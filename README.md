@@ -1,6 +1,6 @@
-# AioLM Benchmark Website
+# AioLM Website
 
-Anonymous public benchmark publishing website. Next.js App Router + PostgreSQL
+Product introduction and anonymous public benchmark explorer. Next.js App Router + PostgreSQL
 (Supabase-compatible) + Cloudflare Turnstile. No accounts in v1.
 
 - Public: browse/filter benchmark results, detail with environment/summary/safe
@@ -19,6 +19,23 @@ Anonymous public benchmark publishing website. Next.js App Router + PostgreSQL
 
 Runs on **Node 22** (`engines.node`, `.nvmrc`, CI, and the Vercel project all
 pin the same major).
+
+## Public pages
+
+- `/`: product introduction to the AioLM desktop workspace, with links to the
+  GitHub repository, documentation, and benchmark explorer.
+- `/benchmarks`: newest-first results with URL-backed model fingerprint, hardware,
+  measurement method, and workload filters. Select up to three results for a
+  summary comparison; differing methods or workloads carry a comparability notice.
+  Results are self-reported and are not ranked.
+- `/benchmarks/[id]`: grouped model, runtime, hardware, workload, execution, and
+  measurement context. Measurement rows load on demand and paginate separately.
+- `/manage`: recovery-code management for an owner's published result.
+- `/verify/[sessionId]`: verification of an upload session from the desktop app.
+
+The product introduction is static. Loading and interacting with public benchmark
+results requires JavaScript. The shared theme follows the system light/dark
+preference and uses the desktop app's semantic colors and official brand assets.
 
 ## Quick start (synthetic local)
 

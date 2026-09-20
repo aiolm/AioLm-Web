@@ -1,16 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { SafeMarkdown, isAbortError, useJsonFetch } from "@/components/ui";
 import { ReportForm } from "@/components/report-form";
+import { asRecord, displayText, statusTone } from "@/components/benchmark-detail-format";
+import { buildSetupGroups, type BenchmarkSetup } from "@/components/benchmark-detail-fields";
+import { buildRowColumns, isFailedRow } from "@/components/benchmark-detail-rows";
+import { formatDuration, formatSampleCount, formatThroughput } from "@/components/benchmark-explorer-format";
 
 interface Detail {
   id: string;
-  submission_id: string;
-  benchmark: {
-    model: unknown; runtime: unknown; workload: unknown; environment: unknown;
-    execution: unknown; method: unknown; app_version: unknown; status: unknown;
-  };
+  benchmark: BenchmarkSetup;
   summary: {
     model_label: string; hardware_label: string; method_label: string; workload_label: string;
     row_count: number; failed_rows: number; mean_tg_tps: number | null; mean_e2e_ms: number | null; status: string;
@@ -34,39 +35,6 @@ export function getRowsSliceIndices(page: number, pageSize: number, loadedCount:
   const start = Math.min(safePage * pageSize, loadedCount);
   const end = Math.min(start + pageSize, loadedCount);
   return { start, end };
-}
-
-/** Display helper: explicit Unknown instead of blank or machine defaults. */
-export function displayText(value: unknown): string {
-  if (value === null || value === undefined) return "Unknown";
-  if (typeof value === "string") return value.trim() === "" ? "Unknown" : value;
-  if (typeof value === "number") return Number.isFinite(value) ? String(value) : "Unknown";
-  if (typeof value === "boolean") return value ? "Yes" : "No";
-  return String(value);
-}
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
-}
-
-function joinList(values: unknown): string {
-  if (!Array.isArray(values)) return "Unknown";
-  if (values.length === 0) return "None reported";
-  return values.map((v) => displayText(v)).join(", ");
-}
-
-function formatGpuList(value: unknown): string {
-  if (!Array.isArray(value)) return "Unknown";
-  if (value.length === 0) return "None reported";
-  return value
-    .map((g) => {
-      const r = asRecord(g);
-      if (!r) return "Unknown";
-      const name = typeof r["name"] === "string" && (r["name"] as string).trim() ? (r["name"] as string) : null;
-      const vendor = typeof r["vendor"] === "string" && (r["vendor"] as string).trim() ? (r["vendor"] as string) : null;
-      return name ?? vendor ?? "Unknown";
-    })
-    .join(" + ");
 }
 
 function friendlyRowsError(): string {
@@ -192,25 +160,32 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
   const clampedPage = pageCount === 0 ? 0 : Math.min(visiblePage, pageCount - 1);
   const { start, end } = getRowsSliceIndices(clampedPage, ROWS_VISIBLE_PAGE_SIZE, loadedCount);
   const retryCursor = rows === null ? null : rowsCursor;
+  const { summary } = data;
+  const tone = statusTone(summary.status);
 
   return (
     <div className="grid">
+      <p className="detail-back">
+        <Link href="/benchmarks">← Back to results</Link>
+      </p>
       <section className="card" aria-labelledby="detail-title">
-        <h1 id="detail-title">{data.summary.workload_label} · {data.summary.model_label}</h1>
+        <h1 id="detail-title">{summary.workload_label} · {summary.model_label}</h1>
         <p>
-          <span className="status ok">{String(data.summary.status)}</span>{" "}
+          <span className={tone ? `status ${tone}` : "status"}>{displayText(summary.status)}</span>{" "}
           <span className="muted">rev {data.revision} · updated {new Date(data.updated_at).toLocaleString()}</span>
         </p>
-        <dl className="kv">
-          <dt>Hardware</dt><dd>{data.summary.hardware_label}</dd>
-          <dt>Method</dt><dd>{data.summary.method_label}</dd>
-          <dt>Rows</dt><dd>{data.summary.row_count} ({data.summary.failed_rows} failed)</dd>
-          <dt>Mean TG tps</dt><dd>{data.summary.mean_tg_tps?.toFixed(2) ?? "—"}</dd>
-          <dt>Mean E2E ms</dt><dd>{data.summary.mean_e2e_ms?.toFixed(1) ?? "—"}</dd>
+        <dl className="kv detail-metrics">
+          <dt>Hardware</dt><dd>{summary.hardware_label}</dd>
+          <dt>Method</dt><dd>{summary.method_label}</dd>
+          <dt>Samples</dt><dd>{formatSampleCount(summary.row_count, summary.failed_rows)}</dd>
+          <dt>Mean generation <span className="detail-unit">(tok/s)</span></dt>
+          <dd>{formatThroughput(summary.mean_tg_tps)}</dd>
+          <dt>Mean end-to-end duration <span className="detail-unit">(ms)</span></dt>
+          <dd>{formatDuration(summary.mean_e2e_ms)}</dd>
         </dl>
       </section>
 
-      <EnvironmentSection benchmark={data.benchmark} />
+      <SetupSection benchmark={data.benchmark} />
 
       <section className="card" aria-labelledby="desc-title">
         <h2 id="desc-title">Description</h2>
@@ -219,7 +194,10 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
 
       <section className="card" aria-labelledby="rows-title">
         <h2 id="rows-title">Measurements {rowsTotal !== null ? `(${rowsTotal})` : null}</h2>
-        <p className="muted">Rows load in chunks of 1000, up to 10000 total. Only one page is shown at a time.</p>
+        <p className="muted">
+          Load the individual measurements to inspect timing, throughput and memory use for each sample.
+          Each page shows up to {ROWS_VISIBLE_PAGE_SIZE} samples.
+        </p>
         {!rows && !rowsLoading ? <button type="button" onClick={() => void loadRows(null)}>Load measurements</button> : null}
         {rowsLoading ? <p role="status" className="muted">Loading measurements…</p> : null}
         {rowsError ? (
@@ -256,60 +234,40 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
   );
 }
 
-function EnvironmentSection({ benchmark }: { benchmark: Detail["benchmark"] }): React.JSX.Element {
-  const model = asRecord(benchmark.model);
-  const runtime = asRecord(benchmark.runtime);
-  const method = asRecord(benchmark.method);
-  const workload = asRecord(benchmark.workload);
-  const environment = asRecord(benchmark.environment);
-  const execution = asRecord(benchmark.execution);
-  const envExecution = asRecord(environment?.["execution"]);
-  const cpu = asRecord(environment?.["cpu"]);
-  const settings = asRecord(execution?.["settings"]);
-
-  const methodText = method
-    ? `${displayText(method["id"])} · version ${displayText(method["version"])}`
-    : "Unknown";
-  const workloadLengths = Array.isArray(workload?.["prompt_lengths"])
-    ? joinList(workload?.["prompt_lengths"])
-    : "Unknown";
-  const batchSizes = Array.isArray(workload?.["batch_sizes"]) ? joinList(workload?.["batch_sizes"]) : "Unknown";
-
+/**
+ * The reported setup, read as four questions instead of one long list: what ran,
+ * on what machine, against which workload, and with which execution settings.
+ */
+function SetupSection({ benchmark }: { benchmark: BenchmarkSetup }): React.JSX.Element {
+  const groups = buildSetupGroups(benchmark);
   return (
     <section className="card" aria-labelledby="env-title">
       <h2 id="env-title">Test setup (as reported)</h2>
       <p className="muted">These values were sent with the publication and are shown as reported. They are not independently verified.</p>
-      <dl className="kv">
-        <dt>App version</dt><dd>{displayText(benchmark.app_version)}</dd>
-        <dt>Result status</dt><dd>{displayText(benchmark.status)}</dd>
-        <dt>Model identity</dt><dd>{model ? displayText(model["status"]) : "Unknown"}</dd>
-        <dt>Model checksum</dt><dd>{model ? displayText(model["sha256"]) : "Unknown"}</dd>
-        <dt>Model size (bytes)</dt><dd>{model ? displayText(model["size_bytes"]) : "Unknown"}</dd>
-        <dt>Runtime</dt>
-        <dd>
-          {runtime
-            ? `${displayText(runtime["name"])} ${displayText(runtime["version"])} · ${displayText(runtime["backend"])}${typeof runtime["build"] === "string" && (runtime["build"] as string).trim() ? ` (${runtime["build"] as string})` : ""}`
-            : "Unknown"}
-        </dd>
-        <dt>Method</dt><dd>{methodText}</dd>
-        <dt>Workload</dt><dd>{workload ? displayText(workload["corpus"]) : "Unknown"}</dd>
-        <dt>Prompt lengths</dt><dd>{workloadLengths}</dd>
-        <dt>Generation length</dt><dd>{workload ? displayText(workload["generation_length"]) : "Unknown"}</dd>
-        <dt>Batch sizes</dt><dd>{batchSizes}</dd>
-        <dt>Repetitions</dt><dd>{workload ? displayText(workload["repetitions"]) : "Unknown"}</dd>
-        <dt>Warmup</dt><dd>{workload ? displayText(workload["warmup"]) : "Unknown"}</dd>
-        <dt>Operating system</dt><dd>{environment ? displayText(environment["os"]) : "Unknown"}</dd>
-        <dt>Architecture</dt><dd>{environment ? displayText(environment["arch"]) : "Unknown"}</dd>
-        <dt>CPU</dt><dd>{cpu ? displayText(cpu["name"]) : "Unknown"}</dd>
-        <dt>CPU cores</dt><dd>{cpu ? displayText(cpu["logical_cores"]) : "Unknown"}</dd>
-        <dt>Installed graphics</dt><dd>{environment ? formatGpuList(environment["installed_gpus"]) : "Unknown"}</dd>
-        <dt>Run mode</dt><dd>{envExecution ? displayText(envExecution["mode"]) : "Unknown"}</dd>
-        <dt>Selected graphics</dt><dd>{envExecution ? formatGpuList(envExecution["selected_gpus"]) : "Unknown"}</dd>
-        <dt>Context size</dt><dd>{execution ? displayText(execution["context_size"]) : "Unknown"}</dd>
-        <dt>Parallel</dt><dd>{execution ? displayText(execution["parallel"]) : "Unknown"}</dd>
-        <dt>Threads</dt><dd>{settings ? displayText(settings["threads"]) : "Unknown"}</dd>
-        <dt>Graphics layers</dt><dd>{settings ? displayText(settings["gpu_layers"]) : "Unknown"}</dd>
-      </dl>
+      {groups.map((group) => (
+        <div className="detail-group" key={group.id}>
+          <h3 className="detail-group-title" id={group.id}>{group.title}</h3>
+          <dl className="kv" aria-labelledby={group.id}>
+            {group.fields.map((field) => (
+              <Fragment key={field.unit ? `${field.label} (${field.unit})` : field.label}>
+                <dt>
+                  {field.label}
+                  {field.unit ? <span className="detail-unit"> ({field.unit})</span> : null}
+                </dt>
+                <dd>
+                  {Array.isArray(field.value) ? (
+                    <ul className="detail-device-list">
+                      {field.value.map((item, index) => <li key={index}>{item}</li>)}
+                    </ul>
+                  ) : (
+                    field.value
+                  )}
+                </dd>
+              </Fragment>
+            ))}
+          </dl>
+        </div>
+      ))}
     </section>
   );
 }
@@ -329,18 +287,45 @@ function RowsPreview({
   pageCount: number;
   onPage: (page: number) => void;
 }): React.JSX.Element {
-  const visible = rows.slice(start, end) as Array<Record<string, unknown>>;
+  // A row that is not an object still takes its place in the table, as gaps.
+  const visible = rows.slice(start, end).map((row) => asRecord(row) ?? {});
   if (rows.length === 0) return <p className="muted">No rows.</p>;
   if (visible.length === 0) return <p className="muted">No rows on this page.</p>;
-  const columns = Object.keys(visible[0] ?? {});
+  const columns = buildRowColumns(visible);
   return (
     <div>
-      <div style={{ overflowX: "auto" }}>
-        <table className="data">
-          <thead><tr>{columns.map((c) => <th key={c} scope="col">{c}</th>)}</tr></thead>
+      {/* Focusable so the wide table can be scrolled from the keyboard, and named so that stop is announced. */}
+      <div
+        className="detail-rows-scroll"
+        style={{ overflowX: "auto" }}
+        tabIndex={0}
+        role="region"
+        aria-label="Measurement samples"
+      >
+        <table className="data detail-rows">
+          <caption className="detail-rows-caption">
+            One row per published measurement sample, in the order it was reported. Failed samples stay in the
+            table and are named in the outcome column.
+          </caption>
+          <thead>
+            <tr>
+              {columns.map((column) => (
+                <th key={column.key} scope="col" className={column.numeric ? "detail-num" : undefined}>
+                  {column.label}
+                  {column.unit ? <span className="detail-unit"> ({column.unit})</span> : null}
+                </th>
+              ))}
+            </tr>
+          </thead>
           <tbody>
             {visible.map((row, i) => (
-              <tr key={start + i}>{columns.map((c) => <td key={c}>{String(row[c] ?? "—")}</td>)}</tr>
+              <tr key={start + i} className={isFailedRow(row) ? "detail-row-failed" : undefined}>
+                {columns.map((column) => (
+                  <td key={column.key} className={column.numeric ? "detail-num" : undefined}>
+                    {column.format(row[column.key])}
+                  </td>
+                ))}
+              </tr>
             ))}
           </tbody>
         </table>

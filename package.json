@@ -1,7 +1,7 @@
 {
   "name": "aiolm-web",
   "version": "1.0.0",
-  "description": "Anonymous benchmark publishing website (Next.js + PostgreSQL + Turnstile). No accounts in v1.",
+  "description": "AioLM product website and anonymous benchmark explorer (Next.js + PostgreSQL + Turnstile). No accounts in v1.",
   "private": true,
   "scripts": {
     "dev": "next dev",

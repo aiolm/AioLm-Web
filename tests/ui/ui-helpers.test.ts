@@ -6,7 +6,8 @@ import {
   pushBrowserHistory,
   sameBrowserFilters,
 } from "@/components/benchmark-browser";
-import { displayText, getRowsPageCount, getRowsSliceIndices, ROWS_VISIBLE_PAGE_SIZE } from "@/components/benchmark-detail";
+import { getRowsPageCount, getRowsSliceIndices, ROWS_VISIBLE_PAGE_SIZE } from "@/components/benchmark-detail";
+import { displayText } from "@/components/benchmark-detail-format";
 import { shouldAdoptServerDescription } from "@/components/management-panel";
 import { friendlyReportError } from "@/components/report-form";
 import { friendlyVerifyError } from "@/components/verify-panel";

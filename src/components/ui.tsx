@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 import { ALLOWED_MARKDOWN_ELEMENTS, isAllowedMarkdownUrl, markdownUrlTransform } from "@/lib/markdown";
+import Link from "next/link";
 
 /** Unsafe link targets render as plain spans, never anchors. */
 function SafeLink({ href, children }: { href?: string; children?: React.ReactNode }): React.JSX.Element {
@@ -56,11 +57,27 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
   );
 }
 
+/**
+ * The explorer's empty result state. The illustration is decorative; the
+ * "About AioLM" link gives a reader who lands on an empty explorer somewhere to
+ * go, which the results panel itself cannot offer.
+ */
 export function EmptyState({ title, hint }: { title: string; hint?: string }): React.JSX.Element {
   return (
-    <div className="card" role="status">
-      <p><strong>{title}</strong></p>
-      {hint ? <p className="muted">{hint}</p> : null}
+    <div className="empty-state" role="status">
+      <span className="empty-state-art" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="44" height="44" focusable="false">
+          <g fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 3H7a1.6 1.6 0 0 0-1.6 1.6v14.8A1.6 1.6 0 0 0 7 21h10a1.6 1.6 0 0 0 1.6-1.6V7.6L14 3Z" />
+            <path d="M13.8 3.2v4.4h4.4M8.8 12.5h6.4M8.8 16h4.4" />
+          </g>
+        </svg>
+      </span>
+      <p className="empty-state-title"><strong>{title}</strong></p>
+      {hint ? <p className="empty-state-hint muted">{hint}</p> : null}
+      <Link className="empty-state-link" href="/">
+        About AioLM
+      </Link>
     </div>
   );
 }
