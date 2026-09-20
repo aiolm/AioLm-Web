@@ -73,7 +73,8 @@ describe.each(locales)("management and common localization: %s", (locale) => {
     const html = wrap(locale, common[locale], createElement(ReportForm, { publicId: "synthetic-public-id" }));
     expect(html).toContain(common[locale]["report.title"]);
     expect(html).toContain(common[locale]["report.send"]);
-    expect(html).toContain(common[locale]["turnstile.notConfigured"]);
+    expect(html).toContain("<details");
+    expect(html).not.toContain(common[locale]["turnstile.notConfigured"]);
     expect(html).toContain(new Intl.NumberFormat(intlLocales[locale]).format(2000));
     expect(html).toContain('action="/v1/benchmark-runs/synthetic-public-id/reports"');
     expect(html).not.toMatch(/>\s*(?:report|turnstile)\.[\w]+\s*</);

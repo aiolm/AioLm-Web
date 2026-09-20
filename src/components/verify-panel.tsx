@@ -38,7 +38,7 @@ export function VerifyPanel({ sessionId }: { sessionId: string }): React.JSX.Ele
   }, []);
 
   const handleVerify = useCallback((value: string): void => {
-    if (!mountedRef.current) return;
+    if (!mountedRef.current || completedRef.current || sendingRef.current) return;
     setToken(value);
     setState((prev) => (prev === "error" ? "idle" : prev));
     setMessage("");
@@ -47,6 +47,7 @@ export function VerifyPanel({ sessionId }: { sessionId: string }): React.JSX.Ele
   const handleExpire = useCallback((): void => {
     if (!mountedRef.current || completedRef.current) return;
     setToken(null);
+    if (sendingRef.current) return;
     setState("error");
     setMessage("verify.expired");
   }, []);
@@ -99,18 +100,18 @@ export function VerifyPanel({ sessionId }: { sessionId: string }): React.JSX.Ele
 
   return (
     <div className="grid">
-      <section className="card" aria-labelledby="verify-title">
+      <section className="card" aria-labelledby="verify-title" aria-busy={state === "sending"}>
         <h1 id="verify-title">{t("verify.title")}</h1>
         <p className="muted">
           {t("verify.intro")}
         </p>
-        <TurnstileWidget key={widgetKey} action="benchmark_publish" onVerify={handleVerify} onExpire={handleExpire} />
+        {state !== "done" ? <TurnstileWidget key={widgetKey} action="benchmark_publish" onVerify={handleVerify} onExpire={handleExpire} /> : null}
         <p>
           <button type="button" className="primary" disabled={state === "sending" || state === "done"} onClick={() => void submit()}>
-            {state === "sending" ? t("verify.sending") : t("verify.continue")}
+            {t(state === "done" ? "verify.completed" : state === "sending" ? "verify.sending" : "verify.continue")}
           </button>
         </p>
-        {message ? <p role={state === "error" ? "alert" : "status"}>{t(message)}</p> : null}
+        {message ? <p className={`alert ${state === "error" ? "error" : "info"}`} role={state === "error" ? "alert" : "status"}>{t(message)}</p> : null}
       </section>
     </div>
   );

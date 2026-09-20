@@ -438,3 +438,31 @@ describe("discovery filters and sorting", () => {
     expect(Object.fromEntries(params)).toEqual({ q: "global", vendor: "synthetic vendor", context_min: "128", field: "gpu", option_query: "new text" });
   });
 });
+
+describe("immediate result sorting", () => {
+  it("sorts applied results without submitting unfinished text or invalid ranges", () => {
+    let state = explorerStateFromSearch("?vendor=synthetic&cursor=page2", [""]);
+    state = explorerReducer(state, { type: "draft", key: "q", value: "unfinished query" });
+    state = explorerReducer(state, { type: "draft", key: "context_min", value: "invalid" });
+    const sorted = explorerReducer(state, { type: "sort", value: "context_desc" });
+    expect(sorted.applied.vendor).toBe("synthetic");
+    expect(sorted.applied.q).toBe("");
+    expect(sorted.applied.context_min).toBe("");
+    expect(sorted.applied.sort).toBe("context_desc");
+    expect(sorted.draft.q).toBe("unfinished query");
+    expect(sorted.draft.context_min).toBe("invalid");
+    expect(sorted.draft.sort).toBe("context_desc");
+    expect(sorted.cursor).toBeNull();
+    expect(sorted.history).toEqual([]);
+    expect(buildExplorerSearch({ filters: sorted.applied, cursor: null })).toContain("sort=context_desc");
+    const restored = explorerReducer(sorted, { type: "location", search: "?vendor=synthetic&cursor=page2", history: [""] });
+    expect(restored.applied.sort).toBe("");
+    expect(restored.cursor).toBe("page2");
+  });
+  it("retains pagination for unchanged sorting and canonicalizes newest", () => {
+    const state = explorerStateFromSearch("?sort=oldest&cursor=page2", [""]);
+    expect(explorerReducer(state, { type: "sort", value: "oldest" })).toBe(state);
+    const newest = explorerReducer(state, { type: "sort", value: "newest" });
+    expect(buildExplorerSearch({ filters: newest.applied, cursor: newest.cursor })).toBe("");
+  });
+});

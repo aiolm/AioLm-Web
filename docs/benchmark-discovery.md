@@ -69,3 +69,25 @@ visible results, and trigram indexes support substring conditions where pg_trgm 
 available. The helper function stays in the private bench schema with restricted
 execution grants. List and suggestion responses use no-store so visibility changes
 are reflected on the next request.
+
+## Compact explorer controls
+
+Search, GPU vendor, and GPU model are the default discovery controls. A single
+native “More filters” disclosure holds all remaining fields in hardware,
+OS/runtime, and execution/workload groups. Its count includes populated advanced
+fields, including values restored from shared links; closing it preserves drafts.
+The Search button sits beside the query and repeats after the advanced fields. A pending
+changes message distinguishes edited controls from the applied result chips.
+Clear filters resets both drafts and results, including pagination, and is also
+available in the filtered empty state. Comparison selections survive reset.
+
+Sorting sits beside the results and applies immediately to the current query.
+It resets pagination without applying or discarding unfinished filter edits,
+including invalid ranges. Search and filter changes still require Search.
+URL sharing, browser history, free-text suggestions, and keyset paging retain
+their existing behavior. Disclosure state is local presentation, not URL state.
+
+A result link preserves the current query. When a shared cursor or a return from
+a detail page has no previous-page history, First page provides a way back to
+the beginning while retaining filters. Applying advanced fields closes their
+panel and moves focus to the result heading.

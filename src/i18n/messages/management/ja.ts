@@ -1,6 +1,13 @@
 import type { Catalog } from "./en";
 
 const messages = {
+  "verify.completed": "認証済み",
+  "manage.saving": "保存中…",
+  "manage.reloading": "読み込み中…",
+  "manage.deleting": "削除中…",
+  "manage.clearing": "解除中…",
+  "manage.reloaded": "保存済みのバージョンを再読み込みしました。未保存の編集内容は保持されています。",
+  "manage.confirmClear": "セッションを解除して、未保存の変更を破棄しますか？",
   "verify.expiredSession": "セッションの有効期限が切れました。アプリから公開をやり直してください。",
   "verify.notFound": "セッションが見つかりません。アプリから公開をやり直してください。",
   "verify.rateLimited": "試行回数が多すぎます。しばらくしてから再試行してください。",
@@ -50,7 +57,7 @@ const messages = {
   "manage.publicId": "公開 ID",
   "manage.revision": "リビジョン",
   "manage.expires": "セッションの有効期限",
-  "manage.readOnly": "この端末にセッションがありますが、変更にはコードの再入力が必要です。保存や削除を許可するには、上に復旧コードを貼り付けてください。",
+  "manage.readOnly": "このセッションは読み取り専用です。保存・削除・セッションの終了には、上に復旧コードを入力してください。",
   "manage.description": "説明（Markdown、最大{max}文字）",
   "manage.count": "{count} / {max}文字",
   "manage.overLimit": " — 上限超過",

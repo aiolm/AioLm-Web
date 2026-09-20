@@ -1639,3 +1639,27 @@ table.data th { color: var(--ui-muted); font-weight: 650; }
   .benchmark-page .page-intro-note { font-size: .8rem; }
   .benchmark-page .explorer-search-row { margin-top: 8px; }
 }
+
+/* Page usability refinements keep navigation compact and supporting details optional. */
+html { scroll-padding-block-start: 88px; }
+.detail-group > summary {
+  cursor: pointer;
+  min-height: var(--control-min);
+  padding-block: 10px;
+}
+.detail-group[open] > summary { margin-block-end: 12px; }
+.detail-group + .detail-group { margin-block-start: 4px; padding-block-start: 4px; }
+.not-found-card { max-width: 44rem; margin-inline: auto; padding: 32px; }
+.not-found-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+@media (max-width: 40rem) {
+  html { scroll-padding-block-start: 124px; }
+  .site-header-inner { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 4px 8px; padding-block: 6px; }
+  .site-header-github { order: 0; grid-column: 2; grid-row: 1; padding: 10px; }
+  .site-header-github span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .language-selector { grid-column: 3; grid-row: 1; margin: 0; }
+  .site-nav { order: 0; grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+  .site-nav-link { justify-content: center; padding: 8px 4px; font-size: .9rem; text-align: center; }
+  main > .grid, main > .page { padding-block-start: 20px; }
+  .not-found-card { padding: 24px; }
+  .not-found-actions .button { width: 100%; }
+}

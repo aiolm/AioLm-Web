@@ -1,4 +1,5 @@
 "use client";
+import "./benchmark-explorer-usability.css";
 import { useI18n } from "@/i18n/client";
 import { localizedPath } from "@/i18n/config";
 import { useSearchParams } from "next/navigation";
@@ -122,6 +123,13 @@ export function BenchmarkBrowser(): React.JSX.Element {
       if (invalidExplorerRanges(state.draft).length) return;
       if (sameExplorerFilters(normalizeExplorerFilters(state.draft), state.applied)) reload();
       dispatch({ type: "apply" });
+      const advanced = event.currentTarget.querySelector<HTMLDetailsElement>(".explorer-more-filters");
+      if (advanced?.open) {
+        advanced.open = false;
+        const heading = document.getElementById("explorer-results-title");
+        heading?.focus({ preventScroll: true });
+        heading?.scrollIntoView({ block: "start" });
+      }
     },
     [state.draft, state.applied, reload, dispatch],
   );
@@ -134,26 +142,29 @@ export function BenchmarkBrowser(): React.JSX.Element {
   const active = activeExplorerFilters(state.applied);
   const filtered = hasActiveExplorerFilters(state.applied);
   const comparisonFull = !canAddToComparison(state.compare);
-  const canPage = data !== null && (data.next_cursor !== null || state.history.length > 0);
+  const canPage = data !== null && (data.next_cursor !== null || state.cursor !== null || state.history.length > 0);
 
   return (
-    <div className="explorer">
+    <div className="explorer explorer-compact">
       <div className="explorer-layout">
         <div className="explorer-rail">
-          <form className="explorer-filters" method="GET" action={localizedPath(locale, EXPLORER_PAGE_PATH)} onSubmit={applyFilters}>
+          <form id="explorer-filter-form" className="explorer-filters" method="GET" action={localizedPath(locale, EXPLORER_PAGE_PATH)} onSubmit={applyFilters}>
             <fieldset className="explorer-filter-set">
-              <legend className="explorer-filter-legend">{t("benchmark.Filters")}</legend>
-              <BenchmarkExplorerFilters draft={state.draft} onChange={(key, value) => dispatch({ type: "draft", key, value })} />
-              <div className="explorer-filter-actions">
-                <button type="submit" disabled={invalidExplorerRanges(state.draft).length > 0} className="explorer-button explorer-button-primary">{t("benchmark.Apply filters")}</button>
-                <button
-                  type="button"
-                  className="explorer-button explorer-button-quiet"
-                  onClick={() => dispatch({ type: "reset" })}
-                  disabled={!filtered && !hasActiveExplorerFilters(state.draft)}
-                >{t("benchmark.Clear filters")}</button>
-              </div>
-              <p className="explorer-filter-hint">{t("benchmark.Narrow down results by setup and measurement details. Filters are kept in the page address, so a filtered view can be bookmarked or shared as a link.")}</p>
+              <legend className="explorer-filter-legend sr-only">{t("benchmark.Filters")}</legend>
+              <BenchmarkExplorerFilters draft={state.draft} onChange={(key, value) => dispatch({ type: "draft", key, value })}
+                pending={!sameExplorerFilters(state.draft, state.applied)}
+                actions={
+                  <div className="explorer-filter-actions">
+                    <button type="submit" disabled={invalidExplorerRanges(state.draft).length > 0} className="explorer-button explorer-button-primary">{t("benchmark.Search")}</button>
+                    <button
+                      type="button"
+                      className="explorer-button explorer-button-quiet"
+                      onClick={() => dispatch({ type: "reset" })}
+                      hidden={!filtered && !hasActiveExplorerFilters(state.draft)}
+                    >{t("benchmark.Clear filters")}</button>
+                  </div>
+                }
+              />
             </fieldset>
           </form>
         </div>
@@ -161,12 +172,19 @@ export function BenchmarkBrowser(): React.JSX.Element {
         <section className="explorer-main" aria-labelledby="explorer-results-title">
           <div className="explorer-main-header">
             <div className="explorer-main-heading">
-              <h2 id="explorer-results-title" className="explorer-main-title">{t("benchmark.Published results")}</h2>
+              <h2 id="explorer-results-title" tabIndex={-1} className="explorer-main-title">{t("benchmark.Published results")}</h2>
               <p className="explorer-main-subtitle">
                 {t("benchmark.Select up to {limit} results to compare their setup.", { limit: EXPLORER_COMPARE_LIMIT })}
               </p>
             </div>
-            <button type="button" className="explorer-button explorer-refresh" onClick={reload}>{t("benchmark.Refresh")}</button>
+            <div className="explorer-result-actions">
+              <div className="explorer-field explorer-sort"><label className="explorer-field-label" htmlFor="explorer-sort">{t("benchmark.Sort")}</label>
+                <select id="explorer-sort" form="explorer-filter-form" name="sort" className="explorer-field-input" value={state.applied.sort || "newest"} onChange={event => dispatch({ type: "sort", value: event.target.value })}>
+                  {Object.entries(EXPLORER_SORTS).map(([value, label]) => <option value={value} key={value}>{t(`benchmark.${label}`)}</option>)}
+                </select>
+              </div>
+              <button type="button" className="explorer-button explorer-refresh" onClick={reload}>{t("benchmark.Refresh")}</button>
+            </div>
           </div>
 
           {active.length > 0 ? (
@@ -202,6 +220,7 @@ export function BenchmarkBrowser(): React.JSX.Element {
               }
             />
           ) : null}
+          {data && items.length === 0 && filtered ? <button type="button" className="explorer-button" onClick={() => dispatch({ type: "reset" })}>{t("benchmark.Clear filters")}</button> : null}
           {data && items.length > 0 ? (
             <div className="explorer-results">
               {comparisonFull ? (
@@ -228,9 +247,9 @@ export function BenchmarkBrowser(): React.JSX.Element {
               <button
                 type="button"
                 className="explorer-button explorer-page-previous"
-                onClick={() => dispatch({ type: "previousPage" })}
-                disabled={state.history.length === 0}
-              >{t("benchmark.Previous page")}</button>
+                onClick={() => dispatch({ type: state.history.length ? "previousPage" : "firstPage" })}
+                disabled={state.history.length === 0 && state.cursor === null}
+              >{t(state.history.length ? "benchmark.Previous page" : "benchmark.First page")}</button>
               <button
                 type="button"
                 className="explorer-button explorer-page-next"

@@ -1,6 +1,13 @@
 import type { Catalog } from "./en";
 
 const messages = {
+  "verify.completed": "인증 완료",
+  "manage.saving": "저장 중…",
+  "manage.reloading": "불러오는 중…",
+  "manage.deleting": "삭제 중…",
+  "manage.clearing": "해제 중…",
+  "manage.reloaded": "저장된 버전을 다시 불러왔습니다. 저장하지 않은 편집 내용은 유지됩니다.",
+  "manage.confirmClear": "세션을 해제하고 저장하지 않은 변경 사항을 버릴까요?",
   "verify.expiredSession": "세션이 만료되었습니다. 앱에서 게시를 다시 시작하세요.",
   "verify.notFound": "세션을 찾을 수 없습니다. 앱에서 게시를 다시 시작하세요.",
   "verify.rateLimited": "시도 횟수가 너무 많습니다. 잠시 후 다시 시도하세요.",
@@ -50,7 +57,7 @@ const messages = {
   "manage.publicId": "공개 ID",
   "manage.revision": "버전",
   "manage.expires": "세션 만료",
-  "manage.readOnly": "이 기기에 세션이 있지만 변경하려면 코드를 다시 입력해야 합니다. 저장 또는 삭제하려면 위에 복구 코드를 붙여넣으세요.",
+  "manage.readOnly": "현재 세션은 읽기 전용입니다. 저장·삭제하거나 세션을 종료하려면 위에 복구 코드를 입력하세요.",
   "manage.description": "설명 (Markdown, 최대 {max}자)",
   "manage.count": "{count} / {max}자",
   "manage.overLimit": " — 제한 초과",

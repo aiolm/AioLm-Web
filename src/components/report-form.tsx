@@ -1,5 +1,7 @@
 "use client";
 
+import "./management-usability.css";
+
 import { useI18n } from "@/i18n/client";
 import { intlLocales } from "@/i18n/config";
 import type { Translator } from "@/i18n/types";
@@ -22,6 +24,7 @@ export function friendlyReportError(status: number | null, code: string | null, 
 }
 
 export function ReportForm({ publicId }: { publicId: string }): React.JSX.Element {
+  const [expanded, setExpanded] = useState(false);
   const [reason, setReason] = useState("");
   const { locale, t } = useI18n();
   const [token, setToken] = useState<string | null>(null);
@@ -30,6 +33,7 @@ export function ReportForm({ publicId }: { publicId: string }): React.JSX.Elemen
   const [message, setMessage] = useState("");
   const mountedRef = useRef(true);
   const sendingRef = useRef(false);
+  const completedRef = useRef(false);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -39,15 +43,16 @@ export function ReportForm({ publicId }: { publicId: string }): React.JSX.Elemen
   }, []);
 
   const handleVerify = useCallback((value: string): void => {
-    if (!mountedRef.current) return;
+    if (!mountedRef.current || completedRef.current || sendingRef.current) return;
     setToken(value);
     setState((prev) => (prev === "error" ? "idle" : prev));
     setMessage("");
   }, []);
 
   const handleExpire = useCallback((): void => {
-    if (!mountedRef.current) return;
+    if (!mountedRef.current || completedRef.current) return;
     setToken(null);
+    if (sendingRef.current) return;
     setState("error");
     setMessage("report.expired");
   }, []);
@@ -55,7 +60,7 @@ export function ReportForm({ publicId }: { publicId: string }): React.JSX.Elemen
   const submit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     // In-flight ref stays authoritative even if expiry/error callbacks flip UI state mid-POST.
-    if (sendingRef.current || state === "sending") return;
+    if (completedRef.current || sendingRef.current || state === "sending") return;
     if (!token) {
       setState("error");
       setMessage("report.required");
@@ -78,6 +83,7 @@ export function ReportForm({ publicId }: { publicId: string }): React.JSX.Elemen
       });
       if (!mountedRef.current) return;
       if (res.ok) {
+        completedRef.current = true;
         setToken(null);
         setState("done");
         setMessage("report.received");
@@ -106,23 +112,28 @@ export function ReportForm({ publicId }: { publicId: string }): React.JSX.Elemen
   if (state === "done") return <div className="alert info" role="status"><p>{t(message)}</p></div>;
 
   return (
-    <section className="card" aria-labelledby="report-title">
-      <h2 id="report-title">{t("report.title")}</h2>
-      <form method="POST" action={`/v1/benchmark-runs/${publicId}/reports`} onSubmit={(e) => void submit(e)}>
+    <details className="card report-disclosure" onToggle={(event) => {
+      const open = event.currentTarget.open;
+      setExpanded(open);
+      if (!open) setToken(null);
+    }}>
+      <summary id="report-title">{t("report.title")}</summary>
+      <form aria-busy={state === "sending"} method="POST" action={`/v1/benchmark-runs/${publicId}/reports`} onSubmit={(e) => void submit(e)}>
         <div className="field">
           <label htmlFor="report-reason">{t("report.reason", { max: new Intl.NumberFormat(intlLocales[locale]).format(2000) })}</label>
           <textarea
             id="report-reason" name="reason" required maxLength={2000}
             value={reason} onChange={(e) => setReason(e.target.value)}
             disabled={state === "sending"}
-            aria-describedby="report-hint"
+            aria-describedby={message === "report.reasonRequired" ? "report-hint report-error" : "report-hint"}
+            aria-invalid={message === "report.reasonRequired"}
           />
           <span id="report-hint" className="hint">{t("report.hint")}</span>
         </div>
-        <TurnstileWidget key={widgetKey} action="benchmark_report" onVerify={handleVerify} onExpire={handleExpire} />
+        {expanded ? <TurnstileWidget key={widgetKey} action="benchmark_report" onVerify={handleVerify} onExpire={handleExpire} /> : null}
         <p><button type="submit" disabled={state === "sending"}>{state === "sending" ? t("report.sending") : t("report.send")}</button></p>
-        {state === "error" && message ? <p role="alert">{t(message)}</p> : null}
+        {state === "error" && message ? <p id="report-error" className="alert error" role="alert">{t(message)}</p> : null}
       </form>
-    </section>
+    </details>
   );
 }

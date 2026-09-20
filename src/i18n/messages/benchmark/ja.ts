@@ -1,5 +1,10 @@
 import type { BenchmarkMessages } from "./en";
 const messages = {
+  "benchmark.First page": "最初のページ",
+  "benchmark.All vendors": "すべてのメーカー",
+  "benchmark.All GPUs": "すべてのGPU",
+  "benchmark.More filters": "その他のフィルター",
+  "benchmark.Changes not applied. Apply filters to update results.": "条件を変更しました。検索を押して適用してください。",
   "benchmark.Find results by model, hardware and setup.": "モデル、ハードウェア、設定から結果を検索できます。",
   "benchmark.Toggle suggestions for {field}": "{field}の候補を開閉",
   "benchmark.Search": "検索",

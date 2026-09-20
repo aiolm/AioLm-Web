@@ -1,4 +1,9 @@
 const messages = {
+  "benchmark.First page": "First page",
+  "benchmark.All vendors": "All vendors",
+  "benchmark.All GPUs": "All GPUs",
+  "benchmark.More filters": "More filters",
+  "benchmark.Changes not applied. Apply filters to update results.": "Changes not applied. Select Search to update results.",
   "benchmark.Find results by model, hardware and setup.": "Find results by model, hardware and setup.",
   "benchmark.Toggle suggestions for {field}": "Toggle suggestions for {field}",
   "benchmark.Search": "Search",

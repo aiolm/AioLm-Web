@@ -1,5 +1,10 @@
 import type { BenchmarkMessages } from "./en";
 const messages = {
+  "benchmark.First page": "第一页",
+  "benchmark.All vendors": "所有厂商",
+  "benchmark.All GPUs": "所有 GPU",
+  "benchmark.More filters": "更多筛选条件",
+  "benchmark.Changes not applied. Apply filters to update results.": "筛选条件已更改。点击搜索以应用。",
   "benchmark.Find results by model, hardware and setup.": "按模型、硬件和配置查找结果。",
   "benchmark.Toggle suggestions for {field}": "展开或收起{field}的建议",
   "benchmark.Search": "搜索",

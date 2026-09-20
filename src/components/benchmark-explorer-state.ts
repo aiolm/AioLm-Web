@@ -240,11 +240,13 @@ export type ExplorerAction =
   | { type: "route"; search: string; history?: string[] }
   | { type: "location"; search: string; history?: string[] }
   | { type: "draft"; key: ExplorerFilterKey; value: string }
+  | { type: "sort"; value: string }
   | { type: "apply" }
   | { type: "reset" }
   | { type: "removeFilter"; key: ExplorerFilterKey }
   | { type: "nextPage"; cursor: string | null }
   | { type: "previousPage" }
+  | { type: "firstPage" }
   | { type: "toggleComparison"; item: ExplorerItem }
   | { type: "clearComparison" };
 
@@ -276,6 +278,12 @@ export function explorerReducer(state: ExplorerState, action: ExplorerAction): E
     }
     case "draft":
       return { ...state, draft: { ...state.draft, [action.key]: action.value } };
+    case "sort": {
+      const sort = action.value !== "newest" && Object.hasOwn(EXPLORER_SORTS, action.value) ? action.value : "";
+      if (sort === state.applied.sort) return state;
+      // Ordering applies to displayed results without submitting unfinished filters.
+      return { ...state, applied: { ...state.applied, sort }, draft: { ...state.draft, sort }, cursor: null, history: [] };
+    }
     case "apply": {
       if (invalidExplorerRanges(state.draft).length) return state;
       const next = normalizeExplorerFilters(state.draft);
@@ -307,6 +315,8 @@ export function explorerReducer(state: ExplorerState, action: ExplorerAction): E
       if (!cursor) return state;
       return { ...state, history: pushExplorerHistory(state.history, state.cursor), cursor };
     }
+    case "firstPage":
+      return { ...state, cursor: null, history: [] };
     case "previousPage": {
       if (state.history.length === 0) return state;
       const { previous, rest } = popExplorerHistory(state.history);

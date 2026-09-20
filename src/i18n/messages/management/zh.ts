@@ -1,6 +1,13 @@
 import type { Catalog } from "./en";
 
 const messages = {
+  "verify.completed": "已验证",
+  "manage.saving": "正在保存…",
+  "manage.reloading": "正在重新加载…",
+  "manage.deleting": "正在删除…",
+  "manage.clearing": "正在清除…",
+  "manage.reloaded": "已重新加载保存的版本。未保存的编辑内容已保留。",
+  "manage.confirmClear": "清除此会话并放弃未保存的更改？",
   "verify.expiredSession": "会话已过期。请在应用中重新发起发布。",
   "verify.notFound": "未找到此会话。请在应用中重新发起发布。",
   "verify.rateLimited": "尝试次数过多。请稍后重试。",
@@ -50,7 +57,7 @@ const messages = {
   "manage.publicId": "公开 ID",
   "manage.revision": "修订版本",
   "manage.expires": "会话到期时间",
-  "manage.readOnly": "此设备上已有会话，但修改需要重新输入代码。请在上方粘贴恢复代码以允许保存或删除。",
+  "manage.readOnly": "当前会话为只读。要保存、删除或清除此会话，请在上方输入恢复代码。",
   "manage.description": "说明（Markdown，最多 {max} 个字符）",
   "manage.count": "{count} / {max} 个字符",
   "manage.overLimit": " — 超出上限",

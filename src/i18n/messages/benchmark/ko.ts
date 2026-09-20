@@ -1,5 +1,10 @@
 import type { BenchmarkMessages } from "./en";
 const messages = {
+  "benchmark.First page": "첫 페이지",
+  "benchmark.All vendors": "모든 제조사",
+  "benchmark.All GPUs": "모든 GPU",
+  "benchmark.More filters": "추가 필터",
+  "benchmark.Changes not applied. Apply filters to update results.": "조건을 변경했습니다. 검색을 눌러 적용하세요.",
   "benchmark.Find results by model, hardware and setup.": "모델, 하드웨어, 실행 설정으로 결과를 찾아보세요.",
   "benchmark.Toggle suggestions for {field}": "{field} 추천값 열기 또는 닫기",
   "benchmark.Search": "검색",

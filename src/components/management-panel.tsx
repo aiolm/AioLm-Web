@@ -1,5 +1,7 @@
 "use client";
 
+import "./management-usability.css";
+
 import { useI18n } from "@/i18n/client";
 import { intlLocales } from "@/i18n/config";
 
@@ -59,7 +61,8 @@ export function ManagementPanel(): React.JSX.Element {
   const [message, setMessage] = useState("");
   const [messageValues, setMessageValues] = useState<Record<string, number>>({});
   const [messageIsError, setMessageIsError] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [operation, setOperation] = useState<"open" | "save" | "reload" | "delete" | "clear" | null>(null);
+  const busy = operation !== null;
   const dirtyRef = useRef(false);
   const infoRef = useRef<ManagedInfo | null>(null);
   const mountedRef = useRef(true);
@@ -122,8 +125,7 @@ export function ManagementPanel(): React.JSX.Element {
         if (!mountedRef.current) return null;
         if (!res.ok) {
           if (!opts.silent) {
-            setInfo(null);
-            infoRef.current = null;
+            if (res.status === 401) setCsrf(null);
             say(managementErrorKey("load", res.status, await readApiErrorCode(res)), res.status !== 401);
           }
           return null;
@@ -181,7 +183,7 @@ export function ManagementPanel(): React.JSX.Element {
     e.preventDefault();
     if (busy) return;
     invalidateRestore();
-    setBusy(true);
+    setOperation("open");
     say("", false);
     try {
       const res = await fetch("/v1/management-sessions", {
@@ -202,14 +204,17 @@ export function ManagementPanel(): React.JSX.Element {
       setCsrf(json.csrf_token);
       // The code has served its purpose: drop it immediately, never retain it.
       setCode("");
-      setIsDirty(false);
-      dirtyRef.current = false;
-      await loadSession({ silent: true });
-      say("manage.opened", false);
+      const current = await loadSession({ silent: true });
+      if (current) {
+        say("manage.opened", false);
+      } else {
+        setCsrf(null);
+        say("manage.openFailed", true);
+      }
     } catch {
       say("error.network", true);
     } finally {
-      if (mountedRef.current) setBusy(false);
+      if (mountedRef.current) setOperation(null);
     }
   };
 
@@ -227,7 +232,7 @@ export function ManagementPanel(): React.JSX.Element {
       say("manage.tooLong", true, { count: draftLength, max: DESCRIPTION_MAX_CODEPOINTS });
       return;
     }
-    setBusy(true);
+    setOperation("save");
     try {
       const res = await fetch(`/v1/benchmark-runs/${info.public_id}/description`, {
         method: "PATCH",
@@ -261,15 +266,19 @@ export function ManagementPanel(): React.JSX.Element {
         say(managementErrorKey("save", res.status, await readApiErrorCode(res)), true);
         return;
       }
+      const saved = await res.json() as { revision: number };
+      const acknowledged = { ...info, description_md: draft, revision: saved.revision };
       // A 401 error JSON must never become the managed record.
       const current = (await fetch("/v1/management-sessions").then((r) => (r.ok ? r.json() : null)).catch(() => null)) as ManagedInfo | null;
-      if (current && mountedRef.current) {
+      if (current && current.public_id === info.public_id && mountedRef.current) {
         setInfo(current);
         infoRef.current = current;
         setDraft(current.description_md);
         setIsDirty(false);
         dirtyRef.current = false;
       } else if (mountedRef.current) {
+        setInfo(acknowledged);
+        infoRef.current = acknowledged;
         setIsDirty(false);
         dirtyRef.current = false;
       }
@@ -277,7 +286,7 @@ export function ManagementPanel(): React.JSX.Element {
     } catch {
       say("manage.saveNetwork", true);
     } finally {
-      if (mountedRef.current) setBusy(false);
+      if (mountedRef.current) setOperation(null);
     }
   };
 
@@ -290,7 +299,7 @@ export function ManagementPanel(): React.JSX.Element {
     }
     if (!window.confirm(t("manage.confirmDelete"))) return;
     invalidateRestore();
-    setBusy(true);
+    setOperation("delete");
     try {
       const res = await fetch(`/v1/benchmark-runs/${info.public_id}`, {
         method: "DELETE",
@@ -315,14 +324,15 @@ export function ManagementPanel(): React.JSX.Element {
     } catch {
       say("manage.deleteNetwork", true);
     } finally {
-      if (mountedRef.current) setBusy(false);
+      if (mountedRef.current) setOperation(null);
     }
   };
 
   const signOut = async (): Promise<void> => {
     if (busy) return;
+    if (isDirty && !window.confirm(t("manage.confirmClear"))) return;
     invalidateRestore();
-    setBusy(true);
+    setOperation("clear");
     try {
       const res = await fetch("/v1/management-sessions", { method: "DELETE", headers: csrf ? { "x-csrf-token": csrf } : {} });
       if (!mountedRef.current) return;
@@ -343,21 +353,33 @@ export function ManagementPanel(): React.JSX.Element {
     } catch {
       say("manage.clearNetwork", true);
     } finally {
-      if (mountedRef.current) setBusy(false);
+      if (mountedRef.current) setOperation(null);
     }
   };
 
   const onDraftChange = (value: string): void => {
     setDraft(value);
-    setIsDirty(true);
-    dirtyRef.current = true;
+    const changed = value !== infoRef.current?.description_md;
+    setIsDirty(changed);
+    dirtyRef.current = changed;
+  };
+
+  const reload = async (): Promise<void> => {
+    if (busy) return;
+    setOperation("reload");
+    say("");
+    try {
+      if (await loadSession()) say("manage.reloaded");
+    } finally {
+      if (mountedRef.current) setOperation(null);
+    }
   };
 
   const canEdit = canEditManagement(info !== null, csrf);
   const showSavedComparison = info !== null && isDirty && draft !== info.description_md;
 
   return (
-    <div className="grid">
+    <div className="grid management-panel" aria-busy={busy}>
       <section className="card" aria-labelledby="manage-title">
         <h1 id="manage-title">{t("manage.title")}</h1>
         <p className="muted">{t("manage.intro")}</p>
@@ -365,7 +387,7 @@ export function ManagementPanel(): React.JSX.Element {
           <div className="field">
             <label htmlFor="recovery-code">{t("manage.code")}</label>
             <textarea
-              id="recovery-code" name="recovery_code" required autoComplete="off" spellCheck={false}
+              id="recovery-code" name="recovery_code" required autoComplete="off" autoCapitalize="none" spellCheck={false}
               placeholder="aiolm-recovery-v1.…"
               value={code} onChange={(e) => setCode(e.target.value)}
               disabled={busy}
@@ -373,9 +395,9 @@ export function ManagementPanel(): React.JSX.Element {
             />
             <span id="recovery-hint" className="hint">{t("manage.codeHint")}</span>
           </div>
-          <button type="submit" className="primary" disabled={busy}>{busy ? t("manage.opening") : t("manage.open")}</button>
+          <button type="submit" className="primary" disabled={busy}>{operation === "open" ? t("manage.opening") : t("manage.open")}</button>
         </form>
-        {message ? <p role={messageIsError ? "alert" : "status"}>{t(message, Object.fromEntries(Object.entries(messageValues).map(([key, value]) => [key, number(value)])))}</p> : null}
+        {message ? <p className={`alert ${messageIsError ? "error" : "info"}`} role={messageIsError ? "alert" : "status"}>{t(message, Object.fromEntries(Object.entries(messageValues).map(([key, value]) => [key, number(value)])))}</p> : null}
       </section>
 
       {info ? (
@@ -395,6 +417,7 @@ export function ManagementPanel(): React.JSX.Element {
               id="desc-draft" value={draft} onChange={(e) => onDraftChange(e.target.value)}
               disabled={busy}
               aria-describedby="desc-count"
+              aria-invalid={draftLength > DESCRIPTION_MAX_CODEPOINTS}
             />
             <span id="desc-count" className="hint" aria-live="polite">
               {t("manage.count", { count: number(draftLength), max: number(DESCRIPTION_MAX_CODEPOINTS) })}
@@ -410,12 +433,12 @@ export function ManagementPanel(): React.JSX.Element {
               {info.description_md ? <SafeMarkdown text={info.description_md} /> : <p className="muted">{t("manage.savedEmpty")}</p>}
             </div>
           ) : null}
-          <p>
-            <button type="button" className="primary" disabled={busy || !canEdit} onClick={() => void saveDescription()}>{t("manage.save")}</button>{" "}
-            <button type="button" disabled={busy} onClick={() => void loadSession()}>{t("manage.reload")}</button>{" "}
-            <button type="button" className="danger" disabled={busy || !canEdit} onClick={() => void remove()}>{t("manage.delete")}</button>{" "}
-            <button type="button" disabled={busy} onClick={() => void signOut()}>{t("manage.clear")}</button>
-          </p>
+          <div className="management-actions">
+            <button type="button" className="primary" disabled={busy || !canEdit || !isDirty || draftLength > DESCRIPTION_MAX_CODEPOINTS} onClick={() => void saveDescription()}>{t(operation === "save" ? "manage.saving" : "manage.save")}</button>{" "}
+            <button type="button" disabled={busy} onClick={() => void reload()}>{t(operation === "reload" ? "manage.reloading" : "manage.reload")}</button>{" "}
+            <button type="button" className="danger" disabled={busy || !canEdit} onClick={() => void remove()}>{t(operation === "delete" ? "manage.deleting" : "manage.delete")}</button>{" "}
+            <button type="button" disabled={busy || !canEdit} onClick={() => void signOut()}>{t(operation === "clear" ? "manage.clearing" : "manage.clear")}</button>
+          </div>
         </section>
       ) : null}
     </div>

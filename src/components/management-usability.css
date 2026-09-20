@@ -1,0 +1,35 @@
+.management-panel .management-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--ui-border);
+}
+
+.management-panel .management-actions .danger {
+  margin-inline-start: auto;
+}
+
+.management-panel .kv dd {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .management-panel .management-actions {
+    flex-direction: column;
+  }
+
+  .management-panel .management-actions .danger {
+    margin-inline-start: 0;
+  }
+}
+
+.report-disclosure > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.report-disclosure[open] > summary {
+  margin-bottom: 1rem;
+}

@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 
 import Link from "next/link";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
-import { SafeMarkdown, isAbortError, useJsonFetch } from "@/components/ui";
+import { ErrorState, SafeMarkdown, isAbortError, useJsonFetch } from "@/components/ui";
 import { ReportForm } from "@/components/report-form";
 import { asRecord, displayText, statusTone } from "@/components/benchmark-detail-format";
 import { buildSetupGroups, type BenchmarkSetup } from "@/components/benchmark-detail-fields";
@@ -62,7 +62,7 @@ export function canApplyRowsResult(opts: {
 export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.Element {
   const { locale, t } = useI18n();
   const search = useSearchParams().toString();
-  const { data, error } = useJsonFetch<Detail>(`/v1/benchmark-runs/${publicId}`);
+  const { data, error, reload } = useJsonFetch<Detail>(`/v1/benchmark-runs/${publicId}`);
   const [rows, setRows] = useState<unknown[] | null>(null);
   const [rowsCursor, setRowsCursor] = useState<string | null>(null);
   const [rowsTotal, setRowsTotal] = useState<number | null>(null);
@@ -108,6 +108,7 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
     async (cursor: string | null): Promise<void> => {
       if (loadingRef.current) return;
       loadingRef.current = true;
+      const nextPage = cursor ? Math.floor((rows?.length ?? 0) / ROWS_VISIBLE_PAGE_SIZE) : 0;
       const myGeneration = generationRef.current;
       const controller = new AbortController();
       rowsAbortRef.current = controller;
@@ -132,6 +133,7 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
           const next = cursor && prev ? [...prev, ...json.rows] : json.rows;
           return next.slice(0, 10000);
         });
+        setVisiblePage(nextPage);
         setRowsCursor(json.next_cursor);
         setRowsTotal(json.total);
       } catch (err: unknown) {
@@ -152,11 +154,17 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
         if (mountedRef.current) setRowsLoading(false);
       }
     },
-    [publicId],
+    [publicId, rows?.length],
   );
 
-  if (error) return <div className="alert error" role="alert"><p><strong>{t("benchmark.Not available.")}</strong> {error}</p></div>;
-  if (!data) return <p role="status" className="muted">{t("benchmark.Loading benchmark…")}</p>;
+  const backLink = <p className="detail-back"><Link href={localizedPath(locale, `/benchmarks${search ? `?${search}` : ""}`)}>{t("benchmark.← Back to results")}</Link></p>;
+  if (error || !data) return <div className="grid">
+    {backLink}
+    <section className="card">
+      <h1>{t("benchmark.Benchmark result")}</h1>
+      {error ? <><p>{t("benchmark.Not available.")}</p><ErrorState message={error} onRetry={reload} /></> : <p role="status" className="muted">{t("benchmark.Loading benchmark…")}</p>}
+    </section>
+  </div>;
 
   const loadedCount = rows?.length ?? 0;
   const pageCount = getRowsPageCount(loadedCount);
@@ -168,9 +176,7 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
 
   return (
     <div className="grid">
-      <p className="detail-back">
-        <Link href={localizedPath(locale, `/benchmarks${search ? `?${search}` : ""}`)}>{t("benchmark.← Back to results")}</Link>
-      </p>
+      {backLink}
       <section className="card" aria-labelledby="detail-title">
         <h1 id="detail-title">{summary.workload_label} · {summary.model_label}</h1>
         <p>
@@ -188,8 +194,6 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
         </dl>
       </section>
 
-      <SetupSection benchmark={data.benchmark} />
-
       <section className="card" aria-labelledby="desc-title">
         <h2 id="desc-title">{t("benchmark.Description")}</h2>
         {data.description_md ? <SafeMarkdown text={data.description_md} /> : <p className="muted">{t("benchmark.No description provided.")}</p>}
@@ -200,7 +204,7 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
         <p className="muted">
           {t("benchmark.Load the individual measurements to inspect timing, throughput and memory use for each sample. Each page shows up to {limit} samples.", { limit: ROWS_VISIBLE_PAGE_SIZE })}
         </p>
-        {!rows && !rowsLoading ? <button type="button" onClick={() => void loadRows(null)}>{t("benchmark.Load measurements")}</button> : null}
+        {!rows && !rowsLoading && !rowsError ? <button type="button" onClick={() => void loadRows(null)}>{t("benchmark.Load measurements")}</button> : null}
         {rowsLoading ? <p role="status" className="muted">{t("benchmark.Loading measurements…")}</p> : null}
         {rowsError ? (
           <div className="alert error" role="alert">
@@ -229,6 +233,8 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
         ) : null}
       </section>
 
+      <SetupSection benchmark={data.benchmark} />
+
       <ReportForm publicId={publicId} />
     </div>
   );
@@ -246,8 +252,8 @@ function SetupSection({ benchmark }: { benchmark: BenchmarkSetup }): React.JSX.E
       <h2 id="env-title">{t("benchmark.Test setup (as reported)")}</h2>
       <p className="muted">{t("benchmark.These values were sent with the publication and are shown as reported. They are not independently verified.")}</p>
       {groups.map((group) => (
-        <div className="detail-group" key={group.id}>
-          <h3 className="detail-group-title" id={group.id}>{group.title}</h3>
+        <details className="detail-group" key={group.id}>
+          <summary className="detail-group-title" id={group.id}>{group.title}</summary>
           <dl className="kv" aria-labelledby={group.id}>
             {group.fields.map((field) => (
               <Fragment key={field.unit ? `${field.label} (${field.unit})` : field.label}>
@@ -267,7 +273,7 @@ function SetupSection({ benchmark }: { benchmark: BenchmarkSetup }): React.JSX.E
               </Fragment>
             ))}
           </dl>
-        </div>
+        </details>
       ))}
     </section>
   );
