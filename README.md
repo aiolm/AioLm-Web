@@ -1,0 +1,69 @@
+# AioLM Benchmark Website
+
+Anonymous public benchmark publishing website. Next.js App Router + PostgreSQL
+(Supabase-compatible) + Cloudflare Turnstile. No accounts in v1.
+
+- Public: browse/filter benchmark results, detail with environment/summary/safe
+  Markdown descriptions, paged measurement rows, Turnstile-gated verification
+  and reporting.
+- Owners: manage via recovery code (`/manage`): result-scoped 30-minute session,
+  description edits with `expected_revision`, deletion (tombstone).
+- API: the wire contract is the OpenAPI document shipped by
+  `@aiolm/benchmark-contracts` 0.2.0
+  (`node_modules/@aiolm/benchmark-contracts/schema/openapi.json`). Routes:
+  `POST /v1/upload-sessions`, `POST .../verify`, `GET ...`, `POST /v1/benchmark-runs`,
+  `GET /v1/benchmark-runs`, `GET /v1/benchmark-runs/<id>`, `GET .../measurements`,
+  `POST /v1/management-sessions` + `GET`/`DELETE`, `PATCH .../description`,
+  `DELETE ...`, `POST .../reports`. `GET /v1/readiness` is the deployment
+  probe and is not part of the shared contract.
+
+Runs on **Node 22** (`engines.node`, `.nvmrc`, CI, and the Vercel project all
+pin the same major).
+
+## Quick start (synthetic local)
+
+```sh
+cp .env.example .env.local
+# Point DATABASE_URL at an isolated database, then:
+npm install
+npm run db:migrate
+npm run dev
+npm test
+```
+
+Publishing stays disabled until `DATABASE_URL`, `PERMIT_HMAC_SECRET`,
+`MANAGEMENT_HMAC_SECRET`, `QUOTA_HMAC_SECRET`, `TURNSTILE_SECRET_KEY`, and
+`SERVICE_ORIGIN` are set, and in production also `PROVISIONED_BYTES` /
+`PROVISIONED_ROWS`.
+
+```sh
+npm run config:check   # validate a deployment environment; prints no secret values
+```
+
+See `docs/deployment.md` and `docs/operations.md`.
+
+## Contracts
+
+Validation, recovery encoding, and the schema/OpenAPI surface come from
+`@aiolm/benchmark-contracts` 0.2.0, installed from the vendored archive
+`vendor/aiolm-benchmark-contracts-0.2.0.tgz` and integrity-pinned in
+`package-lock.json`. The website re-exports that package rather than keeping a
+second copy of the rules, and never imports app sources at runtime. Details and
+the upgrade procedure in `docs/contracts-integration.md`.
+
+## Moderation
+
+```sh
+npx tsx scripts/moderate.ts reports --limit 50
+npx tsx scripts/moderate.ts hide <submission-id> --reason "..."
+npx tsx scripts/moderate.ts delete <submission-id> --reason "..."
+```
+
+All mutations require `--reason` and are audit-logged. Details in `docs/operations.md`.
+
+## Retention
+
+Scheduled hourly inside the database with pg_cron
+(`sql/operations/retention-pg_cron.sql`), with `npm run prune` as the manual
+path. Both run the same policy; `docs/operations.md` has what each removes, what
+it never touches, and the real upper bound of the 24h cutoffs.

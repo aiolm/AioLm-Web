@@ -1,0 +1,51 @@
+# What is NOT uploaded to a Vercel deployment.
+#
+# Vercel already drops .git, node_modules, .next, .vercel, .env.local and
+# .env.*.local by default (docs: Ignored files and folders). Everything below is
+# this project's own list. For a Git-connected deploy, .gitignore is still the
+# first line - an uncommitted file never reaches the source at all - and this
+# file is what also holds for a `vercel deploy` from a working tree.
+#
+# Nothing listed here is read by `next build` or by a request handler. Checked
+# before excluding:
+#   sql/      applied by the operator through `npm run db:migrate`. Nothing
+#             enumerates the directory at runtime (a serverless bundle is not a
+#             checkout): /v1/readiness compares the ledger against the
+#             REQUIRED_MIGRATIONS list in src/server/repository.ts.
+#   scripts/  operator CLIs (db:migrate, moderate, prune, contracts:check,
+#             config:check). The build command is plain `next build`; no
+#             lifecycle script runs any of them.
+#   tests/    never imported by src/.
+#
+# Kept on purpose, because the build needs them: package.json,
+# package-lock.json, vendor/aiolm-benchmark-contracts-0.2.0.tgz (the `file:`
+# dependency npm installs during the build), src/, next.config.ts,
+# tsconfig.json, eslint.config.mjs (`next build` lints), vercel.json, .nvmrc.
+
+# Environment files. No environment file belongs in a deployment: the runtime
+# values are the Vercel project's own environment variables. .env.example is
+# committed (synthetic placeholders, the documented variable list) but has no
+# reason to ship.
+.env
+.env.*
+
+# Development and CI material
+tests/
+vitest.config.ts
+vitest.integration.config.ts
+.github/
+coverage/
+
+# Operator-only material
+docs/
+scripts/
+sql/
+README.md
+
+# Local build artifacts and caches
+.next/
+out/
+dist/
+*.tsbuildinfo
+.vercel/
+tmp/

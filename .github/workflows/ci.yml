@@ -1,0 +1,96 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Synthetic test credentials are scoped to the steps that need them. The
+# production build never runs under NODE_ENV=test: it gets production semantics
+# and a synthetic HTTPS SERVICE_ORIGIN so fail-closed production checks (HTTPS
+# origin, no localhost links) are exercised exactly as they are in a deploy.
+# No real credentials appear in this file.
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - name: unit tests (test env)
+        run: npm test
+        env:
+          SYNTHETIC_TEST_MODE: "1"
+          NODE_ENV: test
+          SERVICE_ORIGIN: http://localhost:3000
+          PERMIT_HMAC_SECRET: synthetic-permit-secret-for-ci-only
+          MANAGEMENT_HMAC_SECRET: synthetic-mgmt-secret-for-ci-only
+          QUOTA_HMAC_SECRET: synthetic-quota-secret-for-ci-only
+          TEST_FIXTURE_TURNSTILE_TOKEN: test-turnstile-ok
+      - name: contracts artifact + lock integrity
+        run: npm run contracts:check
+      # Exercises scripts/config-check.ts end to end against a complete
+      # production-shaped environment. Every value is generated in this step and
+      # discarded with the runner: nothing here is a credential, and nothing here
+      # reaches a real service (.invalid never resolves).
+      - name: production config validator
+        run: |
+          rand() { openssl rand -base64 32 | tr '+/' '-_' | tr -d '='; }
+          export NODE_ENV=production
+          export SERVICE_ORIGIN=https://ci-build.invalid
+          export TURNSTILE_EXPECTED_HOSTNAME=ci-build.invalid
+          export PERMIT_HMAC_SECRET="$(rand)"
+          export MANAGEMENT_HMAC_SECRET="$(rand)"
+          export QUOTA_HMAC_SECRET="$(rand)"
+          export TURNSTILE_SECRET_KEY="0x$(openssl rand -hex 16)"
+          export NEXT_PUBLIC_TURNSTILE_SITE_KEY="0x$(openssl rand -hex 12)"
+          export DATABASE_URL="postgresql://ci:$(openssl rand -hex 8)@db-pooler.invalid:6543/postgres"
+          export PROVISIONED_BYTES=536870912
+          export PROVISIONED_ROWS=2000000
+          npm run config:check
+      - name: production build (production env)
+        run: npm run build
+        env:
+          NODE_ENV: production
+          SERVICE_ORIGIN: https://ci-build.invalid
+
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: aiolm_web
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/aiolm_web
+      DATABASE_MIGRATION_URL: postgresql://postgres:postgres@localhost:5432/aiolm_web
+      SYNTHETIC_TEST_MODE: "1"
+      NODE_ENV: test
+      SERVICE_ORIGIN: http://localhost:3000
+      PERMIT_HMAC_SECRET: synthetic-permit-secret-for-ci-only
+      MANAGEMENT_HMAC_SECRET: synthetic-mgmt-secret-for-ci-only
+      QUOTA_HMAC_SECRET: synthetic-quota-secret-for-ci-only
+      TEST_FIXTURE_TURNSTILE_TOKEN: test-turnstile-ok
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run db:migrate
+      - run: npm run test:integration
