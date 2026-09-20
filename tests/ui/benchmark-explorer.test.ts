@@ -8,6 +8,9 @@ import {
 } from "@/components/benchmark-browser";
 import {
   EXPLORER_COMPARE_LIMIT,
+  EMPTY_EXPLORER_FILTERS,
+  invalidExplorerRanges,
+  buildExplorerOptionsPath,
   EXPLORER_FILTER_MAX_LENGTH,
   EXPLORER_FILTER_PLACEHOLDERS,
   EXPLORER_HISTORY_LIMIT,
@@ -68,6 +71,7 @@ describe("shareable filter links", () => {
   it("loads filters and the page cursor from the address on arrival", () => {
     const state = explorerStateFromSearch("?model=sha256%3A0000aaaa&workload=synthetic-corpus&cursor=Q3Vyc29yMQ");
     expect(state.applied).toEqual({
+      ...EMPTY_EXPLORER_FILTERS,
       model: "sha256:0000aaaa",
       hardware: "",
       method: "",
@@ -94,25 +98,25 @@ describe("shareable filter links", () => {
   });
 
   it("writes only the parts of the view that are set", () => {
-    expect(buildExplorerSearch({ filters: normalizeExplorerFilters({ model: "", hardware: "", method: "", workload: "" }), cursor: null })).toBe("");
+    expect(buildExplorerSearch({ filters: normalizeExplorerFilters({ ...EMPTY_EXPLORER_FILTERS, model: "", hardware: "", method: "", workload: "" }), cursor: null })).toBe("");
     expect(
-      buildExplorerSearch({ filters: { model: "", hardware: "synthetic-gpu-a", method: "", workload: "" }, cursor: null }),
+      buildExplorerSearch({ filters: { ...EMPTY_EXPLORER_FILTERS, model: "", hardware: "synthetic-gpu-a", method: "", workload: "" }, cursor: null }),
     ).toBe("?hardware=synthetic-gpu-a");
   });
 
   it("ignores unrelated parameters and a hand-edited cursor", () => {
     const location = parseExplorerLocation("?foo=bar&limit=9999&cursor=not%20a%20cursor");
-    expect(location.filters).toEqual({ model: "", hardware: "", method: "", workload: "" });
+    expect(location.filters).toEqual({ ...EMPTY_EXPLORER_FILTERS, model: "", hardware: "", method: "", workload: "" });
     expect(location.cursor).toBeNull();
     expect(sanitizeExplorerCursor("Q3Vyc29yMQ")).toBe("Q3Vyc29yMQ");
-    expect(sanitizeExplorerCursor(`${"a".repeat(513)}`)).toBeNull();
+    expect(sanitizeExplorerCursor(`${"a".repeat(2049)}`)).toBeNull();
     expect(sanitizeExplorerCursor(null)).toBeNull();
   });
 
   it("caps a filter at the length the list API accepts", () => {
     const long = "x".repeat(EXPLORER_FILTER_MAX_LENGTH + 40);
     expect(parseExplorerLocation(`?model=${long}`).filters.model).toHaveLength(EXPLORER_FILTER_MAX_LENGTH);
-    expect(normalizeExplorerFilters({ model: `  ${long}  `, hardware: "", method: "", workload: "" }).model).toHaveLength(
+    expect(normalizeExplorerFilters({ ...EMPTY_EXPLORER_FILTERS, model: `  ${long}  `, hardware: "", method: "", workload: "" }).model).toHaveLength(
       EXPLORER_FILTER_MAX_LENGTH,
     );
   });
@@ -157,7 +161,7 @@ describe("applying, resetting and removing filters", () => {
     let state = explorerStateFromSearch("?model=sha256%3A0000aaaa&hardware=synthetic-gpu-a");
     state = explorerReducer(state, { type: "nextPage", cursor: "Q3Vyc29yMQ" });
     state = explorerReducer(state, { type: "reset" });
-    expect(state.applied).toEqual({ model: "", hardware: "", method: "", workload: "" });
+    expect(state.applied).toEqual({ ...EMPTY_EXPLORER_FILTERS, model: "", hardware: "", method: "", workload: "" });
     expect(state.draft).toEqual(state.applied);
     expect(state.cursor).toBeNull();
     expect(state.history).toEqual([]);
@@ -168,7 +172,7 @@ describe("applying, resetting and removing filters", () => {
     let state = explorerStateFromSearch("?model=sha256%3A0000aaaa&hardware=synthetic-gpu-a");
     state = explorerReducer(state, { type: "nextPage", cursor: "Q3Vyc29yMQ" });
     state = explorerReducer(state, { type: "removeFilter", key: "model" });
-    expect(state.applied).toEqual({ model: "", hardware: "synthetic-gpu-a", method: "", workload: "" });
+    expect(state.applied).toEqual({ ...EMPTY_EXPLORER_FILTERS, model: "", hardware: "synthetic-gpu-a", method: "", workload: "" });
     expect(state.draft.model).toBe("");
     expect(state.cursor).toBeNull();
     expect(state.history).toEqual([]);
@@ -268,7 +272,7 @@ describe("browser back and forward", () => {
     state = explorerReducer(state, { type: "nextPage", cursor: "second_page" });
     state = explorerReducer(state, { type: "draft", key: "model", value: "unapplied-edit" });
     const navigated = explorerReducer(state, { type: "route", search: "" });
-    expect(navigated.applied).toEqual({ model: "", hardware: "", method: "", workload: "" });
+    expect(navigated.applied).toEqual({ ...EMPTY_EXPLORER_FILTERS, model: "", hardware: "", method: "", workload: "" });
     expect(navigated.draft).toEqual(navigated.applied);
     expect(navigated.cursor).toBeNull();
     expect(navigated.history).toEqual([]);
@@ -401,5 +405,36 @@ describe("original browser helper names", () => {
     expect(popBrowserHistory).toBe(popExplorerHistory);
     expect(normalizeBrowserFilters).toBe(normalizeExplorerFilters);
     expect(sameBrowserFilters).toBe(sameExplorerFilters);
+  });
+});
+
+
+describe("discovery filters and sorting", () => {
+  it("round-trips arbitrary text, numeric bounds and sorting and restores them on back", () => {
+    const link = "?q=synthetic+search&vendor=unlisted+vendor&gpu=new+device&os=custom+os&runtime=engine&context_min=0&context_max=8192&gpu_layers_min=-1&sort=context_desc";
+    const original = explorerStateFromSearch(link);
+    expect(buildExplorerRequestPath({ filters: original.applied, cursor: null })).toContain("vendor=unlisted+vendor");
+    expect(parseExplorerLocation(buildExplorerSearch({ filters: original.applied, cursor: null })).filters).toEqual(original.applied);
+    let next = explorerReducer(original, { type: "nextPage", cursor: "page2" });
+    next = explorerReducer(next, { type: "draft", key: "sort", value: "vram_desc" });
+    next = explorerReducer(next, { type: "apply" });
+    expect(next.cursor).toBeNull();
+    expect(next.history).toEqual([]);
+    expect(explorerReducer(next, { type: "location", search: link }).applied).toEqual(original.applied);
+    expect(buildExplorerSearch({ filters: explorerReducer(next, { type: "reset" }).applied, cursor: null })).toBe("");
+  });
+  it.each(["NaN", "Infinity", "1.5", "1e3", "9007199254740992", "-1"])("refuses invalid context bounds %s without changing results", value => {
+    const state = explorerReducer(explorerStateFromSearch("?model=synthetic"), { type: "draft", key: "context_min", value });
+    expect(invalidExplorerRanges(state.draft)).toContain("context");
+    expect(explorerReducer(state, { type: "apply" })).toBe(state);
+  });
+  it("validates paired ranges, accepts zero and the GPU layer sentinel", () => {
+    expect(invalidExplorerRanges({ ...EMPTY_EXPLORER_FILTERS, context_min: "100", context_max: "99" })).toEqual(["context"]);
+    expect(invalidExplorerRanges({ ...EMPTY_EXPLORER_FILTERS, context_min: "0", gpu_layers_min: "-1" })).toEqual([]);
+  });
+  it("suggestions honor other filters and use a separate query without paging or own filter", () => {
+    const filters = { ...EMPTY_EXPLORER_FILTERS, q: "global", vendor: "synthetic vendor", gpu: "typed", sort: "oldest", context_min: "128" };
+    const params = new URLSearchParams(buildExplorerOptionsPath("gpu", "new text", filters).split("?")[1]);
+    expect(Object.fromEntries(params)).toEqual({ q: "global", vendor: "synthetic vendor", context_min: "128", field: "gpu", option_query: "new text" });
   });
 });

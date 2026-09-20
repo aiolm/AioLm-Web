@@ -49,7 +49,7 @@ export function BenchmarkExplorerTable({
   const comparisonFull = compare.length >= EXPLORER_COMPARE_LIMIT;
   return (
     <table className="explorer-table">
-      <caption className="explorer-table-caption">{t("benchmark.Published results, newest first. Each row is one self-reported measurement of one configuration; rows are not ranked against each other.")}</caption>
+      <caption className="explorer-table-caption">{t("benchmark.Published results in your selected order. Each row is a self-reported measurement of one configuration.")}</caption>
       <thead className="explorer-table-head">
         <tr className="explorer-head-row">
           <th scope="col" className="explorer-head-cell explorer-head-compare">{t("benchmark.Compare")}</th>
@@ -92,11 +92,15 @@ export function BenchmarkExplorerTable({
                     {summary.model_label}
                   </Link>
                   <span className="explorer-identity-hardware">{summary.hardware_label}</span>
+                  {summary.setup ? <span className="explorer-result-meta">
+                    {[summary.setup.os, [summary.setup.runtime, summary.setup.runtime_version].filter(Boolean).join(" "), summary.setup.vram_mb == null ? null : t("benchmark.{value} MiB VRAM", { value: summary.setup.vram_mb }), summary.setup.cores == null ? null : t("benchmark.{value} logical cores", { value: summary.setup.cores })].filter(Boolean).join(" · ")}
+                  </span> : null}
                 </span>
               </th>
               <ExplorerCell label={t("benchmark.Method & workload")} className="explorer-cell-setup">
                 <span className="explorer-setup-method">{summary.method_label}</span>
                 <span className="explorer-setup-workload">{summary.workload_label}</span>
+                {summary.setup?.context_size != null ? <span className="explorer-result-meta">{t("benchmark.Context: {value} tokens", { value: summary.setup.context_size })}</span> : null}
               </ExplorerCell>
               <ExplorerCell label={t("benchmark.Samples")} className="explorer-cell-samples">
                 <span className="explorer-sample-count">

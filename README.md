@@ -19,7 +19,9 @@ Product introduction and anonymous public benchmark explorer. Next.js App Router
   `GET /v1/benchmark-runs`, `GET /v1/benchmark-runs/<id>`, `GET .../measurements`,
   `POST /v1/management-sessions` + `GET`/`DELETE`, `PATCH .../description`,
   `DELETE ...`, `POST .../reports`. `GET /v1/readiness` is the deployment
-  probe and is not part of the shared contract.
+  probe and is not part of the shared contract. Website-specific discovery
+  query extensions and `GET /v1/benchmark-runs/options` are documented in
+  [benchmark discovery](docs/benchmark-discovery.md).
 
 Runs on **Node 22** (`engines.node`, `.nvmrc`, CI, and the Vercel project all
 pin the same major).
@@ -34,10 +36,11 @@ APIs remain at `/v1/**`. See [language routing and catalogs](docs/internationali
 
 - `/`: product introduction to the AioLM desktop workspace, with links to the
   GitHub repository, documentation, and benchmark explorer.
-- `/benchmarks`: newest-first results with URL-backed model fingerprint, hardware,
-  measurement method, and workload filters. Select up to three results for a
+- `/benchmarks`: top search with editable suggestions, grouped hardware, OS,
+  runtime, and execution filters, numeric ranges, and selectable sort order.
+  Filters and sorting remain in the URL. Select up to three results for a
   summary comparison; differing methods or workloads carry a comparability notice.
-  Results are self-reported and are not ranked.
+  Sorting self-reported measurements does not make different setups comparable.
 - `/benchmarks/[id]`: grouped model, runtime, hardware, workload, execution, and
   measurement context. Measurement rows load on demand and paginate separately.
 - `/manage`: recovery-code management for an owner's published result.

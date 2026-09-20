@@ -1,3 +1,5 @@
+import type { ListCursor } from "../lib/pagination";
+import type { BenchmarkOptions, OptionField } from "../lib/benchmark-discovery";
 import type { PublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
 import { sha256HexUtf8 } from "../lib/crypto";
 import type { QuotaConfig } from "../lib/env";
@@ -113,7 +115,8 @@ export interface BenchmarkStore {
   deleteRun(submissionId: string): Promise<StoredRun | null>;
   setHidden(submissionId: string, hidden: boolean): Promise<void>;
   /** Public columns only: never benchmark payloads or owner hashes. */
-  listRuns(filters: BenchmarkFilters, limit: number, cursor: { createdAt: string; publicId: string } | null): Promise<ListResult>;
+  listRuns(filters: BenchmarkFilters, limit: number, cursor: ListCursor | null): Promise<ListResult>;
+  listOptions(field: OptionField, query: string, filters: BenchmarkFilters): Promise<BenchmarkOptions>;
   /** Bounded slice: reads only the overlapping 1000-row chunk(s). */
   getRowSlice(submissionId: string, offset: number, limit: number): Promise<{ rows: unknown[]; nextOffset: number | null; total: number }>;
 
@@ -185,6 +188,7 @@ export const REQUIRED_MIGRATIONS: readonly string[] = [
   "005_retention_grants.sql",
   "006_trgm_filter_indexes.sql",
   "007_readiness_grant.sql",
+  "008_benchmark_discovery.sql",
 ];
 
 /**

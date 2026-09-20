@@ -1,3 +1,4 @@
+import { EMPTY_EXPLORER_FILTERS } from "@/components/benchmark-explorer-state";
 import common from "@/i18n/messages/common/en";
 import management from "@/i18n/messages/management/en";
 import { createTranslator } from "@/i18n/translate";
@@ -18,7 +19,8 @@ import { truncateToCodePoints } from "@/components/ui";
 
 describe("browser draft/applied filters", () => {
   it("trims filter text before applying", () => {
-    expect(normalizeBrowserFilters({ model: "  llama  ", hardware: "", method: " x ", workload: "" })).toEqual({
+    expect(normalizeBrowserFilters({ ...EMPTY_EXPLORER_FILTERS, model: "  llama  ", hardware: "", method: " x ", workload: "" })).toEqual({
+      ...EMPTY_EXPLORER_FILTERS,
       model: "llama",
       hardware: "",
       method: "x",
@@ -27,8 +29,8 @@ describe("browser draft/applied filters", () => {
   });
 
   it("detects identical applied filters so paging state can be preserved", () => {
-    expect(sameBrowserFilters({ model: "a", hardware: "", method: "", workload: "" }, { model: "a", hardware: "", method: "", workload: "" })).toBe(true);
-    expect(sameBrowserFilters({ model: "a", hardware: "", method: "", workload: "" }, { model: "b", hardware: "", method: "", workload: "" })).toBe(false);
+    expect(sameBrowserFilters({ ...EMPTY_EXPLORER_FILTERS, model: "a", hardware: "", method: "", workload: "" }, { ...EMPTY_EXPLORER_FILTERS, model: "a", hardware: "", method: "", workload: "" })).toBe(true);
+    expect(sameBrowserFilters({ ...EMPTY_EXPLORER_FILTERS, model: "a", hardware: "", method: "", workload: "" }, { ...EMPTY_EXPLORER_FILTERS, model: "b", hardware: "", method: "", workload: "" })).toBe(false);
   });
 });
 

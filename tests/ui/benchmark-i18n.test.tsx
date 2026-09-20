@@ -21,7 +21,7 @@ import { buildSetupGroups } from "@/components/benchmark-detail-fields";
 import { buildRowColumns } from "@/components/benchmark-detail-rows";
 import { describeGpu, formatByteSize, displayText } from "@/components/benchmark-detail-format";
 import { formatUpdatedDate, formatPublishedDate, formatThroughput, formatDuration } from "@/components/benchmark-explorer-format";
-import { EXPLORER_FILTER_LABELS, EXPLORER_FILTER_PLACEHOLDERS, type ExplorerItem } from "@/components/benchmark-explorer-state";
+import { EXPLORER_FILTER_KEYS, EXPLORER_FILTER_LABELS, EXPLORER_FILTER_PLACEHOLDERS, type ExplorerItem } from "@/components/benchmark-explorer-state";
 import BenchmarksPage, { generateMetadata } from "@/app/[locale]/benchmarks/page";
 import BenchmarkPage, { generateMetadata as detailMetadata } from "@/app/[locale]/benchmarks/[id]/page";
 
@@ -68,7 +68,12 @@ describe.each(locales)("benchmark localization: %s", locale => {
     expect(html).toContain(escape(t("benchmark.Filters")));
     expect(html).toContain(escape(t("benchmark.Remove the {filter} filter", { filter: t("benchmark.Model fingerprint") })));
     expect(html).toContain('value="synthetic-model"');
-    expect(html).toContain('name="model"');
+    for (const key of EXPLORER_FILTER_KEYS) expect(html).toContain('name="' + key + '"');
+    expect(html).toContain('role="combobox"');
+    expect(html).toContain('aria-autocomplete="list"');
+    expect(html).toContain('aria-expanded="false"');
+    expect(html).toContain(escape(t("benchmark.Context (tokens)")));
+    expect(html).toContain(escape(t("benchmark.Context: high to low")));
     expect(html).toContain(escape(t("benchmark.GPU name or vendor")));
     expect(html).not.toContain("benchmark.");
   });
@@ -92,6 +97,20 @@ describe.each(locales)("benchmark localization: %s", locale => {
     expect(html).toContain("partial");
     expect(html).toContain("42.3");
     expect(html).not.toContain("benchmark.");
+  });
+  it("renders reported setup metadata while retaining zero and omitting unknown memory", () => {
+    const summary = { ...item.summary, setup: {
+      os: "synthetic-os", arch: null, cpu: null, cores: 4, vendors: [], gpus: [], vram_mb: null,
+      runtime: "synthetic-runtime", runtime_version: "1.0", backend: null, mode: null,
+      context_size: 0, parallel: null, threads: null, gpu_layers: null, flash_attention: null,
+      cache_type_k: null, cache_type_v: null, split_mode: null,
+    } };
+    const html = wrap(locale, <BenchmarkExplorerTable items={[{ ...item, summary }]} compare={[]} onToggleComparison={() => {}} />);
+    expect(html).toContain("synthetic-os");
+    expect(html).toContain("synthetic-runtime 1.0");
+    expect(html).toContain(escape(t("benchmark.Context: {value} tokens", { value: 0 })));
+    expect(html).toContain(escape(t("benchmark.{value} logical cores", { value: 4 })));
+    expect(html).not.toContain("MiB");
   });
   it("renders detail setup, UTC updates, common reporting UI, and a filtered return link", () => {
     state.data = { ...item, id: item.public_id, benchmark, description_md: "Synthetic user text", updated_at: item.created_at };

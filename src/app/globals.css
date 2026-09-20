@@ -741,7 +741,7 @@ main > .grid {
 
 .explorer-layout {
   display: grid;
-  grid-template-columns: var(--rail-width) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
   gap: 20px;
 }
@@ -1594,4 +1594,48 @@ table.data th { color: var(--ui-muted); font-weight: 650; }
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Discovery controls keep the result table full-width and advanced fields optional. */
+.explorer-search-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(200px, 1fr); gap: 16px; margin-top: 20px; }
+.explorer-search-row input { font-size: 1.05rem; }
+.explorer-quick-filters, .explorer-group-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 16px; align-items: start; }
+.explorer-filter-groups { margin-top: 20px; border-top: 1px solid var(--ui-border); }
+.explorer-filter-group { border-bottom: 1px solid var(--ui-border); padding: 14px 0; }
+.explorer-filter-group summary { cursor: pointer; font-weight: 650; }
+.explorer-filter-group[open] { padding-bottom: 20px; }
+.explorer .explorer-filter-actions { display: flex; flex-wrap: wrap; }
+.explorer-range { min-width: 0; margin: 0; padding: 0; border: 0; }
+.explorer-range legend { font-size: .9rem; font-weight: 650; margin-bottom: 6px; }
+.explorer-range-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.explorer-range-inputs label { font-size: .8rem; color: var(--ui-muted); }
+.explorer-validation { color: var(--ui-danger, #b42318); font-size: .85rem; margin-top: 8px; }
+.explorer-combobox { position: relative; }
+.explorer-combobox-popup { position: absolute; z-index: 25; top: 100%; left: 0; right: 0; margin-top: 4px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); background: var(--ui-surface); box-shadow: var(--ui-elev-1); overflow: hidden; }
+.explorer-options { list-style: none; margin: 0; padding: 4px; max-height: 240px; overflow-y: auto; overscroll-behavior: contain; }
+.explorer-options li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 8px; cursor: pointer; overflow-wrap: anywhere; }
+.explorer-options li:hover, .explorer-options li[aria-selected="true"] { background: var(--ui-input); outline: 1px solid var(--ui-border); }
+.explorer-option-count { color: var(--ui-muted); font-variant-numeric: tabular-nums; }
+.explorer-option-status { margin: 0; padding: 8px 12px; font-size: .8rem; color: var(--ui-muted); }
+.explorer-option-status:empty { display: none; }
+.explorer-result-meta { display: block; color: var(--ui-muted); font-size: .78rem; font-weight: 400; margin-top: 6px; overflow-wrap: anywhere; }
+@media (max-width: 700px) {
+  .explorer-search-row, .explorer-quick-filters, .explorer-group-fields { grid-template-columns: minmax(0, 1fr); }
+  .explorer-filter-set { padding: 16px; }
+  .explorer-filter-actions > button { flex: 1 1 auto; }
+}
+
+.explorer-combobox-control { position: relative; min-width: 0; }
+.explorer-combobox-control input { padding-inline-end: 44px; }
+.explorer-combobox-toggle { position: absolute; inset-block: 1px; inset-inline-end: 1px; width: 42px; padding: 0; display: grid; place-items: center; border: 0; border-radius: var(--ui-radius-md); background: transparent; color: var(--ui-muted); cursor: pointer; }
+.explorer-combobox-toggle:hover { color: var(--ui-ink); background: var(--ui-input); }
+.explorer-combobox-toggle:focus-visible { outline: 2px solid currentColor; outline-offset: -4px; }
+
+@media (max-width: 700px) {
+  main > .benchmark-page { padding-block-start: 18px; }
+  .benchmark-page .page-intro { margin-block-end: 16px; gap: 6px; }
+  .benchmark-page .page-title { font-size: 1.65rem; }
+  .benchmark-page .page-subtitle { margin-block-start: 6px; font-size: .95rem; }
+  .benchmark-page .page-intro-note { font-size: .8rem; }
+  .benchmark-page .explorer-search-row { margin-top: 8px; }
 }

@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import { DiscoveryQueryError, type BenchmarkFilters, type BenchmarkSort } from "./benchmark-discovery";
 /** Keyset pagination helpers. Lists use opaque cursors; rows page in chunks of 1000. */
 
 export const LIST_DEFAULT_LIMIT = 25;
@@ -41,4 +43,36 @@ export function decodeRowsCursor(cursor: string | null): number {
   } catch {
     return 0;
   }
+}
+
+/** Discovery cursors bind all normalized filters and sorting to their position. */
+export interface ListCursor { createdAt: string; publicId: string; value?: number | null }
+export function discoveryBinding(filters: BenchmarkFilters): string {
+  const normalized = Object.entries(filters).filter(([key]) => key !== "sort").sort(([a], [b]) => a.localeCompare(b));
+  return createHash("sha256").update(JSON.stringify([filters.sort ?? "newest", normalized])).digest("hex");
+}
+export function encodeDiscoveryCursor(createdAt: string, publicId: string, filters: BenchmarkFilters, value: number | null): string {
+  return Buffer.from(JSON.stringify({ c: createdAt, p: publicId, v: value, b: discoveryBinding(filters) })).toString("base64url");
+}
+export function decodeDiscoveryCursor(raw: string | null, filters: BenchmarkFilters): ListCursor | null {
+  if (!raw) return null;
+  if (raw.length > 2048) throw new DiscoveryQueryError("Invalid cursor.");
+  const base = decodeCursor(raw);
+  if (!base || !base.publicId || base.publicId.length > 200) throw new DiscoveryQueryError("Invalid cursor.");
+  let parsed: { b?: unknown; v?: unknown };
+  try { parsed = JSON.parse(Buffer.from(raw, "base64url").toString("utf8")); } catch { throw new DiscoveryQueryError("Invalid cursor."); }
+  if (parsed.b === undefined && Object.keys(filters).length === 0) return base;
+  if (parsed.b !== discoveryBinding(filters) || !(parsed.v === null || (typeof parsed.v === "number" && Number.isFinite(parsed.v)))) throw new DiscoveryQueryError("Cursor does not match this query.");
+  return { ...base, value: parsed.v as number | null };
+}
+export function comparePosition(a: ListCursor, b: ListCursor, sort: BenchmarkSort): number {
+  if (sort !== "newest" && sort !== "oldest") {
+    const av = a.value ?? null, bv = b.value ?? null;
+    if (av === null && bv !== null) return 1;
+    if (av !== null && bv === null) return -1;
+    if (av !== null && bv !== null && av !== bv) return (av < bv ? -1 : 1) * (sort.endsWith("desc") ? -1 : 1);
+  }
+  const time = Date.parse(a.createdAt) - Date.parse(b.createdAt);
+  const id = a.publicId < b.publicId ? -1 : a.publicId > b.publicId ? 1 : 0;
+  return (time || id) * (sort === "oldest" ? 1 : -1);
 }

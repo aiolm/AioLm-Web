@@ -1,4 +1,5 @@
-import { encodeCursor } from "../lib/pagination";
+import { encodeDiscoveryCursor, comparePosition, type ListCursor } from "../lib/pagination";
+import { matchesFilters, textValues, sortValue, type BenchmarkOptions, type OptionField } from "../lib/benchmark-discovery";
 import { UPLOAD_PERMIT_TTL_MS, permitExpiryForSession, verifyUploadPermit } from "../lib/permits";
 import { quotaKeyForIp, quotaWindowDay, quotaWindowHour } from "../lib/ip";
 import type { BenchmarkFilters } from "../lib/summary";
@@ -225,26 +226,31 @@ export class InMemoryBenchmarkStore implements BenchmarkStore {
     if (run) this.runs.set(submissionId, { ...run, hidden, updated_at: new Date().toISOString() });
   }
 
-  async listRuns(filters: BenchmarkFilters, limit: number, cursor: { createdAt: string; publicId: string } | null): Promise<ListResult> {
-    const match = (v: string | undefined, target: string) => !v || target.toLowerCase().includes(v.toLowerCase());
-    const visible = [...this.runs.values()]
-      .filter((r) => !r.deleted && !r.hidden)
-      .filter((r) => match(filters.model, r.summary.model_label) && match(filters.hardware, r.summary.hardware_label) && match(filters.method, r.summary.method_label) && match(filters.workload, r.summary.workload_label))
-      .sort((a, b) => (b.created_at.localeCompare(a.created_at) || b.public_id.localeCompare(a.public_id)));
-    const filtered = cursor
-      ? visible.filter((r) => r.created_at < cursor.createdAt || (r.created_at === cursor.createdAt && r.public_id < cursor.publicId))
-      : visible;
-    const page = filtered.slice(0, limit);
-    const hasMore = filtered.length > limit;
-    const shown = hasMore ? page : filtered.slice(0, limit);
-    const last = shown[shown.length - 1];
-    return {
-      items: shown.map((r) => ({
-        public_id: r.public_id, summary: r.summary,
-        description_md: r.description_md, revision: r.revision, created_at: r.created_at, updated_at: r.updated_at,
-      })),
-      next_cursor: hasMore && last ? encodeCursor(last.created_at, last.public_id) : null,
-    };
+  async listRuns(filters: BenchmarkFilters, limit: number, cursor: ListCursor | null): Promise<ListResult> {
+    const sort = filters.sort ?? "newest";
+    const position = (r: StoredRun): ListCursor => ({ createdAt: r.created_at, publicId: r.public_id, value: sortValue(r.summary, sort) });
+    const rows = [...this.runs.values()].filter(r => !r.deleted && !r.hidden && matchesFilters(r.summary, filters))
+      .filter(r => !cursor || comparePosition(position(r), cursor, sort) > 0)
+      .sort((a, b) => comparePosition(position(a), position(b), sort));
+    const page = rows.slice(0, limit), last = page.at(-1);
+    return { items: page.map(r => ({ public_id: r.public_id, summary: r.summary, description_md: r.description_md, revision: r.revision, created_at: r.created_at, updated_at: r.updated_at })),
+      next_cursor: rows.length > limit && last ? encodeDiscoveryCursor(last.created_at, last.public_id, filters, sortValue(last.summary, sort)) : null };
+  }
+
+  async listOptions(field: OptionField, query: string, filters: BenchmarkFilters): Promise<BenchmarkOptions> {
+    const remaining = { ...filters }; delete remaining[field];
+    const counts = new Map<string, number>();
+    for (const r of this.runs.values()) {
+      if (r.deleted || r.hidden || !matchesFilters(r.summary, remaining)) continue;
+      const candidates = field === "gpu" && remaining.vendor
+        ? (r.benchmark.environment?.execution.selected_gpus ?? []).filter(g => g.vendor?.toLowerCase().includes(remaining.vendor!.toLowerCase())).flatMap(g => g.name ? [g.name] : [])
+        : textValues(r.summary, field);
+      for (const value of new Set(candidates)) {
+        if (value && value.toLowerCase().includes(query.toLowerCase())) counts.set(value, (counts.get(value) ?? 0) + 1);
+      }
+    }
+    const options = [...counts].map(([value, count]) => ({ value, count })).sort((a,b) => a.value < b.value ? -1 : a.value > b.value ? 1 : 0);
+    return { options: options.slice(0, 30), has_more: options.length > 30 };
   }
 
   async getRowSlice(submissionId: string, offset: number, limit: number): Promise<{ rows: unknown[]; nextOffset: number | null; total: number }> {

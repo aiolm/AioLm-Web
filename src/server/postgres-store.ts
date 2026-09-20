@@ -1,5 +1,7 @@
 import type postgres from "postgres";
-import { encodeCursor } from "../lib/pagination";
+import { encodeDiscoveryCursor, type ListCursor } from "../lib/pagination";
+import { sortValue, type OptionField, type BenchmarkOptions } from "../lib/benchmark-discovery";
+import { listSql, optionsSql } from "./benchmark-discovery-sql";
 import { permitExpiryForSession, verifyUploadPermit } from "../lib/permits";import { quotaKeyForIp, quotaWindowDay, quotaWindowHour } from "../lib/ip";
 import type { BenchmarkFilters } from "../lib/summary";
 import { getDb } from "./db";
@@ -252,31 +254,17 @@ export class PostgresBenchmarkStore implements BenchmarkStore {
     await this.sql`update bench.benchmark_runs set hidden = ${hidden}, updated_at = now() where submission_id = ${submissionId}`;
   }
 
-  async listRuns(filters: BenchmarkFilters, limit: number, cursor: { createdAt: string; publicId: string } | null): Promise<ListResult> {
-    const model = filters.model ? `%${filters.model}%` : null;
-    const hardware = filters.hardware ? `%${filters.hardware}%` : null;
-    const method = filters.method ? `%${filters.method}%` : null;
-    const workload = filters.workload ? `%${filters.workload}%` : null;
-    const rows = await this.sql<PublicListItem[]>`
-      select public_id, summary, description_md, revision,
-        created_at::text as created_at, updated_at::text as updated_at
-      from bench.benchmark_runs
-      where deleted = false and hidden = false
-        and (${model}::text is null or summary->>'model_label' ilike ${model})
-        and (${hardware}::text is null or summary->>'hardware_label' ilike ${hardware})
-        and (${method}::text is null or summary->>'method_label' ilike ${method})
-        and (${workload}::text is null or summary->>'workload_label' ilike ${workload})
-        and (${cursor?.createdAt ?? null}::timestamptz is null
-          or (created_at, public_id) < (${cursor?.createdAt ?? null}::timestamptz, ${cursor?.publicId ?? null}))
-      order by created_at desc, public_id desc
-      limit ${limit + 1}`;
-    const hasMore = rows.length > limit;
-    const page = hasMore ? rows.slice(0, limit) : rows;
-    const last = page[page.length - 1];
-    return {
-      items: page,
-      next_cursor: hasMore && last ? encodeCursor(last.created_at, last.public_id) : null,
-    };
+  async listRuns(filters: BenchmarkFilters, limit: number, cursor: ListCursor | null): Promise<ListResult> {
+    const statement = listSql(filters, limit, cursor);
+    const rows = await this.sql.unsafe<PublicListItem[]>(statement.query, statement.values);
+    const page = rows.slice(0, limit), last = page.at(-1);
+    return { items: page, next_cursor: rows.length > limit && last ? encodeDiscoveryCursor(last.created_at, last.public_id, filters, sortValue(last.summary, filters.sort ?? "newest")) : null };
+  }
+
+  async listOptions(field: OptionField, query: string, filters: BenchmarkFilters): Promise<BenchmarkOptions> {
+    const statement = optionsSql(field, query, filters);
+    const options = await this.sql.unsafe<Array<{ value: string; count: number }>>(statement.query, statement.values);
+    return { options: options.slice(0, 30), has_more: options.length > 30 };
   }
 
   async getRowSlice(submissionId: string, offset: number, limit: number): Promise<{ rows: unknown[]; nextOffset: number | null; total: number }> {

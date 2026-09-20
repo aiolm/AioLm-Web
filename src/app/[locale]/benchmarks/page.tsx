@@ -20,11 +20,11 @@ export default async function BenchmarksPage({ params }: Props): Promise<React.J
   const messages = await getMessages(locale, "benchmark");
   const t = createTranslator(messages);
   return <I18nProvider locale={locale} messages={messages}>
-    <div className="site-shell page">
+    <div className="site-shell page benchmark-page">
       <div className="page-intro">
         <div className="page-intro-copy">
           <h1 className="page-title">{t("benchmark.Benchmark explorer")}</h1>
-          <p className="page-subtitle">{t("benchmark.Explore community results with their hardware, workload and measurement method.")}</p>
+          <p className="page-subtitle">{t("benchmark.Find results by model, hardware and setup.")}</p>
         </div>
         <p className="page-intro-note">{t("benchmark.Self-reported results")}</p>
       </div>

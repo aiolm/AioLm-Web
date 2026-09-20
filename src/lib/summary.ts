@@ -1,10 +1,13 @@
+import { normalizeSetup, selectedExecutionGpus, type BenchmarkSetup } from "./benchmark-discovery";
+export { parseFilters, type BenchmarkFilters } from "./benchmark-discovery";
 import type { PublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
 
 /**
- * Summary and filter columns computed once at acceptance. Public list filters
- * are model/hardware/method/workload; no combined leaderboard is presented.
+ * Public summary and execution metadata computed once at acceptance.
+ * Measurement rows remain in separately paged storage.
  */
 export interface BenchmarkSummary {
+  setup?: BenchmarkSetup;
   model_label: string;
   hardware_label: string;
   method_label: string;
@@ -30,12 +33,13 @@ export function summarizeBenchmark(benchmark: PublicBenchmarkSubmission): Benchm
     benchmark.model.status === "sha256" && benchmark.model.sha256
       ? `sha256:${benchmark.model.sha256.slice(0, 12)}`
       : benchmark.model.status;
-  const gpus = benchmark.environment?.execution.selected_gpus ?? benchmark.environment?.installed_gpus ?? [];
+  const gpus = selectedExecutionGpus(benchmark);
   const hardwareLabel =
     gpus.length > 0
       ? gpus.map((g) => g.name ?? g.vendor ?? "gpu").join(" + ")
       : (benchmark.environment?.execution.mode ?? "unknown");
   return {
+    setup: normalizeSetup(benchmark),
     model_label: modelLabel,
     hardware_label: hardwareLabel,
     method_label: benchmark.method ? `${benchmark.method.id}@${benchmark.method.version}` : "unknown",
@@ -47,21 +51,4 @@ export function summarizeBenchmark(benchmark: PublicBenchmarkSubmission): Benchm
     mean_tg_tps: mean(tg),
     mean_e2e_ms: mean(e2e),
   };
-}
-
-/** Filter values for list queries: model/hardware/method/workload substring match. */
-export interface BenchmarkFilters {
-  model?: string;
-  hardware?: string;
-  method?: string;
-  workload?: string;
-}
-
-export function parseFilters(search: URLSearchParams): BenchmarkFilters {
-  const out: BenchmarkFilters = {};
-  for (const key of ["model", "hardware", "method", "workload"] as const) {
-    const v = search.get(key)?.trim();
-    if (v) out[key] = v.slice(0, 120);
-  }
-  return out;
 }

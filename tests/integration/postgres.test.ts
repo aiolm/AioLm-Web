@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import postgres from "postgres";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { randomBase64Url32, sha256HexUtf8 } from "@/lib/crypto";
 import { syntheticSubmission } from "@/lib/fixtures";
 import { summarizeBenchmark } from "@/lib/summary";
@@ -15,7 +15,7 @@ import { __setTestStore } from "@/server/store";
 import { POST as createUploadSession } from "@/app/v1/upload-sessions/route";
 import { POST as verifyUploadSession } from "@/app/v1/upload-sessions/[id]/verify/route";
 import { GET as pollUploadSession } from "@/app/v1/upload-sessions/[id]/route";
-import { POST as submitBenchmarkRun } from "@/app/v1/benchmark-runs/route";
+import { GET as listBenchmarkRuns, POST as submitBenchmarkRun } from "@/app/v1/benchmark-runs/route";
 
 /**
  * Live-Postgres integration on an isolated database. The connection comes from
@@ -179,6 +179,275 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     }).permit;
   }
 
+  describe("benchmark discovery against PostgreSQL", () => {
+    type Summary = ReturnType<typeof summarizeBenchmark>;
+    type Page = { items: Array<{ public_id: string; summary: Summary }>; next_cursor: string | null };
+    let runtimeDb: postgres.Sql;
+    const setup = {
+      os: "TestOS", arch: "x64", cpu: "Test CPU", cores: 8,
+      vendors: ["Vendor A"], gpus: ["GPU A"], vram_mb: 8192,
+      runtime: "test-runtime", runtime_version: "1", backend: "test-backend", mode: "selected",
+      context_size: 4096, parallel: 2, threads: 4, gpu_layers: -1,
+      flash_attention: "on", cache_type_k: "f16", cache_type_v: "q8", split_mode: "layer",
+    };
+
+    async function seed(id: string, group: string, overrides: Record<string, unknown> = {},
+      flags: { hidden?: boolean; deleted?: boolean; created?: string } = {}): Promise<void> {
+      if (!db) throw new Error("integration database unavailable");
+      const summary = { ...summarizeBenchmark(syntheticSubmission()), model_label: group,
+        setup: { ...setup }, ...overrides };
+      const benchmark = syntheticSubmission();
+      benchmark.environment!.execution = {
+        mode: "selected", selection_complete: true,
+        selected_gpus: summary.setup.gpus.map((name, index) => ({ name,
+          vendor: summary.setup.vendors[index] ?? summary.setup.vendors[0] ?? null,
+          vram_mb: null, driver: null, integrated: false,
+        })),
+      };
+      await db`insert into bench.benchmark_runs
+        (submission_id, public_id, owner_hash, body_sha256, benchmark, summary, hidden, deleted, created_at)
+        values (${randomUUID()}, ${id}, ${"0".repeat(64)}, ${"1".repeat(64)},
+          ${db.json(JSON.parse(JSON.stringify(benchmark)) as postgres.JSONValue)}, ${db.json(summary)}, ${flags.hidden ?? false},
+          ${flags.deleted ?? false}, ${flags.created ?? "2026-01-01T00:00:00.000Z"})`;
+    }
+
+    async function request(query: Record<string, string>, options = false): Promise<Response> {
+      const url = `http://localhost:3000/v1/benchmark-runs${options ? "/options" : ""}?${new URLSearchParams(query)}`;
+      if (options) {
+        const { GET } = await import("@/app/v1/benchmark-runs/options/route");
+        return GET(new Request(url));
+      }
+      return listBenchmarkRuns(new Request(url));
+    }
+
+    async function page(query: Record<string, string>): Promise<Page> {
+      const response = await request(query);
+      expect(response.status).toBe(200);
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      return await response.json() as Page;
+    }
+
+    async function options(query: Record<string, string>) {
+      const response = await request(query, true);
+      expect(response.status).toBe(200);
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      return await response.json() as { options: Array<{ value: string; count: number }>; has_more: boolean };
+    }
+
+    beforeAll(async () => {
+      runtimeDb = postgres(runtimeUrl, { max: 1, prepare: false, ssl: false });
+      await seed("discovery-range-hit", "discovery-range");
+      await seed("discovery-range-low", "discovery-range", { setup: { ...setup,
+        context_size: 1024, vram_mb: 1024, cores: 2, parallel: 1, threads: 1, gpu_layers: 0 } });
+      await seed("discovery-range-high", "discovery-range", { setup: { ...setup,
+        context_size: 8192, vram_mb: 16384, cores: 16, parallel: 8, threads: 16, gpu_layers: 32 } });
+      await seed("discovery-range-unknown", "discovery-range", { setup: { ...setup,
+        context_size: null, vram_mb: null, cores: null, parallel: null, threads: null, gpu_layers: null } });
+      await seed("discovery-vendor-pair", "discovery-vendor-pair", { setup: { ...setup,
+        vendors: ["Vendor A", "Vendor B"], gpus: ["Mixed GPU A", "Mixed GPU B"] } });
+      for (let i = 0; i < 35; i++) {
+        await seed(`discovery-option-${i}`, "discovery-options", { setup: { ...setup,
+          gpus: [`Option ${String(i).padStart(2, "0")}`], vendors: [i === 34 ? "Vendor B" : "Vendor A"] } });
+      }
+      await seed("discovery-option-repeat", "discovery-options", { setup: { ...setup, gpus: ["Option 00", "Option 00"] } });
+      await seed("discovery-option-hidden", "discovery-options", { setup: { ...setup, gpus: ["Hidden GPU"] } }, { hidden: true });
+      await seed("discovery-option-deleted", "discovery-options", { setup: { ...setup, gpus: ["Deleted GPU"] } }, { deleted: true });
+      for (const [id, value, created] of [
+        ["a", 10, "2026-01-01"], ["b", 10, "2026-01-01"],
+        ["c", 10, "2026-01-02"], ["d", 20, "2026-01-01"], ["e", null, "2026-01-03"],
+        ["f", null, "2026-01-03"],
+      ] as const) {
+        await seed(`discovery-sort-${id}`, "discovery-sort", {
+          setup: { ...setup, context_size: value, vram_mb: value }, mean_tg_tps: value, mean_e2e_ms: value,
+        }, { created: `${created}T00:00:00.000Z` });
+      }
+      for (const [id, label] of [["percent", "100%"], ["underscore", "a_b"], ["slash", "a\\b"],
+        ["quote", "x' OR true --"], ["decoy", "1000 axb"]]) {
+        await seed(`discovery-literal-${id}`, "discovery-literal", { setup: { ...setup, cpu: label } });
+      }
+    });
+    beforeEach(() => __setTestStore(new PostgresBenchmarkStore(runtimeDb)));
+    afterEach(() => __setTestStore(null));
+    afterAll(async () => { if (runtimeDb) await runtimeDb.end({ timeout: 5 }); });
+
+    it.each([
+      ["context", "4096"], ["vram", "8192"], ["cores", "8"],
+      ["parallel", "2"], ["threads", "4"], ["gpu_layers", "-1"],
+    ])("applies inclusive %s ranges and excludes unknown values", async (field, value) => {
+      const result = await page({ model: "discovery-range", [`${field}_min`]: value, [`${field}_max`]: value });
+      expect(result.items.map((item) => item.public_id)).toEqual(["discovery-range-hit"]);
+      const lower = await page({ model: "discovery-range", [`${field}_min`]: value });
+      const upper = await page({ model: "discovery-range", [`${field}_max`]: value });
+      expect(lower.items.map((item) => item.public_id)).not.toContain("discovery-range-unknown");
+      expect(upper.items.map((item) => item.public_id)).not.toContain("discovery-range-unknown");
+      expect(lower.items.map((item) => item.public_id)).toContain("discovery-range-high");
+      expect(upper.items.map((item) => item.public_id)).not.toContain("discovery-range-high");
+    });
+
+    it.each(["NaN", "Infinity", "1.5", "9007199254740992", "-2"])("rejects invalid numeric filter %s", async (value) => {
+      expect((await request({ context_min: value })).status).toBe(400);
+      expect((await request({ field: "gpu", context_min: value }, true)).status).toBe(400);
+    });
+
+    it("rejects inverted ranges and unsupported option fields", async () => {
+      expect((await request({ threads_min: "8", threads_max: "2" })).status).toBe(400);
+      expect((await request({ field: "owner_hash" }, true)).status).toBe(400);
+    });
+
+    it("searches options beyond the first page, excludes its own field, and counts visible runs", async () => {
+      expect((await page({ model: "discovery-options", limit: "1" })).items).toHaveLength(1);
+      const first = await options({ field: "gpu", model: "discovery-options", gpu: "not present" });
+      expect(first.options).toHaveLength(30);
+      expect(first.has_more).toBe(true);
+      expect(first.options.find((item) => item.value === "Option 00")?.count).toBe(2);
+      expect(first.options.some((item) => /Hidden|Deleted/.test(item.value))).toBe(false);
+      expect(await options({ field: "gpu", model: "discovery-options", option_query: "34" }))
+        .toEqual({ options: [{ value: "Option 34", count: 1 }], has_more: false });
+      expect((await options({ field: "gpu", model: "discovery-options", vendor: "Vendor B", gpu: "Option 00" })).options)
+        .toEqual([{ value: "Option 34", count: 1 }]);
+      expect((await options({ field: "gpu", model: "discovery-options", q: "no matching run" })).options).toEqual([]);
+    });
+
+    it("narrows GPU suggestions to matching devices in a mixed-vendor run", async () => {
+      expect((await options({ field: "gpu", model: "discovery-vendor-pair", vendor: "vendor b" })).options)
+        .toEqual([{ value: "Mixed GPU B", count: 1 }]);
+      expect((await options({ field: "gpu", model: "discovery-vendor-pair", vendor: "vendor a" })).options)
+        .toEqual([{ value: "Mixed GPU A", count: 1 }]);
+    });
+
+    it.each([["percent", "%"], ["underscore", "a_b"], ["slash", "\\"], ["quote", "' OR true --"]])(
+      "treats %s as literal text in filters and option search", async (id, text) => {
+        expect((await page({ model: "discovery-literal", cpu: text })).items.map((item) => item.public_id))
+          .toEqual([`discovery-literal-${id}`]);
+        expect((await page({ model: "discovery-literal", q: text })).items.map((item) => item.public_id))
+          .toEqual([`discovery-literal-${id}`]);
+        expect((await options({ field: "cpu", model: "discovery-literal", option_query: text })).options).toHaveLength(1);
+      });
+
+    it.each([
+      ["newest", "fecdba"], ["oldest", "abdcef"],
+      ["context_asc", "cbadfe"], ["context_desc", "dcbafe"],
+      ["vram_asc", "cbadfe"], ["vram_desc", "dcbafe"],
+      ["throughput_desc", "dcbafe"], ["duration_asc", "cbadfe"],
+    ])("pages %s across value, timestamp, ID and null ties without gaps", async (sort, order) => {
+      const ids: string[] = [];
+      let cursor: string | null = null;
+      for (let i = 0; i < 8; i++) {
+        const result = await page({ model: "discovery-sort", sort, limit: "1", ...(cursor ? { cursor } : {}) });
+        ids.push(...result.items.map((item) => item.public_id));
+        cursor = result.next_cursor;
+        if (!cursor) break;
+      }
+      expect(cursor).toBeNull();
+      expect(ids).toEqual([...order].map((id) => `discovery-sort-${id}`));
+      expect(new Set(ids).size).toBe(6);
+    });
+
+    it("persists selected GPU totals without inventing unknown or installed-device specs", async () => {
+      if (!store) throw new Error("integration database unavailable");
+      const base = syntheticSubmission();
+      const gpu = { name: "Measured GPU", vendor: "Measured Vendor", vram_mb: 4096, driver: null, integrated: false };
+      const environment = { ...base.environment!, installed_gpus: [
+        { name: "Installed Only", vendor: "Installed Vendor", vram_mb: 65536, driver: null, integrated: false },
+      ], execution: { mode: "selected" as const, selected_gpus: [gpu, gpu], selection_complete: true } };
+      const cases: Array<[string, typeof base.environment]> = [
+        ["multi", environment],
+        ["missing", { ...environment, execution: { ...environment.execution,
+          selected_gpus: [gpu, { ...gpu, name: "Unknown Memory", vram_mb: null }] } }],
+        ["incomplete", { ...environment, execution: { ...environment.execution, selection_complete: false } }],
+        ["cpu", { ...environment, execution: { mode: "cpu" as const, selected_gpus: [], selection_complete: true } }],
+        ["absent", null],
+      ];
+      for (const [label, env] of cases) {
+        const submissionId = randomUUID(), ownerSecret = randomBase64Url32();
+        const benchmark = syntheticSubmission({ submission_id: submissionId, environment: env,
+          runtime: { ...base.runtime, backend: "discovery-devices" } });
+        const body = JSON.stringify({ benchmark, description_md: "integration" });
+        const hash = sha256HexUtf8(body);
+        const permit = await verifiedSession(submissionId, ownerSecret, hash);
+        const args = acceptArgs(submissionId, ownerSecret, permit, GENEROUS_QUOTA);
+        expect((await store.acceptRunAtomic({ ...args, public_id: `discovery-device-${label}`,
+          body_sha256: hash, benchmarkMeta: { ...benchmark, measurements: { ...benchmark.measurements, rows: [] } },
+          summary: summarizeBenchmark(benchmark), rows: benchmark.measurements.rows,
+          byte_size: Buffer.byteLength(body),
+        })).outcome).toBe("created");
+      }
+      const all = await page({ backend: "discovery-devices" });
+      expect(all.items).toHaveLength(5);
+      const byId = new Map(all.items.map((item) => [item.public_id, item.summary.setup]));
+      expect(byId.get("discovery-device-multi")).toMatchObject({
+        vram_mb: 8192, vendors: ["Measured Vendor"], gpus: ["Measured GPU"],
+      });
+      for (const label of ["missing", "incomplete", "cpu", "absent"]) {
+        expect(byId.get(`discovery-device-${label}`)?.vram_mb).toBeNull();
+      }
+      expect(byId.get("discovery-device-absent")).toMatchObject({ cpu: null, cores: null, os: null,
+        vendors: [], gpus: [], backend: "discovery-devices", context_size: 2048, parallel: 1 });
+      expect((await page({ backend: "discovery-devices", vram_min: "0" })).items.map((item) => item.public_id))
+        .toEqual(["discovery-device-multi"]);
+      expect((await page({ backend: "discovery-devices", gpu: "Installed Only" })).items).toEqual([]);
+      expect((await options({ field: "vendor", backend: "discovery-devices" })).options)
+        .toEqual([{ value: "Measured Vendor", count: 3 }]);
+      expect((await options({ field: "gpu", backend: "discovery-devices", option_query: "Installed" })).options).toEqual([]);
+      for (const item of all.items) {
+        expect(item).not.toHaveProperty("benchmark");
+        expect(item).not.toHaveProperty("owner_hash");
+        expect(item).not.toHaveProperty("submission_id");
+      }
+    });
+
+    it("rejects cursors reused with a different sort or filter", async () => {
+      const first = await page({ model: "discovery-sort", sort: "context_asc", limit: "1" });
+      expect(first.next_cursor).toBeTruthy();
+      for (const changed of ([{ sort: "context_desc", model: "discovery-sort" },
+        { sort: "context_asc", model: "discovery-range" },
+        { sort: "context_asc", model: "discovery-sort", cores_min: "2" }] as Array<Record<string, string>>)) {
+        expect((await request({ ...changed, cursor: first.next_cursor! })).status).toBe(400);
+      }
+    });
+  });
+
+  it("backfills existing selected-device summaries with fractional MiB and missing environments", async () => {
+    if (!admin) throw new Error("integration database unavailable");
+    const scratchName = `aiolm_web_backfill_${randomUUID().replace(/-/g, "")}`;
+    await admin.unsafe(`CREATE DATABASE "${scratchName}"`);
+    const scratchUrl = new URL(ADMIN_URL!);
+    scratchUrl.pathname = `/${scratchName}`;
+    const scratch = postgres(scratchUrl.toString(), { max: 1, prepare: false, ssl: false });
+    try {
+      await scratch`create schema bench`;
+      await scratch`create table bench.schema_migrations (filename text primary key, sha256 text not null)`;
+      for (const name of REQUIRED_MIGRATIONS.filter((name) => name < "008_benchmark_discovery.sql")) {
+        await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", name), "utf8"));
+      }
+      const base = syntheticSubmission();
+      const gpu = { name: "Fractional GPU", vendor: "Test Vendor", vram_mb: 4096.5, driver: null, integrated: false };
+      const benchmarks = [
+        syntheticSubmission({ environment: { ...base.environment!, execution: {
+          mode: "selected", selected_gpus: [gpu, gpu], selection_complete: true,
+        } } }),
+        syntheticSubmission({ environment: null }),
+      ];
+      for (const [index, benchmark] of benchmarks.entries()) {
+        const { setup: omittedSetup, ...legacy } = summarizeBenchmark(benchmark);
+        void omittedSetup;
+        await scratch`insert into bench.benchmark_runs
+          (submission_id, public_id, owner_hash, body_sha256, benchmark, summary)
+          values (${randomUUID()}, ${`legacy-${index}`}, ${"0".repeat(64)}, ${"1".repeat(64)},
+            ${scratch.json(JSON.parse(JSON.stringify(benchmark)) as postgres.JSONValue)}, ${scratch.json(legacy)})`;
+      }
+      await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", "008_benchmark_discovery.sql"), "utf8"));
+      const rows = await scratch<Array<{ summary: ReturnType<typeof summarizeBenchmark> }>>`
+        select summary from bench.benchmark_runs order by public_id`;
+      expect(rows.map((row) => row.summary.setup)).toEqual(benchmarks.map((benchmark) => summarizeBenchmark(benchmark).setup));
+      expect(rows[0]!.summary.setup?.vram_mb).toBe(8193);
+      expect(rows[1]!.summary.setup?.vram_mb).toBeNull();
+    } finally {
+      await scratch.end({ timeout: 5 });
+      await admin.unsafe(`DROP DATABASE "${scratchName}"`);
+    }
+  });
+
   it("applies migrations exactly once", async () => {
     if (!db) return;
     expect(await applyMigrations(db)).toEqual([]);
@@ -186,7 +455,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     expect(rows.map((r) => r.filename)).toEqual([
       "001_init.sql", "002_roles.sql", "003_least_privilege.sql",
       "004_filter_indexes.sql", "005_retention_grants.sql", "006_trgm_filter_indexes.sql",
-      "007_readiness_grant.sql",
+      "007_readiness_grant.sql", "008_benchmark_discovery.sql",
     ]);
   });
 
@@ -216,7 +485,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
         where deleted = false and hidden = false
         order by created_at desc, public_id desc limit 25`;
     });
-    expect(JSON.stringify(plan)).toMatch(/benchmark_runs_created_idx/);
+    expect(JSON.stringify(plan)).toMatch(/benchmark_runs_created_idx|benchmark_discovery_newest/);
   });
 
   it("serializes concurrent acceptance to one receipt", async () => {

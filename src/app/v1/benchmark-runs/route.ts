@@ -1,9 +1,10 @@
+import { DiscoveryQueryError } from "@/lib/benchmark-discovery";
 import { parsePublicationSnapshot, utf8ByteLength } from "@aiolm/benchmark-contracts";
 import { randomPublicId, sha256Hex } from "@/lib/crypto";
 import { capacityConfigFromEnv, getServiceOrigin, quotaConfigFromEnv } from "@/lib/env";
 import { rateLimited, serviceError, unavailable } from "@/lib/errors";
 import { getClientIp } from "@/lib/ip";
-import { clampListLimit, decodeCursor } from "@/lib/pagination";
+import { clampListLimit, decodeDiscoveryCursor } from "@/lib/pagination";
 import { ownerHashFor, parseOwnerBearer } from "@/lib/permits";
 import { BoundedBodyError, PUBLICATION_MAX_BYTES, readBoundedBytes, decodeUtf8Fatal } from "@/lib/request";
 import { parseFilters, summarizeBenchmark } from "@/lib/summary";
@@ -140,20 +141,19 @@ function usageHint(byteSize: number, rowCount: number): string {
 
 /**
  * GET /v1/benchmark-runs returns {items,next_cursor} with keyset pagination
- * (default 25, max 100) and model/hardware/method/workload filters.
+ * (default 25, max 100), validated discovery filters and stable sort choices.
  * Items carry public fields only: no submission ids, no owner info.
  */
 export async function GET(request: Request): Promise<Response> {
-  const url = new URL(request.url);
-  const limit = clampListLimit(url.searchParams.get("limit"));
-  const cursor = decodeCursor(url.searchParams.get("cursor"));
-  const filters = parseFilters(url.searchParams);
   try {
-    // getStore() itself throws when DATABASE_URL is absent, so it belongs
-    // inside the boundary too.
+    const url = new URL(request.url);
+    const limit = clampListLimit(url.searchParams.get("limit"));
+    const filters = parseFilters(url.searchParams);
+    const cursor = decodeDiscoveryCursor(url.searchParams.get("cursor"), filters);
     const result = await getStore().listRuns(filters, limit, cursor);
     return Response.json(result, { headers: { "cache-control": "no-store" } });
-  } catch {
+  } catch (error) {
+    if (error instanceof DiscoveryQueryError) return serviceError(400, "invalid_request", error.message);
     return unavailable("Service unavailable.");
   }
 }

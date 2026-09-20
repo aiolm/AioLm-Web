@@ -6,33 +6,41 @@
  * resets and comparison bounds are verified directly instead of through a DOM.
  */
 
-export const EXPLORER_FILTER_KEYS = ["model", "hardware", "method", "workload"] as const;
+import type { BenchmarkSetup } from "@/lib/benchmark-discovery";
 
+export const EXPLORER_TEXT_KEYS = ["q", "model", "hardware", "vendor", "gpu", "cpu", "os", "arch", "runtime", "backend", "mode", "method", "workload", "flash_attention", "cache_type_k", "cache_type_v", "split_mode"] as const;
+export const EXPLORER_RANGES = ["context", "vram", "cores", "parallel", "threads", "gpu_layers"] as const;
+export const EXPLORER_NUMERIC_KEYS = ["context_min", "context_max", "vram_min", "vram_max", "cores_min", "cores_max", "parallel_min", "parallel_max", "threads_min", "threads_max", "gpu_layers_min", "gpu_layers_max"] as const;
+export const EXPLORER_SORTS = { newest: "Newest first", oldest: "Oldest first", context_asc: "Context: low to high", context_desc: "Context: high to low", vram_asc: "VRAM: low to high", vram_desc: "VRAM: high to low", throughput_desc: "Generation: fastest first", duration_asc: "Duration: shortest first" } as const;
+export const EXPLORER_FILTER_KEYS = [...EXPLORER_TEXT_KEYS, ...EXPLORER_NUMERIC_KEYS, "sort"] as const;
 export type ExplorerFilterKey = (typeof EXPLORER_FILTER_KEYS)[number];
-
 export type ExplorerFilters = Record<ExplorerFilterKey, string>;
-
-/** Field names shown in the filter form and the active-filter chips. */
+export const EXPLORER_RANGE_LABELS = { context: "Context (tokens)", vram: "Selected GPU VRAM (MiB)", cores: "Logical cores", parallel: "Parallel sequences", threads: "Threads", gpu_layers: "GPU layers (-1 = all)" } as const;
 export const EXPLORER_FILTER_LABELS: Record<ExplorerFilterKey, string> = {
-  model: "Model fingerprint",
-  hardware: "Hardware",
-  method: "Measurement method",
-  workload: "Workload",
+  q: "Search", model: "Model fingerprint", hardware: "Hardware", vendor: "GPU vendor", gpu: "GPU model", cpu: "CPU", os: "Operating system", arch: "Architecture", runtime: "Runtime", backend: "Backend", mode: "Execution mode", method: "Measurement method", workload: "Workload", flash_attention: "Flash attention", cache_type_k: "Key cache type", cache_type_v: "Value cache type", split_mode: "Split mode", sort: "Sort",
+  context_min: "Minimum context", context_max: "Maximum context", vram_min: "Minimum VRAM", vram_max: "Maximum VRAM", cores_min: "Minimum cores", cores_max: "Maximum cores", parallel_min: "Minimum parallel sequences", parallel_max: "Maximum parallel sequences", threads_min: "Minimum threads", threads_max: "Maximum threads", gpu_layers_min: "Minimum GPU layers", gpu_layers_max: "Maximum GPU layers",
 };
+export const EXPLORER_FILTER_PLACEHOLDERS = { model: "sha256: or unidentified", hardware: "GPU name or vendor", method: "cold-prompt-serving@1", workload: "code_python, novel_en" };
 
-/**
- * Placeholders describe the shape of a published label instead of naming a model
- * or a product: a fingerprint prefix, the method id this app records, and corpus
- * names from the workload contract.
- */
-export const EXPLORER_FILTER_PLACEHOLDERS: Record<ExplorerFilterKey, string> = {
-  model: "sha256: or unidentified",
-  hardware: "GPU name or vendor",
-  method: "cold-prompt-serving@1",
-  workload: "code_python, novel_en",
-};
+export function invalidExplorerRanges(filters: ExplorerFilters): string[] {
+  return EXPLORER_RANGES.filter(range => {
+    const low = filters[`${range}_min`].trim();
+    const high = filters[`${range}_max`].trim();
+    const invalid = (value: string) => value !== "" && (!/^-?\d+$/.test(value) || !Number.isSafeInteger(Number(value)) || Number(value) < (range === "gpu_layers" ? -1 : 0));
+    return invalid(low) || invalid(high) || (low !== "" && high !== "" && Number(low) > Number(high));
+  });
+}
 
-/** The list API truncates every filter to 120 characters; match it so the address and the request agree. */
+export function buildExplorerOptionsPath(field: string, value: string, filters: ExplorerFilters): string {
+  const params = new URLSearchParams(buildExplorerSearch({ filters, cursor: null }));
+  params.delete(field);
+  params.delete("sort");
+  params.set("field", field);
+  params.set("option_query", value.trim().slice(0, 120));
+  return `/v1/benchmark-runs/options?${params}`;
+}
+
+/** The list API accepts at most 120 characters per text filter. */
 export const EXPLORER_FILTER_MAX_LENGTH = 120;
 
 /** Page size requested from the list API, whose own default is 25 and maximum 100. */
@@ -45,21 +53,16 @@ export const EXPLORER_HISTORY_LIMIT = 20;
 export const EXPLORER_COMPARE_LIMIT = 3;
 
 /** Cursors are opaque base64url strings; anything else is treated as absent. */
-export const EXPLORER_CURSOR_MAX_LENGTH = 512;
+export const EXPLORER_CURSOR_MAX_LENGTH = 2048;
 
-export const EMPTY_EXPLORER_FILTERS: ExplorerFilters = { model: "", hardware: "", method: "", workload: "" };
+export const EMPTY_EXPLORER_FILTERS = Object.fromEntries(EXPLORER_FILTER_KEYS.map(key => [key, ""])) as ExplorerFilters;
 
 function normalizeValue(value: string): string {
   return value.trim().slice(0, EXPLORER_FILTER_MAX_LENGTH);
 }
 
 export function normalizeExplorerFilters(filters: ExplorerFilters): ExplorerFilters {
-  return {
-    model: normalizeValue(filters.model),
-    hardware: normalizeValue(filters.hardware),
-    method: normalizeValue(filters.method),
-    workload: normalizeValue(filters.workload),
-  };
+  return Object.fromEntries(EXPLORER_FILTER_KEYS.map(key => [key, normalizeValue(filters[key] ?? "")])) as ExplorerFilters;
 }
 
 export function sameExplorerFilters(a: ExplorerFilters, b: ExplorerFilters): boolean {
@@ -109,6 +112,7 @@ export function parseExplorerLocation(search: string): ExplorerLocation {
   const params = new URLSearchParams(search);
   const filters: ExplorerFilters = { ...EMPTY_EXPLORER_FILTERS };
   for (const key of EXPLORER_FILTER_KEYS) filters[key] = normalizeValue(params.get(key) ?? "");
+  if (!(filters.sort in EXPLORER_SORTS) || filters.sort === "newest") filters.sort = "";
   return { filters, cursor: sanitizeExplorerCursor(params.get("cursor")) };
 }
 
@@ -116,7 +120,7 @@ export function parseExplorerLocation(search: string): ExplorerLocation {
 export function buildExplorerSearch(location: ExplorerLocation): string {
   const params = new URLSearchParams();
   for (const key of EXPLORER_FILTER_KEYS) {
-    const value = normalizeValue(location.filters[key]);
+    const value = normalizeValue(location.filters[key] ?? "");
     if (value) params.set(key, value);
   }
   const cursor = sanitizeExplorerCursor(location.cursor);
@@ -129,7 +133,7 @@ export function buildExplorerSearch(location: ExplorerLocation): string {
 export function buildExplorerRequestPath(location: ExplorerLocation, limit: number = EXPLORER_PAGE_SIZE): string {
   const params = new URLSearchParams({ limit: String(limit) });
   for (const key of EXPLORER_FILTER_KEYS) {
-    const value = normalizeValue(location.filters[key]);
+    const value = normalizeValue(location.filters[key] ?? "");
     if (value) params.set(key, value);
   }
   const cursor = sanitizeExplorerCursor(location.cursor);
@@ -183,6 +187,7 @@ export interface ExplorerSummary {
   status: string;
   mean_tg_tps: number | null;
   mean_e2e_ms: number | null;
+  setup?: BenchmarkSetup;
 }
 
 export interface ExplorerItem {
@@ -272,6 +277,7 @@ export function explorerReducer(state: ExplorerState, action: ExplorerAction): E
     case "draft":
       return { ...state, draft: { ...state.draft, [action.key]: action.value } };
     case "apply": {
+      if (invalidExplorerRanges(state.draft).length) return state;
       const next = normalizeExplorerFilters(state.draft);
       // An unchanged filter set keeps the current page; the caller re-requests it.
       if (sameExplorerFilters(next, state.applied)) return { ...state, draft: next };

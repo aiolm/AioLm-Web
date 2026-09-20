@@ -6,16 +6,15 @@ import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { EmptyState, ErrorState, Loading, useJsonFetch } from "./ui";
 import { BenchmarkExplorerComparison } from "./benchmark-explorer-comparison";
+import { BenchmarkExplorerFilters } from "./benchmark-explorer-filters";
 import { BenchmarkExplorerTable } from "./benchmark-explorer-table";
 import {
   EXPLORER_COMPARE_LIMIT,
-  EXPLORER_FILTER_KEYS,
-  EXPLORER_FILTER_LABELS,
-  EXPLORER_FILTER_MAX_LENGTH,
-  EXPLORER_FILTER_PLACEHOLDERS,
   EXPLORER_HISTORY_LIMIT,
   EXPLORER_PAGE_PATH,
   activeExplorerFilters,
+  invalidExplorerRanges,
+  EXPLORER_SORTS,
   buildExplorerRequestPath,
   buildExplorerSearch,
   canAddToComparison,
@@ -45,7 +44,7 @@ export const sameBrowserFilters = sameExplorerFilters;
 export type BrowserFilters = ExplorerFilters;
 
 /**
- * Systematic browsing of published results: a filter rail beside the result
+ * Systematic browsing of published results: grouped discovery controls above the result
  * table, filters kept in the page address so a view can be shared, browser back
  * and forward moving between views, and an optional hand-picked comparison.
  * Only summary fields are requested; measurement rows stay on the detail page.
@@ -120,6 +119,7 @@ export function BenchmarkBrowser(): React.JSX.Element {
   const applyFilters = useCallback(
     (event: React.FormEvent<HTMLFormElement>): void => {
       event.preventDefault();
+      if (invalidExplorerRanges(state.draft).length) return;
       if (sameExplorerFilters(normalizeExplorerFilters(state.draft), state.applied)) reload();
       dispatch({ type: "apply" });
     },
@@ -143,29 +143,9 @@ export function BenchmarkBrowser(): React.JSX.Element {
           <form className="explorer-filters" method="GET" action={localizedPath(locale, EXPLORER_PAGE_PATH)} onSubmit={applyFilters}>
             <fieldset className="explorer-filter-set">
               <legend className="explorer-filter-legend">{t("benchmark.Filters")}</legend>
-              <p className="explorer-filter-hint">{t("benchmark.Narrow down results by setup and measurement details. Filters are kept in the page address, so a filtered view can be bookmarked or shared as a link.")}</p>
-              <div className="explorer-filter-grid">
-                {EXPLORER_FILTER_KEYS.map((filterKey) => (
-                  <div className="explorer-field" key={filterKey}>
-                    <label className="explorer-field-label" htmlFor={`explorer-filter-${filterKey}`}>
-                      {t(`benchmark.${EXPLORER_FILTER_LABELS[filterKey]}`)}
-                    </label>
-                    <input
-                      className="explorer-field-input"
-                      id={`explorer-filter-${filterKey}`}
-                      name={filterKey}
-                      type="search"
-                      autoComplete="off"
-                      maxLength={EXPLORER_FILTER_MAX_LENGTH}
-                      placeholder={t(`benchmark.${EXPLORER_FILTER_PLACEHOLDERS[filterKey]}`)}
-                      value={state.draft[filterKey]}
-                      onChange={(event) => dispatch({ type: "draft", key: filterKey, value: event.target.value })}
-                    />
-                  </div>
-                ))}
-              </div>
+              <BenchmarkExplorerFilters draft={state.draft} onChange={(key, value) => dispatch({ type: "draft", key, value })} />
               <div className="explorer-filter-actions">
-                <button type="submit" className="explorer-button explorer-button-primary">{t("benchmark.Apply filters")}</button>
+                <button type="submit" disabled={invalidExplorerRanges(state.draft).length > 0} className="explorer-button explorer-button-primary">{t("benchmark.Apply filters")}</button>
                 <button
                   type="button"
                   className="explorer-button explorer-button-quiet"
@@ -173,6 +153,7 @@ export function BenchmarkBrowser(): React.JSX.Element {
                   disabled={!filtered && !hasActiveExplorerFilters(state.draft)}
                 >{t("benchmark.Clear filters")}</button>
               </div>
+              <p className="explorer-filter-hint">{t("benchmark.Narrow down results by setup and measurement details. Filters are kept in the page address, so a filtered view can be bookmarked or shared as a link.")}</p>
             </fieldset>
           </form>
         </div>
@@ -182,7 +163,7 @@ export function BenchmarkBrowser(): React.JSX.Element {
             <div className="explorer-main-heading">
               <h2 id="explorer-results-title" className="explorer-main-title">{t("benchmark.Published results")}</h2>
               <p className="explorer-main-subtitle">
-                {t("benchmark.Newest first. Select up to {limit} results to compare their setup.", { limit: EXPLORER_COMPARE_LIMIT })}
+                {t("benchmark.Select up to {limit} results to compare their setup.", { limit: EXPLORER_COMPARE_LIMIT })}
               </p>
             </div>
             <button type="button" className="explorer-button explorer-refresh" onClick={reload}>{t("benchmark.Refresh")}</button>
@@ -195,7 +176,7 @@ export function BenchmarkBrowser(): React.JSX.Element {
                 {active.map((filter) => (
                   <li className="explorer-active-filter" key={filter.key}>
                     <span className="explorer-active-filter-text">
-                      <span className="explorer-active-filter-key">{t(`benchmark.${filter.label}`)}:</span> {filter.value}
+                      <span className="explorer-active-filter-key">{t(`benchmark.${filter.label}`)}:</span> {filter.key === "sort" ? t(`benchmark.${EXPLORER_SORTS[filter.value as keyof typeof EXPLORER_SORTS]}`) : filter.value}
                     </span>
                     <button
                       type="button"
@@ -265,7 +246,7 @@ export function BenchmarkBrowser(): React.JSX.Element {
         <h2 id="explorer-guide-title" className="explorer-guide-title">{t("benchmark.Compare like for like")}</h2>
         <p className="explorer-guide-text">{t("benchmark.Match the model fingerprint, hardware, workload and measurement method before reading anything into a difference. Results published with a different method or workload measured different work.")}</p>
         <p className="explorer-guide-text">{t("benchmark.Generation (tok/s) is the mean generation throughput in tokens per second, so higher is faster. Duration (ms) is the mean end-to-end time of a measurement in milliseconds, so lower is faster. The two answer different questions and do not convert into each other.")}</p>
-        <p className="explorer-guide-text">{t("benchmark.Some results do not carry every metric. A missing measurement is shown as an em dash (—), never as a zero. Rows are listed newest first and are not ranked.")}</p>
+        <p className="explorer-guide-text">{t("benchmark.A missing measurement is shown as an em dash (—), never as a zero. Sorting does not make different setups directly comparable.")}</p>
       </section>
     </div>
   );
