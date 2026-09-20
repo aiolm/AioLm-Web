@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { GITHUB_REPOSITORY_URL, GitHubMark } from "@/components/site-links";
 import { WorkspaceIllustration } from "@/components/workspace-illustration";
@@ -9,6 +10,10 @@ import { WorkspaceIllustration } from "@/components/workspace-illustration";
  *
  * There is intentionally no download or release link anywhere on this page.
  */
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 const PLATFORMS = [
   { label: "Windows app", icon: <WindowsIcon /> },

@@ -2,9 +2,9 @@
  * The project's real, public destinations. Kept in one module so a link can
  * never drift between the header, the footer and the explorer empty state.
  */
-export const GITHUB_REPOSITORY_URL = "https://github.com/joowon-jang/AioLM";
-export const GITHUB_DOCS_URL = "https://github.com/joowon-jang/AioLM/tree/main/docs";
-export const GITHUB_LICENSE_URL = "https://github.com/joowon-jang/AioLM/blob/main/LICENSE";
+export const GITHUB_REPOSITORY_URL = "https://github.com/aiolm/AioLM";
+export const GITHUB_DOCS_URL = "https://github.com/aiolm/AioLM/tree/main/docs";
+export const GITHUB_LICENSE_URL = "https://github.com/aiolm/AioLM/blob/main/LICENSE";
 
 /** GitHub's mark, inline so the header costs no extra request. */
 export function GitHubMark(): React.JSX.Element {

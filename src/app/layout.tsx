@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { getServiceOrigin } from "@/lib/env";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getServiceOrigin()),
   title: {
     default: "AioLM — Local models. One workspace.",
     template: "%s · AioLM",

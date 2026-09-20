@@ -2,6 +2,24 @@
 
 Target: managed Vercel + Supabase PostgreSQL + Cloudflare Turnstile. No Redis/message queue.
 
+Canonical production site: [https://aiolm.vercel.app](https://aiolm.vercel.app).
+Connect the Vercel project to the website repository
+[aiolm/AioLm-Web](https://github.com/aiolm/AioLm-Web). The desktop app lives in
+[aiolm/AioLM](https://github.com/aiolm/AioLM).
+
+Set this public configuration pair in the production environment before building
+and deploying:
+
+```dotenv
+SERVICE_ORIGIN=https://aiolm.vercel.app
+TURNSTILE_EXPECTED_HOSTNAME=aiolm.vercel.app
+```
+
+Authorize `aiolm.vercel.app` in the production Turnstile widget. The homepage
+canonical URL and site metadata base use `SERVICE_ORIGIN`; preview environments
+must supply their own matching origin and hostname. These public values do not
+replace the secret credentials listed below.
+
 Runtime: **Node 22**. Pinned in `package.json` (`engines.node: "22.x"`), `.nvmrc`,
 and the CI workflow, so the local shell, CI, and the Vercel build all resolve the
 same major. Set the same version in the Vercel project's Node.js Version setting.
@@ -32,8 +50,9 @@ runtime database role and nothing else**.
   These two names are compiled into the browser widget, so a different value
   here makes every siteverify fail with `action-mismatch`. Leave them unset to
   take the matching defaults.
-- `SERVICE_ORIGIN`: public root origin, e.g. `https://benchmarks.example.com`.
-  Used for `verification_url`, recovery-code origin binding, and the exact
+- `SERVICE_ORIGIN`: public root origin (`https://aiolm.vercel.app` in production).
+  Used for site metadata, the homepage canonical URL, `verification_url`,
+  recovery-code origin binding, and the exact
   `Origin` header match on management mutations. A path, query, fragment, or
   credentials are rejected; in production HTTPS is required (the HTTP loopback is
   accepted only in development/test).

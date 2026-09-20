@@ -3,6 +3,10 @@
 Product introduction and anonymous public benchmark explorer. Next.js App Router + PostgreSQL
 (Supabase-compatible) + Cloudflare Turnstile. No accounts in v1.
 
+- Production site: [aiolm.vercel.app](https://aiolm.vercel.app).
+- Desktop app repository: [aiolm/AioLM](https://github.com/aiolm/AioLM).
+- Website repository: [aiolm/AioLm-Web](https://github.com/aiolm/AioLm-Web).
+
 - Public: browse/filter benchmark results, detail with environment/summary/safe
   Markdown descriptions, paged measurement rows, Turnstile-gated verification
   and reporting.
@@ -56,6 +60,17 @@ Publishing stays disabled until `DATABASE_URL`, `PERMIT_HMAC_SECRET`,
 ```sh
 npm run config:check   # validate a deployment environment; prints no secret values
 ```
+
+Production uses this public configuration pair:
+
+```dotenv
+SERVICE_ORIGIN=https://aiolm.vercel.app
+TURNSTILE_EXPECTED_HOSTNAME=aiolm.vercel.app
+```
+
+The homepage canonical URL and site metadata base use the configured
+`SERVICE_ORIGIN`. Set it before building; production requires an explicit HTTPS
+origin. Authorize `aiolm.vercel.app` in the production Turnstile widget.
 
 See `docs/deployment.md` and `docs/operations.md`.
 
