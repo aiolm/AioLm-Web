@@ -1,3 +1,5 @@
+import type { Translator } from "@/i18n/types";
+import { benchmarkFallback } from "./benchmark-i18n";
 /**
  * Value formatting for one published benchmark. Absent data reads as "Unknown",
  * an empty list as "None reported", a missing measurement as a gap, and a
@@ -17,19 +19,19 @@ export function asRecord(value: unknown): Record<string, unknown> | null {
 }
 
 /** Setup display: explicit Unknown instead of blank or machine defaults. */
-export function displayText(value: unknown): string {
-  if (value === null || value === undefined) return "Unknown";
-  if (typeof value === "string") return value.trim() === "" ? "Unknown" : value;
-  if (typeof value === "number") return Number.isFinite(value) ? String(value) : "Unknown";
-  if (typeof value === "boolean") return value ? "Yes" : "No";
+export function displayText(value: unknown, t: Translator = benchmarkFallback): string {
+  if (value === null || value === undefined) return t("benchmark.Unknown");
+  if (typeof value === "string") return value.trim() === "" ? t("benchmark.Unknown") : value;
+  if (typeof value === "number") return Number.isFinite(value) ? String(value) : t("benchmark.Unknown");
+  if (typeof value === "boolean") return value ? t("benchmark.Yes") : t("benchmark.No");
   return structuredText(value);
 }
 
 /** A reported list. Not a list at all and an empty list are different facts. */
-export function joinList(values: unknown): string {
-  if (!Array.isArray(values)) return "Unknown";
-  if (values.length === 0) return "None reported";
-  return values.map((v) => displayText(v)).join(", ");
+export function joinList(values: unknown, t: Translator = benchmarkFallback): string {
+  if (!Array.isArray(values)) return t("benchmark.Unknown");
+  if (values.length === 0) return t("benchmark.None reported");
+  return values.map((v) => displayText(v, t)).join(", ");
 }
 
 /**
@@ -38,43 +40,43 @@ export function joinList(values: unknown): string {
  * unreported driver reads "Driver: Unknown" instead of borrowing a neighbouring
  * value, and `integrated: false` reads "No", which an unreported one does not.
  */
-export function describeGpu(value: unknown): string {
+export function describeGpu(value: unknown, t: Translator = benchmarkFallback): string {
   const gpu = asRecord(value);
-  if (!gpu) return "Unknown device";
+  if (!gpu) return t("benchmark.Unknown device");
   return [
-    `Name: ${displayText(gpu["name"])}`,
-    `Vendor: ${displayText(gpu["vendor"])}`,
-    `VRAM: ${formatMegabytes(gpu["vram_mb"])}`,
-    `Driver: ${displayText(gpu["driver"])}`,
-    `Integrated: ${displayText(gpu["integrated"])}`,
+    `${t("benchmark.Name")}: ${displayText(gpu["name"], t)}`,
+    `${t("benchmark.Vendor")}: ${displayText(gpu["vendor"], t)}`,
+    `${t("benchmark.VRAM")}: ${formatMegabytes(gpu["vram_mb"], t)}`,
+    `${t("benchmark.Driver")}: ${displayText(gpu["driver"], t)}`,
+    `${t("benchmark.Integrated")}: ${displayText(gpu["integrated"], t)}`,
   ].join(" · ");
 }
 
 /** One description per device. No devices and no list at all stay different facts. */
-export function describeGpuList(value: unknown): string | string[] {
-  if (!Array.isArray(value)) return "Unknown";
-  if (value.length === 0) return "None reported";
-  return value.map(describeGpu);
+export function describeGpuList(value: unknown, t: Translator = benchmarkFallback): string | string[] {
+  if (!Array.isArray(value)) return t("benchmark.Unknown");
+  if (value.length === 0) return t("benchmark.None reported");
+  return value.map((gpu) => describeGpu(gpu, t));
 }
 
 /** VRAM is published in megabytes and is shown in megabytes; the number is never rescaled. */
-export function formatMegabytes(value: unknown): string {
-  if (typeof value !== "number" || !Number.isFinite(value)) return displayText(value);
+export function formatMegabytes(value: unknown, t: Translator = benchmarkFallback): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return displayText(value, t);
   return `${groupDigits(value)} MB`;
 }
 
 /** A human-scale unit with the published number kept alongside it. */
-export function formatByteSize(value: unknown): string {
-  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) return displayText(value);
-  const exact = `${groupDigits(value)} bytes`;
+export function formatByteSize(value: unknown, t: Translator = benchmarkFallback): string {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) return displayText(value, t);
+  const exact = t("benchmark.{value} bytes", { value: groupDigits(value) });
   const scaled = scaleBytes(value);
   return scaled === null ? exact : `${scaled} (${exact})`;
 }
 
 /** The same scale without the exact byte count, for a table cell that has to stay narrow. */
-export function formatCompactBytes(value: unknown): string {
+export function formatCompactBytes(value: unknown, t: Translator = benchmarkFallback): string {
   if (typeof value !== "number" || !Number.isFinite(value) || value < 0) return DETAIL_MISSING;
-  return scaleBytes(value) ?? `${groupDigits(value)} bytes`;
+  return scaleBytes(value) ?? t("benchmark.{value} bytes", { value: groupDigits(value) });
 }
 
 /** One decimal: sub-millisecond per-token times are normal and rounding erases them. */
@@ -88,11 +90,11 @@ export function formatCount(value: unknown): string {
 }
 
 /** A value with no column contract behind it: readable, bounded, never "[object Object]". */
-export function formatCellValue(value: unknown): string {
+export function formatCellValue(value: unknown, t: Translator = benchmarkFallback): string {
   if (value === null || value === undefined) return DETAIL_MISSING;
   if (typeof value === "string") return value.trim() === "" ? DETAIL_MISSING : value;
   if (typeof value === "number") return Number.isFinite(value) ? String(value) : DETAIL_MISSING;
-  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "boolean") return value ? t("benchmark.Yes") : t("benchmark.No");
   return structuredText(value);
 }
 

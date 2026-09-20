@@ -1,0 +1,43 @@
+import type { Catalog } from "./en";
+
+const messages = {
+  "common.loading": "正在加载…",
+  "common.errorTitle": "出现了问题。",
+  "common.retry": "重试",
+  "common.about": "关于 AioLM",
+  "error.network": "无法连接服务器。请检查网络连接后重试。",
+  "error.unknown": "无法完成请求。请重试。",
+  "error.notFound": "此结果已不可用。",
+  "error.rateLimited": "尝试次数过多。请稍后重试。",
+  "error.unavailable": "服务暂时不可用。请稍后重试。",
+  "error.invalidRequest": "请求未被接受。请检查输入后重试。",
+  "error.tooLarge": "请求过大。请缩短文本后重试。",
+  "error.ownership": "需要权限。请使用恢复代码开启新的管理会话。",
+  "error.csrf": "权限检查失败。请开启新的管理会话后重试。",
+  "error.conflict": "已保存的说明发生了变化。请重新加载后再试。",
+  "error.deleted": "此基准测试已删除。",
+  "error.verification": "验证失败或已过期。请重新验证后再试。",
+  "error.expired": "验证会话已过期。请在应用中重新发起发布。",
+  "error.bodyMismatch": "此提交已存在，但内容不同。",
+  "report.notFound": "此结果已不可用。",
+  "report.rateLimited": "当前举报过多。请稍后重试。",
+  "report.unavailable": "当前无法举报。请稍后重试。",
+  "report.verification": "验证失败或已过期。请重新验证后发送。",
+  "report.rejected": "举报未被接受。请检查原因和验证状态后重试。",
+  "report.network": "无法发送举报。请检查网络连接后重试。",
+  "report.expired": "验证已过期。请重新验证后发送。",
+  "report.required": "请先完成验证再发送。",
+  "report.reasonRequired": "请先描述问题再发送。",
+  "report.received": "举报已收到。管理员将私下审核。",
+  "report.title": "举报此结果",
+  "report.reason": "原因（最多 {max} 个字符）",
+  "report.hint": "请描述问题。举报仅对管理员可见。",
+  "report.sending": "正在发送…",
+  "report.send": "发送举报",
+  "turnstile.notConfigured": "尚未配置验证。",
+  "turnstile.failed": "验证组件出错。请刷新页面后重试。",
+  "turnstile.timeout": "验证超时。请重试。",
+  "turnstile.scriptFailed": "无法加载验证脚本。请检查网络连接并刷新。"
+} satisfies Catalog;
+
+export default messages;

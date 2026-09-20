@@ -1,5 +1,8 @@
 "use client";
 
+import { useI18n } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
+
 import { useEffect, useRef, useState } from "react";
 
 declare global {
@@ -23,10 +26,11 @@ export function TurnstileWidget({
   onExpire?: () => void;
   action?: string;
 }): React.JSX.Element {
+  const { locale, t } = useI18n();
   const ref = useRef<HTMLDivElement>(null);
   const siteKey = process.env["NEXT_PUBLIC_TURNSTILE_SITE_KEY"] ?? "";
   const [error, setError] = useState<string | null>(() =>
-    siteKey ? null : "Verification is not configured (missing site key).",
+    siteKey ? null : "turnstile.notConfigured",
   );
   const verifyRef = useRef(onVerify);
   const expireRef = useRef(onExpire);
@@ -38,9 +42,14 @@ export function TurnstileWidget({
   }, [onExpire]);
 
   const actionValue = action ?? "benchmark_publish";
+  const previousLocale = useRef(locale);
 
   useEffect(() => {
     if (!siteKey) return;
+    if (previousLocale.current !== locale) {
+      previousLocale.current = locale;
+      expireRef.current?.();
+    }
     let cancelled = false;
     let widgetId: string | undefined;
     let script: HTMLScriptElement | null = null;
@@ -56,6 +65,7 @@ export function TurnstileWidget({
         widgetId = window.turnstile.render(container, {
           sitekey: siteKey,
           action: actionValue,
+          language: turnstileLanguage(locale),
           callback: (token: string) => {
             if (cancelled) return;
             // A fresh token replaces any stale widget error.
@@ -73,7 +83,7 @@ export function TurnstileWidget({
           },
           "error-callback": () => {
             if (cancelled) return;
-            setError("Verification widget failed. Please reload the page and try again.");
+            setError("turnstile.failed");
             // Invalidate any parent one-use token; it must not be reused after a widget failure.
             try {
               expireRef.current?.();
@@ -83,7 +93,7 @@ export function TurnstileWidget({
           },
           "timeout-callback": () => {
             if (cancelled) return;
-            setError("Verification timed out. Please try again.");
+            setError("turnstile.timeout");
             // A timed-out widget must not leave a stale parent token behind.
             try {
               expireRef.current?.();
@@ -93,7 +103,7 @@ export function TurnstileWidget({
           },
         });
       } catch {
-        if (!cancelled) setError("Verification widget failed. Please reload the page and try again.");
+        if (!cancelled) setError("turnstile.failed");
       }
     };
 
@@ -103,7 +113,7 @@ export function TurnstileWidget({
     };
     const handleScriptError = (): void => {
       if (cancelled) return;
-      setError("Verification script failed to load. Check your connection and reload.");
+      setError("turnstile.scriptFailed");
       // Script failure invalidates the parent token so a stale token is never submitted.
       try {
         expireRef.current?.();
@@ -158,13 +168,17 @@ export function TurnstileWidget({
         // Container cleanup is best-effort.
       }
     };
-  }, [siteKey, actionValue]);
+  }, [siteKey, actionValue, locale]);
 
-  if (!siteKey) return <p className="muted" role="note">Verification is not configured.</p>;
+  if (!siteKey) return <p className="muted" role="note">{t("turnstile.notConfigured")}</p>;
   return (
     <div>
       <div ref={ref} />
-      {error ? <p className="error" role="alert">{error}</p> : null}
+      {error ? <p className="error" role="alert">{t(error)}</p> : null}
     </div>
   );
+}
+
+export function turnstileLanguage(locale: Locale): string {
+  return locale;
 }

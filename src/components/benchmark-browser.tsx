@@ -1,7 +1,9 @@
 "use client";
+import { useI18n } from "@/i18n/client";
+import { localizedPath } from "@/i18n/config";
+import { useSearchParams } from "next/navigation";
 
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { EmptyState, ErrorState, Loading, useJsonFetch } from "./ui";
 import { BenchmarkExplorerComparison } from "./benchmark-explorer-comparison";
 import { BenchmarkExplorerTable } from "./benchmark-explorer-table";
@@ -49,6 +51,7 @@ export type BrowserFilters = ExplorerFilters;
  * Only summary fields are requested; measurement rows stay on the detail page.
  */
 export function BenchmarkBrowser(): React.JSX.Element {
+  const { locale, t } = useI18n();
   const searchParams = useSearchParams();
   const routeSearch = searchParams.toString();
   const [state, reduce] = useReducer(explorerReducer, routeSearch, explorerStateFromSearch);
@@ -137,18 +140,15 @@ export function BenchmarkBrowser(): React.JSX.Element {
     <div className="explorer">
       <div className="explorer-layout">
         <div className="explorer-rail">
-          <form className="explorer-filters" method="GET" action={EXPLORER_PAGE_PATH} onSubmit={applyFilters}>
+          <form className="explorer-filters" method="GET" action={localizedPath(locale, EXPLORER_PAGE_PATH)} onSubmit={applyFilters}>
             <fieldset className="explorer-filter-set">
-              <legend className="explorer-filter-legend">Filters</legend>
-              <p className="explorer-filter-hint">
-                Narrow down results by setup and measurement details. Filters are kept in the page address, so a
-                filtered view can be bookmarked or shared as a link.
-              </p>
+              <legend className="explorer-filter-legend">{t("benchmark.Filters")}</legend>
+              <p className="explorer-filter-hint">{t("benchmark.Narrow down results by setup and measurement details. Filters are kept in the page address, so a filtered view can be bookmarked or shared as a link.")}</p>
               <div className="explorer-filter-grid">
                 {EXPLORER_FILTER_KEYS.map((filterKey) => (
                   <div className="explorer-field" key={filterKey}>
                     <label className="explorer-field-label" htmlFor={`explorer-filter-${filterKey}`}>
-                      {EXPLORER_FILTER_LABELS[filterKey]}
+                      {t(`benchmark.${EXPLORER_FILTER_LABELS[filterKey]}`)}
                     </label>
                     <input
                       className="explorer-field-input"
@@ -157,7 +157,7 @@ export function BenchmarkBrowser(): React.JSX.Element {
                       type="search"
                       autoComplete="off"
                       maxLength={EXPLORER_FILTER_MAX_LENGTH}
-                      placeholder={EXPLORER_FILTER_PLACEHOLDERS[filterKey]}
+                      placeholder={t(`benchmark.${EXPLORER_FILTER_PLACEHOLDERS[filterKey]}`)}
                       value={state.draft[filterKey]}
                       onChange={(event) => dispatch({ type: "draft", key: filterKey, value: event.target.value })}
                     />
@@ -165,15 +165,13 @@ export function BenchmarkBrowser(): React.JSX.Element {
                 ))}
               </div>
               <div className="explorer-filter-actions">
-                <button type="submit" className="explorer-button explorer-button-primary">Apply filters</button>
+                <button type="submit" className="explorer-button explorer-button-primary">{t("benchmark.Apply filters")}</button>
                 <button
                   type="button"
                   className="explorer-button explorer-button-quiet"
                   onClick={() => dispatch({ type: "reset" })}
                   disabled={!filtered && !hasActiveExplorerFilters(state.draft)}
-                >
-                  Clear filters
-                </button>
+                >{t("benchmark.Clear filters")}</button>
               </div>
             </fieldset>
           </form>
@@ -182,46 +180,44 @@ export function BenchmarkBrowser(): React.JSX.Element {
         <section className="explorer-main" aria-labelledby="explorer-results-title">
           <div className="explorer-main-header">
             <div className="explorer-main-heading">
-              <h2 id="explorer-results-title" className="explorer-main-title">Published results</h2>
+              <h2 id="explorer-results-title" className="explorer-main-title">{t("benchmark.Published results")}</h2>
               <p className="explorer-main-subtitle">
-                Newest first. Select up to {EXPLORER_COMPARE_LIMIT} results to compare their setup.
+                {t("benchmark.Newest first. Select up to {limit} results to compare their setup.", { limit: EXPLORER_COMPARE_LIMIT })}
               </p>
             </div>
-            <button type="button" className="explorer-button explorer-refresh" onClick={reload}>Refresh</button>
+            <button type="button" className="explorer-button explorer-refresh" onClick={reload}>{t("benchmark.Refresh")}</button>
           </div>
 
           {active.length > 0 ? (
             <div className="explorer-active-filters">
-              <h3 className="explorer-active-filters-title">Active filters</h3>
+              <h3 className="explorer-active-filters-title">{t("benchmark.Active filters")}</h3>
               <ul className="explorer-active-filter-list">
                 {active.map((filter) => (
                   <li className="explorer-active-filter" key={filter.key}>
                     <span className="explorer-active-filter-text">
-                      <span className="explorer-active-filter-key">{filter.label}:</span> {filter.value}
+                      <span className="explorer-active-filter-key">{t(`benchmark.${filter.label}`)}:</span> {filter.value}
                     </span>
                     <button
                       type="button"
                       className="explorer-active-filter-remove"
                       onClick={() => dispatch({ type: "removeFilter", key: filter.key })}
-                      aria-label={`Remove the ${filter.label} filter`}
-                    >
-                      Remove
-                    </button>
+                      aria-label={t("benchmark.Remove the {filter} filter", { filter: t(`benchmark.${filter.label}`) })}
+                    >{t("benchmark.Remove")}</button>
                   </li>
                 ))}
               </ul>
             </div>
           ) : null}
 
-          {!ready || (!data && !error) ? <Loading label="Loading published benchmarks…" /> : null}
+          {!ready || (!data && !error) ? <Loading label={t("benchmark.Loading published benchmarks…")} /> : null}
           {error ? <ErrorState message={error} onRetry={reload} /> : null}
           {data && items.length === 0 ? (
             <EmptyState
-              title={filtered ? "No results match these filters." : "No public benchmarks yet."}
+              title={filtered ? t("benchmark.No results match these filters.") : t("benchmark.No public benchmarks yet.")}
               hint={
                 filtered
-                  ? "Clear a filter to widen the search. Labels are self-reported, so they differ between configurations."
-                  : "Results shared from AioLM will appear here. Self-reported data only; compare configurations carefully."
+                  ? t("benchmark.Clear a filter to widen the search. Labels are self-reported, so they differ between configurations.")
+                  : t("benchmark.Results shared from AioLM will appear here. Self-reported data only; compare configurations carefully.")
               }
             />
           ) : null}
@@ -229,7 +225,7 @@ export function BenchmarkBrowser(): React.JSX.Element {
             <div className="explorer-results">
               {comparisonFull ? (
                 <p className="explorer-compare-limit">
-                  The comparison holds {EXPLORER_COMPARE_LIMIT} results. Remove one to select another.
+                  {t("benchmark.The comparison holds {limit} results. Remove one to select another.", { limit: EXPLORER_COMPARE_LIMIT })}
                 </p>
               ) : null}
               <BenchmarkExplorerTable
@@ -247,44 +243,29 @@ export function BenchmarkBrowser(): React.JSX.Element {
           />
 
           {canPage ? (
-            <nav className="explorer-pagination" aria-label="Result pages">
+            <nav className="explorer-pagination" aria-label={t("benchmark.Result pages")}>
               <button
                 type="button"
                 className="explorer-button explorer-page-previous"
                 onClick={() => dispatch({ type: "previousPage" })}
                 disabled={state.history.length === 0}
-              >
-                Previous page
-              </button>
+              >{t("benchmark.Previous page")}</button>
               <button
                 type="button"
                 className="explorer-button explorer-page-next"
                 onClick={goNext}
                 disabled={!data?.next_cursor}
-              >
-                Next page
-              </button>
+              >{t("benchmark.Next page")}</button>
             </nav>
           ) : null}
         </section>
       </div>
 
       <section className="explorer-guide" aria-labelledby="explorer-guide-title">
-        <h2 id="explorer-guide-title" className="explorer-guide-title">Compare like for like</h2>
-        <p className="explorer-guide-text">
-          Match the model fingerprint, hardware, workload and measurement method before reading anything into a
-          difference. Results published with a different method or workload measured different work.
-        </p>
-        <p className="explorer-guide-text">
-          <span className="explorer-guide-term">Generation (tok/s)</span> is the mean generation throughput in tokens
-          per second, so higher is faster. <span className="explorer-guide-term">Duration (ms)</span> is the mean
-          end-to-end time of a measurement in milliseconds, so lower is faster. The two answer different questions and
-          do not convert into each other.
-        </p>
-        <p className="explorer-guide-text">
-          Some results do not carry every metric. A missing measurement is shown as an em dash (—), never as a zero.
-          Rows are listed newest first and are not ranked.
-        </p>
+        <h2 id="explorer-guide-title" className="explorer-guide-title">{t("benchmark.Compare like for like")}</h2>
+        <p className="explorer-guide-text">{t("benchmark.Match the model fingerprint, hardware, workload and measurement method before reading anything into a difference. Results published with a different method or workload measured different work.")}</p>
+        <p className="explorer-guide-text">{t("benchmark.Generation (tok/s) is the mean generation throughput in tokens per second, so higher is faster. Duration (ms) is the mean end-to-end time of a measurement in milliseconds, so lower is faster. The two answer different questions and do not convert into each other.")}</p>
+        <p className="explorer-guide-text">{t("benchmark.Some results do not carry every metric. A missing measurement is shown as an em dash (—), never as a zero. Rows are listed newest first and are not ranked.")}</p>
       </section>
     </div>
   );

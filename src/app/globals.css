@@ -305,6 +305,24 @@ main > .grid {
 
 .github-mark { flex-shrink: 0; }
 
+/* Native select keeps platform keyboard and assistive-technology behavior. */
+.language-selector { flex: 0 0 auto; }
+.language-selector select {
+  min-height: var(--control-min);
+  max-width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-input);
+  color: var(--ui-ink);
+  font: inherit;
+  cursor: pointer;
+}
+:lang(ko) .hero-title, :lang(ja) .hero-title, :lang(zh) .hero-title {
+  font-size: clamp(2.25rem, 4.2vw, 4rem);
+  overflow-wrap: anywhere;
+}
+
 /* ------------------------------------------------------------- footer ---- */
 
 .site-footer {
@@ -1544,7 +1562,8 @@ table.data th { color: var(--ui-muted); font-weight: 650; }
 
 @media (max-width: 40rem) {
   .site-header-inner { min-height: 0; gap: 8px 16px; }
-  .site-header-github { order: 3; margin-inline-start: auto; }
+  .language-selector { margin-inline-start: auto; }
+  .site-header-github { order: 3; margin-inline-start: 0; }
   .site-nav { order: 4; width: 100%; margin-inline: 0; }
 
   .hero-actions .button { flex: 1 1 100%; }

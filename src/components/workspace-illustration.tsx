@@ -1,3 +1,4 @@
+import type { Translator } from '@/i18n/types';
 /**
  * A code-native picture of the desktop app beside the hero.
  *
@@ -8,16 +9,16 @@
  * content and stays in the accessibility tree.
  */
 
-const NAV_ITEMS = ["Models", "Runtimes", "Chat", "Benchmarks"] as const;
+const NAV_ITEMS = ["home.models", "home.runtimes", "home.chat", "home.benchmarks"] as const;
 
 const CAPABILITIES = [
-  { icon: <CubeIcon />, title: "GGUF model library", detail: "Find and organize local models" },
-  { icon: <GearIcon />, title: "Runtime management", detail: "Choose a llama.cpp backend" },
-  { icon: <ChatIcon />, title: "Local conversations", detail: "Chat with your models" },
-  { icon: <ChartIcon />, title: "Performance benchmarks", detail: "Measure and review your setup" },
+  { icon: <CubeIcon />, title: "home.library", detail: "home.libraryDetail" },
+  { icon: <GearIcon />, title: "home.runtime", detail: "home.runtimeDetail" },
+  { icon: <ChatIcon />, title: "home.conversation", detail: "home.conversationDetail" },
+  { icon: <ChartIcon />, title: "home.performance", detail: "home.performanceDetail" },
 ] as const;
 
-export function WorkspaceIllustration(): React.JSX.Element {
+export function WorkspaceIllustration({ t }: { t: Translator }): React.JSX.Element {
   return (
     <figure className="workspace-figure">
       <div className="workspace-window">
@@ -38,20 +39,20 @@ export function WorkspaceIllustration(): React.JSX.Element {
                 key={item}
                 className={index === 0 ? "workspace-nav-item is-current" : "workspace-nav-item"}
               >
-                {item}
+                {t(item)}
               </span>
             ))}
           </div>
 
           <div className="workspace-content">
-            <p className="workspace-content-title">Workspace overview</p>
+            <p className="workspace-content-title">{t('home.overview')}</p>
             <ul className="workspace-capabilities">
               {CAPABILITIES.map((capability) => (
                 <li className="workspace-capability" key={capability.title}>
                   <span className="workspace-capability-icon" aria-hidden="true">{capability.icon}</span>
                   <span className="workspace-capability-copy">
-                    <span className="workspace-capability-title">{capability.title}</span>
-                    <span className="workspace-capability-detail">{capability.detail}</span>
+                    <span className="workspace-capability-title">{t(capability.title)}</span>
+                    <span className="workspace-capability-detail">{t(capability.detail)}</span>
                   </span>
                 </li>
               ))}
@@ -60,8 +61,7 @@ export function WorkspaceIllustration(): React.JSX.Element {
         </div>
       </div>
       <figcaption className="sr-only">
-        The AioLM desktop workspace groups a GGUF model library, llama.cpp runtime management, local
-        conversations and performance benchmarks in one window.
+        {t('home.caption')}
       </figcaption>
     </figure>
   );

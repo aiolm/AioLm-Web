@@ -1,3 +1,5 @@
+import type { Translator } from "@/i18n/types";
+import { benchmarkFallback } from "./benchmark-i18n";
 /**
  * The reported test setup, grouped the way a reader checks one: what ran, on
  * what machine, against which workload, with which execution settings.
@@ -37,7 +39,7 @@ export interface SetupGroup {
   fields: SetupField[];
 }
 
-export function buildSetupGroups(benchmark: BenchmarkSetup): SetupGroup[] {
+export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benchmarkFallback): SetupGroup[] {
   const model = asRecord(benchmark.model);
   const runtime = asRecord(benchmark.runtime);
   const method = asRecord(benchmark.method);
@@ -51,63 +53,63 @@ export function buildSetupGroups(benchmark: BenchmarkSetup): SetupGroup[] {
   return [
     {
       id: "detail-setup-model",
-      title: "Model and runtime",
+      title: t("benchmark.Model and runtime"),
       fields: [
-        { label: "App version", value: displayText(benchmark.app_version) },
-        { label: "Result status", value: displayText(benchmark.status) },
-        { label: "Model identity", value: displayText(model?.["status"]) },
-        { label: "Model checksum", value: displayText(model?.["sha256"]) },
-        { label: "Model size", value: formatByteSize(model?.["size_bytes"]) },
-        { label: "Runtime", value: displayText(runtime?.["name"]) },
-        { label: "Runtime version", value: displayText(runtime?.["version"]) },
-        { label: "Runtime backend", value: displayText(runtime?.["backend"]) },
-        { label: "Runtime build", value: displayText(runtime?.["build"]) },
+        { label: t("benchmark.App version"), value: displayText(benchmark.app_version, t) },
+        { label: t("benchmark.Result status"), value: displayText(benchmark.status, t) },
+        { label: t("benchmark.Model identity"), value: displayText(model?.["status"], t) },
+        { label: t("benchmark.Model checksum"), value: displayText(model?.["sha256"], t) },
+        { label: t("benchmark.Model size"), value: formatByteSize(model?.["size_bytes"], t) },
+        { label: t("benchmark.Runtime"), value: displayText(runtime?.["name"], t) },
+        { label: t("benchmark.Runtime version"), value: displayText(runtime?.["version"], t) },
+        { label: t("benchmark.Runtime backend"), value: displayText(runtime?.["backend"], t) },
+        { label: t("benchmark.Runtime build"), value: displayText(runtime?.["build"], t) },
       ],
     },
     {
       id: "detail-setup-hardware",
-      title: "Hardware and operating system",
+      title: t("benchmark.Hardware and operating system"),
       fields: [
-        { label: "Operating system", value: displayText(environment?.["os"]) },
-        { label: "Architecture", value: displayText(environment?.["arch"]) },
-        { label: "CPU", value: displayText(cpu?.["name"]) },
-        { label: "CPU cores", unit: "logical", value: displayText(cpu?.["logical_cores"]) },
-        { label: "Installed graphics", value: describeGpuList(environment?.["installed_gpus"]) },
-        { label: "Run mode", value: displayText(envExecution?.["mode"]) },
-        { label: "Selected graphics", value: describeGpuList(envExecution?.["selected_gpus"]) },
-        { label: "Graphics selection complete", value: displayText(envExecution?.["selection_complete"]) },
+        { label: t("benchmark.Operating system"), value: displayText(environment?.["os"], t) },
+        { label: t("benchmark.Architecture"), value: displayText(environment?.["arch"], t) },
+        { label: t("benchmark.CPU"), value: displayText(cpu?.["name"], t) },
+        { label: t("benchmark.CPU cores"), unit: t("benchmark.logical"), value: displayText(cpu?.["logical_cores"], t) },
+        { label: t("benchmark.Installed graphics"), value: describeGpuList(environment?.["installed_gpus"], t) },
+        { label: t("benchmark.Run mode"), value: displayText(envExecution?.["mode"], t) },
+        { label: t("benchmark.Selected graphics"), value: describeGpuList(envExecution?.["selected_gpus"], t) },
+        { label: t("benchmark.Graphics selection complete"), value: displayText(envExecution?.["selection_complete"], t) },
       ],
     },
     {
       id: "detail-setup-workload",
-      title: "Workload and method",
+      title: t("benchmark.Workload and method"),
       fields: [
-        { label: "Method", value: displayText(method?.["id"]) },
-        { label: "Method version", value: displayText(method?.["version"]) },
-        { label: "Corpus", value: displayText(workload?.["corpus"]) },
-        { label: "Corpus version", value: displayText(workload?.["corpus_version"]) },
-        { label: "Corpus checksum", value: displayText(workload?.["corpus_sha256"]) },
-        { label: "Prompt lengths", unit: "tokens", value: joinList(workload?.["prompt_lengths"]) },
-        { label: "Generation length", unit: "tokens", value: displayText(workload?.["generation_length"]) },
-        { label: "Batch sizes", value: joinList(workload?.["batch_sizes"]) },
-        { label: "Repetitions", value: displayText(workload?.["repetitions"]) },
-        { label: "Warmup", value: displayText(workload?.["warmup"]) },
+        { label: t("benchmark.Method"), value: displayText(method?.["id"], t) },
+        { label: t("benchmark.Method version"), value: displayText(method?.["version"], t) },
+        { label: t("benchmark.Corpus"), value: displayText(workload?.["corpus"], t) },
+        { label: t("benchmark.Corpus version"), value: displayText(workload?.["corpus_version"], t) },
+        { label: t("benchmark.Corpus checksum"), value: displayText(workload?.["corpus_sha256"], t) },
+        { label: t("benchmark.Prompt lengths"), unit: t("benchmark.tokens"), value: joinList(workload?.["prompt_lengths"], t) },
+        { label: t("benchmark.Generation length"), unit: t("benchmark.tokens"), value: displayText(workload?.["generation_length"], t) },
+        { label: t("benchmark.Batch sizes"), value: joinList(workload?.["batch_sizes"], t) },
+        { label: t("benchmark.Repetitions"), value: displayText(workload?.["repetitions"], t) },
+        { label: t("benchmark.Warmup"), value: displayText(workload?.["warmup"], t) },
       ],
     },
     {
       id: "detail-setup-execution",
-      title: "Execution settings",
+      title: t("benchmark.Execution settings"),
       fields: [
-        { label: "Context size", unit: "tokens", value: displayText(execution?.["context_size"]) },
-        { label: "Parallel requests", value: displayText(execution?.["parallel"]) },
-        { label: "Threads", value: displayText(settings?.["threads"]) },
-        { label: "Batch threads", value: displayText(settings?.["threads_batch"]) },
-        { label: "Graphics layers", value: displayText(settings?.["gpu_layers"]) },
-        { label: "Flash attention", value: displayText(settings?.["flash_attention"]) },
-        { label: "KV cache type", unit: "keys", value: displayText(settings?.["cache_type_k"]) },
-        { label: "KV cache type", unit: "values", value: displayText(settings?.["cache_type_v"]) },
-        { label: "Split mode", value: displayText(settings?.["split_mode"]) },
-        { label: "Tensor split", value: joinList(settings?.["tensor_split"]) },
+        { label: t("benchmark.Context size"), unit: t("benchmark.tokens"), value: displayText(execution?.["context_size"], t) },
+        { label: t("benchmark.Parallel requests"), value: displayText(execution?.["parallel"], t) },
+        { label: t("benchmark.Threads"), value: displayText(settings?.["threads"], t) },
+        { label: t("benchmark.Batch threads"), value: displayText(settings?.["threads_batch"], t) },
+        { label: t("benchmark.Graphics layers"), value: displayText(settings?.["gpu_layers"], t) },
+        { label: t("benchmark.Flash attention"), value: displayText(settings?.["flash_attention"], t) },
+        { label: t("benchmark.KV cache type"), unit: t("benchmark.keys"), value: displayText(settings?.["cache_type_k"], t) },
+        { label: t("benchmark.KV cache type"), unit: t("benchmark.values"), value: displayText(settings?.["cache_type_v"], t) },
+        { label: t("benchmark.Split mode"), value: displayText(settings?.["split_mode"], t) },
+        { label: t("benchmark.Tensor split"), value: joinList(settings?.["tensor_split"], t) },
       ],
     },
   ];

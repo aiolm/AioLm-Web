@@ -1,4 +1,7 @@
 "use client";
+import { useI18n } from "@/i18n/client";
+import { localizedPath } from "@/i18n/config";
+import { useSearchParams } from "next/navigation";
 
 import Link from "next/link";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
@@ -7,7 +10,7 @@ import { ReportForm } from "@/components/report-form";
 import { asRecord, displayText, statusTone } from "@/components/benchmark-detail-format";
 import { buildSetupGroups, type BenchmarkSetup } from "@/components/benchmark-detail-fields";
 import { buildRowColumns, isFailedRow } from "@/components/benchmark-detail-rows";
-import { formatDuration, formatSampleCount, formatThroughput } from "@/components/benchmark-explorer-format";
+import { formatUpdatedDate, formatDuration, formatSampleCount, formatThroughput } from "@/components/benchmark-explorer-format";
 
 interface Detail {
   id: string;
@@ -37,9 +40,7 @@ export function getRowsSliceIndices(page: number, pageSize: number, loadedCount:
   return { start, end };
 }
 
-function friendlyRowsError(): string {
-  return "Could not load measurements. Check your connection and try again.";
-}
+function friendlyRowsError(): string { return "benchmark.Could not load measurements. Check your connection and try again."; }
 
 /** Generation guard: a rows response only applies to the request generation that started it. */
 export function isStaleRowsGeneration(requestGeneration: number, currentGeneration: number): boolean {
@@ -59,6 +60,8 @@ export function canApplyRowsResult(opts: {
 }
 
 export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.Element {
+  const { locale, t } = useI18n();
+  const search = useSearchParams().toString();
   const { data, error } = useJsonFetch<Detail>(`/v1/benchmark-runs/${publicId}`);
   const [rows, setRows] = useState<unknown[] | null>(null);
   const [rowsCursor, setRowsCursor] = useState<string | null>(null);
@@ -152,8 +155,8 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
     [publicId],
   );
 
-  if (error) return <div className="alert error" role="alert"><p><strong>Not available.</strong> {error}</p></div>;
-  if (!data) return <p role="status" className="muted">Loading benchmark…</p>;
+  if (error) return <div className="alert error" role="alert"><p><strong>{t("benchmark.Not available.")}</strong> {error}</p></div>;
+  if (!data) return <p role="status" className="muted">{t("benchmark.Loading benchmark…")}</p>;
 
   const loadedCount = rows?.length ?? 0;
   const pageCount = getRowsPageCount(loadedCount);
@@ -166,21 +169,21 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
   return (
     <div className="grid">
       <p className="detail-back">
-        <Link href="/benchmarks">← Back to results</Link>
+        <Link href={localizedPath(locale, `/benchmarks${search ? `?${search}` : ""}`)}>{t("benchmark.← Back to results")}</Link>
       </p>
       <section className="card" aria-labelledby="detail-title">
         <h1 id="detail-title">{summary.workload_label} · {summary.model_label}</h1>
         <p>
-          <span className={tone ? `status ${tone}` : "status"}>{displayText(summary.status)}</span>{" "}
-          <span className="muted">rev {data.revision} · updated {new Date(data.updated_at).toLocaleString()}</span>
+          <span className={tone ? `status ${tone}` : "status"}>{displayText(summary.status, t)}</span>{" "}
+          <span className="muted">{t("benchmark.Revision {revision} · updated {date} (UTC)", { revision: data.revision, date: formatUpdatedDate(data.updated_at, locale) })}</span>
         </p>
         <dl className="kv detail-metrics">
-          <dt>Hardware</dt><dd>{summary.hardware_label}</dd>
-          <dt>Method</dt><dd>{summary.method_label}</dd>
-          <dt>Samples</dt><dd>{formatSampleCount(summary.row_count, summary.failed_rows)}</dd>
-          <dt>Mean generation <span className="detail-unit">(tok/s)</span></dt>
+          <dt>{t("benchmark.Hardware")}</dt><dd>{summary.hardware_label}</dd>
+          <dt>{t("benchmark.Method")}</dt><dd>{summary.method_label}</dd>
+          <dt>{t("benchmark.Samples")}</dt><dd>{formatSampleCount(summary.row_count, summary.failed_rows, t)}</dd>
+          <dt>{t("benchmark.Mean generation")}{" "}<span className="detail-unit">{t("benchmark.(tok/s)")}</span></dt>
           <dd>{formatThroughput(summary.mean_tg_tps)}</dd>
-          <dt>Mean end-to-end duration <span className="detail-unit">(ms)</span></dt>
+          <dt>{t("benchmark.Mean end-to-end duration")}{" "}<span className="detail-unit">{t("benchmark.(ms)")}</span></dt>
           <dd>{formatDuration(summary.mean_e2e_ms)}</dd>
         </dl>
       </section>
@@ -188,25 +191,22 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
       <SetupSection benchmark={data.benchmark} />
 
       <section className="card" aria-labelledby="desc-title">
-        <h2 id="desc-title">Description</h2>
-        {data.description_md ? <SafeMarkdown text={data.description_md} /> : <p className="muted">No description provided.</p>}
+        <h2 id="desc-title">{t("benchmark.Description")}</h2>
+        {data.description_md ? <SafeMarkdown text={data.description_md} /> : <p className="muted">{t("benchmark.No description provided.")}</p>}
       </section>
 
       <section className="card" aria-labelledby="rows-title">
-        <h2 id="rows-title">Measurements {rowsTotal !== null ? `(${rowsTotal})` : null}</h2>
+        <h2 id="rows-title">{t("benchmark.Measurements")}{rowsTotal !== null ? `(${rowsTotal})` : null}</h2>
         <p className="muted">
-          Load the individual measurements to inspect timing, throughput and memory use for each sample.
-          Each page shows up to {ROWS_VISIBLE_PAGE_SIZE} samples.
+          {t("benchmark.Load the individual measurements to inspect timing, throughput and memory use for each sample. Each page shows up to {limit} samples.", { limit: ROWS_VISIBLE_PAGE_SIZE })}
         </p>
-        {!rows && !rowsLoading ? <button type="button" onClick={() => void loadRows(null)}>Load measurements</button> : null}
-        {rowsLoading ? <p role="status" className="muted">Loading measurements…</p> : null}
+        {!rows && !rowsLoading ? <button type="button" onClick={() => void loadRows(null)}>{t("benchmark.Load measurements")}</button> : null}
+        {rowsLoading ? <p role="status" className="muted">{t("benchmark.Loading measurements…")}</p> : null}
         {rowsError ? (
           <div className="alert error" role="alert">
-            <p>{rowsError}</p>
+            <p>{t(rowsError)}</p>
             <p>
-              <button type="button" onClick={() => void loadRows(retryCursor)} disabled={rowsLoading}>
-                Retry loading measurements
-              </button>
+              <button type="button" onClick={() => void loadRows(retryCursor)} disabled={rowsLoading}>{t("benchmark.Retry loading measurements")}</button>
             </p>
           </div>
         ) : null}
@@ -223,7 +223,7 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
         {rows && rowsCursor && !rowsError ? (
           <p>
             <button type="button" onClick={() => void loadRows(rowsCursor)} disabled={rowsLoading}>
-              {rowsLoading ? "Loading…" : "Load more"}
+              {rowsLoading ? t("benchmark.Loading…") : t("benchmark.Load more")}
             </button>
           </p>
         ) : null}
@@ -239,11 +239,12 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
  * on what machine, against which workload, and with which execution settings.
  */
 function SetupSection({ benchmark }: { benchmark: BenchmarkSetup }): React.JSX.Element {
-  const groups = buildSetupGroups(benchmark);
+  const { t } = useI18n();
+  const groups = buildSetupGroups(benchmark, t);
   return (
     <section className="card" aria-labelledby="env-title">
-      <h2 id="env-title">Test setup (as reported)</h2>
-      <p className="muted">These values were sent with the publication and are shown as reported. They are not independently verified.</p>
+      <h2 id="env-title">{t("benchmark.Test setup (as reported)")}</h2>
+      <p className="muted">{t("benchmark.These values were sent with the publication and are shown as reported. They are not independently verified.")}</p>
       {groups.map((group) => (
         <div className="detail-group" key={group.id}>
           <h3 className="detail-group-title" id={group.id}>{group.title}</h3>
@@ -287,11 +288,12 @@ function RowsPreview({
   pageCount: number;
   onPage: (page: number) => void;
 }): React.JSX.Element {
+  const { t } = useI18n();
   // A row that is not an object still takes its place in the table, as gaps.
   const visible = rows.slice(start, end).map((row) => asRecord(row) ?? {});
-  if (rows.length === 0) return <p className="muted">No rows.</p>;
-  if (visible.length === 0) return <p className="muted">No rows on this page.</p>;
-  const columns = buildRowColumns(visible);
+  if (rows.length === 0) return <p className="muted">{t("benchmark.No rows.")}</p>;
+  if (visible.length === 0) return <p className="muted">{t("benchmark.No rows on this page.")}</p>;
+  const columns = buildRowColumns(visible, t);
   return (
     <div>
       {/* Focusable so the wide table can be scrolled from the keyboard, and named so that stop is announced. */}
@@ -300,13 +302,10 @@ function RowsPreview({
         style={{ overflowX: "auto" }}
         tabIndex={0}
         role="region"
-        aria-label="Measurement samples"
+        aria-label={t("benchmark.Measurement samples")}
       >
         <table className="data detail-rows">
-          <caption className="detail-rows-caption">
-            One row per published measurement sample, in the order it was reported. Failed samples stay in the
-            table and are named in the outcome column.
-          </caption>
+          <caption className="detail-rows-caption">{t("benchmark.One row per published measurement sample, in the order it was reported. Failed samples stay in the table and are named in the outcome column.")}</caption>
           <thead>
             <tr>
               {columns.map((column) => (
@@ -331,16 +330,12 @@ function RowsPreview({
         </table>
       </div>
       <p className="muted" role="status">
-        Showing {rows.length === 0 ? 0 : start + 1}–{end} of {rows.length} loaded rows · Page {pageCount === 0 ? 0 : page + 1} of {pageCount}.
+        {t("benchmark.Showing {start}–{end} of {count} loaded rows · Page {page} of {pages}.", { start: rows.length === 0 ? 0 : start + 1, end, count: rows.length, page: pageCount === 0 ? 0 : page + 1, pages: pageCount })}
       </p>
       {pageCount > 1 ? (
-        <nav aria-label="Loaded measurement pages">
-          <button type="button" onClick={() => onPage(Math.max(0, page - 1))} disabled={page <= 0}>
-            Previous rows
-          </button>{" "}
-          <button type="button" onClick={() => onPage(Math.min(pageCount - 1, page + 1))} disabled={page + 1 >= pageCount}>
-            Next rows
-          </button>
+        <nav aria-label={t("benchmark.Loaded measurement pages")}>
+          <button type="button" onClick={() => onPage(Math.max(0, page - 1))} disabled={page <= 0}>{t("benchmark.Previous rows")}</button>{" "}
+          <button type="button" onClick={() => onPage(Math.min(pageCount - 1, page + 1))} disabled={page + 1 >= pageCount}>{t("benchmark.Next rows")}</button>
         </nav>
       ) : null}
     </div>

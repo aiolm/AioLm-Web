@@ -1,9 +1,12 @@
 "use client";
 
+import { useI18n } from "@/i18n/client";
+import { intlLocales } from "@/i18n/config";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { countCodePoints } from "@aiolm/benchmark-contracts";
 import { DESCRIPTION_MAX_CODEPOINTS } from "@/lib/validation";
-import { SafeMarkdown } from "./ui";
+import { apiErrorKey, readApiErrorCode, SafeMarkdown } from "./ui";
 
 interface ManagedInfo {
   id: string;
@@ -37,13 +40,24 @@ export function isStaleSessionRestore(requestOp: number, currentOp: number): boo
   return requestOp !== currentOp;
 }
 
+export function managementErrorKey(operation: "open" | "load" | "save" | "delete" | "clear", status: number, code: string | null): string {
+  if (operation === "open" && (code === "ownership_missing" || status === 401)) return "manage.badCode";
+  if (operation === "load" && status === 401) return "manage.noSession";
+  const key = apiErrorKey(status, code);
+  if (key !== "error.unknown") return key;
+  return ({ open: "manage.openFailed", load: "error.unknown", save: "manage.saveFailed", delete: "manage.deleteFailed", clear: "manage.clearFailed" })[operation];
+}
+
 export function ManagementPanel(): React.JSX.Element {
+  const { locale, t } = useI18n();
+  const number = (value: number): string => new Intl.NumberFormat(intlLocales[locale]).format(value);
   const [code, setCode] = useState("");
   const [csrf, setCsrf] = useState<string | null>(null);
   const [info, setInfo] = useState<ManagedInfo | null>(null);
   const [draft, setDraft] = useState("");
   const [isDirty, setIsDirty] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageValues, setMessageValues] = useState<Record<string, number>>({});
   const [messageIsError, setMessageIsError] = useState(false);
   const [busy, setBusy] = useState(false);
   const dirtyRef = useRef(false);
@@ -62,9 +76,10 @@ export function ManagementPanel(): React.JSX.Element {
     }
   }, []);
 
-  const say = useCallback((text: string, isError = false): void => {
+  const say = useCallback((text: string, isError = false, values: Record<string, number> = {}): void => {
     if (!mountedRef.current) return;
     setMessage(text);
+    setMessageValues(values);
     setMessageIsError(isError);
   }, []);
 
@@ -109,7 +124,7 @@ export function ManagementPanel(): React.JSX.Element {
           if (!opts.silent) {
             setInfo(null);
             infoRef.current = null;
-            say("No active session. Paste your recovery code to open one.", false);
+            say(managementErrorKey("load", res.status, await readApiErrorCode(res)), res.status !== 401);
           }
           return null;
         }
@@ -118,7 +133,7 @@ export function ManagementPanel(): React.JSX.Element {
         applyServerInfo(json);
         return json;
       } catch {
-        if (!opts.silent && mountedRef.current) say("Could not reach the server. Check your connection and try again.", true);
+        if (!opts.silent && mountedRef.current) say("error.network", true);
         return null;
       }
     },
@@ -144,7 +159,7 @@ export function ManagementPanel(): React.JSX.Element {
         if (cancelled || controller.signal.aborted || !mountedRef.current) return;
         if (isStaleSessionRestore(myOp, sessionOpRef.current)) return;
         applyServerInfo(json);
-        say("Session restored. Paste your recovery code again to allow changes.", false);
+        say("manage.restored", false);
       } catch {
         // Stay on the recovery form; no announcement needed before interaction.
         // Abort errors stay silent so they never overwrite explicit session work.
@@ -177,9 +192,7 @@ export function ManagementPanel(): React.JSX.Element {
       if (!mountedRef.current) return;
       if (!res.ok) {
         say(
-          res.status === 401
-            ? "That recovery code was not accepted. Check it and try again."
-            : "Could not open a session right now. Please try again.",
+          managementErrorKey("open", res.status, await readApiErrorCode(res)),
           true,
         );
         return;
@@ -192,9 +205,9 @@ export function ManagementPanel(): React.JSX.Element {
       setIsDirty(false);
       dirtyRef.current = false;
       await loadSession({ silent: true });
-      say("Session opened for 30 minutes on this device.", false);
+      say("manage.opened", false);
     } catch {
-      say("Could not reach the server. Check your connection and try again.", true);
+      say("error.network", true);
     } finally {
       if (mountedRef.current) setBusy(false);
     }
@@ -203,15 +216,15 @@ export function ManagementPanel(): React.JSX.Element {
   const saveDescription = async (): Promise<void> => {
     if (busy) return;
     if (!info) {
-      say("Open a management session first.", true);
+      say("manage.openFirst", true);
       return;
     }
     if (!csrf) {
-      say("Editing needs a fresh session. Paste your recovery code again, then save.", true);
+      say("manage.freshEdit", true);
       return;
     }
     if (draftLength > DESCRIPTION_MAX_CODEPOINTS) {
-      say(`Description is ${draftLength} characters; the limit is ${DESCRIPTION_MAX_CODEPOINTS}. Shorten it and try again.`, true);
+      say("manage.tooLong", true, { count: draftLength, max: DESCRIPTION_MAX_CODEPOINTS });
       return;
     }
     setBusy(true);
@@ -231,21 +244,21 @@ export function ManagementPanel(): React.JSX.Element {
           infoRef.current = current;
         }
         say(
-          "Someone else changed the description first (newer version saved). Your text is kept above — compare it with the saved version below, then save again to replace it.",
+          "manage.conflict",
           true,
         );
         return;
       }
       if (res.status === 410) {
-        say("This benchmark was deleted and can no longer be edited.", true);
+        say("manage.deletedEdit", true);
         return;
       }
       if (res.status === 403) {
-        say("Saving was refused. Paste your recovery code again and try once more.", true);
+        say(managementErrorKey("save", res.status, await readApiErrorCode(res)), true);
         return;
       }
       if (!res.ok) {
-        say("Save failed. Please try again. Your text is kept above.", true);
+        say(managementErrorKey("save", res.status, await readApiErrorCode(res)), true);
         return;
       }
       // A 401 error JSON must never become the managed record.
@@ -260,9 +273,9 @@ export function ManagementPanel(): React.JSX.Element {
         setIsDirty(false);
         dirtyRef.current = false;
       }
-      say("Description updated.", false);
+      say("manage.updated", false);
     } catch {
-      say("Could not reach the server. Your text is kept above.", true);
+      say("manage.saveNetwork", true);
     } finally {
       if (mountedRef.current) setBusy(false);
     }
@@ -272,10 +285,10 @@ export function ManagementPanel(): React.JSX.Element {
     if (busy) return;
     if (!info) return;
     if (!csrf) {
-      say("Deleting needs a fresh session. Paste your recovery code again, then delete.", true);
+      say("manage.freshDelete", true);
       return;
     }
-    if (!window.confirm("Delete this benchmark? Its public page will be removed permanently.")) return;
+    if (!window.confirm(t("manage.confirmDelete"))) return;
     invalidateRestore();
     setBusy(true);
     try {
@@ -285,7 +298,7 @@ export function ManagementPanel(): React.JSX.Element {
       });
       if (!mountedRef.current) return;
       if (res.status === 204 || res.ok) {
-        say("Deleted. This benchmark no longer appears publicly, and its sharing link will not work again.", false);
+        say("manage.deleted", false);
         setInfo(null);
         infoRef.current = null;
         setCsrf(null);
@@ -293,14 +306,14 @@ export function ManagementPanel(): React.JSX.Element {
         setIsDirty(false);
         dirtyRef.current = false;
       } else if (res.status === 403) {
-        say("Delete was refused. Paste your recovery code again and try once more.", true);
+        say(managementErrorKey("delete", res.status, await readApiErrorCode(res)), true);
       } else if (res.status === 410) {
-        say("This benchmark was already deleted.", true);
+        say("manage.alreadyDeleted", true);
       } else {
-        say("Delete failed. Please try again.", true);
+        say(managementErrorKey("delete", res.status, await readApiErrorCode(res)), true);
       }
     } catch {
-      say("Could not reach the server. Nothing was deleted.", true);
+      say("manage.deleteNetwork", true);
     } finally {
       if (mountedRef.current) setBusy(false);
     }
@@ -321,14 +334,14 @@ export function ManagementPanel(): React.JSX.Element {
         setDraft("");
         setIsDirty(false);
         dirtyRef.current = false;
-        say("Session cleared on this device.", false);
+        say("manage.cleared", false);
       } else if (res.status === 403) {
-        say("Could not clear the session (permission check failed). Nothing was cleared — try again.", true);
+        say(managementErrorKey("clear", res.status, await readApiErrorCode(res)), true);
       } else {
-        say(`Could not clear the session right now. Nothing was cleared — try again.`, true);
+        say(managementErrorKey("clear", res.status, await readApiErrorCode(res)), true);
       }
     } catch {
-      say("Could not reach the server. Nothing was cleared — try again.", true);
+      say("manage.clearNetwork", true);
     } finally {
       if (mountedRef.current) setBusy(false);
     }
@@ -346,11 +359,11 @@ export function ManagementPanel(): React.JSX.Element {
   return (
     <div className="grid">
       <section className="card" aria-labelledby="manage-title">
-        <h1 id="manage-title">Manage a published benchmark</h1>
-        <p className="muted">Paste the recovery code saved at publish time. It is sent once and never placed in the address bar.</p>
+        <h1 id="manage-title">{t("manage.title")}</h1>
+        <p className="muted">{t("manage.intro")}</p>
         <form method="POST" action="/v1/management-sessions" onSubmit={(e) => void openSession(e)}>
           <div className="field">
-            <label htmlFor="recovery-code">Recovery code</label>
+            <label htmlFor="recovery-code">{t("manage.code")}</label>
             <textarea
               id="recovery-code" name="recovery_code" required autoComplete="off" spellCheck={false}
               placeholder="aiolm-recovery-v1.…"
@@ -358,50 +371,50 @@ export function ManagementPanel(): React.JSX.Element {
               disabled={busy}
               aria-describedby="recovery-hint"
             />
-            <span id="recovery-hint" className="hint">Starts with aiolm-recovery-v1. — keep it private.</span>
+            <span id="recovery-hint" className="hint">{t("manage.codeHint")}</span>
           </div>
-          <button type="submit" className="primary" disabled={busy}>{busy ? "Opening…" : "Open management session"}</button>
+          <button type="submit" className="primary" disabled={busy}>{busy ? t("manage.opening") : t("manage.open")}</button>
         </form>
-        {message ? <p role={messageIsError ? "alert" : "status"}>{message}</p> : null}
+        {message ? <p role={messageIsError ? "alert" : "status"}>{t(message, Object.fromEntries(Object.entries(messageValues).map(([key, value]) => [key, number(value)])))}</p> : null}
       </section>
 
       {info ? (
         <section className="card" aria-labelledby="record-title">
-          <h2 id="record-title">Your record {info.hidden ? "(hidden by moderators)" : ""}</h2>
+          <h2 id="record-title">{t("manage.record")} {info.hidden ? t("manage.hidden") : ""}</h2>
           <dl className="kv">
-            <dt>Public id</dt><dd>{info.public_id}</dd>
-            <dt>Revision</dt><dd>{info.revision}</dd>
-            <dt>Session expires</dt><dd>{new Date(info.expires_at).toLocaleString()}</dd>
+            <dt>{t("manage.publicId")}</dt><dd>{info.public_id}</dd>
+            <dt>{t("manage.revision")}</dt><dd>{number(info.revision)}</dd>
+            <dt>{t("manage.expires")}</dt><dd>{new Date(info.expires_at).toLocaleString(intlLocales[locale], { timeZone: "UTC", timeZoneName: "short" })}</dd>
           </dl>
           {!csrf ? (
-            <p role="status" className="muted">Session found on this device, but changes need a fresh code. Paste your recovery code above to allow saving or deleting.</p>
+            <p role="status" className="muted">{t("manage.readOnly")}</p>
           ) : null}
           <div className="field">
-            <label htmlFor="desc-draft">Description (Markdown, max {DESCRIPTION_MAX_CODEPOINTS} characters)</label>
+            <label htmlFor="desc-draft">{t("manage.description", { max: number(DESCRIPTION_MAX_CODEPOINTS) })}</label>
             <textarea
               id="desc-draft" value={draft} onChange={(e) => onDraftChange(e.target.value)}
               disabled={busy}
               aria-describedby="desc-count"
             />
             <span id="desc-count" className="hint" aria-live="polite">
-              {draftLength} / {DESCRIPTION_MAX_CODEPOINTS} characters
-              {draftLength > DESCRIPTION_MAX_CODEPOINTS ? " — over the limit" : ""}
-              {isDirty ? " — unsaved changes" : ""}
+              {t("manage.count", { count: number(draftLength), max: number(DESCRIPTION_MAX_CODEPOINTS) })}
+              {draftLength > DESCRIPTION_MAX_CODEPOINTS ? t("manage.overLimit") : ""}
+              {isDirty ? t("manage.unsaved") : ""}
             </span>
           </div>
-          <h3>Preview</h3>
-          {draft ? <SafeMarkdown text={draft} /> : <p className="muted">Empty description.</p>}
+          <h3>{t("manage.preview")}</h3>
+          {draft ? <SafeMarkdown text={draft} /> : <p className="muted">{t("manage.empty")}</p>}
           {showSavedComparison ? (
             <div>
-              <h3>Saved version (revision {info.revision})</h3>
-              {info.description_md ? <SafeMarkdown text={info.description_md} /> : <p className="muted">Saved description is empty.</p>}
+              <h3>{t("manage.savedVersion", { revision: number(info.revision) })}</h3>
+              {info.description_md ? <SafeMarkdown text={info.description_md} /> : <p className="muted">{t("manage.savedEmpty")}</p>}
             </div>
           ) : null}
           <p>
-            <button type="button" className="primary" disabled={busy || !canEdit} onClick={() => void saveDescription()}>Save description</button>{" "}
-            <button type="button" disabled={busy} onClick={() => void loadSession()}>Reload</button>{" "}
-            <button type="button" className="danger" disabled={busy || !canEdit} onClick={() => void remove()}>Delete benchmark</button>{" "}
-            <button type="button" disabled={busy} onClick={() => void signOut()}>Clear session</button>
+            <button type="button" className="primary" disabled={busy || !canEdit} onClick={() => void saveDescription()}>{t("manage.save")}</button>{" "}
+            <button type="button" disabled={busy} onClick={() => void loadSession()}>{t("manage.reload")}</button>{" "}
+            <button type="button" className="danger" disabled={busy || !canEdit} onClick={() => void remove()}>{t("manage.delete")}</button>{" "}
+            <button type="button" disabled={busy} onClick={() => void signOut()}>{t("manage.clear")}</button>
           </p>
         </section>
       ) : null}

@@ -1,3 +1,6 @@
+import common from "@/i18n/messages/common/en";
+import management from "@/i18n/messages/management/en";
+import { createTranslator } from "@/i18n/translate";
 import { describe, expect, it } from "vitest";
 import {
   BROWSER_HISTORY_LIMIT,
@@ -97,17 +100,18 @@ describe("management draft adoption", () => {
 });
 
 describe("friendly form errors", () => {
+  const t = createTranslator({ ...common, ...management });
   it("explains report failures without technical codes", () => {
-    expect(friendlyReportError(404, "not_found")).toMatch(/no longer available/i);
-    expect(friendlyReportError(403, "verification_required")).toMatch(/verification/i);
-    expect(friendlyReportError(null, null)).toMatch(/connection/i);
-    expect(friendlyReportError(429, "rate_limited")).toMatch(/too many/i);
+    expect(friendlyReportError(404, "not_found", t)).toMatch(/no longer available/i);
+    expect(friendlyReportError(403, "verification_required", t)).toMatch(/verification/i);
+    expect(friendlyReportError(null, null, t)).toMatch(/connection/i);
+    expect(friendlyReportError(429, "rate_limited", t)).toMatch(/too many/i);
   });
 
   it("explains verification failures including expiry", () => {
-    expect(friendlyVerifyError(410, "verification_expired")).toMatch(/expired/i);
-    expect(friendlyVerifyError(404, "not_found")).toMatch(/not found/i);
-    expect(friendlyVerifyError(null, null)).toMatch(/try again/i);
+    expect(friendlyVerifyError(410, "verification_expired", t)).toMatch(/expired/i);
+    expect(friendlyVerifyError(404, "not_found", t)).toMatch(/not found/i);
+    expect(friendlyVerifyError(null, null, t)).toMatch(/try again/i);
   });
 });
 

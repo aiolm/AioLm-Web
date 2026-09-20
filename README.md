@@ -26,6 +26,12 @@ pin the same major).
 
 ## Public pages
 
+All page routes below use a language prefix: `/en`, `/ko`, `/ja`, or `/zh`
+(Simplified Chinese), for example `/ko/benchmarks`. Legacy unprefixed URLs
+redirect using the saved language or browser preference, with English fallback.
+The header language selector preserves the current page, query and fragment.
+APIs remain at `/v1/**`. See [language routing and catalogs](docs/internationalization.md).
+
 - `/`: product introduction to the AioLM desktop workspace, with links to the
   GitHub repository, documentation, and benchmark explorer.
 - `/benchmarks`: newest-first results with URL-backed model fingerprint, hardware,

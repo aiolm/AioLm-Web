@@ -1,33 +1,34 @@
 "use client";
 
+import { useI18n } from "@/i18n/client";
+import type { Translator } from "@/i18n/types";
+import { readApiErrorCode } from "./ui";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { TurnstileWidget } from "@/components/turnstile";
 
-export function friendlyVerifyError(status: number | null, code: string | null): string {
-  if (status === 410 || code === "verification_expired") return "This session expired. Start a new publish from the app.";
-  if (status === 404) return "This session was not found. Start a new publish from the app.";
-  if (status === 429) return "Too many attempts right now. Wait a moment and try again.";
-  if (status === 503) return "Verification is not available right now. Please try again later.";
-  if (code === "verification_required") return "Verification failed or expired. Complete it again and continue.";
-  return "Verification failed. Please try again.";
+export function verifyErrorKey(status: number | null, code: string | null): string {
+  if (status === 410 || code === "verification_expired") return "verify.expiredSession";
+  if (status === 404 || code === "not_found") return "verify.notFound";
+  if (status === 429 || code === "rate_limited") return "error.rateLimited";
+  if (status === 503 || code === "service_unavailable") return "verify.unavailable";
+  if (code === "verification_required") return "verify.verification";
+  return "verify.failed";
 }
 
-async function readVerifyCode(res: Response): Promise<string | null> {
-  try {
-    const body = (await res.clone().json()) as { error?: { code?: unknown } };
-    return typeof body.error?.code === "string" ? body.error.code : null;
-  } catch {
-    return null;
-  }
+export function friendlyVerifyError(status: number | null, code: string | null, t: Translator): string {
+  return t(verifyErrorKey(status, code));
 }
 
 export function VerifyPanel({ sessionId }: { sessionId: string }): React.JSX.Element {
+  const { t } = useI18n();
   const [token, setToken] = useState<string | null>(null);
   const [widgetKey, setWidgetKey] = useState(0);
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [message, setMessage] = useState("");
   const mountedRef = useRef(true);
   const sendingRef = useRef(false);
+  const completedRef = useRef(false);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -44,10 +45,10 @@ export function VerifyPanel({ sessionId }: { sessionId: string }): React.JSX.Ele
   }, []);
 
   const handleExpire = useCallback((): void => {
-    if (!mountedRef.current) return;
+    if (!mountedRef.current || completedRef.current) return;
     setToken(null);
     setState("error");
-    setMessage("Verification expired. Complete it again, then continue.");
+    setMessage("verify.expired");
   }, []);
 
   const submit = async (): Promise<void> => {
@@ -55,7 +56,7 @@ export function VerifyPanel({ sessionId }: { sessionId: string }): React.JSX.Ele
     if (sendingRef.current || state === "sending" || state === "done") return;
     if (!token) {
       setState("error");
-      setMessage("Complete the verification step first, then continue.");
+      setMessage("verify.required");
       return;
     }
     sendingRef.current = true;
@@ -70,25 +71,27 @@ export function VerifyPanel({ sessionId }: { sessionId: string }): React.JSX.Ele
       });
       if (!mountedRef.current) return;
       if (res.ok) {
+        completedRef.current = true;
         setToken(null);
         setState("done");
-        setMessage("Verified. Return to the app; it will continue automatically.");
+        setMessage("verify.done");
         return;
       }
-      const code = await readVerifyCode(res);
+      const code = await readApiErrorCode(res);
+      if (!mountedRef.current) return;
       // The attempted one-use token may already be consumed, even for
       // non-token errors, so every failure forces a fresh challenge before retry.
       setToken(null);
       setWidgetKey((k) => k + 1);
       setState("error");
-      setMessage(friendlyVerifyError(res.status, code));
+      setMessage(verifyErrorKey(res.status, code));
     } catch {
       if (!mountedRef.current) return;
       // Lost response may still have consumed the one-use token: reset before retry.
       setToken(null);
       setWidgetKey((k) => k + 1);
       setState("error");
-      setMessage(friendlyVerifyError(null, null));
+      setMessage(verifyErrorKey(null, null));
     } finally {
       sendingRef.current = false;
     }
@@ -97,18 +100,17 @@ export function VerifyPanel({ sessionId }: { sessionId: string }): React.JSX.Ele
   return (
     <div className="grid">
       <section className="card" aria-labelledby="verify-title">
-        <h1 id="verify-title">Verify publishing</h1>
+        <h1 id="verify-title">{t("verify.title")}</h1>
         <p className="muted">
-          This confirms you are human before the benchmark is accepted. No account needed;
-          the app keeps your owner credential and never shares it with this page.
+          {t("verify.intro")}
         </p>
         <TurnstileWidget key={widgetKey} action="benchmark_publish" onVerify={handleVerify} onExpire={handleExpire} />
         <p>
           <button type="button" className="primary" disabled={state === "sending" || state === "done"} onClick={() => void submit()}>
-            {state === "sending" ? "Verifying…" : "Verify and continue"}
+            {state === "sending" ? t("verify.sending") : t("verify.continue")}
           </button>
         </p>
-        {message ? <p role={state === "error" ? "alert" : "status"}>{message}</p> : null}
+        {message ? <p role={state === "error" ? "alert" : "status"}>{t(message)}</p> : null}
       </section>
     </div>
   );

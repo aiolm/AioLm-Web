@@ -1,28 +1,29 @@
 "use client";
 
+import { useI18n } from "@/i18n/client";
+import { intlLocales } from "@/i18n/config";
+import type { Translator } from "@/i18n/types";
+import { readApiErrorCode } from "./ui";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { TurnstileWidget } from "./turnstile";
 
-export function friendlyReportError(status: number | null, code: string | null): string {
-  if (status === 404) return "This result is no longer available.";
-  if (status === 429) return "Too many reports right now. Please wait and try again.";
-  if (status === 503) return "Reporting is not available right now. Please try again later.";
-  if (code === "verification_required") return "Verification failed or expired. Complete it again and resend.";
-  if (status !== null && status >= 400 && status < 500) return "This report was not accepted. Check the reason and verification, then try again.";
-  return "Could not send the report. Check your connection and try again.";
+export function reportErrorKey(status: number | null, code: string | null): string {
+  if (status === 404 || code === "not_found") return "error.notFound";
+  if (status === 429 || code === "rate_limited") return "report.rateLimited";
+  if (status === 503 || code === "service_unavailable") return "report.unavailable";
+  if (code === "verification_required") return "report.verification";
+  if (status !== null && status >= 400 && status < 500) return "report.rejected";
+  return "report.network";
 }
 
-async function readErrorCode(res: Response): Promise<string | null> {
-  try {
-    const body = (await res.clone().json()) as { error?: { code?: unknown } };
-    return typeof body.error?.code === "string" ? body.error.code : null;
-  } catch {
-    return null;
-  }
+export function friendlyReportError(status: number | null, code: string | null, t: Translator): string {
+  return t(reportErrorKey(status, code));
 }
 
 export function ReportForm({ publicId }: { publicId: string }): React.JSX.Element {
   const [reason, setReason] = useState("");
+  const { locale, t } = useI18n();
   const [token, setToken] = useState<string | null>(null);
   const [widgetKey, setWidgetKey] = useState(0);
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
@@ -48,7 +49,7 @@ export function ReportForm({ publicId }: { publicId: string }): React.JSX.Elemen
     if (!mountedRef.current) return;
     setToken(null);
     setState("error");
-    setMessage("Verification expired. Complete it again, then resend.");
+    setMessage("report.expired");
   }, []);
 
   const submit = async (e: React.FormEvent): Promise<void> => {
@@ -57,12 +58,12 @@ export function ReportForm({ publicId }: { publicId: string }): React.JSX.Elemen
     if (sendingRef.current || state === "sending") return;
     if (!token) {
       setState("error");
-      setMessage("Complete the verification step first, then send.");
+      setMessage("report.required");
       return;
     }
     if (!reason.trim()) {
       setState("error");
-      setMessage("Describe the issue before sending.");
+      setMessage("report.reasonRequired");
       return;
     }
     sendingRef.current = true;
@@ -79,47 +80,48 @@ export function ReportForm({ publicId }: { publicId: string }): React.JSX.Elemen
       if (res.ok) {
         setToken(null);
         setState("done");
-        setMessage("Report received. Moderators review reports privately.");
+        setMessage("report.received");
         return;
       }
-      const code = await readErrorCode(res);
+      const code = await readApiErrorCode(res);
+      if (!mountedRef.current) return;
       // The attempted one-use token may already be consumed, even for
       // non-token errors, so every failure forces a fresh challenge before retry.
       setToken(null);
       setWidgetKey((k) => k + 1);
       setState("error");
-      setMessage(friendlyReportError(res.status, code));
+      setMessage(reportErrorKey(res.status, code));
     } catch {
       if (!mountedRef.current) return;
       // Lost response may still have consumed the one-use token: reset before retry.
       setToken(null);
       setWidgetKey((k) => k + 1);
       setState("error");
-      setMessage(friendlyReportError(null, null));
+      setMessage(reportErrorKey(null, null));
     } finally {
       sendingRef.current = false;
     }
   };
 
-  if (state === "done") return <div className="alert info" role="status"><p>{message}</p></div>;
+  if (state === "done") return <div className="alert info" role="status"><p>{t(message)}</p></div>;
 
   return (
     <section className="card" aria-labelledby="report-title">
-      <h2 id="report-title">Report this result</h2>
+      <h2 id="report-title">{t("report.title")}</h2>
       <form method="POST" action={`/v1/benchmark-runs/${publicId}/reports`} onSubmit={(e) => void submit(e)}>
         <div className="field">
-          <label htmlFor="report-reason">Reason (max 2000 characters)</label>
+          <label htmlFor="report-reason">{t("report.reason", { max: new Intl.NumberFormat(intlLocales[locale]).format(2000) })}</label>
           <textarea
             id="report-reason" name="reason" required maxLength={2000}
             value={reason} onChange={(e) => setReason(e.target.value)}
             disabled={state === "sending"}
             aria-describedby="report-hint"
           />
-          <span id="report-hint" className="hint">Describe what looks wrong. Reports are private to moderators.</span>
+          <span id="report-hint" className="hint">{t("report.hint")}</span>
         </div>
         <TurnstileWidget key={widgetKey} action="benchmark_report" onVerify={handleVerify} onExpire={handleExpire} />
-        <p><button type="submit" disabled={state === "sending"}>{state === "sending" ? "Sending…" : "Send report"}</button></p>
-        {state === "error" && message ? <p role="alert">{message}</p> : null}
+        <p><button type="submit" disabled={state === "sending"}>{state === "sending" ? t("report.sending") : t("report.send")}</button></p>
+        {state === "error" && message ? <p role="alert">{t(message)}</p> : null}
       </form>
     </section>
   );

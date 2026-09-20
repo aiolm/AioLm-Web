@@ -1,3 +1,5 @@
+import type { Translator } from "@/i18n/types";
+import { benchmarkFallback } from "./benchmark-i18n";
 /**
  * Column contract for the measurement table. The published row shape is fixed
  * by `@aiolm/benchmark-contracts` (`$defs/row`), so columns are declared here in
@@ -29,38 +31,38 @@ function throughput(value: unknown): string {
 }
 
 /** A failed sample is named in words, so the outcome does not depend on styling. */
-function outcome(value: unknown): string {
-  if (value === true) return "Failed";
-  if (value === false) return "OK";
-  return formatCellValue(value);
+function outcome(value: unknown, t: Translator): string {
+  if (value === true) return t("benchmark.Failed");
+  if (value === false) return t("benchmark.OK");
+  return formatCellValue(value, t);
 }
 
-const MEASUREMENT_COLUMNS: readonly RowColumn[] = [
-  { key: "prompt_tokens", label: "Prompt", unit: "tokens", numeric: true, format: formatCount },
-  { key: "generation_length", label: "Generation length", unit: "tokens", numeric: true, format: formatCount },
-  { key: "concurrency", label: "Concurrency", numeric: true, format: formatCount },
-  { key: "repetition", label: "Repetition", numeric: true, format: formatCount },
-  { key: "completion_tokens", label: "Completion", unit: "tokens", numeric: true, format: formatCount },
-  { key: "cached_tokens", label: "Cached", unit: "tokens", numeric: true, format: formatCount },
-  { key: "ttft_ms", label: "Time to first token", unit: "ms", numeric: true, format: formatMilliseconds },
-  { key: "tpot_ms", label: "Time per output token", unit: "ms", numeric: true, format: formatMilliseconds },
-  { key: "pp_tps", label: "Prompt processing", unit: "tok/s", numeric: true, format: throughput },
-  { key: "tg_tps", label: "Generation", unit: "tok/s", numeric: true, format: throughput },
-  { key: "e2e_ms", label: "End-to-end duration", unit: "ms", numeric: true, format: formatMilliseconds },
-  { key: "total_tps", label: "Total throughput", unit: "tok/s", numeric: true, format: throughput },
-  { key: "peak_memory_bytes", label: "Peak memory", numeric: true, format: formatCompactBytes },
-  { key: "timing_source", label: "Timing source", numeric: false, format: formatCellValue },
-  { key: "failed", label: "Outcome", numeric: false, format: outcome },
-];
+function measurementColumns(t: Translator): readonly RowColumn[] { return [
+  { key: "prompt_tokens", label: t("benchmark.Prompt"), unit: t("benchmark.tokens"), numeric: true, format: formatCount },
+  { key: "generation_length", label: t("benchmark.Generation length"), unit: t("benchmark.tokens"), numeric: true, format: formatCount },
+  { key: "concurrency", label: t("benchmark.Concurrency"), numeric: true, format: formatCount },
+  { key: "repetition", label: t("benchmark.Repetition"), numeric: true, format: formatCount },
+  { key: "completion_tokens", label: t("benchmark.Completion"), unit: t("benchmark.tokens"), numeric: true, format: formatCount },
+  { key: "cached_tokens", label: t("benchmark.Cached"), unit: t("benchmark.tokens"), numeric: true, format: formatCount },
+  { key: "ttft_ms", label: t("benchmark.Time to first token"), unit: t("benchmark.ms"), numeric: true, format: formatMilliseconds },
+  { key: "tpot_ms", label: t("benchmark.Time per output token"), unit: t("benchmark.ms"), numeric: true, format: formatMilliseconds },
+  { key: "pp_tps", label: t("benchmark.Prompt processing"), unit: t("benchmark.tok/s"), numeric: true, format: throughput },
+  { key: "tg_tps", label: t("benchmark.Generation"), unit: t("benchmark.tok/s"), numeric: true, format: throughput },
+  { key: "e2e_ms", label: t("benchmark.End-to-end duration"), unit: t("benchmark.ms"), numeric: true, format: formatMilliseconds },
+  { key: "total_tps", label: t("benchmark.Total throughput"), unit: t("benchmark.tok/s"), numeric: true, format: throughput },
+  { key: "peak_memory_bytes", label: t("benchmark.Peak memory"), numeric: true, format: (value) => formatCompactBytes(value, t) },
+  { key: "timing_source", label: t("benchmark.Timing source"), numeric: false, format: (value: unknown) => formatCellValue(value, t) },
+  { key: "failed", label: t("benchmark.Outcome"), numeric: false, format: (value) => outcome(value, t) },
+]; }
 
-const CONTRACT_KEYS = new Set(MEASUREMENT_COLUMNS.map((column) => column.key));
+const CONTRACT_KEYS = new Set(measurementColumns(benchmarkFallback).map((column) => column.key));
 
 /**
  * Contract columns first, in contract order, then any unrecognized key in the
  * order it was first seen. Only keys that some visible row actually carries get
  * a column, so an absent metric is not implied by an empty one.
  */
-export function buildRowColumns(rows: ReadonlyArray<Record<string, unknown>>): RowColumn[] {
+export function buildRowColumns(rows: ReadonlyArray<Record<string, unknown>>, t: Translator = benchmarkFallback): RowColumn[] {
   const seen = new Set<string>();
   const extras: string[] = [];
   for (const row of rows) {
@@ -71,8 +73,8 @@ export function buildRowColumns(rows: ReadonlyArray<Record<string, unknown>>): R
     }
   }
   return [
-    ...MEASUREMENT_COLUMNS.filter((column) => seen.has(column.key)),
-    ...extras.map((key) => ({ key, label: key, numeric: false, format: formatCellValue })),
+    ...measurementColumns(t).filter((column) => seen.has(column.key)),
+    ...extras.map((key) => ({ key, label: key, numeric: false, format: (value: unknown) => formatCellValue(value, t) })),
   ];
 }
 

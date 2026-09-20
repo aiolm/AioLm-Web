@@ -1,0 +1,43 @@
+import type { Catalog } from "./en";
+
+const messages = {
+  "common.loading": "読み込み中…",
+  "common.errorTitle": "問題が発生しました。",
+  "common.retry": "再試行",
+  "common.about": "AioLM について",
+  "error.network": "サーバーに接続できません。接続を確認して再試行してください。",
+  "error.unknown": "リクエストを完了できませんでした。再試行してください。",
+  "error.notFound": "この結果は現在表示できません。",
+  "error.rateLimited": "試行回数が多すぎます。しばらくしてから再試行してください。",
+  "error.unavailable": "サービスを一時的に利用できません。後でもう一度お試しください。",
+  "error.invalidRequest": "リクエストが受理されませんでした。入力内容を確認して再試行してください。",
+  "error.tooLarge": "リクエストが大きすぎます。文章を短くして再試行してください。",
+  "error.ownership": "権限が必要です。復旧コードで新しい管理セッションを開始してください。",
+  "error.csrf": "権限の確認に失敗しました。新しい管理セッションを開始して再試行してください。",
+  "error.conflict": "保存済みの説明が変更されました。再読み込みしてから再試行してください。",
+  "error.deleted": "このベンチマークは削除されました。",
+  "error.verification": "認証に失敗したか、有効期限が切れました。再認証してからお試しください。",
+  "error.expired": "認証セッションの有効期限が切れました。アプリから公開をやり直してください。",
+  "error.bodyMismatch": "この送信は異なる内容ですでに存在します。",
+  "report.notFound": "この結果は現在表示できません。",
+  "report.rateLimited": "現在、報告が多すぎます。しばらく待ってから再試行してください。",
+  "report.unavailable": "現在、報告を送信できません。後でもう一度お試しください。",
+  "report.verification": "認証に失敗したか、有効期限が切れました。再認証してから送信してください。",
+  "report.rejected": "報告が受理されませんでした。理由と認証を確認して再試行してください。",
+  "report.network": "報告を送信できませんでした。接続を確認して再試行してください。",
+  "report.expired": "認証の有効期限が切れました。再認証してから送信してください。",
+  "report.required": "先に認証を完了してから送信してください。",
+  "report.reasonRequired": "送信する前に問題を説明してください。",
+  "report.received": "報告を受け付けました。モデレーターが非公開で確認します。",
+  "report.title": "この結果を報告",
+  "report.reason": "理由（最大{max}文字）",
+  "report.hint": "問題のある点を説明してください。報告はモデレーターにのみ公開されます。",
+  "report.sending": "送信中…",
+  "report.send": "報告を送信",
+  "turnstile.notConfigured": "認証が設定されていません。",
+  "turnstile.failed": "認証ウィジェットに失敗しました。ページを再読み込みして再試行してください。",
+  "turnstile.timeout": "認証がタイムアウトしました。再試行してください。",
+  "turnstile.scriptFailed": "認証スクリプトを読み込めませんでした。接続を確認して再読み込みしてください。"
+} satisfies Catalog;
+
+export default messages;

@@ -1,0 +1,43 @@
+import type { Catalog } from "./en";
+
+const messages = {
+  "common.loading": "불러오는 중…",
+  "common.errorTitle": "문제가 발생했습니다.",
+  "common.retry": "다시 시도",
+  "common.about": "AioLM 소개",
+  "error.network": "서버에 연결할 수 없습니다. 연결을 확인하고 다시 시도하세요.",
+  "error.unknown": "요청을 완료하지 못했습니다. 다시 시도하세요.",
+  "error.notFound": "이 결과는 더 이상 볼 수 없습니다.",
+  "error.rateLimited": "시도 횟수가 너무 많습니다. 잠시 후 다시 시도하세요.",
+  "error.unavailable": "서비스를 일시적으로 이용할 수 없습니다. 나중에 다시 시도하세요.",
+  "error.invalidRequest": "요청이 수락되지 않았습니다. 입력 내용을 확인하고 다시 시도하세요.",
+  "error.tooLarge": "요청이 너무 큽니다. 내용을 줄이고 다시 시도하세요.",
+  "error.ownership": "권한이 필요합니다. 복구 코드로 새 관리 세션을 여세요.",
+  "error.csrf": "권한 확인에 실패했습니다. 새 관리 세션을 열고 다시 시도하세요.",
+  "error.conflict": "저장된 설명이 변경되었습니다. 새로 불러온 후 다시 시도하세요.",
+  "error.deleted": "이 벤치마크는 삭제되었습니다.",
+  "error.verification": "인증에 실패했거나 만료되었습니다. 다시 인증한 후 시도하세요.",
+  "error.expired": "인증 세션이 만료되었습니다. 앱에서 게시를 다시 시작하세요.",
+  "error.bodyMismatch": "이 제출 항목이 다른 내용으로 이미 존재합니다.",
+  "report.notFound": "이 결과는 더 이상 볼 수 없습니다.",
+  "report.rateLimited": "신고가 너무 많습니다. 잠시 후 다시 시도하세요.",
+  "report.unavailable": "지금은 신고할 수 없습니다. 나중에 다시 시도하세요.",
+  "report.verification": "인증에 실패했거나 만료되었습니다. 다시 인증한 후 보내세요.",
+  "report.rejected": "신고가 수락되지 않았습니다. 사유와 인증을 확인하고 다시 시도하세요.",
+  "report.network": "신고를 보내지 못했습니다. 연결을 확인하고 다시 시도하세요.",
+  "report.expired": "인증이 만료되었습니다. 다시 인증한 후 보내세요.",
+  "report.required": "먼저 인증을 완료한 후 보내세요.",
+  "report.reasonRequired": "보내기 전에 문제를 설명하세요.",
+  "report.received": "신고가 접수되었습니다. 운영자가 비공개로 검토합니다.",
+  "report.title": "이 결과 신고",
+  "report.reason": "사유 (최대 {max}자)",
+  "report.hint": "잘못된 부분을 설명하세요. 신고는 운영자에게만 공개됩니다.",
+  "report.sending": "보내는 중…",
+  "report.send": "신고 보내기",
+  "turnstile.notConfigured": "인증이 구성되지 않았습니다.",
+  "turnstile.failed": "인증 위젯에 오류가 발생했습니다. 페이지를 새로고침하고 다시 시도하세요.",
+  "turnstile.timeout": "인증 시간이 초과되었습니다. 다시 시도하세요.",
+  "turnstile.scriptFailed": "인증 스크립트를 불러오지 못했습니다. 연결을 확인하고 새로고침하세요."
+} satisfies Catalog;
+
+export default messages;

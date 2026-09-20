@@ -1,0 +1,43 @@
+const messages = {
+  "common.loading": "Loading…",
+  "common.errorTitle": "Something went wrong.",
+  "common.retry": "Retry",
+  "common.about": "About AioLM",
+  "error.network": "Could not reach the server. Check your connection and try again.",
+  "error.unknown": "The request could not be completed. Please try again.",
+  "error.notFound": "This result is no longer available.",
+  "error.rateLimited": "Too many attempts right now. Wait a moment and try again.",
+  "error.unavailable": "The service is temporarily unavailable. Please try again later.",
+  "error.invalidRequest": "The request was not accepted. Check your input and try again.",
+  "error.tooLarge": "The request is too large. Shorten your text and try again.",
+  "error.ownership": "Permission is required. Open a fresh management session with your recovery code.",
+  "error.csrf": "The permission check failed. Open a fresh management session and try again.",
+  "error.conflict": "The saved description changed. Reload it before trying again.",
+  "error.deleted": "This benchmark was deleted.",
+  "error.verification": "Verification failed or expired. Complete it again and try again.",
+  "error.expired": "This verification session expired. Start a new publish from the app.",
+  "error.bodyMismatch": "This submission already exists with different content.",
+  "report.notFound": "This result is no longer available.",
+  "report.rateLimited": "Too many reports right now. Please wait and try again.",
+  "report.unavailable": "Reporting is not available right now. Please try again later.",
+  "report.verification": "Verification failed or expired. Complete it again and resend.",
+  "report.rejected": "This report was not accepted. Check the reason and verification, then try again.",
+  "report.network": "Could not send the report. Check your connection and try again.",
+  "report.expired": "Verification expired. Complete it again, then resend.",
+  "report.required": "Complete the verification step first, then send.",
+  "report.reasonRequired": "Describe the issue before sending.",
+  "report.received": "Report received. Moderators review reports privately.",
+  "report.title": "Report this result",
+  "report.reason": "Reason (max {max} characters)",
+  "report.hint": "Describe what looks wrong. Reports are private to moderators.",
+  "report.sending": "Sending…",
+  "report.send": "Send report",
+  "turnstile.notConfigured": "Verification is not configured.",
+  "turnstile.failed": "Verification widget failed. Please reload the page and try again.",
+  "turnstile.timeout": "Verification timed out. Please try again.",
+  "turnstile.scriptFailed": "Verification script failed to load. Check your connection and reload."
+};
+
+export type Catalog = { [K in keyof typeof messages]: string };
+
+export default messages;

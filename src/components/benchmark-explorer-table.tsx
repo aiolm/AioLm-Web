@@ -1,4 +1,7 @@
 "use client";
+import { useI18n } from "@/i18n/client";
+import { localizedPath } from "@/i18n/config";
+import { useSearchParams } from "next/navigation";
 
 import Link from "next/link";
 import {
@@ -41,76 +44,73 @@ export function BenchmarkExplorerTable({
   compare,
   onToggleComparison,
 }: BenchmarkExplorerTableProps): React.JSX.Element {
+  const { locale, t } = useI18n();
+  const search = useSearchParams().toString();
   const comparisonFull = compare.length >= EXPLORER_COMPARE_LIMIT;
   return (
     <table className="explorer-table">
-      <caption className="explorer-table-caption">
-        Published results, newest first. Each row is one self-reported measurement of one configuration;
-        rows are not ranked against each other.
-      </caption>
+      <caption className="explorer-table-caption">{t("benchmark.Published results, newest first. Each row is one self-reported measurement of one configuration; rows are not ranked against each other.")}</caption>
       <thead className="explorer-table-head">
         <tr className="explorer-head-row">
-          <th scope="col" className="explorer-head-cell explorer-head-compare">Compare</th>
-          <th scope="col" className="explorer-head-cell explorer-head-identity">Model &amp; hardware</th>
-          <th scope="col" className="explorer-head-cell explorer-head-setup">Method &amp; workload</th>
-          <th scope="col" className="explorer-head-cell explorer-head-samples">Samples</th>
-          <th scope="col" className="explorer-head-cell explorer-head-numeric">
-            Generation <span className="explorer-unit">(tok/s)</span>
+          <th scope="col" className="explorer-head-cell explorer-head-compare">{t("benchmark.Compare")}</th>
+          <th scope="col" className="explorer-head-cell explorer-head-identity">{t("benchmark.Model & hardware")}</th>
+          <th scope="col" className="explorer-head-cell explorer-head-setup">{t("benchmark.Method & workload")}</th>
+          <th scope="col" className="explorer-head-cell explorer-head-samples">{t("benchmark.Samples")}</th>
+          <th scope="col" className="explorer-head-cell explorer-head-numeric">{t("benchmark.Generation")}{" "}<span className="explorer-unit">{t("benchmark.(tok/s)")}</span>
           </th>
-          <th scope="col" className="explorer-head-cell explorer-head-numeric">
-            Duration <span className="explorer-unit">(ms)</span>
+          <th scope="col" className="explorer-head-cell explorer-head-numeric">{t("benchmark.Duration")}{" "}<span className="explorer-unit">{t("benchmark.(ms)")}</span>
           </th>
-          <th scope="col" className="explorer-head-cell explorer-head-published">Published</th>
+          <th scope="col" className="explorer-head-cell explorer-head-published">{t("benchmark.Published")}</th>
         </tr>
       </thead>
       <tbody className="explorer-table-body">
         {items.map((item) => {
           const { summary } = item;
           const selected = isCompared(compare, item.public_id);
-          const identity = `${summary.model_label} on ${summary.hardware_label}`;
+          const identity = { model: summary.model_label, hardware: summary.hardware_label };
           return (
             <tr key={item.public_id} className="explorer-row">
               <td className="explorer-cell explorer-cell-compare">
-                <span className="explorer-cell-label" aria-hidden="true">Compare</span>
+                <span className="explorer-cell-label" aria-hidden="true">{t("benchmark.Compare")}</span>
                 <input
                   className="explorer-compare-input"
                   type="checkbox"
                   checked={selected}
                   disabled={!selected && comparisonFull}
                   onChange={() => onToggleComparison(item)}
-                  aria-label={`Add ${identity} to the comparison`}
+                  aria-label={t(selected ? "benchmark.Remove {model} on {hardware} from the comparison" : "benchmark.Add {model} on {hardware} to the comparison", identity)}
                 />
               </td>
               <th scope="row" className="explorer-cell explorer-cell-identity">
-                <span className="explorer-cell-label" aria-hidden="true">Model &amp; hardware</span>
+                <span className="explorer-cell-label" aria-hidden="true">{t("benchmark.Model & hardware")}</span>
                 <span className="explorer-cell-value">
                   <Link
                     className="explorer-detail-link"
-                    href={explorerDetailHref(item.public_id)}
-                    aria-label={`Open the full result for ${identity}`}
+                    href={localizedPath(locale, `${explorerDetailHref(item.public_id)}${search ? `?${search}` : ""}`)}
+                    aria-label={t("benchmark.Open the full result for {model} on {hardware}", identity)}
                   >
                     {summary.model_label}
                   </Link>
                   <span className="explorer-identity-hardware">{summary.hardware_label}</span>
                 </span>
               </th>
-              <ExplorerCell label="Method & workload" className="explorer-cell-setup">
+              <ExplorerCell label={t("benchmark.Method & workload")} className="explorer-cell-setup">
                 <span className="explorer-setup-method">{summary.method_label}</span>
                 <span className="explorer-setup-workload">{summary.workload_label}</span>
               </ExplorerCell>
-              <ExplorerCell label="Samples" className="explorer-cell-samples">
+              <ExplorerCell label={t("benchmark.Samples")} className="explorer-cell-samples">
                 <span className="explorer-sample-count">
-                  {formatSampleCount(summary.row_count, summary.failed_rows)}
+                  {formatSampleCount(summary.row_count, summary.failed_rows, t)}
                 </span>
                 <span className={`explorer-status explorer-status-${summary.status}`}>{summary.status}</span>
               </ExplorerCell>
-              <ExplorerCell label="Generation (tok/s)" className="explorer-cell-numeric">
+              <ExplorerCell label={t("benchmark.Generation (tok/s)")} className="explorer-cell-numeric">
                 {formatThroughput(summary.mean_tg_tps)}
               </ExplorerCell>
-              <ExplorerCell label="Duration (ms)" className="explorer-cell-numeric">
+              <ExplorerCell label={t("benchmark.Duration (ms)")} className="explorer-cell-numeric">
                 {formatDuration(summary.mean_e2e_ms)}
               </ExplorerCell>
-              <ExplorerCell label="Published" className="explorer-cell-published">
+              <ExplorerCell label={t("benchmark.Published")} className="explorer-cell-published">
                 <time dateTime={item.created_at}>{formatPublishedDate(item.created_at)}</time>
               </ExplorerCell>
             </tr>

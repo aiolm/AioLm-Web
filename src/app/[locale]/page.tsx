@@ -1,4 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { isLocale, localizedPath } from '@/i18n/config';
+import { localeAlternates } from '@/i18n/metadata';
+import { getMessages } from '@/i18n/server';
+import { createTranslator } from '@/i18n/translate';
 import Link from "next/link";
 import { GITHUB_REPOSITORY_URL, GitHubMark } from "@/components/site-links";
 import { WorkspaceIllustration } from "@/components/workspace-illustration";
@@ -11,60 +16,65 @@ import { WorkspaceIllustration } from "@/components/workspace-illustration";
  * There is intentionally no download or release link anywhere on this page.
  */
 
-export const metadata: Metadata = {
-  alternates: { canonical: "/" },
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) notFound();
+  return { alternates: localeAlternates(locale, '/') };
+}
 
 const PLATFORMS = [
-  { label: "Windows app", icon: <WindowsIcon /> },
-  { label: "macOS planned", icon: <AppleIcon /> },
-  { label: "Linux planned", icon: <LinuxIcon /> },
+  { label: "home.windows", icon: <WindowsIcon /> },
+  { label: "home.macos", icon: <AppleIcon /> },
+  { label: "home.linux", icon: <LinuxIcon /> },
 ] as const;
 
 const STEPS = [
   {
-    title: "Choose your model",
-    detail: "Discover GGUF models from the community and add them to your library.",
+    title: "home.choose",
+    detail: "home.chooseDetail",
     icon: <CubeIcon />,
     tone: "step-icon-blue",
   },
   {
-    title: "Run it your way",
-    detail: "Manage llama.cpp runtimes and configure settings that fit your hardware and workflow.",
+    title: "home.run",
+    detail: "home.runDetail",
     icon: <GearIcon />,
     tone: "step-icon-cyan",
   },
   {
-    title: "Measure and share",
-    detail: "Run benchmarks, review results with full context, and share your configuration with others.",
+    title: "home.measure",
+    detail: "home.measureDetail",
     icon: <ChartIcon />,
     tone: "step-icon-violet",
   },
 ] as const;
 
-export default function Home(): React.JSX.Element {
+export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  if (!isLocale(locale)) notFound();
+  const [home, site] = await Promise.all([getMessages(locale, 'home'), getMessages(locale, 'site')]);
+  const t = createTranslator({ ...site, ...home });
   return (
     <>
       <section className="hero" aria-labelledby="hero-title">
         <div className="site-shell hero-inner">
           <div className="hero-copy">
             <h1 className="hero-title" id="hero-title">
-              Local models.
+              {t('home.heroFirst')}
               <br />
-              One workspace.
+              {t('home.heroSecond')}
             </h1>
             <p className="hero-subtitle">
-              Discover GGUF models, manage llama.cpp runtimes, chat locally, and measure performance
-              with AioLM.
+              {t('home.subtitle')}
             </p>
 
             <div className="hero-actions">
               <a className="button button-primary" href={GITHUB_REPOSITORY_URL}>
                 <GitHubMark />
-                <span>View on GitHub</span>
+                <span>{t('site.github')}</span>
               </a>
-              <Link className="button button-outline" href="/benchmarks">
-                <span>Explore benchmarks</span>
+              <Link className="button button-outline" href={localizedPath(locale, '/benchmarks')}>
+                <span>{t('home.explore')}</span>
                 <ArrowIcon />
               </Link>
             </div>
@@ -73,22 +83,22 @@ export default function Home(): React.JSX.Element {
               {PLATFORMS.map((platform) => (
                 <li className="hero-platform" key={platform.label}>
                   <span className="hero-platform-icon" aria-hidden="true">{platform.icon}</span>
-                  {platform.label}
+                  {t(platform.label)}
                 </li>
               ))}
             </ul>
           </div>
 
           <div className="hero-figure">
-            <WorkspaceIllustration />
+            <WorkspaceIllustration t={t} />
           </div>
         </div>
       </section>
 
       <section className="workflow" aria-labelledby="workflow-title">
         <div className="site-shell">
-          <h2 className="section-title" id="workflow-title">From model to measurement</h2>
-          <p className="section-subtitle">A simple workflow for local LLMs, designed for builders.</p>
+          <h2 className="section-title" id="workflow-title">{t('home.workflow')}</h2>
+          <p className="section-subtitle">{t('home.workflowDetail')}</p>
 
           <ol className="steps">
             {STEPS.map((step, index) => (
@@ -97,9 +107,9 @@ export default function Home(): React.JSX.Element {
                 <div className="step-copy">
                   <h3 className="step-title">
                     {/* The list already conveys order; the visible number is decorative. */}
-                    <span className="step-number" aria-hidden="true">{index + 1}.</span> {step.title}
+                    <span className="step-number" aria-hidden="true">{index + 1}.</span> {t(step.title)}
                   </h3>
-                  <p className="step-detail">{step.detail}</p>
+                  <p className="step-detail">{t(step.detail)}</p>
                 </div>
               </li>
             ))}
@@ -112,14 +122,13 @@ export default function Home(): React.JSX.Element {
           <div className="closing-band">
             <span className="closing-icon" aria-hidden="true"><DocumentIcon /></span>
             <div className="closing-copy">
-              <h2 className="closing-title" id="closing-title">Understand the setup behind the numbers</h2>
+              <h2 className="closing-title" id="closing-title">{t('home.closing')}</h2>
               <p className="closing-detail">
-                Published benchmarks include the measurement method, workload and hardware so
-                configurations can be compared.
+                {t('home.closingDetail')}
               </p>
             </div>
-            <Link className="closing-link" href="/benchmarks">
-              <span>Browse benchmarks</span>
+            <Link className="closing-link" href={localizedPath(locale, '/benchmarks')}>
+              <span>{t('home.browse')}</span>
               <ArrowIcon />
             </Link>
           </div>

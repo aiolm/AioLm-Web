@@ -1,4 +1,8 @@
 "use client";
+import { useI18n } from "@/i18n/client";
+import { localizedPath, type Locale } from "@/i18n/config";
+import type { Translator } from "@/i18n/types";
+import { useSearchParams } from "next/navigation";
 
 import Link from "next/link";
 import {
@@ -21,37 +25,35 @@ interface ComparisonField {
   render: (item: ExplorerItem) => React.ReactNode;
 }
 
-const COMPARISON_FIELDS: ComparisonField[] = [
-  { key: "hardware", label: "Hardware", render: (item) => item.summary.hardware_label },
-  { key: "method", label: "Method", render: (item) => item.summary.method_label },
-  { key: "workload", label: "Workload", render: (item) => item.summary.workload_label },
+function comparisonFields(t: Translator, locale: Locale, search: string): ComparisonField[] { return [
+  { key: "hardware", label: t("benchmark.Hardware"), render: (item) => item.summary.hardware_label },
+  { key: "method", label: t("benchmark.Method"), render: (item) => item.summary.method_label },
+  { key: "workload", label: t("benchmark.Workload"), render: (item) => item.summary.workload_label },
   {
     key: "samples",
-    label: "Samples",
-    render: (item) => formatSampleCount(item.summary.row_count, item.summary.failed_rows),
+    label: t("benchmark.Samples"),
+    render: (item) => formatSampleCount(item.summary.row_count, item.summary.failed_rows, t),
   },
-  { key: "status", label: "Status", render: (item) => item.summary.status },
-  { key: "throughput", label: "Throughput (tok/s)", render: (item) => formatThroughput(item.summary.mean_tg_tps) },
-  { key: "duration", label: "Duration (ms)", render: (item) => formatDuration(item.summary.mean_e2e_ms) },
+  { key: "status", label: t("benchmark.Status"), render: (item) => item.summary.status },
+  { key: "throughput", label: t("benchmark.Throughput (tok/s)"), render: (item) => formatThroughput(item.summary.mean_tg_tps) },
+  { key: "duration", label: t("benchmark.Duration (ms)"), render: (item) => formatDuration(item.summary.mean_e2e_ms) },
   {
     key: "published",
-    label: "Published",
+    label: t("benchmark.Published"),
     render: (item) => <time dateTime={item.created_at}>{formatPublishedDate(item.created_at)}</time>,
   },
   {
     key: "detail",
-    label: "Detail",
+    label: t("benchmark.Detail"),
     render: (item) => (
       <Link
         className="explorer-detail-link"
-        href={explorerDetailHref(item.public_id)}
-        aria-label={`Open the full result for ${item.summary.model_label} on ${item.summary.hardware_label}`}
-      >
-        Open result
-      </Link>
+        href={localizedPath(locale, `${explorerDetailHref(item.public_id)}${search ? `?${search}` : ""}`)}
+        aria-label={t("benchmark.Open the full result for {model} on {hardware}", { model: item.summary.model_label, hardware: item.summary.hardware_label })}
+      >{t("benchmark.Open result")}</Link>
     ),
   },
-];
+]; }
 
 export interface BenchmarkExplorerComparisonProps {
   items: ExplorerItem[];
@@ -64,41 +66,35 @@ export function BenchmarkExplorerComparison({
   onRemove,
   onClear,
 }: BenchmarkExplorerComparisonProps): React.JSX.Element | null {
+  const { locale, t } = useI18n();
+  const search = useSearchParams().toString();
   if (items.length === 0) return null;
   const compatibility = comparisonCompatibility(items);
   return (
     <section className="explorer-comparison" aria-labelledby="explorer-comparison-title">
       <div className="explorer-comparison-header">
-        <h3 id="explorer-comparison-title" className="explorer-comparison-title">Selected results</h3>
-        <button type="button" className="explorer-button explorer-comparison-clear" onClick={onClear}>
-          Clear selection
-        </button>
+        <h3 id="explorer-comparison-title" className="explorer-comparison-title">{t("benchmark.Selected results")}</h3>
+        <button type="button" className="explorer-button explorer-comparison-clear" onClick={onClear}>{t("benchmark.Clear selection")}</button>
       </div>
       <p className="explorer-comparison-note">
-        {items.length} of {EXPLORER_COMPARE_LIMIT} results selected. These are the results you picked; the site
-        publishes self-reported measurements and does not rank them. Only summary fields appear here, so open a
-        result to check its full environment before drawing a conclusion.
+        {t("benchmark.{count} of {limit} results selected. These are the results you picked; the site publishes self-reported measurements and does not rank them. Only summary fields appear here, so open a result to check its full environment before drawing a conclusion.", { count: items.length, limit: EXPLORER_COMPARE_LIMIT })}
       </p>
       {compatibility.comparable ? null : (
         <p className="explorer-comparison-caveat">
-          <strong>Not directly comparable.</strong> The selected results do not share one method and workload
-          (methods: {compatibility.methods.join(", ")}; workloads: {compatibility.workloads.join(", ")}), so their
-          numbers describe different work. Read each column on its own terms.
+          {t("benchmark.Not directly comparable. The selected results do not share one method and workload (methods: {methods}; workloads: {workloads}), so their numbers describe different work. Read each column on its own terms.", { methods: compatibility.methods.join(', '), workloads: compatibility.workloads.join(', ') })}
         </p>
       )}
       <div
         className="explorer-comparison-scroll"
         role="region"
-        aria-label="Selected results comparison table"
+        aria-label={t("benchmark.Selected results comparison table")}
         tabIndex={0}
       >
         <table className="explorer-comparison-table" style={{ minWidth: `${10 + items.length * 12}rem` }}>
-          <caption className="explorer-comparison-caption">
-            Summary fields for the selected results, one column per result.
-          </caption>
+          <caption className="explorer-comparison-caption">{t("benchmark.Summary fields for the selected results, one column per result.")}</caption>
           <thead className="explorer-comparison-head">
             <tr className="explorer-comparison-head-row">
-              <th scope="col" className="explorer-comparison-field-head">Field</th>
+              <th scope="col" className="explorer-comparison-field-head">{t("benchmark.Field")}</th>
               {items.map((item) => (
                 <th scope="col" key={item.public_id} className="explorer-comparison-item-head">
                   <span className="explorer-comparison-item-title">{item.summary.model_label}</span>
@@ -106,16 +102,14 @@ export function BenchmarkExplorerComparison({
                     type="button"
                     className="explorer-comparison-remove"
                     onClick={() => onRemove(item)}
-                    aria-label={`Remove ${item.summary.model_label} on ${item.summary.hardware_label} from the comparison`}
-                  >
-                    Remove
-                  </button>
+                    aria-label={t("benchmark.Remove {model} on {hardware} from the comparison", { model: item.summary.model_label, hardware: item.summary.hardware_label })}
+                  >{t("benchmark.Remove")}</button>
                 </th>
               ))}
             </tr>
           </thead>
           <tbody className="explorer-comparison-body">
-            {COMPARISON_FIELDS.map((field) => (
+            {comparisonFields(t, locale, search).map((field) => (
               <tr key={field.key} className="explorer-comparison-row">
                 <th scope="row" className="explorer-comparison-field">{field.label}</th>
                 {items.map((item) => (
