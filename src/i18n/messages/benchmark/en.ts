@@ -248,7 +248,23 @@ const messages = {
   "benchmark.The publisher is the namespace of the repository the file came from; whoever quantized the weights is listed separately and is often someone else. Quantization describes the weights in the published file, not the KV cache, and it is not a statement about output quality.": "The publisher is the namespace of the repository the file came from; whoever quantized the weights is listed separately and is often someone else. Quantization describes the weights in the published file, not the KV cache, and it is not a statement about output quality.",
   "benchmark.GGUF file": "GGUF file",
   "benchmark.Hugging Face": "Hugging Face",
-  "benchmark.GGUF file and Hugging Face": "GGUF file + Hugging Face"
+  "benchmark.GGUF file and Hugging Face": "GGUF file + Hugging Face",
+  "benchmark.Environment": "Environment",
+  "benchmark.Prefill": "Prefill",
+  "benchmark.Decode": "Decode",
+  "benchmark.Context / workload": "Context / Workload",
+  "benchmark.TTFT": "TTFT",
+  "benchmark.Peak process memory": "Peak process memory",
+  "benchmark.System memory": "System memory",
+  "benchmark.System RAM": "System RAM",
+  "benchmark.GPU": "GPU",
+  "benchmark.RAM": "RAM",
+  "benchmark.Show detailed metrics": "Show detailed metrics",
+  "benchmark.Hide detailed metrics": "Hide detailed metrics",
+  "benchmark.Prefill (tok/s)": "Prefill (tok/s)",
+  "benchmark.Decode (tok/s)": "Decode (tok/s)",
+  "benchmark.Not recorded": "Not recorded",
+  "benchmark.One row per published measurement sample, in the order it was reported.": "One row per published measurement sample, in the order it was reported."
 } as const;
 export type BenchmarkMessages = { [K in keyof typeof messages]: string };
 export default messages;

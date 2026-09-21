@@ -22,6 +22,7 @@ import {
   formatWeightQuantization,
   huggingFaceLinks,
   huggingFaceUrl,
+  modelDisplayName,
   modelPublisher,
   modelValue,
   readModelInfo,
@@ -74,47 +75,80 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
   const info = readModelInfo(model?.["metadata"]);
   const repositoryUrl = huggingFaceUrl(info?.repository);
 
+  // Model group: key fields shown once; empty optional metadata fields omitted.
+  const modelFields: SetupField[] = [
+    { label: t("benchmark.Model name"), value: info?.name ? modelDisplayName(info, info.name) : modelValue(null, t) },
+    { label: t("benchmark.Publisher"), value: modelValue(modelPublisher(info), t) },
+    { label: t("benchmark.Weight quantization"), value: formatWeightQuantization(info, t) },
+  ];
+  if (info?.repository) {
+    modelFields.push({
+      label: t("benchmark.Repository"),
+      value: info.repository,
+      ...(repositoryUrl ? { links: { [info.repository]: repositoryUrl } } : {}),
+    });
+  }
+  if (info?.quantized_by) {
+    modelFields.push({ label: t("benchmark.Quantized by"), value: info.quantized_by });
+  }
+  if (info && info.base_models.length > 0) {
+    modelFields.push({
+      label: t("benchmark.Base model"),
+      value: info.base_models,
+      links: huggingFaceLinks(info.base_models),
+    });
+  }
+  if (info?.artifact) {
+    modelFields.push({ label: t("benchmark.Artifact file"), value: info.artifact });
+  }
+  if (info?.architecture) {
+    modelFields.push({ label: t("benchmark.Model architecture"), value: info.architecture });
+  }
+  if (info?.size_label) {
+    modelFields.push({ label: t("benchmark.Parameter size"), value: info.size_label });
+  }
+  if (info?.format) {
+    modelFields.push({ label: t("benchmark.Weights format"), value: info.format });
+  }
+  if (info?.file_type != null) {
+    modelFields.push({ label: t("benchmark.Quantization file type"), value: String(info.file_type) });
+  }
+  if (info?.source) {
+    modelFields.push({ label: t("benchmark.Metadata source"), value: formatMetadataSource(info, t) });
+  }
+  modelFields.push(
+    { label: t("benchmark.Model identity"), value: displayText(model?.["status"], t) },
+    { label: t("benchmark.Model checksum"), value: displayText(model?.["sha256"], t) },
+    { label: t("benchmark.Model size"), value: formatByteSize(model?.["size_bytes"], t) },
+  );
+
+  // Hardware group: Selected GPU only; no installed GPU list. System RAM when reported.
+  const hardwareFields: SetupField[] = [
+    { label: t("benchmark.CPU"), value: displayText(cpu?.["name"], t) },
+    { label: t("benchmark.CPU cores"), unit: t("benchmark.logical"), value: displayText(cpu?.["logical_cores"], t) },
+  ];
+  if (typeof environment?.["system_memory_bytes"] === "number") {
+    hardwareFields.push({
+      label: t("benchmark.System memory"),
+      value: formatByteSize(environment["system_memory_bytes"], t),
+    });
+  }
+  hardwareFields.push(
+    { label: t("benchmark.Run mode"), value: displayText(envExecution?.["mode"], t) },
+    { label: t("benchmark.Selected graphics"), value: describeGpuList(envExecution?.["selected_gpus"], t), devices: describeGpuDetails(envExecution?.["selected_gpus"], t) },
+    { label: t("benchmark.Graphics selection complete"), value: displayText(envExecution?.["selection_complete"], t) },
+  );
+
   return [
     {
       id: "detail-setup-model",
       title: t("benchmark.Model"),
-      fields: [
-        { label: t("benchmark.Model name"), value: modelValue(info?.name, t) },
-        { label: t("benchmark.Publisher"), value: modelValue(modelPublisher(info), t) },
-        {
-          label: t("benchmark.Repository"),
-          value: modelValue(info?.repository, t),
-          ...(repositoryUrl && info?.repository ? { links: { [info.repository]: repositoryUrl } } : {}),
-        },
-        { label: t("benchmark.Weight quantization"), value: formatWeightQuantization(info, t) },
-        { label: t("benchmark.Quantization file type"), value: modelValue(info?.file_type, t) },
-        { label: t("benchmark.Quantized by"), value: modelValue(info?.quantized_by, t) },
-        { label: t("benchmark.Model architecture"), value: modelValue(info?.architecture, t) },
-        { label: t("benchmark.Parameter size"), value: modelValue(info?.size_label, t) },
-        { label: t("benchmark.Weights format"), value: modelValue(info?.format, t) },
-        {
-          label: t("benchmark.Base model"),
-          value: info && info.base_models.length > 0 ? info.base_models : t("benchmark.Unknown"),
-          ...(info ? { links: huggingFaceLinks(info.base_models) } : {}),
-        },
-        { label: t("benchmark.Artifact file"), value: modelValue(info?.artifact, t) },
-        { label: t("benchmark.Metadata source"), value: formatMetadataSource(info, t) },
-        { label: t("benchmark.Model identity"), value: displayText(model?.["status"], t) },
-        { label: t("benchmark.Model checksum"), value: displayText(model?.["sha256"], t) },
-        { label: t("benchmark.Model size"), value: formatByteSize(model?.["size_bytes"], t) },
-      ],
+      fields: modelFields,
     },
     {
       id: "detail-setup-hardware",
       title: t("benchmark.Hardware"),
-      fields: [
-        { label: t("benchmark.CPU"), value: displayText(cpu?.["name"], t) },
-        { label: t("benchmark.CPU cores"), unit: t("benchmark.logical"), value: displayText(cpu?.["logical_cores"], t) },
-        { label: t("benchmark.Installed graphics"), value: describeGpuList(environment?.["installed_gpus"], t), devices: describeGpuDetails(environment?.["installed_gpus"], t) },
-        { label: t("benchmark.Run mode"), value: displayText(envExecution?.["mode"], t) },
-        { label: t("benchmark.Selected graphics"), value: describeGpuList(envExecution?.["selected_gpus"], t), devices: describeGpuDetails(envExecution?.["selected_gpus"], t) },
-        { label: t("benchmark.Graphics selection complete"), value: displayText(envExecution?.["selection_complete"], t) },
-      ],
+      fields: hardwareFields,
     },
     {
       id: "detail-setup-os",
@@ -149,7 +183,6 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
         { label: t("benchmark.Batch sizes"), value: joinList(workload?.["batch_sizes"], t) },
         { label: t("benchmark.Repetitions"), value: displayText(workload?.["repetitions"], t) },
         { label: t("benchmark.Warmup"), value: displayText(workload?.["warmup"], t) },
-        { label: t("benchmark.Result status"), value: displayText(benchmark.status, t) },
       ],
     },
     {

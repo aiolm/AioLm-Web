@@ -979,20 +979,60 @@ main > .grid {
 }
 
 /*
- * Column proportions. The two label columns carry self-reported text of unknown
+ * Column proportions. The label columns carry self-reported text of unknown
  * length and take the slack; the measured columns stay narrow and right-aligned
  * so the digits line up.
  */
 .explorer-head-compare { width: 1%; }
-.explorer-head-identity { width: 31%; }
-.explorer-head-setup { width: 24%; }
-.explorer-head-numeric { width: 11%; }
+.explorer-head-identity { width: 25%; }
+.explorer-head-environment { width: 27%; }
+.explorer-head-setup { width: 23%; }
+.explorer-head-numeric { width: 12%; }
 .explorer-head-published { width: 11%; }
 
 .explorer-cell-published { color: var(--ui-muted); white-space: nowrap; }
-.explorer-cell-identity, .explorer-cell-setup { min-width: 0; }
+.explorer-cell-identity, .explorer-cell-environment, .explorer-cell-setup { min-width: 0; }
 
 .explorer-unit { color: var(--ui-faint); font-weight: 500; }
+
+/* Bilingual column header styles */
+.bilingual-header {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1.25;
+  vertical-align: top;
+  white-space: nowrap;
+}
+.bilingual-local {
+  font-size: inherit;
+  font-weight: inherit;
+  white-space: nowrap;
+}
+.bilingual-en {
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--ui-muted);
+  white-space: nowrap;
+  margin-block-start: 1px;
+}
+.bilingual-sub {
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--ui-faint);
+  white-space: nowrap;
+  margin-block-start: 1px;
+}
+.bilingual-unit {
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--ui-faint);
+  margin-inline-start: 3px;
+}
+.explorer-head-numeric .bilingual-header,
+th[style*="text-align: right"] .bilingual-header {
+  align-items: flex-end;
+  text-align: right;
+}
 
 .explorer-row { border-block-end: 1px solid var(--ui-border); }
 .explorer-row:hover { background: var(--ui-panel-raised); }
@@ -1012,11 +1052,9 @@ main > .grid {
 .explorer-head-numeric, .explorer-cell-numeric { text-align: right; }
 
 /*
- * A measured column carries its unit under its name. Wrapping there keeps the
- * head within the column it labels, so the heading and the digits below it stay
- * on the same right edge instead of the head widening the column.
+ * A measured column carries its unit under its name.
  */
-.explorer-head-numeric { white-space: normal; }
+.explorer-head-numeric { white-space: nowrap; }
 .explorer-head-numeric .explorer-unit { display: block; }
 
 .explorer-cell-compare { width: 1%; }
@@ -1350,6 +1388,37 @@ main > .grid {
 .detail-device-list { display: grid; gap: 8px; margin: 0; padding-inline-start: 20px; overflow-wrap: anywhere; }
 
 .detail-rows { min-width: 40rem; }
+.detail-rows th { white-space: nowrap; }
+
+.detail-rows-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block-end: 12px;
+}
+
+.detail-rows-toolbar .detail-rows-caption {
+  margin-block-end: 0;
+}
+
+.detail-metrics-toggle {
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.detail-metrics-toggle:hover {
+  background: var(--ui-surface-muted);
+}
 
 .detail-rows-caption {
   margin-block-end: 10px;
@@ -1697,3 +1766,21 @@ html { scroll-padding-block-start: 88px; }
 .detail-device-facts dt { color: var(--ui-muted); font-size: .8rem; }
 .detail-device-facts dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
 @media (max-width: 360px) { .detail-device-facts { grid-template-columns: minmax(0, 1fr); gap: 2px; } .detail-device-facts dd { margin-block-end: 6px; } }
+
+/* Performance and measurement hardware lead the result; optional details follow. */
+.detail-model-summary, .detail-run-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
+.detail-weight-badge { padding: 3px 8px; border: 1px solid var(--ui-border); border-radius: 6px; font-size: .85rem; font-weight: 650; }
+.detail-performance-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-block: 24px; }
+.detail-performance-grid > div { display: flex; flex-direction: column; gap: 8px; border-inline-start: 2px solid var(--ui-border); padding-inline-start: 16px; }
+.detail-performance-grid strong { font-size: clamp(1.35rem, 3vw, 2rem); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.detail-performance-grid small { font-size: .75rem; font-weight: 450; color: var(--ui-muted); }
+.detail-record-date { font-size: .8rem; }
+.detail-hardware-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+.detail-hardware-grid article { display: flex; min-width: 0; flex-direction: column; gap: 8px; overflow-wrap: anywhere; }
+.detail-hardware-grid ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.detail-hardware-grid li { display: grid; gap: 4px; }
+.detail-hardware-grid article > span:not(.bilingual-header), .detail-hardware-grid li > span { font-size: .83rem; color: var(--ui-muted); }
+.detail-description > summary { cursor: pointer; min-height: 32px; font-weight: 650; }
+.detail-description[open] > summary { margin-block-end: 16px; }
+@media (max-width: 1000px) { .detail-hardware-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .detail-performance-grid { gap: 10px; } .detail-performance-grid > div { padding-inline-start: 8px; } .detail-performance-grid strong small { display: block; } .detail-hardware-grid { grid-template-columns: minmax(0, 1fr); } }

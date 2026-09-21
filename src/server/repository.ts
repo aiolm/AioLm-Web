@@ -191,6 +191,7 @@ export const REQUIRED_MIGRATIONS: readonly string[] = [
   "008_benchmark_discovery.sql",
   "009_input_context.sql",
   "010_model_metadata.sql",
+  "011_system_memory.sql",
 ];
 
 /**

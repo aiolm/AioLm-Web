@@ -58,6 +58,10 @@ export async function POST(request: Request): Promise<Response> {
     } catch (err) {
       return serviceError(400, "invalid_request", err instanceof Error ? err.message : "Invalid publication request.");
     }
+    const measurements = parsed.benchmark.measurements;
+    if (measurements.status !== "complete" || measurements.rows.length === 0 || measurements.rows.some(row => row.failed)) {
+      return serviceError(400, "invalid_request", "Only completed benchmarks with successful measurements can be published.");
+    }
     const submissionId = parsed.benchmark.submission_id;
     if (idempotencyKey !== null && idempotencyKey !== submissionId) {
       return serviceError(400, "invalid_request", "Idempotency-Key must equal benchmark.submission_id.");

@@ -18,7 +18,7 @@ import { BenchmarkExplorerTable } from "@/components/benchmark-explorer-table";
 import { BenchmarkExplorerComparison } from "@/components/benchmark-explorer-comparison";
 import { BenchmarkDetail } from "@/components/benchmark-detail";
 import { buildSetupGroups } from "@/components/benchmark-detail-fields";
-import { buildRowColumns } from "@/components/benchmark-detail-rows";
+import { buildRowColumns, isFailedRow } from "@/components/benchmark-detail-rows";
 import { describeGpu, formatByteSize, displayText } from "@/components/benchmark-detail-format";
 import { formatUpdatedDate, formatPublishedDate, formatThroughput, formatDuration } from "@/components/benchmark-explorer-format";
 import { EXPLORER_FILTER_KEYS, EXPLORER_FILTER_LABELS, EXPLORER_FILTER_PLACEHOLDERS, type ExplorerItem } from "@/components/benchmark-explorer-state";
@@ -42,7 +42,7 @@ const benchmark = {
   model: { status: "identified", sha256: "synthetic-checksum", size_bytes: 2048 },
   runtime: { name: "synthetic-runtime", backend: "synthetic-backend" },
   method: { id: "cold-prompt-serving", version: 1 }, workload: { corpus: "code_python", prompt_lengths: [128] },
-  environment: { os: "synthetic-os", cpu: { name: "synthetic-cpu", logical_cores: 4 }, installed_gpus: [{ name: "synthetic-device", vendor: "synthetic-vendor", integrated: false }], execution: { mode: "gpu", selection_complete: true } },
+  environment: { os: "synthetic-os", cpu: { name: "synthetic-cpu", logical_cores: 4 }, execution: { mode: "gpu", selection_complete: true, selected_gpus: [{ name: "synthetic-device", vendor: "synthetic-vendor", integrated: false }] } },
   execution: { settings: { flash_attention: "auto", cache_type_k: "q8_0" } }, app_version: "0.0.0", status: "partial",
 };
 const wrap = (locale: Locale, node: React.ReactNode) => renderToStaticMarkup(<I18nProvider locale={locale} messages={{ ...common[locale], ...catalogs[locale] }}>{node}</I18nProvider>);
@@ -92,13 +92,14 @@ describe.each(locales)("benchmark localization: %s", locale => {
     const html = wrap(locale, <><BenchmarkExplorerTable items={[item]} compare={[]} onToggleComparison={() => {}} /><BenchmarkExplorerComparison items={[item, { ...item, public_id: "other", summary: { ...item.summary, method_label: "different-method" } }]} onRemove={() => {}} onClear={() => {}} /></>);
     expect(html).toContain('/' + locale + '/benchmarks/synthetic-id?model=synthetic-model&amp;hardware=synthetic-device&amp;cursor=abc_123');
     expect(html).toContain(escape(t("benchmark.Add {model} on {hardware} to the comparison", { model: "synthetic-model", hardware: "synthetic-device" })));
-    expect(html).toContain(escape(t("benchmark.{total} ({failed} failed)", { total: 12, failed: 2 })));
+    expect(html).toContain(escape(t("benchmark.Measurement count: {value}", { value: "12" })));
+    expect(html).not.toContain(escape(t("benchmark.{total} ({failed} failed)", { total: 12, failed: 2 })));
     expect(html).toContain("cold-prompt-serving@1");
     expect(html).toContain("code_python");
-    expect(html).toContain("partial");
     expect(html).toContain("42.3");
     expect(html).toContain("128.8");
-    expect(html).toContain(escape(t("benchmark.Prompt processing (tok/s)")));
+    expect(html).toContain(escape(t("benchmark.Prefill (tok/s)")));
+    expect(html).toContain(escape(t("benchmark.Decode (tok/s)")));
     expect(html).toContain(escape(t("benchmark.Input context: {value}", { value: "512 · 4K · 8K" })));
     expect(html).not.toContain("benchmark.");
   });
@@ -113,7 +114,7 @@ describe.each(locales)("benchmark localization: %s", locale => {
     expect(html).toContain("synthetic-os");
     expect(html).toContain("synthetic-runtime 1.0");
     expect(html).toContain(escape(t("benchmark.Input context: {value}", { value: "512 · 4K · 8K" })));
-    expect(html).toContain(escape(t("benchmark.Logical cores")) + "</span><span class=\"explorer-fact-value\">4<");
+    expect(html).not.toContain("explorer-fact-value\">4<");
     expect(html).not.toContain("MiB");
     // An unreported list stays unreported: the allocated context measures something else.
     const unreported = wrap(locale, <BenchmarkExplorerTable items={[{ ...item, summary: { ...summary, prompt_lengths: undefined } }]} compare={[]} onToggleComparison={() => {}} />);
@@ -125,10 +126,13 @@ describe.each(locales)("benchmark localization: %s", locale => {
     const html = wrap(locale, <BenchmarkDetail publicId={item.public_id} />);
     expect(html).toContain('/' + locale + '/benchmarks?model=synthetic-model&amp;hardware=synthetic-device&amp;cursor=abc_123');
     expect(html).toContain(escape(t("benchmark.Input context")));
-    expect(html).toContain(escape(t("benchmark.Mean prompt processing")));
+    expect(html).toContain(escape(t("benchmark.Prefill")));
+    expect(html).toContain("Prefill");
+    expect(html).toContain("detail-hardware-grid");
+    expect(html).toContain("System RAM");
     expect(html).toContain(escape(t("benchmark.Test setup (as reported)")));
-    expect(html).toContain(escape(t("benchmark.Integrated")));
-    expect(html).toContain(escape(t("benchmark.No")));
+    expect(html).not.toContain(escape(t("benchmark.Installed graphics")));
+    expect(html).toContain(escape(t("benchmark.Selected graphics")));
     expect(html).toContain("UTC");
     expect(html).toContain("Synthetic user text");
     expect(html).toContain("q8_0");
@@ -141,12 +145,13 @@ describe.each(locales)("benchmark localization: %s", locale => {
     expect(formatByteSize(12, t)).toBe(t("benchmark.{value} bytes", { value: 12 }));
     expect(describeGpu({ name: "synthetic-device", integrated: false }, t)).toContain(t("benchmark.No"));
     expect(buildSetupGroups(benchmark, t)[0].title).toBe(t("benchmark.Model"));
-    const columns = buildRowColumns([{ failed: true, tg_tps: 42.25, timing_source: "server", synthetic_extra: true }], t);
-    expect(columns.find(x => x.key === "failed")?.format(true)).toBe(t("benchmark.Failed"));
+    const columns = buildRowColumns([{ failed: true, tg_tps: 42.25, timing_source: "server", synthetic_extra: true }], t, true);
+    expect(columns.find(x => x.key === "failed")).toBeUndefined();
     expect(columns.find(x => x.key === "tg_tps")?.unit).toBe(t("benchmark.tok/s"));
     expect(columns.find(x => x.key === "timing_source")?.format("server")).toBe("server");
     expect(columns.find(x => x.key === "synthetic_extra")?.label).toBe("synthetic_extra");
     expect(columns.find(x => x.key === "synthetic_extra")?.format(true)).toBe(t("benchmark.Yes"));
+    expect(isFailedRow({ failed: true })).toBe(true);
   });
   it("renders locale routes and advertises canonical locale alternates", async () => {
     const params = Promise.resolve({ locale, id: item.public_id });

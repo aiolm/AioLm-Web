@@ -95,11 +95,7 @@ export function formatByteSize(value: unknown, t: Translator = benchmarkFallback
   return scaled === null ? exact : `${scaled} (${exact})`;
 }
 
-/** The same scale without the exact byte count, for a table cell that has to stay narrow. */
-export function formatCompactBytes(value: unknown, t: Translator = benchmarkFallback): string {
-  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) return DETAIL_MISSING;
-  return scaleBytes(value) ?? t("benchmark.{value} bytes", { value: groupDigits(value) });
-}
+export { formatCompactBytes } from "./benchmark-explorer-format";
 
 /** One decimal: sub-millisecond per-token times are normal and rounding erases them. */
 export function formatMilliseconds(value: unknown): string {

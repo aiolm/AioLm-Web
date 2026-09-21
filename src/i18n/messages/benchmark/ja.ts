@@ -249,6 +249,22 @@ const messages = {
   "benchmark.The publisher is the namespace of the repository the file came from; whoever quantized the weights is listed separately and is often someone else. Quantization describes the weights in the published file, not the KV cache, and it is not a statement about output quality.": "配布元はファイルを取得したリポジトリの名前空間です。重みを量子化した提供者は別に表示され、多くの場合は別の主体です。量子化は公開されたファイルの重みを説明するもので、KV キャッシュとは無関係であり、出力品質を保証しません。",
   "benchmark.GGUF file": "GGUFファイル",
   "benchmark.Hugging Face": "Hugging Face",
-  "benchmark.GGUF file and Hugging Face": "GGUFファイル + Hugging Face"
+  "benchmark.GGUF file and Hugging Face": "GGUFファイル + Hugging Face",
+  "benchmark.Environment": "環境",
+  "benchmark.Prefill": "プリフィル",
+  "benchmark.Decode": "デコード",
+  "benchmark.Context / workload": "コンテキスト / ワークロード",
+  "benchmark.TTFT": "初回トークン時間",
+  "benchmark.Peak process memory": "最大プロセスメモリ",
+  "benchmark.System memory": "システムメモリ",
+  "benchmark.System RAM": "システムRAM",
+  "benchmark.GPU": "GPU",
+  "benchmark.RAM": "RAM",
+  "benchmark.Show detailed metrics": "詳細メトリクスを表示",
+  "benchmark.Hide detailed metrics": "詳細メトリクスを非表示",
+  "benchmark.Prefill (tok/s)": "プリフィル (tok/s)",
+  "benchmark.Decode (tok/s)": "デコード (tok/s)",
+  "benchmark.Not recorded": "未記録",
+  "benchmark.One row per published measurement sample, in the order it was reported.": "報告された順序による公開測定サンプル行です。"
 } satisfies BenchmarkMessages;
 export default messages;

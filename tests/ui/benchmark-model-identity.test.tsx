@@ -222,13 +222,16 @@ describe("the result list", () => {
     expect(html).toContain('<span class="explorer-fact-label">VRAM</span><span class="explorer-fact-value">4096 MiB<');
   });
 
-  it("keeps the seven columns and the workload metadata the list already had", () => {
+  it("keeps the six columns and the workload metadata in the redesigned list", () => {
     const html = render(<BenchmarkExplorerTable items={[item("a", { model_info: info() })]} compare={[]} onToggleComparison={() => {}} />);
-    expect(html.match(/<th scope="col"/g)).toHaveLength(7);
-    expect(html).toContain("Prompt processing");
+    expect(html.match(/<th scope="col"/g)).toHaveLength(6);
+    expect(html).toContain("Prefill");
+    expect(html).toContain("Decode");
     expect(html).toContain("Measurement count: 4");
-    // The comparison checkbox stays the first cell of the row, ahead of identity.
+    // The comparison checkbox stays the first cell of the row, ahead of identity and environment.
     expect(html.indexOf("explorer-cell-compare")).toBeLessThan(html.indexOf("explorer-cell-identity"));
+    expect(html.indexOf("explorer-cell-identity")).toBeLessThan(html.indexOf("explorer-cell-environment"));
+    expect(html).not.toContain("explorer-status");
   });
 
   it("keeps supporting lists inside a block parent so the markup stays valid", () => {
@@ -352,13 +355,17 @@ describe("the result page", () => {
     expect(unlinkable.fields.find((field) => field.label === "Base model")?.links).toEqual({});
   });
 
-  it("reports unknown for a publication that carried no metadata at all", () => {
+  it("reports unknown for required facts and omits empty optional metadata fields for bare publication", () => {
     const bare = { status: "unidentified", sha256: null, size_bytes: null };
     const [model] = buildSetupGroups({ ...benchmark, model: bare }, t);
-    for (const label of ["Model name", "Publisher", "Weight quantization", "Base model", "Artifact file"]) {
+    for (const label of ["Model name", "Publisher", "Weight quantization", "Model checksum", "Model size"]) {
       expect(model.fields.find((field) => field.label === label)?.value, label).toBe("Unknown");
     }
     expect(model.fields.find((field) => field.label === "Model identity")?.value).toBe("unidentified");
+    // Empty optional metadata fields are omitted
+    for (const label of ["Base model", "Artifact file", "Repository", "Quantized by"]) {
+      expect(model.fields.find((field) => field.label === label)).toBeUndefined();
+    }
   });
 });
 

@@ -61,11 +61,10 @@ describe("setup groups", () => {
     for (const group of groups) expect(group.fields.length).toBeGreaterThan(0);
   });
 
-  it("keeps every field the earlier flat list published", () => {
+  it("keeps every field the earlier flat list published except omitted result status and installed graphics", () => {
     const labels = labelsOf(buildSetupGroups(publicSetup()));
     for (const label of [
       "App version",
-      "Result status",
       "Model identity",
       "Model checksum",
       "Model size",
@@ -81,7 +80,6 @@ describe("setup groups", () => {
       "Architecture",
       "CPU",
       "CPU cores (logical)",
-      "Installed graphics",
       "Run mode",
       "Selected graphics",
       "Allocated context size (tokens)",
@@ -91,6 +89,14 @@ describe("setup groups", () => {
     ]) {
       expect(labels).toContain(label);
     }
+    // Outcome/status badges and redundant installed graphics are intentionally omitted
+    expect(labels).not.toContain("Result status");
+    expect(labels).not.toContain("Installed graphics");
+
+    // System memory is shown when reported
+    const withRam = buildSetupGroups(publicSetup({ environment: { system_memory_bytes: 34_359_738_368 } }));
+    expect(labelsOf(withRam)).toContain("System memory");
+    expect(valueOf(withRam, "System memory")).toBe("32.0 GiB (34,359,738,368 bytes)");
   });
 
   it("publishes the contract fields the flat list left out", () => {
@@ -122,13 +128,14 @@ describe("setup groups", () => {
   it("separates an absent value from an empty reported list", () => {
     const groups = buildSetupGroups(publicSetup());
     // The synthetic environment reports no GPUs at all, and no settings block.
-    expect(valueOf(groups, "Installed graphics")).toBe("None reported");
+    expect(valueOf(groups, "Installed graphics")).toBeUndefined();
     expect(valueOf(groups, "Selected graphics")).toBe("None reported");
     expect(valueOf(groups, "Threads")).toBe("Unknown");
     expect(valueOf(groups, "Tensor split")).toBe("Unknown");
 
     const missing = buildSetupGroups(publicSetup({ environment: null, execution: null, method: null }));
-    expect(valueOf(missing, "Installed graphics")).toBe("Unknown");
+    expect(valueOf(missing, "Installed graphics")).toBeUndefined();
+    expect(valueOf(missing, "Selected graphics")).toBe("Unknown");
     expect(valueOf(missing, "Operating system")).toBe("Unknown");
     expect(valueOf(missing, "Method")).toBe("Unknown");
     expect(valueOf(missing, "Allocated context size", "tokens")).toBe("Unknown");
@@ -185,12 +192,9 @@ describe("graphics devices", () => {
     );
   });
 
-  it("lists installed and selected devices one entry at a time, in reported order", () => {
+  it("shows selected devices one entry at a time, in reported order, omitting installed graphics", () => {
     const groups = buildSetupGroups(environmentWith([discrete, partial], [discrete]));
-    const installed = valueOf(groups, "Installed graphics");
-    expect(Array.isArray(installed)).toBe(true);
-    expect(installed).toHaveLength(2);
-    expect((installed as string[])[0]).toContain("synthetic-gpu-a");
+    expect(valueOf(groups, "Installed graphics")).toBeUndefined();
     expect(valueOf(groups, "Selected graphics")).toEqual([describeGpu(discrete)]);
   });
 
@@ -224,69 +228,91 @@ describe("graphics devices", () => {
     expect(describeGpuList(null)).toBe("Unknown");
     expect(describeGpuList(undefined)).toBe("Unknown");
     const groups = buildSetupGroups(environmentWith([], null));
-    expect(valueOf(groups, "Installed graphics")).toBe("None reported");
+    expect(valueOf(groups, "Installed graphics")).toBeUndefined();
     expect(valueOf(groups, "Selected graphics")).toBe("Unknown");
+    const groupsEmpty = buildSetupGroups(environmentWith([], []));
+    expect(valueOf(groupsEmpty, "Selected graphics")).toBe("None reported");
   });
 });
 
 describe("measurement columns", () => {
   const row = syntheticSubmission().measurements.rows[0] as unknown as Record<string, unknown>;
 
-  it("orders the contract metrics the same way whatever order the keys arrive in", () => {
+  it("orders core contract metrics and expands detailed metrics upon request", () => {
     const reversed = Object.fromEntries(Object.entries(row).reverse());
     expect(buildRowColumns([reversed]).map((c) => c.key)).toEqual(buildRowColumns([row]).map((c) => c.key));
+    // Core columns (default mode)
     expect(buildRowColumns([row]).map((c) => c.key)).toEqual([
       "prompt_tokens",
-      "generation_length",
       "concurrency",
       "repetition",
-      "completion_tokens",
-      "cached_tokens",
-      "ttft_ms",
-      "tpot_ms",
       "pp_tps",
       "tg_tps",
+      "ttft_ms",
+      "peak_memory_bytes",
+    ]);
+
+    // Detailed columns (when toggle is active)
+    expect(buildRowColumns([row], true).map((c) => c.key)).toEqual([
+      "prompt_tokens",
+      "concurrency",
+      "repetition",
+      "pp_tps",
+      "tg_tps",
+      "ttft_ms",
+      "peak_memory_bytes",
+      "generation_length",
+      "completion_tokens",
+      "cached_tokens",
+      "tpot_ms",
       "e2e_ms",
       "total_tps",
-      "peak_memory_bytes",
       "timing_source",
-      "failed",
     ]);
+
+    // Outcome column is defensively removed from both core and detailed views
+    expect(buildRowColumns([row], false).map((c) => c.key)).not.toContain("failed");
+    expect(buildRowColumns([row], true).map((c) => c.key)).not.toContain("failed");
   });
 
-  it("labels every metric with its reported unit", () => {
-    const byKey = new Map(buildRowColumns([row]).map((c) => [c.key, c]));
-    expect(byKey.get("tg_tps")).toMatchObject({ label: "Generation", unit: "tok/s", numeric: true });
+  it("labels every metric with its reported unit, bilingual labels, and process memory", () => {
+    const byKey = new Map(buildRowColumns([row], true).map((c) => [c.key, c]));
+    expect(byKey.get("tg_tps")).toMatchObject({ label: "Decode", unit: "tok/s", numeric: true });
+    expect(byKey.get("pp_tps")).toMatchObject({ label: "Prefill", unit: "tok/s", numeric: true });
     expect(byKey.get("e2e_ms")).toMatchObject({ label: "End-to-end duration", unit: "ms", numeric: true });
-    expect(byKey.get("ttft_ms")).toMatchObject({ label: "Time to first token", unit: "ms" });
+    expect(byKey.get("ttft_ms")).toMatchObject({ label: "TTFT", unit: "ms" });
     expect(byKey.get("prompt_tokens")).toMatchObject({ label: "Prompt", unit: "tokens" });
-    expect(byKey.get("failed")).toMatchObject({ label: "Outcome", numeric: false });
+    // peak_memory_bytes is specifically labeled Peak process memory, not VRAM or system memory
+    expect(byKey.get("peak_memory_bytes")).toMatchObject({ label: "Peak process memory", numeric: true });
+    expect(byKey.get("failed")).toBeUndefined();
   });
 
-  it("keeps a metric that only later rows carry, and an unknown key under its own name", () => {
-    const partial: Record<string, unknown> = { prompt_tokens: 1, failed: false };
-    const extended: Record<string, unknown> = { prompt_tokens: 2, tg_tps: 9, failed: false, scheduler_ms: 4 };
-    const columns = buildRowColumns([partial, extended]);
-    expect(columns.map((c) => c.key)).toEqual(["prompt_tokens", "tg_tps", "failed", "scheduler_ms"]);
-    expect(columns[columns.length - 1]).toMatchObject({ label: "scheduler_ms", numeric: false });
+  it("keeps a metric that only later rows carry, and an unknown key under its own name in detailed mode", () => {
+    const partial: Record<string, unknown> = { prompt_tokens: 1 };
+    const extended: Record<string, unknown> = { prompt_tokens: 2, tg_tps: 9, scheduler_ms: 4 };
+    const coreColumns = buildRowColumns([partial, extended]);
+    expect(coreColumns.map((c) => c.key)).toEqual(["prompt_tokens", "tg_tps"]);
+
+    const detailedColumns = buildRowColumns([partial, extended], true);
+    expect(detailedColumns.map((c) => c.key)).toEqual(["prompt_tokens", "tg_tps", "scheduler_ms"]);
+    expect(detailedColumns[detailedColumns.length - 1]).toMatchObject({ label: "scheduler_ms", numeric: false });
   });
 
   it("shows only the columns the loaded rows actually carry", () => {
-    expect(buildRowColumns([{ e2e_ms: 12 }]).map((c) => c.key)).toEqual(["e2e_ms"]);
+    expect(buildRowColumns([{ e2e_ms: 12 }], true).map((c) => c.key)).toEqual(["e2e_ms"]);
+    expect(buildRowColumns([{ tg_tps: 50 }]).map((c) => c.key)).toEqual(["tg_tps"]);
     expect(buildRowColumns([])).toEqual([]);
   });
 
-  it("names a failed sample in words rather than by styling alone", () => {
-    const outcome = buildRowColumns([row]).find((c) => c.key === "failed");
-    expect(outcome?.format(true)).toBe("Failed");
-    expect(outcome?.format(false)).toBe("OK");
+  it("detects failed rows defensively for UI exclusion while omitting outcome column", () => {
     expect(isFailedRow({ failed: true })).toBe(true);
     expect(isFailedRow({ failed: false })).toBe(false);
     expect(isFailedRow({})).toBe(false);
+    expect(buildRowColumns([row], true).find((c) => c.key === "failed")).toBeUndefined();
   });
 
   it("formats each cell in the unit its column promises", () => {
-    const byKey = new Map(buildRowColumns([row]).map((c) => [c.key, c]));
+    const byKey = new Map(buildRowColumns([row], true).map((c) => [c.key, c]));
     expect(byKey.get("ttft_ms")?.format(0.62)).toBe("0.6");
     expect(byKey.get("e2e_ms")?.format(2560)).toBe("2560.0");
     expect(byKey.get("tg_tps")?.format(51.27)).toBe("51.3");

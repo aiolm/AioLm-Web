@@ -175,3 +175,6 @@ A result link preserves the current query. When a shared cursor or a return from
 a detail page has no previous-page history, First page provides a way back to
 the beginning while retaining filters. Applying advanced fields closes their
 panel and moves focus to the result heading.
+
+
+Published measurement policy: new submissions must be complete, non-empty, and contain no failed rows. Local diagnostic records remain local. System RAM is an optional measurement-time capacity in environment.system_memory_bytes and summary.setup.ram_bytes; it is not GPU VRAM or peak process memory. Model display names may omit encoding suffixes, but weight encoding always comes from model metadata, never from the display label.

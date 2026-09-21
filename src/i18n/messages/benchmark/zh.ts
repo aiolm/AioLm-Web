@@ -249,6 +249,22 @@ const messages = {
   "benchmark.The publisher is the namespace of the repository the file came from; whoever quantized the weights is listed separately and is often someone else. Quantization describes the weights in the published file, not the KV cache, and it is not a statement about output quality.": "分发方取自下载该文件的仓库命名空间；量化权重的一方单独列出，二者常常不同。量化描述的是已发布文件中的权重，与 KV 缓存无关，也不代表输出质量。",
   "benchmark.GGUF file": "GGUF 文件",
   "benchmark.Hugging Face": "Hugging Face",
-  "benchmark.GGUF file and Hugging Face": "GGUF 文件 + Hugging Face"
+  "benchmark.GGUF file and Hugging Face": "GGUF 文件 + Hugging Face",
+  "benchmark.Environment": "环境",
+  "benchmark.Prefill": "预填充",
+  "benchmark.Decode": "解码",
+  "benchmark.Context / workload": "上下文 / 工作负载",
+  "benchmark.TTFT": "首字延迟",
+  "benchmark.Peak process memory": "峰值进程内存",
+  "benchmark.System memory": "系统内存",
+  "benchmark.System RAM": "系统内存",
+  "benchmark.GPU": "GPU",
+  "benchmark.RAM": "内存",
+  "benchmark.Show detailed metrics": "显示详细指标",
+  "benchmark.Hide detailed metrics": "隐藏详细指标",
+  "benchmark.Prefill (tok/s)": "预填充 (tok/s)",
+  "benchmark.Decode (tok/s)": "解码 (tok/s)",
+  "benchmark.Not recorded": "未记录",
+  "benchmark.One row per published measurement sample, in the order it was reported.": "按上报顺序排列的公开测量样本行。"
 } satisfies BenchmarkMessages;
 export default messages;

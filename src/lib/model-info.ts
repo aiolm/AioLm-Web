@@ -24,7 +24,7 @@ export type BenchmarkModelInfo = {
   /** Hugging Face namespace/repo only, never a URL or a local path. */
   repository: string | null;
   base_models: string[];
-  /** Repo-relative .gguf artifact from the download receipt only. */
+  /** Repo-relative .gguf artifact from a file-matched public origin. */
   artifact: string | null;
   source: "gguf" | "huggingface" | "gguf+huggingface" | null;
   /**
@@ -111,8 +111,23 @@ export function normalizeModelInfo(benchmark: PublicBenchmarkSubmission): Benchm
  * metadata; everything else keeps the existing hash-or-status label, so a run
  * without metadata still reads exactly as it did before.
  */
+/** Name presentation is separate from weight identity: never derive quantization here. */
+export function cleanModelName(value: string): string {
+  const withoutExtension = value.replace(/\.gguf$/i, "");
+  const cleaned = withoutExtension.replace(/[-_. ](?:UD[-_])?(?:IQ[1-4]_[A-Z0-9_]+|Q[2-8]_[A-Z0-9_]+|BF16|FP16|F16|FP32|F32)$/i, "");
+  return cleaned || withoutExtension;
+}
+
 export function modelLabelFor(benchmark: PublicBenchmarkSubmission, info: BenchmarkModelInfo | null): string {
-  if (info?.name) return info.name;
+  if (info?.name) {
+    const name = cleanModelName(info.name);
+    // A declared base name may normalize spelling only when it describes the
+    // entire recorded name; a fine-tune's identity must never be replaced by its parent.
+    const compact = (text: string) => text.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const base = info.base_models.length === 1 ? info.base_models[0].split("/").at(-1) : undefined;
+    if (base && compact(name) === compact(info.base_models[0])) return cleanModelName(base);
+    return name;
+  }
   if (info?.repository) return info.repository;
   return benchmark.model.status === "sha256" && benchmark.model.sha256
     ? `sha256:${benchmark.model.sha256.slice(0, 12)}`

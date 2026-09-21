@@ -1,3 +1,4 @@
+import { cleanModelName } from "@/lib/model-info";
 import type { Translator } from "@/i18n/types";
 import { benchmarkFallback } from "./benchmark-i18n";
 import { asRecord } from "./benchmark-detail-format";
@@ -26,7 +27,7 @@ export interface BenchmarkModelInfo {
   /** Hugging Face `namespace/repo`, never a URL and never a local path. */
   repository: string | null;
   base_models: string[];
-  /** Repository-relative `.gguf` path taken from the download receipt. */
+  /** Repository-relative `.gguf` path from a file-matched public origin. */
   artifact: string | null;
   source: string | null;
   sha256: string | null;
@@ -177,4 +178,12 @@ export function modelIdentityComparison(infos: ReadonlyArray<BenchmarkModelInfo 
     same: new Set(keys.filter((key): key is string => key !== null)).size <= 1,
     unknown: keys.some((key) => key === null),
   };
+}
+
+/**
+ * Display name for a model: prefers the explicit metadata name when present,
+ * falling back to the summary label. Quantization is never inferred from the name.
+ */
+export function modelDisplayName(info: BenchmarkModelInfo | null, fallbackLabel: string = ""): string {
+  return cleanModelName(fallbackLabel.trim() || info?.name?.trim() || "");
 }

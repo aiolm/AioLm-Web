@@ -202,8 +202,8 @@ describe("prefill average", () => {
     ]);
     const summary = summarizeBenchmark(b);
     expect(summary.mean_pp_tps).toBe(200);
-    expect(summary.failed_rows).toBe(1);
-    expect(summary.row_count).toBe(5);
+    expect(summary.failed_rows).toBe(0);
+    expect(summary.row_count).toBe(4);
   });
 
   it("reports an unknown prefill average when nothing measured it", () => {
@@ -214,12 +214,12 @@ describe("prefill average", () => {
     expect(summarizeBenchmark(b).mean_pp_tps).toBeNull();
   });
 
-  it("keeps the generation and duration means on the rows they already used", () => {
+  it("excludes failed measurements from generation and duration means", () => {
     const b = syntheticSubmission();
     b.measurements.rows = rowsWith([{ tg_tps: 10, e2e_ms: 100 }, { tg_tps: 30, e2e_ms: 300, failed: true, pp_tps: null }]);
     const summary = summarizeBenchmark(b);
-    expect(summary.mean_tg_tps).toBe(20);
-    expect(summary.mean_e2e_ms).toBe(200);
+    expect(summary.mean_tg_tps).toBe(10);
+    expect(summary.mean_e2e_ms).toBe(100);
     expect(summary.mean_pp_tps).toBe(100);
   });
 });

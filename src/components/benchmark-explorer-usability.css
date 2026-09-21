@@ -34,15 +34,16 @@
   .explorer-compact .explorer-main { padding: 16px; }
   .explorer-compact .explorer-main-header { gap: 10px; }
   .explorer-compact .explorer-sort { min-width: 0; }
-  .explorer-compact .explorer-table .explorer-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 12px; }
+  .explorer-compact .explorer-table .explorer-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto; gap: 6px 12px; }
   .explorer-compact .explorer-table .explorer-cell { min-width: 0; padding: 3px 0; }
-  .explorer-compact .explorer-table .explorer-cell-identity { grid-column: 1 / -1; grid-row: 1; padding-inline-end: 52px; grid-template-columns: minmax(0, 1fr); }
+  .explorer-compact .explorer-table .explorer-cell-identity { grid-column: 1 / 3; grid-row: 1; padding-inline-end: 8px; grid-template-columns: minmax(0, 1fr); }
   .explorer-compact .explorer-table .explorer-cell-identity > .explorer-cell-label { display: none; }
   .explorer-compact .explorer-table .explorer-cell-compare { grid-column: 3; grid-row: 1; justify-self: end; align-self: start; display: flex; flex-direction: column; align-items: center; gap: 0; }
   .explorer-compact .explorer-compare-input { margin: 10px 12px; }
-  .explorer-compact .explorer-table .explorer-cell-setup { grid-column: 1 / -1; }
+  .explorer-compact .explorer-table .explorer-cell-environment { grid-column: 1 / -1; grid-row: 2; }
+  .explorer-compact .explorer-table .explorer-cell-numeric { grid-row: 3; grid-template-columns: minmax(0, 1fr); }
+  .explorer-compact .explorer-table .explorer-cell-setup { grid-column: 1 / -1; grid-row: 4; }
   .explorer-compact .explorer-status { margin: 0; }
-  .explorer-compact .explorer-table .explorer-cell-published { grid-column: 1 / -1; display: flex; gap: 8px; }
   .explorer-compact .explorer-cell-numeric .explorer-cell-value { font-size: 1.1rem; font-weight: 650; }
 }
 
@@ -60,8 +61,6 @@
 }
 @media (max-width: 700px) {
   .explorer-compact .explorer-table .explorer-cell-compare { position: relative; z-index: 1; }
-  .explorer-compact .explorer-table .explorer-cell-numeric { grid-row: 2; grid-template-columns: minmax(0, 1fr); }
-  .explorer-compact .explorer-table .explorer-cell-setup { grid-row: 3; }
 }
 
 /* Measurement counts qualify the workload rather than occupy a metric column. */

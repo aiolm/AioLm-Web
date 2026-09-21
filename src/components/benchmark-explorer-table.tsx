@@ -4,24 +4,23 @@ import { localizedPath } from "@/i18n/config";
 import { useSearchParams } from "next/navigation";
 
 import Link from "next/link";
+import { BilingualHeader } from "./benchmark-i18n";
 import {
   EXPLORER_COMPARE_LIMIT,
   explorerDetailHref,
   isCompared,
   type ExplorerItem,
 } from "./benchmark-explorer-state";
-import { environmentFacts, formatDuration, formatPromptLengths, formatPublishedDate, formatSampleCount, formatThroughput, type SummaryFact } from "./benchmark-explorer-format";
+import { environmentFacts, formatDuration, formatPromptLengths, formatPublishedDate, formatThroughput, type SummaryFact } from "./benchmark-explorer-format";
 import { formatWeightQuantization, modelPublisher, modelValue } from "./benchmark-model-identity";
 
 /**
- * Published results as one native table. Setup fields are paired into a single
- * column each, so the desktop table stays scannable while every cell keeps a
- * label element that lets the same markup stack into readable rows on a phone.
+ * Published results as one native table. Model and Environment are separated
+ * so the hardware and runtime scan cleanly while publisher and weight quantization
+ * stay beside the model identity.
  *
- * Inside a cell, supporting values are labeled facts rather than one separated
- * line: who published the weights and how they were quantized are different
- * claims from the operating system and the backend, and a reader should not have
- * to infer which is which from their order.
+ * Headings are bilingual on ko/ja/zh (local + English nowrap) and English on en.
+ * Results are successful-only; failed rows and status badges are omitted.
  */
 
 /** Labeled supporting values inside a cell, packed onto as few lines as they need. */
@@ -73,16 +72,24 @@ export function BenchmarkExplorerTable({
       <caption className="explorer-table-caption">{t("benchmark.Published results in your selected order. Each row is a self-reported measurement of one configuration.")}</caption>
       <thead className="explorer-table-head">
         <tr className="explorer-head-row">
-          <th scope="col" className="explorer-head-cell explorer-head-compare">{t("benchmark.Compare")}</th>
-          <th scope="col" className="explorer-head-cell explorer-head-identity">{t("benchmark.Model & hardware")}</th>
-          <th scope="col" className="explorer-head-cell explorer-head-setup">{t("benchmark.Method & workload")}</th>
-          <th scope="col" className="explorer-head-cell explorer-head-numeric">{t("benchmark.Prompt processing")}{" "}<span className="explorer-unit">{t("benchmark.(tok/s)")}</span>
+          <th scope="col" className="explorer-head-cell explorer-head-compare">
+            <BilingualHeader local={t("benchmark.Compare")} en="Compare" locale={locale} />
           </th>
-          <th scope="col" className="explorer-head-cell explorer-head-numeric">{t("benchmark.Generation")}{" "}<span className="explorer-unit">{t("benchmark.(tok/s)")}</span>
+          <th scope="col" className="explorer-head-cell explorer-head-identity explorer-head-model">
+            <BilingualHeader local={t("benchmark.Model")} en="Model" locale={locale} />
           </th>
-          <th scope="col" className="explorer-head-cell explorer-head-numeric">{t("benchmark.Duration")}{" "}<span className="explorer-unit">{t("benchmark.(ms)")}</span>
+          <th scope="col" className="explorer-head-cell explorer-head-environment">
+            <BilingualHeader local={t("benchmark.Environment")} en="Environment" locale={locale} />
           </th>
-          <th scope="col" className="explorer-head-cell explorer-head-published">{t("benchmark.Published")}</th>
+          <th scope="col" className="explorer-head-cell explorer-head-numeric explorer-head-prefill">
+            <BilingualHeader local={t("benchmark.Prefill")} en="Prefill" unit="tok/s" locale={locale} />
+          </th>
+          <th scope="col" className="explorer-head-cell explorer-head-numeric explorer-head-decode">
+            <BilingualHeader local={t("benchmark.Decode")} en="Decode" unit="tok/s" locale={locale} />
+          </th>
+          <th scope="col" className="explorer-head-cell explorer-head-setup">
+            <BilingualHeader local={t("benchmark.Context / workload")} en="Context / Workload" locale={locale} />
+          </th>
         </tr>
       </thead>
       <tbody className="explorer-table-body">
@@ -97,6 +104,7 @@ export function BenchmarkExplorerTable({
             { key: "publisher", label: t("benchmark.Publisher"), value: modelValue(modelPublisher(info), t) },
             { key: "quantization", label: t("benchmark.Weight quantization"), value: formatWeightQuantization(info, t) },
           ];
+          const envFacts = environmentFacts(summary.setup, t).filter(fact => fact.key !== "gpu" && fact.key !== "cores");
           return (
             <tr key={item.public_id} className="explorer-row">
               <td className="explorer-cell explorer-cell-compare">
@@ -110,8 +118,8 @@ export function BenchmarkExplorerTable({
                   aria-label={t(selected ? "benchmark.Remove {model} on {hardware} from the comparison" : "benchmark.Add {model} on {hardware} to the comparison", identity)}
                 />
               </td>
-              <th scope="row" className="explorer-cell explorer-cell-identity">
-                <span className="explorer-cell-label" aria-hidden="true">{t("benchmark.Model & hardware")}</span>
+              <th scope="row" className="explorer-cell explorer-cell-identity explorer-cell-model">
+                <span className="explorer-cell-label" aria-hidden="true">{t("benchmark.Model")}</span>
                 <div className="explorer-cell-value">
                   <Link
                     className="explorer-detail-link"
@@ -121,30 +129,30 @@ export function BenchmarkExplorerTable({
                     {summary.model_label}
                   </Link>
                   <FactList className="explorer-model-facts" facts={modelFacts} />
-                  <span className="explorer-identity-hardware">{summary.hardware_label}</span>
-                  <FactList className="explorer-environment-facts" facts={environmentFacts(summary.setup, t)} />
                 </div>
               </th>
-              <ExplorerCell label={t("benchmark.Method & workload")} className="explorer-cell-setup">
-                <span className="explorer-setup-method">{summary.method_label}</span>
-                <span className="explorer-setup-workload">{summary.workload_label}</span>
-                <span className="explorer-result-meta">{t("benchmark.Input context: {value}", { value: formatPromptLengths(summary.prompt_lengths) ?? t("benchmark.Unknown") })}</span>
-                <span className="explorer-measurement-meta">
-                  <span>{t("benchmark.Measurement count: {value}", { value: formatSampleCount(summary.row_count, summary.failed_rows, t) })}</span>
-                  <span className={`explorer-status explorer-status-${summary.status}`}>{summary.status}</span>
-                </span>
-              </ExplorerCell>
-              <ExplorerCell label={t("benchmark.Prompt processing (tok/s)")} className="explorer-cell-numeric">
+              <td className="explorer-cell explorer-cell-environment">
+                <span className="explorer-cell-label" aria-hidden="true">{t("benchmark.Environment")}</span>
+                <div className="explorer-cell-value">
+                  <span className="explorer-identity-hardware">{summary.hardware_label}</span>
+                  <FactList className="explorer-environment-facts" facts={envFacts} />
+                </div>
+              </td>
+              <ExplorerCell label={t("benchmark.Prefill (tok/s)")} className="explorer-cell-numeric explorer-cell-prefill">
                 {formatThroughput(summary.mean_pp_tps)}
               </ExplorerCell>
-              <ExplorerCell label={t("benchmark.Generation (tok/s)")} className="explorer-cell-numeric">
+              <ExplorerCell label={t("benchmark.Decode (tok/s)")} className="explorer-cell-numeric explorer-cell-decode">
                 {formatThroughput(summary.mean_tg_tps)}
               </ExplorerCell>
-              <ExplorerCell label={t("benchmark.Duration (ms)")} className="explorer-cell-numeric">
-                {formatDuration(summary.mean_e2e_ms)}
-              </ExplorerCell>
-              <ExplorerCell label={t("benchmark.Published")} className="explorer-cell-published">
-                <time dateTime={item.created_at}>{formatPublishedDate(item.created_at)}</time>
+              <ExplorerCell label={t("benchmark.Context / workload")} className="explorer-cell-setup">
+                <span className="explorer-result-meta">{t("benchmark.Input context: {value}", { value: formatPromptLengths(summary.prompt_lengths) ?? t("benchmark.Unknown") })}</span>
+                <span className="explorer-setup-workload">{summary.workload_label}</span>
+                <span className="explorer-setup-method">{summary.method_label}</span>
+                <span className="explorer-measurement-meta">
+                  <time dateTime={item.created_at}>{formatPublishedDate(item.created_at)}</time>
+                  <span> · {t("benchmark.Measurement count: {value}", { value: String(summary.row_count) })}</span>
+                  {summary.mean_e2e_ms != null ? <span> · {formatDuration(summary.mean_e2e_ms)} ms</span> : null}
+                </span>
               </ExplorerCell>
             </tr>
           );

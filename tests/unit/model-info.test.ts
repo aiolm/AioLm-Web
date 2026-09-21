@@ -116,3 +116,17 @@ describe("model labels", () => {
       .toBe("unidentified");
   });
 });
+
+describe("model names and the weight encoding stay independent", () => {
+  it("removes a filename-style quantization suffix without believing it", () => {
+    const summary = summarizeBenchmark(described({ ...COMPLETE, name: "Qwen3.8-27B-Q4_K_M", quantization: "Q6_K", file_type: 18 }));
+    expect(summary.model_label).toBe("Qwen3.8-27B");
+    expect(summary.model_info?.quantization).toBe("Q6_K");
+    const missing = summarizeBenchmark(described({ ...COMPLETE, name: "Qwen3.8-27B-Q4_K_M", quantization: null }));
+    expect(missing.model_info?.quantization).toBeNull();
+  });
+  it("keeps fine-tune identity and arbitrary model names", () => {
+    expect(summarizeBenchmark(described({ ...COMPLETE, name: "Example-Custom-Instruct-8B", base_models: ["org/Example-8B"] })).model_label).toBe("Example-Custom-Instruct-8B");
+    expect(summarizeBenchmark(described({ ...COMPLETE, name: "Q4_K_M" })).model_label).toBe("Q4_K_M");
+  });
+});

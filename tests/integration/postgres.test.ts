@@ -494,8 +494,9 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
         select summary from bench.benchmark_runs order by public_id`;
       // 008 backfills from benchmark metadata only; the configured input length arrives with 009.
       expect(rows.map((row) => row.summary.setup)).toEqual(benchmarks.map((benchmark) => {
-        const { prompt_length, ...setup } = summarizeBenchmark(benchmark).setup!;
+        const { prompt_length, ram_bytes, ...setup } = summarizeBenchmark(benchmark).setup!;
         void prompt_length;
+        void ram_bytes;
         return setup;
       }));
       expect(rows[0]!.summary.setup?.vram_mb).toBe(8193);
@@ -774,6 +775,38 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     }
   });
 
+  it("backfills only recorded system RAM and preserves measurement data", async () => {
+    if (!admin) throw new Error("integration database unavailable");
+    const scratchName = `aiolm_web_ram_${randomUUID().replace(/-/g, "")}`;
+    await admin.unsafe(`CREATE DATABASE "${scratchName}"`);
+    const scratchUrl = new URL(ADMIN_URL!);
+    scratchUrl.pathname = `/${scratchName}`;
+    const scratch = postgres(scratchUrl.toString(), { max: 1, prepare: false, ssl: false });
+    try {
+      await applyMigrations(scratch);
+      const base = syntheticSubmission();
+      const recorded = syntheticSubmission({ environment: { ...base.environment!, system_memory_bytes: 32 * 1024 ** 3 } });
+      for (const [id, benchmark] of [["recorded", recorded], ["legacy", base]] as const) {
+        const summary = summarizeBenchmark(benchmark);
+        delete summary.setup!.ram_bytes;
+        await scratch`insert into bench.benchmark_runs (submission_id,public_id,owner_hash,body_sha256,benchmark,summary)
+          values (${randomUUID()},${id},${"0".repeat(64)},${"1".repeat(64)},
+          ${scratch.json(JSON.parse(JSON.stringify(benchmark)))},${scratch.json(JSON.parse(JSON.stringify(summary)))})`;
+      }
+      await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", "011_system_memory.sql"), "utf8"));
+      const rows = await scratch`select public_id,benchmark,summary,owner_hash,body_sha256 from bench.benchmark_runs order by public_id`;
+      expect(rows[0]!.summary.setup.ram_bytes).toBeNull();
+      expect(rows[1]!.summary.setup.ram_bytes).toBe(32 * 1024 ** 3);
+      expect(rows[0]!.benchmark).toEqual(JSON.parse(JSON.stringify(base)));
+      expect(rows[1]!.benchmark).toEqual(JSON.parse(JSON.stringify(recorded)));
+      expect(rows[1]!.summary).toEqual(summarizeBenchmark(recorded));
+      expect(rows.every(row => row.owner_hash === "0".repeat(64) && row.body_sha256 === "1".repeat(64))).toBe(true);
+    } finally {
+      await scratch.end({ timeout: 5 });
+      await admin.unsafe(`DROP DATABASE "${scratchName}"`);
+    }
+  });
+
   it("applies migrations exactly once", async () => {
     if (!db) return;
     expect(await applyMigrations(db)).toEqual([]);
@@ -782,7 +815,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       "001_init.sql", "002_roles.sql", "003_least_privilege.sql",
       "004_filter_indexes.sql", "005_retention_grants.sql", "006_trgm_filter_indexes.sql",
       "007_readiness_grant.sql", "008_benchmark_discovery.sql", "009_input_context.sql",
-      "010_model_metadata.sql",
+      "010_model_metadata.sql", "011_system_memory.sql",
     ]);
   });
 

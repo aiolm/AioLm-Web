@@ -61,6 +61,32 @@ export function formatPromptLengths(values: readonly number[] | null | undefined
   return lengths.length === 0 ? null : lengths.map(formatPromptLength).join(" · ");
 }
 
+/** Binary scale, or null when the value is small enough that bytes are the readable unit. */
+function scaleBytes(value: number): string | null {
+  if (value < 1024) return null;
+  const units = ["KiB", "MiB", "GiB", "TiB", "PiB"] as const;
+  let scaled = value / 1024;
+  let unitIndex = 0;
+  while (scaled >= 1024 && unitIndex < units.length - 1) {
+    scaled /= 1024;
+    unitIndex += 1;
+  }
+  return `${scaled.toFixed(scaled < 10 ? 2 : 1)} ${units[unitIndex]}`;
+}
+
+function groupDigits(value: number): string {
+  const text = String(value);
+  const [whole, fraction] = text.split(".");
+  const grouped = (whole ?? "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return fraction === undefined ? grouped : `${grouped}.${fraction}`;
+}
+
+/** The same scale without the exact byte count, for a table cell that has to stay narrow. */
+export function formatCompactBytes(value: unknown, t: Translator = benchmarkFallback): string {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) return EXPLORER_MISSING;
+  return scaleBytes(value) ?? t("benchmark.{value} bytes", { value: groupDigits(value) });
+}
+
 /** One labeled fact. The label travels with the value so neither reads as the other. */
 export interface SummaryFact {
   key: string;
@@ -75,16 +101,27 @@ export interface SummaryFact {
  * Only reported parts are listed: an unreported one is absent here and named on
  * the result page, where there is room to say so.
  */
-export function environmentFacts(setup: BenchmarkSetup | undefined, t: Translator = benchmarkFallback): SummaryFact[] {
+export function environmentFacts(setup: (BenchmarkSetup & { ram_bytes?: number | null }) | undefined, t: Translator = benchmarkFallback): SummaryFact[] {
   if (!setup) return [];
   const runtime = [setup.runtime, setup.runtime_version].filter(Boolean).join(" ");
-  return [
+  const facts: SummaryFact[] = [];
+  if (setup.gpus && setup.gpus.length > 0) {
+    facts.push({ key: "gpu", label: t("benchmark.GPU"), value: setup.gpus.join(", ") });
+  }
+  if (setup.cpu) {
+    facts.push({ key: "cpu", label: t("benchmark.CPU"), value: setup.cpu });
+  }
+  if (setup.ram_bytes != null && setup.ram_bytes > 0) {
+    facts.push({ key: "ram", label: t("benchmark.RAM"), value: formatCompactBytes(setup.ram_bytes, t) });
+  }
+  facts.push(
     { key: "os", label: t("benchmark.OS"), value: setup.os ?? "" },
     { key: "runtime", label: t("benchmark.Runtime"), value: runtime },
     { key: "backend", label: t("benchmark.Backend"), value: setup.backend ?? "" },
     { key: "vram", label: t("benchmark.VRAM"), value: setup.vram_mb == null ? "" : t("benchmark.{value} MiB", { value: setup.vram_mb }) },
     { key: "cores", label: t("benchmark.Logical cores"), value: setup.cores == null ? "" : String(setup.cores) },
-  ].filter((fact) => fact.value !== "");
+  );
+  return facts.filter((fact) => fact.value !== "");
 }
 
 /**
@@ -99,10 +136,11 @@ export function formatComparisonOs(setup: BenchmarkSetup | undefined, t: Transla
 }
 
 /** Reported CPU and its logical core count, or unknown when neither was recorded. */
-export function formatComparisonCpu(setup: BenchmarkSetup | undefined, t: Translator = benchmarkFallback): string {
+export function formatComparisonCpu(setup: (BenchmarkSetup & { ram_bytes?: number | null }) | undefined, t: Translator = benchmarkFallback): string {
   const parts: string[] = [];
   if (typeof setup?.cpu === "string" && setup.cpu !== "") parts.push(setup.cpu);
   if (setup?.cores != null) parts.push(`${t("benchmark.Logical cores")}: ${setup.cores}`);
+  if (setup?.ram_bytes != null) parts.push(`${t("benchmark.System RAM")}: ${formatCompactBytes(setup.ram_bytes, t)}`);
   return parts.length > 0 ? parts.join(" · ") : t("benchmark.Unknown");
 }
 

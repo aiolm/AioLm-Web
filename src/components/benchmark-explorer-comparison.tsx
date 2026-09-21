@@ -5,6 +5,7 @@ import type { Translator } from "@/i18n/types";
 import { useSearchParams } from "next/navigation";
 
 import Link from "next/link";
+import { BilingualHeader } from "./benchmark-i18n";
 import {
   EXPLORER_COMPARE_LIMIT,
   comparisonCompatibility,
@@ -44,11 +45,10 @@ function comparisonFields(t: Translator, locale: Locale, search: string): Compar
   {
     key: "samples",
     label: t("benchmark.Measurement count"),
-    render: (item) => formatSampleCount(item.summary.row_count, item.summary.failed_rows, t),
+    render: (item) => formatSampleCount(item.summary.row_count, 0, t),
   },
-  { key: "status", label: t("benchmark.Status"), render: (item) => item.summary.status },
-  { key: "prompt-processing", label: t("benchmark.Prompt processing (tok/s)"), render: (item) => formatThroughput(item.summary.mean_pp_tps) },
-  { key: "throughput", label: t("benchmark.Generation (tok/s)"), render: (item) => formatThroughput(item.summary.mean_tg_tps) },
+  { key: "prompt-processing", label: t("benchmark.Prefill (tok/s)"), render: (item) => formatThroughput(item.summary.mean_pp_tps) },
+  { key: "throughput", label: t("benchmark.Decode (tok/s)"), render: (item) => formatThroughput(item.summary.mean_tg_tps) },
   { key: "duration", label: t("benchmark.Duration (ms)"), render: (item) => formatDuration(item.summary.mean_e2e_ms) },
   {
     key: "published",
@@ -115,7 +115,9 @@ export function BenchmarkExplorerComparison({
           <caption className="explorer-comparison-caption">{t("benchmark.Summary fields for the selected results, one column per result.")}</caption>
           <thead className="explorer-comparison-head">
             <tr className="explorer-comparison-head-row">
-              <th scope="col" className="explorer-comparison-field-head">{t("benchmark.Field")}</th>
+              <th scope="col" className="explorer-comparison-field-head">
+                <BilingualHeader local={t("benchmark.Field")} en="Field" locale={locale} />
+              </th>
               {items.map((item) => (
                 <th scope="col" key={item.public_id} className="explorer-comparison-item-head">
                   <span className="explorer-comparison-item-title">{item.summary.model_label}</span>

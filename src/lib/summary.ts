@@ -38,7 +38,7 @@ function mean(values: number[]): number | null {
 }
 
 export function summarizeBenchmark(benchmark: PublicBenchmarkSubmission): BenchmarkSummary {
-  const rows = benchmark.measurements.rows;
+  const rows = benchmark.measurements.rows.filter(row => !row.failed);
   const tg = rows.map((r) => r.tg_tps).filter((v): v is number => typeof v === "number" && Number.isFinite(v));
   const e2e = rows.map((r) => r.e2e_ms).filter((v) => Number.isFinite(v));
   // Prefill is only measured on rows that ran: a failed row reports no throughput,

@@ -6,12 +6,14 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { ErrorState, SafeMarkdown, isAbortError, useJsonFetch } from "@/components/ui";
+import { BenchmarkHardwareOverview } from "./benchmark-hardware-overview";
 import { ReportForm } from "@/components/report-form";
-import { asRecord, displayText, statusTone } from "@/components/benchmark-detail-format";
+import { asRecord } from "@/components/benchmark-detail-format";
 import { buildSetupGroups, type BenchmarkSetup, type SetupField } from "@/components/benchmark-detail-fields";
 import { formatWeightQuantization, modelPublisher, modelValue, type BenchmarkModelInfo } from "@/components/benchmark-model-identity";
 import { buildRowColumns, isFailedRow } from "@/components/benchmark-detail-rows";
-import { formatUpdatedDate, formatDuration, formatPromptLengths, formatSampleCount, formatThroughput } from "@/components/benchmark-explorer-format";
+import { formatUpdatedDate, formatDuration, formatPromptLengths, formatThroughput } from "@/components/benchmark-explorer-format";
+import { BilingualHeader } from "./benchmark-i18n";
 
 interface Detail {
   id: string;
@@ -133,8 +135,9 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
           currentGeneration: generationRef.current,
           aborted: controller.signal.aborted,
         })) return;
+        const successful = json.rows.filter((r) => !isFailedRow(asRecord(r) ?? {}));
         setRows((prev) => {
-          const next = cursor && prev ? [...prev, ...json.rows] : json.rows;
+          const next = cursor && prev ? [...prev, ...successful] : successful;
           return next.slice(0, 10000);
         });
         setVisiblePage(nextPage);
@@ -176,40 +179,26 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
   const { start, end } = getRowsSliceIndices(clampedPage, ROWS_VISIBLE_PAGE_SIZE, loadedCount);
   const retryCursor = rows === null ? null : rowsCursor;
   const { summary } = data;
-  const tone = statusTone(summary.status);
+
 
   return (
     <div className="grid">
       {backLink}
       <section className="card" aria-labelledby="detail-title">
-        <h1 id="detail-title">{summary.workload_label} · {summary.model_label}</h1>
-        <p>
-          <span className={tone ? `status ${tone}` : "status"}>{displayText(summary.status, t)}</span>{" "}
-          <span className="muted">{t("benchmark.Revision {revision} · updated {date} (UTC)", { revision: data.revision, date: formatUpdatedDate(data.updated_at, locale) })}</span>
-        </p>
-        <dl className="kv detail-metrics">
-          {/* Who distributed the weights and how they were quantized qualify every
-              number below, so they are read before the metrics rather than inside
-              the collapsed setup. Both name their gaps instead of staying blank. */}
-          <dt>{t("benchmark.Publisher")}</dt><dd>{modelValue(modelPublisher(summary.model_info ?? null), t)}</dd>
-          <dt>{t("benchmark.Weight quantization")}</dt><dd>{formatWeightQuantization(summary.model_info ?? null, t)}</dd>
-          <dt>{t("benchmark.Hardware")}</dt><dd>{summary.hardware_label}</dd>
-          <dt>{t("benchmark.Method")}</dt><dd>{summary.method_label}</dd>
-          <dt>{t("benchmark.Input context")}</dt><dd>{formatPromptLengths(summary.prompt_lengths) ?? t("benchmark.Unknown")}</dd>
-          <dt>{t("benchmark.Measurement count")}</dt><dd>{formatSampleCount(summary.row_count, summary.failed_rows, t)}</dd>
-          <dt>{t("benchmark.Mean prompt processing")}{" "}<span className="detail-unit">{t("benchmark.(tok/s)")}</span></dt>
-          <dd>{formatThroughput(summary.mean_pp_tps)}</dd>
-          <dt>{t("benchmark.Mean generation")}{" "}<span className="detail-unit">{t("benchmark.(tok/s)")}</span></dt>
-          <dd>{formatThroughput(summary.mean_tg_tps)}</dd>
-          <dt>{t("benchmark.Mean end-to-end duration")}{" "}<span className="detail-unit">{t("benchmark.(ms)")}</span></dt>
-          <dd>{formatDuration(summary.mean_e2e_ms)}</dd>
-        </dl>
+        <h1 id="detail-title">{summary.model_label}</h1>
+        <p className="detail-model-summary"><span>{modelValue(modelPublisher(summary.model_info ?? null), t)}</span><span className="detail-weight-badge">{formatWeightQuantization(summary.model_info ?? null, t)}</span></p>
+        <div className="detail-performance-grid">
+          <div><BilingualHeader local={t("benchmark.Prefill")} en="Prefill" locale={locale} /><strong>{formatThroughput(summary.mean_pp_tps)} <small>tok/s</small></strong></div>
+          <div><BilingualHeader local={t("benchmark.Decode")} en="Decode" locale={locale} /><strong>{formatThroughput(summary.mean_tg_tps)} <small>tok/s</small></strong></div>
+          <div><BilingualHeader local={t("benchmark.Duration")} en="Duration" locale={locale} /><strong>{formatDuration(summary.mean_e2e_ms)} <small>ms</small></strong></div>
+        </div>
+        <p className="detail-run-summary"><span>{t("benchmark.Input context")}: <strong>{formatPromptLengths(summary.prompt_lengths) ?? "—"}</strong></span><span>{summary.workload_label}</span><span>{t("benchmark.Measurement count")}: {summary.row_count}</span></p>
+        <p className="muted detail-record-date">{t("benchmark.Revision {revision} · updated {date} (UTC)", { revision: data.revision, date: formatUpdatedDate(data.updated_at, locale) })}</p>
       </section>
 
-      <section className="card" aria-labelledby="desc-title">
-        <h2 id="desc-title">{t("benchmark.Description")}</h2>
-        {data.description_md ? <SafeMarkdown text={data.description_md} /> : <p className="muted">{t("benchmark.No description provided.")}</p>}
-      </section>
+      <BenchmarkHardwareOverview benchmark={data.benchmark} />
+
+      {data.description_md ? <details className="card detail-description"><summary>{t("benchmark.Description")}</summary><SafeMarkdown text={data.description_md} /></details> : null}
 
       <section className="card" aria-labelledby="rows-title">
         <h2 id="rows-title">{t("benchmark.Measurements")}{rowsTotal !== null ? `(${rowsTotal})` : null}</h2>
@@ -258,7 +247,7 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
  */
 function SetupSection({ benchmark }: { benchmark: BenchmarkSetup }): React.JSX.Element {
   const { t } = useI18n();
-  const groups = buildSetupGroups(benchmark, t);
+  const groups = buildSetupGroups(benchmark, t).filter(group => group.id !== "detail-setup-os");
   return (
     <section className="card" aria-labelledby="env-title">
       <h2 id="env-title">{t("benchmark.Test setup (as reported)")}</h2>
@@ -332,14 +321,26 @@ function RowsPreview({
   pageCount: number;
   onPage: (page: number) => void;
 }): React.JSX.Element {
-  const { t } = useI18n();
-  // A row that is not an object still takes its place in the table, as gaps.
-  const visible = rows.slice(start, end).map((row) => asRecord(row) ?? {});
-  if (rows.length === 0) return <p className="muted">{t("benchmark.No rows.")}</p>;
+  const { locale, t } = useI18n();
+  const [showDetailed, setShowDetailed] = useState(false);
+  // A row that is not an object still takes its place in the table, as gaps. Failures are defensively excluded.
+  const filtered = rows.filter((row) => !isFailedRow(asRecord(row) ?? {}));
+  const visible = filtered.slice(start, end).map((row) => asRecord(row) ?? {});
+  if (rows.length === 0 || filtered.length === 0) return <p className="muted">{t("benchmark.No rows.")}</p>;
   if (visible.length === 0) return <p className="muted">{t("benchmark.No rows on this page.")}</p>;
-  const columns = buildRowColumns(visible, t);
+  const columns = buildRowColumns(visible, t, showDetailed);
   return (
     <div>
+      <div className="detail-rows-toolbar">
+        <button
+          type="button"
+          className="detail-metrics-toggle"
+          onClick={() => setShowDetailed((prev) => !prev)}
+          aria-pressed={showDetailed}
+        >
+          {t(showDetailed ? "benchmark.Hide detailed metrics" : "benchmark.Show detailed metrics")}
+        </button>
+      </div>
       {/* Focusable so the wide table can be scrolled from the keyboard, and named so that stop is announced. */}
       <div
         className="detail-rows-scroll"
@@ -349,20 +350,24 @@ function RowsPreview({
         aria-label={t("benchmark.Measurement samples")}
       >
         <table className="data detail-rows">
-          <caption className="detail-rows-caption">{t("benchmark.One row per published measurement sample, in the order it was reported. Failed samples stay in the table and are named in the outcome column.")}</caption>
+          <caption className="detail-rows-caption">{t("benchmark.One row per published measurement sample, in the order it was reported.")}</caption>
           <thead>
             <tr>
               {columns.map((column) => (
-                <th key={column.key} scope="col" className={column.numeric ? "detail-num" : undefined}>
-                  {column.label}
-                  {column.unit ? <span className="detail-unit"> ({column.unit})</span> : null}
+                <th key={column.key} scope="col" className={column.numeric ? "detail-num" : undefined} style={{ whiteSpace: "nowrap" }}>
+                  <BilingualHeader
+                    local={column.localLabel ?? column.label}
+                    en={column.enLabel}
+                    unit={column.unit}
+                    locale={locale}
+                  />
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
             {visible.map((row, i) => (
-              <tr key={start + i} className={isFailedRow(row) ? "detail-row-failed" : undefined}>
+              <tr key={start + i}>
                 {columns.map((column) => (
                   <td key={column.key} className={column.numeric ? "detail-num" : undefined}>
                     {column.format(row[column.key])}
