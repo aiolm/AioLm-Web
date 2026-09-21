@@ -1,7 +1,7 @@
 const messages = {
   "home.faqTitle": "Frequently asked questions",
   "home.faqWhatQuestion": "What is AioLM?",
-  "home.faqWhatAnswer": "AioLM is short for All In One LM: a desktop workspace for local language models. It brings GGUF model discovery, llama.cpp runtime management, local chat and performance benchmarks into one application.",
+  "home.faqWhatAnswer": "AioLM is short for All-in-One LM: a desktop workspace for local language models. It brings GGUF model discovery, llama.cpp runtime management, local chat and performance benchmarks into one application.",
   "home.faqOsQuestion": "Which operating systems does AioLM support?",
   "home.faqOsAnswer": "AioLM is available for Windows. macOS and Linux support is planned.",
   "home.faqBenchmarkQuestion": "What do the public benchmarks measure?",

@@ -48,11 +48,11 @@ describe('localized static homepage', () => {
     const html = renderToStaticMarkup(await Layout({ params, children: page }));
     // A reader who asks what AioLM is gets the expansion in the answer itself,
     // and search results carry it too rather than only the initials.
-    expect(home['home.faqWhatAnswer']).toContain('All In One LM');
-    expect(site['site.description']).toContain('All In One LM');
+    expect(home['home.faqWhatAnswer']).toContain('All-in-One LM');
+    expect(site['site.description']).toContain('All-in-One LM');
     // An answer engine is told the two names belong together instead of having
     // to infer it from the prose.
-    expect(html).toContain('"alternateName":"All In One LM"');
+    expect(html).toContain('"alternateName":"All-in-One LM"');
   });
   it.each(locales)('renders a localized %s not-found screen and document title', async locale => {
     const params = Promise.resolve({ locale });

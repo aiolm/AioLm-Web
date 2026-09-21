@@ -2,7 +2,7 @@ import type { EnglishMessages } from './en';
 const messages = {
   "home.faqTitle": "常见问题",
   "home.faqWhatQuestion": "AioLM 是什么？",
-  "home.faqWhatAnswer": "AioLM 是 All In One LM 的缩写，面向本地语言模型的桌面工作空间，将 GGUF 模型发现、llama.cpp 运行时管理、本地聊天和性能基准测试整合在一个应用中。",
+  "home.faqWhatAnswer": "AioLM 是 All-in-One LM 的缩写，面向本地语言模型的桌面工作空间，将 GGUF 模型发现、llama.cpp 运行时管理、本地聊天和性能基准测试整合在一个应用中。",
   "home.faqOsQuestion": "AioLM 支持哪些操作系统？",
   "home.faqOsAnswer": "目前支持 Windows，macOS 和 Linux 支持正在计划中。",
   "home.faqBenchmarkQuestion": "公开基准测试测量的是什么？",

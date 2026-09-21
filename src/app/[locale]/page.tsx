@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
  * a constant rather than a translated string, and it is published as the
  * schema.org alternateName so an answer engine can tie the two names together.
  */
-const PRODUCT_NAME_EXPANDED = 'All In One LM';
+const PRODUCT_NAME_EXPANDED = 'All-in-One LM';
 
 const STEPS = [
   {

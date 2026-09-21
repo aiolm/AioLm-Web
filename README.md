@@ -1,6 +1,6 @@
 # AioLM Website
 
-Website for AioLM — All In One LM — the desktop workspace for local language
+Website for AioLM — All-in-One LM — the desktop workspace for local language
 models. Product introduction and anonymous public benchmark explorer. Next.js
 App Router + PostgreSQL (Supabase-compatible) + Cloudflare Turnstile. No
 accounts in v1.
