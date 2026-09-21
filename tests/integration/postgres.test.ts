@@ -505,11 +505,12 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", "008_benchmark_discovery.sql"), "utf8"));
       const rows = await scratch<Array<{ summary: ReturnType<typeof summarizeBenchmark> }>>`
         select summary from bench.benchmark_runs order by public_id`;
-      // 008 backfills from benchmark metadata only; the configured input length arrives with 009.
+      // 008 predates configured input length, RAM bytes, and physical core summaries.
       expect(rows.map((row) => row.summary.setup)).toEqual(benchmarks.map((benchmark) => {
-        const { prompt_length, ram_bytes, ...setup } = summarizeBenchmark(benchmark).setup!;
+        const { prompt_length, ram_bytes, physical_cores, ...setup } = summarizeBenchmark(benchmark).setup!;
         void prompt_length;
         void ram_bytes;
+        void physical_cores;
         return setup;
       }));
       expect(rows[0]!.summary.setup?.vram_mb).toBe(8193);
