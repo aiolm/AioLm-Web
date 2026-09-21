@@ -7,20 +7,28 @@
  */
 
 import type { BenchmarkSetup } from "@/lib/benchmark-discovery";
+import type { BenchmarkModelInfo } from "./benchmark-model-identity";
 
-export const EXPLORER_TEXT_KEYS = ["q", "model", "hardware", "vendor", "gpu", "cpu", "os", "arch", "runtime", "backend", "mode", "method", "workload", "flash_attention", "cache_type_k", "cache_type_v", "split_mode"] as const;
+export const EXPLORER_TEXT_KEYS = ["q", "model", "publisher", "quantization", "base_model", "hardware", "vendor", "gpu", "cpu", "os", "arch", "runtime", "backend", "mode", "method", "workload", "flash_attention", "cache_type_k", "cache_type_v", "split_mode"] as const;
 export const EXPLORER_RANGES = ["context", "vram", "cores", "parallel", "threads", "gpu_layers"] as const;
 export const EXPLORER_NUMERIC_KEYS = ["context_min", "context_max", "vram_min", "vram_max", "cores_min", "cores_max", "parallel_min", "parallel_max", "threads_min", "threads_max", "gpu_layers_min", "gpu_layers_max"] as const;
-export const EXPLORER_SORTS = { newest: "Newest first", oldest: "Oldest first", context_asc: "Context: low to high", context_desc: "Context: high to low", vram_asc: "VRAM: low to high", vram_desc: "VRAM: high to low", throughput_desc: "Generation: fastest first", duration_asc: "Duration: shortest first" } as const;
+export const EXPLORER_SORTS = { newest: "Newest first", oldest: "Oldest first", context_asc: "Input length: low to high", context_desc: "Input length: high to low", vram_asc: "VRAM: low to high", vram_desc: "VRAM: high to low", throughput_desc: "Generation: fastest first", duration_asc: "Duration: shortest first" } as const;
 export const EXPLORER_FILTER_KEYS = [...EXPLORER_TEXT_KEYS, ...EXPLORER_NUMERIC_KEYS, "sort"] as const;
 export type ExplorerFilterKey = (typeof EXPLORER_FILTER_KEYS)[number];
 export type ExplorerFilters = Record<ExplorerFilterKey, string>;
-export const EXPLORER_RANGE_LABELS = { context: "Context (tokens)", vram: "Selected GPU VRAM (MiB)", cores: "Logical cores", parallel: "Parallel sequences", threads: "Threads", gpu_layers: "GPU layers (-1 = all)" } as const;
+export const EXPLORER_RANGE_LABELS = { context: "Max input length (tokens)", vram: "Selected GPU VRAM (MiB)", cores: "Logical cores", parallel: "Parallel sequences", threads: "Threads", gpu_layers: "GPU layers (-1 = all)" } as const;
 export const EXPLORER_FILTER_LABELS: Record<ExplorerFilterKey, string> = {
-  q: "Search", model: "Model fingerprint", hardware: "Hardware", vendor: "GPU vendor", gpu: "GPU model", cpu: "CPU", os: "Operating system", arch: "Architecture", runtime: "Runtime", backend: "Backend", mode: "Execution mode", method: "Measurement method", workload: "Workload", flash_attention: "Flash attention", cache_type_k: "Key cache type", cache_type_v: "Value cache type", split_mode: "Split mode", sort: "Sort",
-  context_min: "Minimum context", context_max: "Maximum context", vram_min: "Minimum VRAM", vram_max: "Maximum VRAM", cores_min: "Minimum cores", cores_max: "Maximum cores", parallel_min: "Minimum parallel sequences", parallel_max: "Maximum parallel sequences", threads_min: "Minimum threads", threads_max: "Maximum threads", gpu_layers_min: "Minimum GPU layers", gpu_layers_max: "Maximum GPU layers",
+  q: "Search", model: "Model fingerprint", publisher: "Publisher", quantization: "Weight quantization", base_model: "Base model", hardware: "Hardware", vendor: "GPU vendor", gpu: "GPU model", cpu: "CPU", os: "Operating system", arch: "Architecture", runtime: "Runtime", backend: "Backend", mode: "Execution mode", method: "Measurement method", workload: "Workload", flash_attention: "Flash attention", cache_type_k: "Key cache type", cache_type_v: "Value cache type", split_mode: "Split mode", sort: "Sort",
+  context_min: "Minimum input length", context_max: "Maximum input length", vram_min: "Minimum VRAM", vram_max: "Maximum VRAM", cores_min: "Minimum cores", cores_max: "Maximum cores", parallel_min: "Minimum parallel sequences", parallel_max: "Maximum parallel sequences", threads_min: "Minimum threads", threads_max: "Maximum threads", gpu_layers_min: "Minimum GPU layers", gpu_layers_max: "Maximum GPU layers",
 };
-export const EXPLORER_FILTER_PLACEHOLDERS = { model: "sha256: or unidentified", hardware: "GPU name or vendor", method: "cold-prompt-serving@1", workload: "code_python, novel_en" };
+/**
+ * The context range and its sorts read the largest input length a result was
+ * configured with, which is not the total context the server allocated. The
+ * address keys stay `context_*`, so a link shared before this wording still
+ * opens the same view.
+ */
+export const EXPLORER_RANGE_HINTS = { context: "Matches the largest input length a result was configured with, not the total context the server allocated." } as const;
+export const EXPLORER_FILTER_PLACEHOLDERS = { model: "sha256: or unidentified", publisher: "Hugging Face namespace", quantization: "Q4_K_M, Q8_0", base_model: "namespace/repo", hardware: "GPU name or vendor", method: "cold-prompt-serving@1", workload: "code_python, novel_en" };
 
 export function invalidExplorerRanges(filters: ExplorerFilters): string[] {
   return EXPLORER_RANGES.filter(range => {
@@ -176,7 +184,7 @@ export function readExplorerHistory(historyState: unknown): string[] {
   return boundExplorerHistory(raw.filter((value): value is string => typeof value === "string"));
 }
 
-/** Public list fields used by the explorer. The list API exposes no submission ids and no file names. */
+/** Public list fields used by the explorer. The list API exposes no submission ids and no local file paths; the repository-relative artifact filename is public when reported. */
 export interface ExplorerSummary {
   model_label: string;
   hardware_label: string;
@@ -187,6 +195,16 @@ export interface ExplorerSummary {
   status: string;
   mean_tg_tps: number | null;
   mean_e2e_ms: number | null;
+  /** Mean prompt processing throughput over the successful rows. */
+  mean_pp_tps?: number | null;
+  /** Input lengths the run was configured with, sorted and deduplicated. */
+  prompt_lengths?: number[];
+  /**
+   * Published model metadata. Absent on results stored before the metadata
+   * migration and null when the publication carried none, which the explorer
+   * reports as unknown rather than filling in from the curated label.
+   */
+  model_info?: BenchmarkModelInfo | null;
   setup?: BenchmarkSetup;
 }
 

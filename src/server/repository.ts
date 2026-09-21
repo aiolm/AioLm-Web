@@ -189,6 +189,8 @@ export const REQUIRED_MIGRATIONS: readonly string[] = [
   "006_trgm_filter_indexes.sql",
   "007_readiness_grant.sql",
   "008_benchmark_discovery.sql",
+  "009_input_context.sql",
+  "010_model_metadata.sql",
 ];
 
 /**

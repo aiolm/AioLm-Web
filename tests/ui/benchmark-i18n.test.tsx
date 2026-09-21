@@ -36,7 +36,7 @@ vi.mock("@/components/ui", async (importOriginal) => ({
 }));
 const item: ExplorerItem = {
   public_id: "synthetic-id", revision: 1, created_at: "2026-01-02T03:04:05.000Z",
-  summary: { model_label: "synthetic-model", hardware_label: "synthetic-device", method_label: "cold-prompt-serving@1", workload_label: "code_python", row_count: 12, failed_rows: 2, status: "partial", mean_tg_tps: 42.25, mean_e2e_ms: 1234.6 },
+  summary: { model_label: "synthetic-model", hardware_label: "synthetic-device", method_label: "cold-prompt-serving@1", workload_label: "code_python", row_count: 12, failed_rows: 2, status: "partial", mean_tg_tps: 42.25, mean_e2e_ms: 1234.6, mean_pp_tps: 128.75, prompt_lengths: [8192, 512, 4096] },
 };
 const benchmark = {
   model: { status: "identified", sha256: "synthetic-checksum", size_bytes: 2048 },
@@ -72,8 +72,9 @@ describe.each(locales)("benchmark localization: %s", locale => {
     expect(html).toContain('role="combobox"');
     expect(html).toContain('aria-autocomplete="list"');
     expect(html).toContain('aria-expanded="false"');
-    expect(html).toContain(escape(t("benchmark.Context (tokens)")));
-    expect(html).toContain(escape(t("benchmark.Context: high to low")));
+    expect(html).toContain(escape(t("benchmark.Max input length (tokens)")));
+    expect(html).toContain(escape(t("benchmark.Input length: high to low")));
+    expect(html).toContain(escape(t("benchmark.Matches the largest input length a result was configured with, not the total context the server allocated.")));
     expect(html).toContain(escape(t("benchmark.GPU name or vendor")));
     expect(html).not.toContain("benchmark.");
   });
@@ -96,26 +97,35 @@ describe.each(locales)("benchmark localization: %s", locale => {
     expect(html).toContain("code_python");
     expect(html).toContain("partial");
     expect(html).toContain("42.3");
+    expect(html).toContain("128.8");
+    expect(html).toContain(escape(t("benchmark.Prompt processing (tok/s)")));
+    expect(html).toContain(escape(t("benchmark.Input context: {value}", { value: "512 · 4K · 8K" })));
     expect(html).not.toContain("benchmark.");
   });
-  it("renders reported setup metadata while retaining zero and omitting unknown memory", () => {
+  it("renders every configured input length and never borrows the server context allocation", () => {
     const summary = { ...item.summary, setup: {
       os: "synthetic-os", arch: null, cpu: null, cores: 4, vendors: [], gpus: [], vram_mb: null,
       runtime: "synthetic-runtime", runtime_version: "1.0", backend: null, mode: null,
-      context_size: 0, parallel: null, threads: null, gpu_layers: null, flash_attention: null,
+      context_size: 16896, parallel: null, threads: null, gpu_layers: null, flash_attention: null,
       cache_type_k: null, cache_type_v: null, split_mode: null,
     } };
     const html = wrap(locale, <BenchmarkExplorerTable items={[{ ...item, summary }]} compare={[]} onToggleComparison={() => {}} />);
     expect(html).toContain("synthetic-os");
     expect(html).toContain("synthetic-runtime 1.0");
-    expect(html).toContain(escape(t("benchmark.Context: {value} tokens", { value: 0 })));
-    expect(html).toContain(escape(t("benchmark.{value} logical cores", { value: 4 })));
+    expect(html).toContain(escape(t("benchmark.Input context: {value}", { value: "512 · 4K · 8K" })));
+    expect(html).toContain(escape(t("benchmark.Logical cores")) + "</span><span class=\"explorer-fact-value\">4<");
     expect(html).not.toContain("MiB");
+    // An unreported list stays unreported: the allocated context measures something else.
+    const unreported = wrap(locale, <BenchmarkExplorerTable items={[{ ...item, summary: { ...summary, prompt_lengths: undefined } }]} compare={[]} onToggleComparison={() => {}} />);
+    expect(unreported).toContain(escape(t("benchmark.Input context: {value}", { value: t("benchmark.Unknown") })));
+    expect(unreported).not.toContain("16896");
   });
   it("renders detail setup, UTC updates, common reporting UI, and a filtered return link", () => {
     state.data = { ...item, id: item.public_id, benchmark, description_md: "Synthetic user text", updated_at: item.created_at };
     const html = wrap(locale, <BenchmarkDetail publicId={item.public_id} />);
     expect(html).toContain('/' + locale + '/benchmarks?model=synthetic-model&amp;hardware=synthetic-device&amp;cursor=abc_123');
+    expect(html).toContain(escape(t("benchmark.Input context")));
+    expect(html).toContain(escape(t("benchmark.Mean prompt processing")));
     expect(html).toContain(escape(t("benchmark.Test setup (as reported)")));
     expect(html).toContain(escape(t("benchmark.Integrated")));
     expect(html).toContain(escape(t("benchmark.No")));
@@ -130,7 +140,7 @@ describe.each(locales)("benchmark localization: %s", locale => {
     expect(displayText("unidentified", t)).toBe("unidentified");
     expect(formatByteSize(12, t)).toBe(t("benchmark.{value} bytes", { value: 12 }));
     expect(describeGpu({ name: "synthetic-device", integrated: false }, t)).toContain(t("benchmark.No"));
-    expect(buildSetupGroups(benchmark, t)[0].title).toBe(t("benchmark.Model and runtime"));
+    expect(buildSetupGroups(benchmark, t)[0].title).toBe(t("benchmark.Model"));
     const columns = buildRowColumns([{ failed: true, tg_tps: 42.25, timing_source: "server", synthetic_extra: true }], t);
     expect(columns.find(x => x.key === "failed")?.format(true)).toBe(t("benchmark.Failed"));
     expect(columns.find(x => x.key === "tg_tps")?.unit).toBe(t("benchmark.tok/s"));
@@ -167,4 +177,18 @@ it("rejects unsupported benchmark route locales", async () => {
   const params = Promise.resolve({ locale: "unsupported", id: item.public_id });
   await expect(BenchmarksPage({ params })).rejects.toThrow("not-found");
   await expect(BenchmarkPage({ params })).rejects.toThrow("not-found");
+});
+
+it("keeps the clear control in the layout while it is inactive, so Search never moves", () => {
+  const filtered = state.search;
+  try {
+    state.search = "";
+    const unfiltered = wrap("en", <BenchmarkBrowser />);
+    expect(unfiltered).toContain("explorer-button-reserved");
+    expect(unfiltered).toContain(en["benchmark.Clear filters"]);
+    state.search = filtered;
+    expect(wrap("en", <BenchmarkBrowser />)).not.toContain("explorer-button-reserved");
+  } finally {
+    state.search = filtered;
+  }
 });

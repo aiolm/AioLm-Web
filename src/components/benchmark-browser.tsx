@@ -141,6 +141,7 @@ export function BenchmarkBrowser(): React.JSX.Element {
   const items = data?.items ?? [];
   const active = activeExplorerFilters(state.applied);
   const filtered = hasActiveExplorerFilters(state.applied);
+  const clearable = filtered || hasActiveExplorerFilters(state.draft);
   const comparisonFull = !canAddToComparison(state.compare);
   const canPage = data !== null && (data.next_cursor !== null || state.cursor !== null || state.history.length > 0);
 
@@ -156,11 +157,11 @@ export function BenchmarkBrowser(): React.JSX.Element {
                 actions={
                   <div className="explorer-filter-actions">
                     <button type="submit" disabled={invalidExplorerRanges(state.draft).length > 0} className="explorer-button explorer-button-primary">{t("benchmark.Search")}</button>
+                    {/* Kept in the layout while inactive so applying or clearing a filter never moves Search. */}
                     <button
                       type="button"
-                      className="explorer-button explorer-button-quiet"
+                      className={clearable ? "explorer-button explorer-button-quiet" : "explorer-button explorer-button-quiet explorer-button-reserved"}
                       onClick={() => dispatch({ type: "reset" })}
-                      hidden={!filtered && !hasActiveExplorerFilters(state.draft)}
                     >{t("benchmark.Clear filters")}</button>
                   </div>
                 }
@@ -223,16 +224,17 @@ export function BenchmarkBrowser(): React.JSX.Element {
           {data && items.length === 0 && filtered ? <button type="button" className="explorer-button" onClick={() => dispatch({ type: "reset" })}>{t("benchmark.Clear filters")}</button> : null}
           {data && items.length > 0 ? (
             <div className="explorer-results">
-              {comparisonFull ? (
-                <p className="explorer-compare-limit">
-                  {t("benchmark.The comparison holds {limit} results. Remove one to select another.", { limit: EXPLORER_COMPARE_LIMIT })}
-                </p>
-              ) : null}
               <BenchmarkExplorerTable
                 items={items}
                 compare={state.compare}
                 onToggleComparison={(item) => dispatch({ type: "toggleComparison", item })}
               />
+              {comparisonFull ? (
+                <p className="explorer-compare-limit">
+                  {t("benchmark.The comparison holds {limit} results. Remove one to select another.", { limit: EXPLORER_COMPARE_LIMIT })}
+                </p>
+              ) : null}
+
             </div>
           ) : null}
 
@@ -265,6 +267,7 @@ export function BenchmarkBrowser(): React.JSX.Element {
         <h2 id="explorer-guide-title" className="explorer-guide-title">{t("benchmark.Compare like for like")}</h2>
         <p className="explorer-guide-text">{t("benchmark.Match the model fingerprint, hardware, workload and measurement method before reading anything into a difference. Results published with a different method or workload measured different work.")}</p>
         <p className="explorer-guide-text">{t("benchmark.Generation (tok/s) is the mean generation throughput in tokens per second, so higher is faster. Duration (ms) is the mean end-to-end time of a measurement in milliseconds, so lower is faster. The two answer different questions and do not convert into each other.")}</p>
+        <p className="explorer-guide-text">{t("benchmark.Prompt processing (tok/s) is the mean input throughput: how fast a result consumed its prompt. Input context lists the input lengths a result was configured with, and the input length filter and its sorts read the largest of them. The total context the server allocated is a different number and appears on the result page.")}</p>
         <p className="explorer-guide-text">{t("benchmark.A missing measurement is shown as an em dash (—), never as a zero. Sorting does not make different setups directly comparable.")}</p>
       </section>
     </div>

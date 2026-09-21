@@ -6,6 +6,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { randomBase64Url32, sha256HexUtf8 } from "@/lib/crypto";
 import { syntheticSubmission } from "@/lib/fixtures";
 import { summarizeBenchmark } from "@/lib/summary";
+import { normalizeModelInfo } from "@/lib/model-info";
 import { mintUploadPermit, ownerHashFor, permitExpiryForSession } from "@/lib/permits";
 import { applyMigrations } from "@/server/migrations";
 import { PostgresBenchmarkStore } from "@/server/postgres-store";
@@ -187,9 +188,18 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       os: "TestOS", arch: "x64", cpu: "Test CPU", cores: 8,
       vendors: ["Vendor A"], gpus: ["GPU A"], vram_mb: 8192,
       runtime: "test-runtime", runtime_version: "1", backend: "test-backend", mode: "selected",
-      context_size: 4096, parallel: 2, threads: 4, gpu_layers: -1,
+      context_size: 16896, prompt_length: 4096, parallel: 2, threads: 4, gpu_layers: -1,
       flash_attention: "on", cache_type_k: "f16", cache_type_v: "q8", split_mode: "layer",
     };
+
+    // A summary carrying contract 0.3.0 model metadata, publisher included, exactly
+    // as summarizeBenchmark and migration 010 store it.
+    const modelInfo = (overrides: Record<string, unknown> = {}) => ({
+      format: "GGUF", name: "Example 8B", architecture: "qwen2", size_label: "8B", quantization: "Q4_K_M",
+      file_type: 15, quantized_by: "Quantizer Org", repository: "Publisher-Org/example-8B-GGUF",
+      base_models: ["Upstream-Org/example-8B", "Other-Org/mixin-2B"], artifact: "q4/example-8B-Q4_K_M.gguf",
+      source: "gguf+huggingface", publisher: "Publisher-Org", sha256: "c".repeat(64), identity_status: "sha256",
+      ...overrides });
 
     async function seed(id: string, group: string, overrides: Record<string, unknown> = {},
       flags: { hidden?: boolean; deleted?: boolean; created?: string } = {}): Promise<void> {
@@ -238,11 +248,11 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       runtimeDb = postgres(runtimeUrl, { max: 1, prepare: false, ssl: false });
       await seed("discovery-range-hit", "discovery-range");
       await seed("discovery-range-low", "discovery-range", { setup: { ...setup,
-        context_size: 1024, vram_mb: 1024, cores: 2, parallel: 1, threads: 1, gpu_layers: 0 } });
+        prompt_length: 1024, vram_mb: 1024, cores: 2, parallel: 1, threads: 1, gpu_layers: 0 } });
       await seed("discovery-range-high", "discovery-range", { setup: { ...setup,
-        context_size: 8192, vram_mb: 16384, cores: 16, parallel: 8, threads: 16, gpu_layers: 32 } });
+        prompt_length: 8192, vram_mb: 16384, cores: 16, parallel: 8, threads: 16, gpu_layers: 32 } });
       await seed("discovery-range-unknown", "discovery-range", { setup: { ...setup,
-        context_size: null, vram_mb: null, cores: null, parallel: null, threads: null, gpu_layers: null } });
+        prompt_length: null, vram_mb: null, cores: null, parallel: null, threads: null, gpu_layers: null } });
       await seed("discovery-vendor-pair", "discovery-vendor-pair", { setup: { ...setup,
         vendors: ["Vendor A", "Vendor B"], gpus: ["Mixed GPU A", "Mixed GPU B"] } });
       for (let i = 0; i < 35; i++) {
@@ -258,9 +268,13 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
         ["f", null, "2026-01-03"],
       ] as const) {
         await seed(`discovery-sort-${id}`, "discovery-sort", {
-          setup: { ...setup, context_size: value, vram_mb: value }, mean_tg_tps: value, mean_e2e_ms: value,
+          setup: { ...setup, prompt_length: value, vram_mb: value }, mean_tg_tps: value, mean_e2e_ms: value,
         }, { created: `${created}T00:00:00.000Z` });
       }
+      await seed("discovery-model-described", "discovery-model", { model_info: modelInfo() });
+      await seed("discovery-model-other", "discovery-model", { model_info: modelInfo({
+        repository: "Other-Org/example-8B-GGUF", publisher: "Other-Org", quantization: "Q8_0" }) });
+      await seed("discovery-model-undescribed", "discovery-model");
       for (const [id, label] of [["percent", "100%"], ["underscore", "a_b"], ["slash", "a\\b"],
         ["quote", "x' OR true --"], ["decoy", "1000 axb"]]) {
         await seed(`discovery-literal-${id}`, "discovery-literal", { setup: { ...setup, cpu: label } });
@@ -282,6 +296,17 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       expect(upper.items.map((item) => item.public_id)).not.toContain("discovery-range-unknown");
       expect(lower.items.map((item) => item.public_id)).toContain("discovery-range-high");
       expect(upper.items.map((item) => item.public_id)).not.toContain("discovery-range-high");
+    });
+
+    it("reads context ranges from the configured input length, never from the runtime allocation", async () => {
+      // Every seeded run allocates 16896 tokens and none was configured to send an input that long.
+      expect((await page({ model: "discovery-range", context_min: "16896" })).items).toEqual([]);
+      expect((await page({ model: "discovery-range", context_min: "4096", context_max: "4096" })).items
+        .map((item) => item.public_id)).toEqual(["discovery-range-hit"]);
+      const ascending = await page({ model: "discovery-range", sort: "context_asc" });
+      expect(ascending.items.map((item) => item.public_id)).toEqual([
+        "discovery-range-low", "discovery-range-hit", "discovery-range-high", "discovery-range-unknown"]);
+      expect(ascending.items.every((item) => item.summary.setup?.context_size === 16896)).toBe(true);
     });
 
     it.each(["NaN", "Infinity", "1.5", "9007199254740992", "-2"])("rejects invalid numeric filter %s", async (value) => {
@@ -306,6 +331,34 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       expect((await options({ field: "gpu", model: "discovery-options", vendor: "Vendor B", gpu: "Option 00" })).options)
         .toEqual([{ value: "Option 34", count: 1 }]);
       expect((await options({ field: "gpu", model: "discovery-options", q: "no matching run" })).options).toEqual([]);
+    });
+
+    it("filters, suggests and searches model metadata the way the in-memory store does", async () => {
+      const ids = async (query: Record<string, string>) =>
+        (await page({ model: "discovery-model", ...query })).items.map((item) => item.public_id).sort();
+      expect(await ids({ publisher: "publisher-org" })).toEqual(["discovery-model-described"]);
+      // general.quantized_by is not a publisher, and a run without metadata is not a match.
+      expect(await ids({ publisher: "quantizer" })).toEqual([]);
+      expect(await ids({ quantization: "q8" })).toEqual(["discovery-model-other"]);
+      expect(await ids({ base_model: "upstream-org/example" }))
+        .toEqual(["discovery-model-described", "discovery-model-other"]);
+      // A base model matches within one entry, never across two neighbouring ones.
+      expect(await ids({ base_model: "example-8BOther-Org" })).toEqual([]);
+      // Percent, underscore and quote are ordinary characters in every model filter.
+      for (const literal of ["%", "_", "'", "' OR true --"]) {
+        expect(await ids({ publisher: literal })).toEqual([]);
+        expect(await ids({ base_model: literal })).toEqual([]);
+      }
+      for (const q of ["q4/example-8B-Q4_K_M.gguf", "qwen2", "quantizer org", "upstream-org/example-8B", "c".repeat(64)]) {
+        expect(await ids({ q })).toEqual(["discovery-model-described", "discovery-model-other"]);
+      }
+      expect(await options({ field: "publisher", model: "discovery-model" })).toEqual({
+        options: [{ value: "Other-Org", count: 1 }, { value: "Publisher-Org", count: 1 }], has_more: false });
+      expect((await options({ field: "quantization", model: "discovery-model", publisher: "other" })).options)
+        .toEqual([{ value: "Q8_0", count: 1 }]);
+      expect((await options({ field: "base_model", model: "discovery-model", option_query: "upstream" })).options)
+        .toEqual([{ value: "Upstream-Org/example-8B", count: 2 }]);
+      expect((await options({ field: "publisher", model: "discovery-model", option_query: "%" })).options).toEqual([]);
     });
 
     it("narrows GPU suggestions to matching devices in a mixed-vendor run", async () => {
@@ -439,9 +492,282 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", "008_benchmark_discovery.sql"), "utf8"));
       const rows = await scratch<Array<{ summary: ReturnType<typeof summarizeBenchmark> }>>`
         select summary from bench.benchmark_runs order by public_id`;
-      expect(rows.map((row) => row.summary.setup)).toEqual(benchmarks.map((benchmark) => summarizeBenchmark(benchmark).setup));
+      // 008 backfills from benchmark metadata only; the configured input length arrives with 009.
+      expect(rows.map((row) => row.summary.setup)).toEqual(benchmarks.map((benchmark) => {
+        const { prompt_length, ...setup } = summarizeBenchmark(benchmark).setup!;
+        void prompt_length;
+        return setup;
+      }));
       expect(rows[0]!.summary.setup?.vram_mb).toBe(8193);
       expect(rows[1]!.summary.setup?.vram_mb).toBeNull();
+    } finally {
+      await scratch.end({ timeout: 5 });
+      await admin.unsafe(`DROP DATABASE "${scratchName}"`);
+    }
+  });
+
+  it("backfills configured input context and prefill from retained chunks without recomputing curated summaries", async () => {
+    if (!admin) throw new Error("integration database unavailable");
+    const MIGRATION = "009_input_context.sql";
+    const scratchName = `aiolm_web_measured_${randomUUID().replace(/-/g, "")}`;
+    await admin.unsafe(`CREATE DATABASE "${scratchName}"`);
+    const scratchUrl = new URL(ADMIN_URL!);
+    scratchUrl.pathname = `/${scratchName}`;
+    const scratch = postgres(scratchUrl.toString(), { max: 1, prepare: false, ssl: false });
+    try {
+      await scratch`create schema bench`;
+      await scratch`create table bench.schema_migrations (filename text primary key, sha256 text not null)`;
+      for (const name of REQUIRED_MIGRATIONS.filter((name) => name < MIGRATION)) {
+        await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", name), "utf8"));
+      }
+
+      const base = syntheticSubmission();
+      const row = (overrides: Partial<(typeof base)["measurements"]["rows"][number]>) =>
+        ({ ...base.measurements.rows[0]!, ...overrides });
+      const measured = syntheticSubmission({
+        workload: { ...base.workload, prompt_lengths: [4096, 512, 4096, 1024, 0, 512.5, 2 ** 53] },
+        execution: { ...base.execution, context_size: 16896 },
+        measurements: { status: "partial", rows: [
+          row({ pp_tps: 123.45 }), row({ pp_tps: 0.1 }), row({ pp_tps: 9999, failed: true }),
+          row({ pp_tps: null }), row({ pp_tps: 0.2 }), row({ pp_tps: 987.654321 }), row({ pp_tps: 7 }),
+        ] },
+      });
+      const unrecorded = syntheticSubmission({
+        workload: { ...base.workload, prompt_lengths: [] },
+        execution: { ...base.execution, context_size: 8704 },
+        measurements: { status: "complete", rows: [] },
+      });
+      // Production keeps metadata on the run row and measurement rows in chunks.
+      const metaOf = (b: typeof base) => JSON.parse(JSON.stringify({ ...b, measurements: { ...b.measurements, rows: [] } }));
+      // What 008 left behind: an operator-curated label and a setup with no input length.
+      const curated = (b: typeof base, label: string) => {
+        const { prompt_lengths, mean_pp_tps, setup, ...rest } = summarizeBenchmark(b);
+        void prompt_lengths; void mean_pp_tps;
+        const { prompt_length, ...legacySetup } = setup!;
+        void prompt_length;
+        return { ...rest, model_label: label, setup: legacySetup };
+      };
+
+      const submissionIds = new Map<string, string>();
+      for (const [publicId, benchmark, label] of [
+        ["measured", measured, "Curated Model A"], ["unrecorded", unrecorded, "Curated Model B"],
+      ] as const) {
+        const submissionId = randomUUID();
+        submissionIds.set(publicId, submissionId);
+        await scratch`insert into bench.benchmark_runs
+          (submission_id, public_id, owner_hash, body_sha256, benchmark, summary, hidden, row_count, byte_size)
+          values (${submissionId}, ${publicId}, ${"0".repeat(64)}, ${"1".repeat(64)},
+            ${scratch.json(metaOf(benchmark) as postgres.JSONValue)}, ${scratch.json(curated(benchmark, label))},
+            ${publicId === "measured"}, ${benchmark.measurements.rows.length}, ${4096})`;
+        const chunked = benchmark.measurements.rows;
+        for (const [index, slice] of [chunked.slice(0, 4), chunked.slice(4)].entries()) {
+          if (slice.length === 0) continue;
+          await scratch`insert into bench.benchmark_chunks (submission_id, chunk_index, rows) values (${submissionId}, ${index},
+            ${scratch.json(JSON.parse(JSON.stringify(slice)) as postgres.JSONValue)})`;
+        }
+      }
+      await scratch`insert into bench.benchmark_runs
+        (submission_id, public_id, owner_hash, body_sha256, benchmark, summary, deleted)
+        values (${randomUUID()}, 'tombstone', ${"2".repeat(64)}, ${"3".repeat(64)}, null, null, true)`;
+
+      await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", MIGRATION), "utf8"));
+
+      type Stored = { public_id: string; summary: ReturnType<typeof summarizeBenchmark> | null; benchmark: unknown;
+        owner_hash: string; body_sha256: string; row_count: number; byte_size: number };
+      const stored = new Map((await scratch<Stored[]>`
+        select public_id, summary, benchmark, owner_hash, body_sha256, row_count, byte_size
+        from bench.benchmark_runs`).map((r) => [r.public_id, r]));
+
+      // The hidden run is enriched too, and the curated label survives the merge.
+      expect(stored.get("measured")!.summary).toEqual({ ...summarizeBenchmark(measured), model_label: "Curated Model A" });
+      // Non-integer, non-positive and unsafe entries are dropped, matching the helper.
+      expect(stored.get("measured")!.summary!.prompt_lengths).toEqual([512, 1024, 4096]);
+      expect(stored.get("measured")!.summary!.setup!.prompt_length).toBe(4096);
+      // Prefill averages the five rows that measured it across both chunks; the failed
+      // row and the one that reported none are skipped, bit-for-bit with the helper.
+      expect(stored.get("measured")!.summary!.mean_pp_tps).toBe(summarizeBenchmark(measured).mean_pp_tps);
+      expect(stored.get("measured")!.summary!.mean_pp_tps).toBeCloseTo(223.6808642, 7);
+      // The raw runtime allocation survives exactly and is never read as an input length.
+      expect(stored.get("measured")!.summary!.setup!.context_size).toBe(16896);
+
+      // A workload that recorded no input length stays unknown rather than copying the allocation.
+      expect(stored.get("unrecorded")!.summary).toEqual({ ...summarizeBenchmark(unrecorded), model_label: "Curated Model B" });
+      expect(stored.get("unrecorded")!.summary!.prompt_lengths).toEqual([]);
+      expect(stored.get("unrecorded")!.summary!.setup!.prompt_length).toBeNull();
+      expect(stored.get("unrecorded")!.summary!.mean_pp_tps).toBeNull();
+      expect(stored.get("unrecorded")!.summary!.setup!.context_size).toBe(8704);
+
+      // Raw metadata, chunks, hashes, capacity counters and the tombstone are left as they were.
+      expect(stored.get("measured")!.benchmark).toEqual(metaOf(measured));
+      expect(stored.get("measured")!.owner_hash).toBe("0".repeat(64));
+      expect(stored.get("measured")!.body_sha256).toBe("1".repeat(64));
+      expect(stored.get("measured")!.row_count).toBe(7);
+      expect(stored.get("measured")!.byte_size).toBe(4096);
+      expect(stored.get("tombstone")!.summary).toBeNull();
+      expect(stored.get("tombstone")!.benchmark).toBeNull();
+      const chunks = await scratch<Array<{ rows: unknown[] }>>`
+        select rows from bench.benchmark_chunks where submission_id = ${submissionIds.get("measured")!} order by chunk_index`;
+      expect(chunks).toHaveLength(2);
+      expect(chunks.flatMap((c) => c.rows)).toEqual(JSON.parse(JSON.stringify(measured.measurements.rows)));
+
+      const indexes = (await scratch<Array<{ indexname: string }>>`
+        select indexname from pg_indexes where schemaname = 'bench' and tablename = 'benchmark_runs'`)
+        .map((r) => r.indexname);
+      expect(indexes).toContain("benchmark_discovery_prompt_length_asc");
+      expect(indexes).toContain("benchmark_discovery_prompt_length_desc");
+      expect(indexes).not.toContain("benchmark_discovery_context_asc");
+      expect(indexes).not.toContain("benchmark_discovery_context_desc");
+    } finally {
+      await scratch.end({ timeout: 5 });
+      await admin.unsafe(`DROP DATABASE "${scratchName}"`);
+    }
+  });
+
+  it("enriches summaries that recorded model metadata and leaves every other run exactly as it was", async () => {
+    if (!admin) throw new Error("integration database unavailable");
+    const MIGRATION = "010_model_metadata.sql";
+    const scratchName = `aiolm_web_model_${randomUUID().replace(/-/g, "")}`;
+    await admin.unsafe(`CREATE DATABASE "${scratchName}"`);
+    const scratchUrl = new URL(ADMIN_URL!);
+    scratchUrl.pathname = `/${scratchName}`;
+    const scratch = postgres(scratchUrl.toString(), { max: 1, prepare: false, ssl: false });
+    try {
+      await scratch`create schema bench`;
+      await scratch`create table bench.schema_migrations (filename text primary key, sha256 text not null)`;
+      for (const name of REQUIRED_MIGRATIONS.filter((name) => name < MIGRATION)) {
+        await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", name), "utf8"));
+      }
+
+      // Contract 0.3.0 metadata attached directly: the vendored 0.2.0 types do not
+      // carry the optional block yet, and validating it is the contracts package's job.
+      const withMetadata = (metadata: unknown) => syntheticSubmission({
+        model: { status: "sha256", sha256: "c".repeat(64), size_bytes: 4096, metadata } as never });
+      const complete = withMetadata({
+        format: "GGUF", name: "Example 8B", architecture: "qwen2", size_label: "8B", quantization: "Q4_K_M",
+        file_type: 15, quantized_by: "Quantizer Org", repository: "Publisher-Org/example-8B-GGUF",
+        base_models: ["Upstream-Org/example-8B", "Other-Org/mixin-2B"],
+        artifact: "q4/example-8B-Q4_K_M.gguf", source: "gguf+huggingface" });
+      // Every field here is out of contract in a different way, and every one of them
+      // must land as unknown rather than as a repaired or invented value.
+      const messy = withMetadata({
+        format: "GGUF", name: "vendor/model", architecture: "\u0001qwen2", size_label: "x".repeat(257),
+        quantization: "host:Q4", file_type: 65536, quantized_by: "org@host", repository: "Publisher-Org//example",
+        base_models: ["Upstream-Org/example-8B", "Upstream-Org/example-8B", "not-a-repo", "org/a", "org/b",
+          "org/c", "org/d", "org/e", "org/f", "org/g", "org/h"],
+        artifact: "../escape.gguf", source: "filename" });
+      // A Windows share path is not a repo-relative artifact.
+      const backslash = withMetadata({ format: "GGUF", name: "Example 8B",
+        artifact: "share" + String.fromCharCode(92) + "example-8B-Q4_K_M.gguf" });
+      // A well-shaped filename with no repository and no registry source proves
+      // no download origin: the name is kept, the artifact stays unknown.
+      const sourceless = withMetadata({ format: "GGUF", name: "Example 8B",
+        artifact: "q4/example-8B-Q4_K_M.gguf" });
+      const undescribed = syntheticSubmission();
+
+      const metaOf = (b: typeof undescribed) => JSON.parse(JSON.stringify({ ...b, measurements: { ...b.measurements, rows: [] } }));
+      // What a pre-010 row looks like: an operator-curated label and no model_info key.
+      const curated = (b: typeof undescribed, label: string) => {
+        const { model_info, ...rest } = summarizeBenchmark(b);
+        void model_info;
+        return { ...rest, model_label: label };
+      };
+
+      const submissionIds = new Map<string, string>();
+      for (const [publicId, benchmark, label] of [
+        ["described", complete, "Curated Model A"], ["messy", messy, "Curated Model B"],
+        ["backslash", backslash, "Curated Model C"], ["undescribed", undescribed, "Curated Model D"],
+        ["sourceless", sourceless, "Curated Model E"],
+      ] as const) {
+        const submissionId = randomUUID();
+        submissionIds.set(publicId, submissionId);
+        await scratch`insert into bench.benchmark_runs
+          (submission_id, public_id, owner_hash, body_sha256, benchmark, summary, hidden, row_count, byte_size)
+          values (${submissionId}, ${publicId}, ${"0".repeat(64)}, ${"1".repeat(64)},
+            ${scratch.json(metaOf(benchmark) as unknown as postgres.JSONValue)}, ${scratch.json(curated(benchmark, label) as unknown as postgres.JSONValue)},
+            ${publicId === "described"}, ${benchmark.measurements.rows.length}, ${4096})`;
+        await scratch`insert into bench.benchmark_chunks (submission_id, chunk_index, rows) values (${submissionId}, 0,
+          ${scratch.json(JSON.parse(JSON.stringify(benchmark.measurements.rows)) as postgres.JSONValue)})`;
+      }
+      await scratch`insert into bench.benchmark_runs
+        (submission_id, public_id, owner_hash, body_sha256, benchmark, summary, deleted)
+        values (${randomUUID()}, 'tombstone', ${"2".repeat(64)}, ${"3".repeat(64)}, null, null, true)`;
+
+      await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", MIGRATION), "utf8"));
+
+      type Stored = { public_id: string; summary: ReturnType<typeof summarizeBenchmark> | null; benchmark: unknown;
+        owner_hash: string; body_sha256: string; row_count: number; byte_size: number };
+      const stored = new Map((await scratch<Stored[]>`
+        select public_id, summary, benchmark, owner_hash, body_sha256, row_count, byte_size
+        from bench.benchmark_runs`).map((r) => [r.public_id, r]));
+
+      // The backfill reproduces the application helper field for field, on the hidden
+      // run too, and the operator-curated label survives the merge untouched.
+      expect(stored.get("described")!.summary).toEqual({ ...summarizeBenchmark(complete), model_label: "Curated Model A" });
+      expect(stored.get("described")!.summary!.model_info).toEqual(normalizeModelInfo(complete));
+      expect(stored.get("described")!.summary!.model_info).toMatchObject({
+        publisher: "Publisher-Org", quantized_by: "Quantizer Org", identity_status: "sha256", sha256: "c".repeat(64) });
+
+      // Out-of-contract fields are unknown, never repaired: no publisher is read from
+      // the unusable repository, and no quantization or name from the artifact.
+      expect(stored.get("messy")!.summary).toEqual({ ...summarizeBenchmark(messy), model_label: "Curated Model B" });
+      expect(stored.get("messy")!.summary!.model_info).toEqual(normalizeModelInfo(messy));
+      expect(stored.get("messy")!.summary!.model_info).toMatchObject({
+        name: null, architecture: null, size_label: null, quantization: null, file_type: null,
+        quantized_by: null, repository: null, publisher: null, artifact: null, source: null });
+      expect(stored.get("messy")!.summary!.model_info!.base_models)
+        .toEqual(["Upstream-Org/example-8B", "org/a", "org/b", "org/c", "org/d", "org/e", "org/f", "org/g"]);
+
+      expect(stored.get("backslash")!.summary).toEqual({ ...summarizeBenchmark(backslash), model_label: "Curated Model C" });
+      expect(stored.get("backslash")!.summary!.model_info).toMatchObject({ artifact: null, name: "Example 8B" });
+
+      // A well-shaped filename with no repository and no registry source proves
+      // no download origin: the application helper and the backfill agree that
+      // the name is kept, the artifact is unknown, and the curated label wins.
+      expect(stored.get("sourceless")!.summary).toEqual({ ...summarizeBenchmark(sourceless), model_label: "Curated Model E" });
+      expect(stored.get("sourceless")!.summary!.model_info).toEqual(normalizeModelInfo(sourceless));
+      expect(stored.get("sourceless")!.summary!.model_info).toMatchObject({
+        name: "Example 8B", repository: null, publisher: null, artifact: null, source: null });
+
+      // A run that recorded no metadata is not written at all: no model_info key
+      // appears, so it reads as "never recorded" rather than as an empty model.
+      expect(stored.get("undescribed")!.summary).toEqual(curated(undescribed, "Curated Model D"));
+      expect(Object.hasOwn(stored.get("undescribed")!.summary!, "model_info")).toBe(false);
+
+      // Prior migrations, raw metadata, chunks, hashes, capacity counters and the
+      // tombstone are all left exactly as they were.
+      for (const publicId of ["described", "messy", "backslash", "sourceless", "undescribed"]) {
+        const row = stored.get(publicId)!;
+        expect(row.summary!.prompt_lengths).toEqual([512]);
+        expect(row.summary!.setup!.prompt_length).toBe(512);
+        expect(row.summary!.setup!.context_size).toBe(2048);
+        expect(row.summary!.mean_pp_tps).toBe(100);
+        expect(row.owner_hash).toBe("0".repeat(64));
+        expect(row.body_sha256).toBe("1".repeat(64));
+        expect(row.row_count).toBe(1);
+        expect(row.byte_size).toBe(4096);
+      }
+      expect(stored.get("described")!.benchmark).toEqual(metaOf(complete));
+      expect(stored.get("messy")!.benchmark).toEqual(metaOf(messy));
+      expect(stored.get("sourceless")!.benchmark).toEqual(metaOf(sourceless));
+      expect(stored.get("tombstone")!.summary).toBeNull();
+      expect(stored.get("tombstone")!.benchmark).toBeNull();
+      const chunks = await scratch<Array<{ rows: unknown[] }>>`
+        select rows from bench.benchmark_chunks where submission_id = ${submissionIds.get("described")!}`;
+      expect(chunks.flatMap((c) => c.rows)).toEqual(JSON.parse(JSON.stringify(complete.measurements.rows)));
+
+      // The backfill validators are scaffolding, not runtime API: they are gone again.
+      const functions = await scratch<Array<{ proname: string }>>`
+        select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'bench'`;
+      expect(functions.map((f) => f.proname)).toEqual(["discovery_array_text"]);
+
+      const extension = await scratch<Array<{ n: string }>>`select count(*)::text as n from pg_extension where extname = 'pg_trgm'`;
+      if (extension[0]!.n !== "0") {
+        const indexes = (await scratch<Array<{ indexname: string }>>`
+          select indexname from pg_indexes where schemaname = 'bench' and tablename = 'benchmark_runs'`)
+          .map((r) => r.indexname);
+        for (const name of ["benchmark_discovery_publisher_trgm", "benchmark_discovery_quantization_trgm",
+          "benchmark_discovery_base_models_trgm"]) expect(indexes).toContain(name);
+      }
     } finally {
       await scratch.end({ timeout: 5 });
       await admin.unsafe(`DROP DATABASE "${scratchName}"`);
@@ -455,7 +781,8 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     expect(rows.map((r) => r.filename)).toEqual([
       "001_init.sql", "002_roles.sql", "003_least_privilege.sql",
       "004_filter_indexes.sql", "005_retention_grants.sql", "006_trgm_filter_indexes.sql",
-      "007_readiness_grant.sql", "008_benchmark_discovery.sql",
+      "007_readiness_grant.sql", "008_benchmark_discovery.sql", "009_input_context.sql",
+      "010_model_metadata.sql",
     ]);
   });
 
@@ -465,6 +792,12 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     const names = idx.map((r) => r.indexname as string);
     // Keyset pagination ordering is index-backed.
     expect(names).toContain("benchmark_runs_created_idx");
+    // The context condition reads the configured input length, so that is what is indexed;
+    // 009 removed the raw-allocation indexes 008 had created for the old expression.
+    expect(names).toContain("benchmark_discovery_prompt_length_asc");
+    expect(names).toContain("benchmark_discovery_prompt_length_desc");
+    expect(names).not.toContain("benchmark_discovery_context_asc");
+    expect(names).not.toContain("benchmark_discovery_context_desc");
     const ext = await db`select count(*)::text as n from pg_extension where extname = 'pg_trgm'`;
     if ((ext[0]!.n as string) !== "0") {
       for (const name of [

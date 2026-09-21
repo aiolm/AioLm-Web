@@ -202,7 +202,7 @@ platform logs. Point an uptime monitor at it; read `config:check` when it turns 
   what each exclusion was checked against. `sql/` and `scripts/` are
   operator-only: nothing enumerates `sql/migrations/` at runtime (readiness
   compares the ledger against `REQUIRED_MIGRATIONS`) and no build step runs a
-  script. `package-lock.json` and `vendor/aiolm-benchmark-contracts-0.2.0.tgz`
+   script. `package-lock.json` and `vendor/aiolm-benchmark-contracts-0.3.0.tgz`
   stay in the upload — the build installs the contracts package from that
   archive.
 
@@ -212,8 +212,8 @@ platform logs. Point an uptime monitor at it; read `config:check` when it turns 
       supplied from the operator secret store (they cannot be pulled back out of
       Vercel — see Validating configuration).
 - [ ] `vercel env ls production` shows exactly the intended keys.
-- [ ] Migrations applied (through `007_readiness_grant.sql`); roles
-      least-privilege; Data API disabled.
+- [ ] Migrations applied (through `010_model_metadata.sql`); roles
+       least-privilege; Data API disabled.
 - [ ] `GET /v1/readiness` returns `200 {"status":"ready"}` on the deployed origin.
 - [ ] `DATABASE_MIGRATION_URL` / `DATABASE_MODERATION_URL` are absent from the
       Vercel project env, and present only in the operator shell.

@@ -9,6 +9,7 @@ import {
   formatCompactBytes,
   formatCount,
   formatMegabytes,
+  describeGpuDetails,
   formatMilliseconds,
   statusTone,
   DETAIL_MISSING,
@@ -46,11 +47,13 @@ function valueOf(groups: SetupGroup[], label: string, unit?: string): string | s
 }
 
 describe("setup groups", () => {
-  it("reads as four titled groups instead of one long list", () => {
+  it("reads as titled groups instead of one long list, with the machine split from the software", () => {
     const groups = buildSetupGroups(publicSetup());
     expect(groups.map((g) => g.title)).toEqual([
-      "Model and runtime",
-      "Hardware and operating system",
+      "Model",
+      "Hardware",
+      "Operating system",
+      "Runtime and backend",
       "Workload and method",
       "Execution settings",
     ]);
@@ -81,7 +84,7 @@ describe("setup groups", () => {
       "Installed graphics",
       "Run mode",
       "Selected graphics",
-      "Context size (tokens)",
+      "Allocated context size (tokens)",
       "Parallel requests",
       "Threads",
       "Graphics layers",
@@ -128,7 +131,7 @@ describe("setup groups", () => {
     expect(valueOf(missing, "Installed graphics")).toBe("Unknown");
     expect(valueOf(missing, "Operating system")).toBe("Unknown");
     expect(valueOf(missing, "Method")).toBe("Unknown");
-    expect(valueOf(missing, "Context size", "tokens")).toBe("Unknown");
+    expect(valueOf(missing, "Allocated context size", "tokens")).toBe("Unknown");
   });
 
   it("reports booleans and sizes in words a reader can use", () => {
@@ -178,7 +181,7 @@ describe("graphics devices", () => {
 
   it("shows every member the contract publishes for a device", () => {
     expect(describeGpu(discrete)).toBe(
-      "Name: synthetic-gpu-a · Vendor: synthetic-vendor · VRAM: 24,576 MB · Driver: 0.0.0-synthetic · Integrated: No",
+      "Name: synthetic-gpu-a · Vendor: synthetic-vendor · VRAM: 24,576 MiB · Driver: 0.0.0-synthetic · Integrated: No",
     );
   });
 
@@ -209,8 +212,8 @@ describe("graphics devices", () => {
   });
 
   it("keeps VRAM in the megabytes the contract publishes", () => {
-    expect(formatMegabytes(24576)).toBe("24,576 MB");
-    expect(formatMegabytes(0)).toBe("0 MB");
+    expect(formatMegabytes(24576)).toBe("24,576 MiB");
+    expect(formatMegabytes(0)).toBe("0 MiB");
     expect(formatMegabytes(null)).toBe("Unknown");
     const text = describeGpu(discrete);
     expect(text).not.toMatch(/GiB|GB|bytes/);
@@ -326,5 +329,18 @@ describe("detail value formatting", () => {
     expect(statusTone("partial")).toBe("");
     expect(statusTone("cancelled")).toBe("");
     expect(statusTone(null)).toBe("");
+  });
+});
+
+
+describe("structured measurement devices", () => {
+  it("keeps device names intact and separates their reported facts", () => {
+    const devices = describeGpuDetails([{ name: "Synthetic GPU · Revision B", vendor: "Example", vram_mb: 8192, driver: null, integrated: false }]);
+    expect(devices[0].name).toBe("Synthetic GPU · Revision B");
+    expect(devices[0].facts).toEqual([
+      { label: "Vendor", value: "Example" }, { label: "VRAM", value: "8,192 MiB" },
+      { label: "Driver", value: "Unknown" }, { label: "Integrated", value: "No" },
+    ]);
+    expect(describeGpuDetails(null)).toEqual([]);
   });
 });

@@ -1,14 +1,27 @@
-import { RANGE_FILTER_KEYS, TEXT_FILTER_KEYS, type BenchmarkFilters, type BenchmarkSort, type OptionField, type TextFilterKey } from "../lib/benchmark-discovery";
+import { MODEL_INFO_SEARCH_KEYS, RANGE_FILTER_KEYS, TEXT_FILTER_KEYS, type BenchmarkFilters, type BenchmarkSort, type OptionField, type TextFilterKey } from "../lib/benchmark-discovery";
 import type { ListCursor } from "../lib/pagination";
 
 // Identifiers and SQL expressions come exclusively from the fixed contract whitelist.
+/**
+ * Fields whose value is a JSON array. Their filter prefilter, their per-element
+ * predicate and their option expansion all read the same path, so a filter and
+ * the suggestions offered for it can never drift apart.
+ */
+export const ARRAY_TEXT_PATHS: Partial<Record<Exclude<TextFilterKey, "q">, string>> = {
+  vendor: "summary->'setup'->'vendors'",
+  gpu: "summary->'setup'->'gpus'",
+  base_model: "summary->'model_info'->'base_models'",
+};
 export function textExpression(field: Exclude<TextFilterKey, "q">): string {
   if (["model", "hardware", "method", "workload"].includes(field)) return `summary->>'${field}_label'`;
-  if (field === "vendor" || field === "gpu") return `bench.discovery_array_text(summary->'setup'->'${field === "vendor" ? "vendors" : "gpus"}')`;
+  const arrayPath = ARRAY_TEXT_PATHS[field];
+  if (arrayPath) return `bench.discovery_array_text(${arrayPath})`;
+  if (field === "publisher" || field === "quantization") return `summary->'model_info'->>'${field}'`;
   return `summary->'setup'->>'${field}'`;
 }
+// "context" reads the largest configured input length; setup.context_size stays the raw allocation.
 export function numericExpression(field: string): string {
-  return `(summary->'setup'->>'${field === "context" ? "context_size" : field === "vram" ? "vram_mb" : field}')::double precision`;
+  return `(summary->'setup'->>'${field === "context" ? "prompt_length" : field === "vram" ? "vram_mb" : field}')::double precision`;
 }
 export function sortExpression(sort: BenchmarkSort): string | null {
   if (sort.startsWith("context_")) return numericExpression("context");
@@ -23,17 +36,17 @@ export function discoverySql(filters: BenchmarkFilters) {
   const bind = (v: string | number | null) => { values.push(v); return `$${values.length}`; };
   const match = (field: Exclude<TextFilterKey, "q">, pattern: string) => {
     const expr = textExpression(field);
-    if (field === "gpu" || field === "vendor") {
-      const key = field === "gpu" ? "gpus" : "vendors";
-      return `(${expr} ilike ${pattern} and exists (select 1 from jsonb_array_elements_text(coalesce(summary->'setup'->'${key}', '[]'::jsonb)) as element(value) where value ilike ${pattern}))`;
-    }
+    const arrayPath = ARRAY_TEXT_PATHS[field];
+    // The joined text narrows using the expression index; the per-element test
+    // then rejects a match that only spans two neighbouring entries.
+    if (arrayPath) return `(${expr} ilike ${pattern} and exists (select 1 from jsonb_array_elements_text(coalesce(${arrayPath}, '[]'::jsonb)) as element(value) where value ilike ${pattern}))`;
     return `${expr} ilike ${pattern}`;
   };
   const clauses = ["deleted = false", "hidden = false"];
   for (const key of TEXT_FILTER_KEYS) {
     if (!filters[key]) continue;
     const pattern = bind(literalPattern(filters[key]!));
-    clauses.push(key === "q" ? `(${TEXT_FILTER_KEYS.filter(k => k !== "q").map(k => match(k, pattern)).concat([`summary->'setup'->>'runtime_version' ilike ${pattern}`, `summary->>'status' ilike ${pattern}`]).join(" or ")})` : match(key, pattern));
+    clauses.push(key === "q" ? `(${TEXT_FILTER_KEYS.filter(k => k !== "q").map(k => match(k, pattern)).concat([`summary->'setup'->>'runtime_version' ilike ${pattern}`, `summary->>'status' ilike ${pattern}`], MODEL_INFO_SEARCH_KEYS.map(k => `summary->'model_info'->>'${k}' ilike ${pattern}`)).join(" or ")})` : match(key, pattern));
   }
   for (const key of RANGE_FILTER_KEYS) for (const bound of ["min", "max"] as const) {
     const value = filters[`${key}_${bound}`];
@@ -67,6 +80,7 @@ export function optionsSql(field: OptionField, query: string, filters: Benchmark
     clauses.push(`device->>'vendor' ilike ${bind(literalPattern(remaining.vendor))}`);
     return { values, query: `select value, count(*)::int as count from (select distinct public_id, device->>'name' as value from bench.benchmark_runs cross join lateral jsonb_array_elements(coalesce(benchmark#>'{environment,execution,selected_gpus}', '[]'::jsonb)) as gpu(device) where ${clauses.join(" and ")}) as candidates where value <> '' and value ilike ${optionPattern} group by value order by value collate "C" limit 31` };
   }
-  const expr = field === "gpu" || field === "vendor" ? `jsonb_array_elements_text(coalesce(summary->'setup'->'${field === "gpu" ? "gpus" : "vendors"}', '[]'::jsonb))` : textExpression(field);
+  const arrayPath = ARRAY_TEXT_PATHS[field];
+  const expr = arrayPath ? `jsonb_array_elements_text(coalesce(${arrayPath}, '[]'::jsonb))` : textExpression(field);
   return { values, query: `select value, count(*)::int as count from (select distinct public_id, ${expr} as value from bench.benchmark_runs where ${clauses.join(" and ")}) as candidates where value <> '' and value ilike ${optionPattern} group by value order by value collate "C" limit 31` };
 }

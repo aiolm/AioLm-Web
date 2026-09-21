@@ -984,14 +984,11 @@ main > .grid {
  * so the digits line up.
  */
 .explorer-head-compare { width: 1%; }
-.explorer-head-identity { width: 26%; }
-.explorer-head-setup { width: 26%; }
-.explorer-head-samples { width: 10%; }
-.explorer-head-samples, .explorer-cell-samples { min-width: 7rem; }
-.explorer-head-numeric { width: 12%; }
-.explorer-head-published { width: 14%; }
+.explorer-head-identity { width: 31%; }
+.explorer-head-setup { width: 24%; }
+.explorer-head-numeric { width: 11%; }
+.explorer-head-published { width: 11%; }
 
-.explorer-head-numeric, .explorer-cell-numeric { text-align: right; }
 .explorer-cell-published { color: var(--ui-muted); white-space: nowrap; }
 .explorer-cell-identity, .explorer-cell-setup { min-width: 0; }
 
@@ -1007,6 +1004,20 @@ main > .grid {
   text-align: left;
   vertical-align: top;
 }
+
+/*
+ * Declared after .explorer-cell, which sets text-align at the same specificity:
+ * a measured value has to keep the right edge its heading is on.
+ */
+.explorer-head-numeric, .explorer-cell-numeric { text-align: right; }
+
+/*
+ * A measured column carries its unit under its name. Wrapping there keeps the
+ * head within the column it labels, so the heading and the digits below it stay
+ * on the same right edge instead of the head widening the column.
+ */
+.explorer-head-numeric { white-space: normal; }
+.explorer-head-numeric .explorer-unit { display: block; }
 
 .explorer-cell-compare { width: 1%; }
 
@@ -1045,7 +1056,6 @@ main > .grid {
 
 .explorer-setup-method { overflow-wrap: anywhere; }
 
-.explorer-sample-count { display: block; }
 
 .explorer-status {
   white-space: nowrap;
@@ -1543,16 +1553,17 @@ table.data th { color: var(--ui-muted); font-weight: 650; }
   }
 
   .explorer-table .explorer-cell {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 9rem) minmax(0, 1fr);
     align-items: baseline;
-    gap: 12px;
+    gap: 4px 12px;
     padding: 6px 0;
     text-align: left;
   }
 
   .explorer-cell-numeric { text-align: left; }
 
-  .explorer-cell-label { display: block; flex: 0 0 9rem; font-weight: 650; }
+  .explorer-cell-label { display: block; font-weight: 650; }
 
   .explorer-table-caption { display: block; width: 100%; }
   .explorer-guide { grid-template-columns: minmax(0, 1fr); }
@@ -1576,8 +1587,7 @@ table.data th { color: var(--ui-muted); font-weight: 650; }
     border-block-end: 1px solid var(--ui-border);
   }
 
-  .explorer-table .explorer-cell { display: grid; gap: 2px; }
-  .explorer-cell-label { flex: none; }
+  .explorer-table .explorer-cell { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 
   .kv { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   .kv dd { margin-block-end: 10px; }
@@ -1609,6 +1619,7 @@ table.data th { color: var(--ui-muted); font-weight: 650; }
 .explorer-range legend { font-size: .9rem; font-weight: 650; margin-bottom: 6px; }
 .explorer-range-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .explorer-range-inputs label { font-size: .8rem; color: var(--ui-muted); }
+.explorer-range-hint { margin-top: 6px; color: var(--ui-muted); font-size: .78rem; }
 .explorer-validation { color: var(--ui-danger, #b42318); font-size: .85rem; margin-top: 8px; }
 .explorer-combobox { position: relative; }
 .explorer-combobox-popup { position: absolute; z-index: 25; top: 100%; left: 0; right: 0; margin-top: 4px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); background: var(--ui-surface); box-shadow: var(--ui-elev-1); overflow: hidden; }
@@ -1619,6 +1630,20 @@ table.data th { color: var(--ui-muted); font-weight: 650; }
 .explorer-option-status { margin: 0; padding: 8px 12px; font-size: .8rem; color: var(--ui-muted); }
 .explorer-option-status:empty { display: none; }
 .explorer-result-meta { display: block; color: var(--ui-muted); font-size: .78rem; font-weight: 400; margin-top: 6px; overflow-wrap: anywhere; }
+/*
+ * Supporting values inside a result cell are labeled pairs rather than one
+ * separated line: a publisher, an operating system and a backend are different
+ * claims, and a reader should not have to infer which is which from position.
+ * They wrap as a group, so the cell stays two lines on a wide table and folds
+ * one pair per line on a phone without any of them losing its label.
+ */
+.explorer-facts { display: flex; flex-wrap: wrap; gap: 2px 12px; margin: 6px 0 0; padding: 0; list-style: none; color: var(--ui-muted); font-size: .78rem; font-weight: 400; }
+.explorer-fact { display: flex; gap: 4px; min-width: 0; overflow-wrap: anywhere; }
+.explorer-fact-label { color: var(--ui-faint); white-space: nowrap; }
+.explorer-fact-value { min-width: 0; }
+/* Model identity qualifies the name directly above it, so it reads first. */
+.explorer-model-facts { margin-block-start: 4px; font-size: .8rem; }
+.explorer-model-facts .explorer-fact-value { color: var(--ui-ink); font-weight: 600; }
 @media (max-width: 700px) {
   .explorer-search-row, .explorer-quick-filters, .explorer-group-fields { grid-template-columns: minmax(0, 1fr); }
   .explorer-filter-set { padding: 16px; }
@@ -1663,3 +1688,12 @@ html { scroll-padding-block-start: 88px; }
   .not-found-card { padding: 24px; }
   .not-found-actions .button { width: 100%; }
 }
+
+/* Device names stay intact while their specifications form readable pairs. */
+.detail-device-cards { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.detail-device-card { min-width: 0; padding: 12px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); }
+.detail-device-card > strong { display: block; margin-block-end: 8px; overflow-wrap: anywhere; }
+.detail-device-facts { display: grid; grid-template-columns: minmax(5rem, max-content) minmax(0, 1fr); gap: 4px 12px; margin: 0; }
+.detail-device-facts dt { color: var(--ui-muted); font-size: .8rem; }
+.detail-device-facts dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 360px) { .detail-device-facts { grid-template-columns: minmax(0, 1fr); gap: 2px; } .detail-device-facts dd { margin-block-end: 6px; } }

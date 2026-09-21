@@ -8,9 +8,10 @@ import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { ErrorState, SafeMarkdown, isAbortError, useJsonFetch } from "@/components/ui";
 import { ReportForm } from "@/components/report-form";
 import { asRecord, displayText, statusTone } from "@/components/benchmark-detail-format";
-import { buildSetupGroups, type BenchmarkSetup } from "@/components/benchmark-detail-fields";
+import { buildSetupGroups, type BenchmarkSetup, type SetupField } from "@/components/benchmark-detail-fields";
+import { formatWeightQuantization, modelPublisher, modelValue, type BenchmarkModelInfo } from "@/components/benchmark-model-identity";
 import { buildRowColumns, isFailedRow } from "@/components/benchmark-detail-rows";
-import { formatUpdatedDate, formatDuration, formatSampleCount, formatThroughput } from "@/components/benchmark-explorer-format";
+import { formatUpdatedDate, formatDuration, formatPromptLengths, formatSampleCount, formatThroughput } from "@/components/benchmark-explorer-format";
 
 interface Detail {
   id: string;
@@ -18,6 +19,9 @@ interface Detail {
   summary: {
     model_label: string; hardware_label: string; method_label: string; workload_label: string;
     row_count: number; failed_rows: number; mean_tg_tps: number | null; mean_e2e_ms: number | null; status: string;
+    mean_pp_tps?: number | null; prompt_lengths?: number[];
+    /** Published model metadata, absent on older results and null when none was sent. */
+    model_info?: BenchmarkModelInfo | null;
   };
   description_md: string;
   revision: number;
@@ -184,9 +188,17 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
           <span className="muted">{t("benchmark.Revision {revision} · updated {date} (UTC)", { revision: data.revision, date: formatUpdatedDate(data.updated_at, locale) })}</span>
         </p>
         <dl className="kv detail-metrics">
+          {/* Who distributed the weights and how they were quantized qualify every
+              number below, so they are read before the metrics rather than inside
+              the collapsed setup. Both name their gaps instead of staying blank. */}
+          <dt>{t("benchmark.Publisher")}</dt><dd>{modelValue(modelPublisher(summary.model_info ?? null), t)}</dd>
+          <dt>{t("benchmark.Weight quantization")}</dt><dd>{formatWeightQuantization(summary.model_info ?? null, t)}</dd>
           <dt>{t("benchmark.Hardware")}</dt><dd>{summary.hardware_label}</dd>
           <dt>{t("benchmark.Method")}</dt><dd>{summary.method_label}</dd>
-          <dt>{t("benchmark.Samples")}</dt><dd>{formatSampleCount(summary.row_count, summary.failed_rows, t)}</dd>
+          <dt>{t("benchmark.Input context")}</dt><dd>{formatPromptLengths(summary.prompt_lengths) ?? t("benchmark.Unknown")}</dd>
+          <dt>{t("benchmark.Measurement count")}</dt><dd>{formatSampleCount(summary.row_count, summary.failed_rows, t)}</dd>
+          <dt>{t("benchmark.Mean prompt processing")}{" "}<span className="detail-unit">{t("benchmark.(tok/s)")}</span></dt>
+          <dd>{formatThroughput(summary.mean_pp_tps)}</dd>
           <dt>{t("benchmark.Mean generation")}{" "}<span className="detail-unit">{t("benchmark.(tok/s)")}</span></dt>
           <dd>{formatThroughput(summary.mean_tg_tps)}</dd>
           <dt>{t("benchmark.Mean end-to-end duration")}{" "}<span className="detail-unit">{t("benchmark.(ms)")}</span></dt>
@@ -251,6 +263,7 @@ function SetupSection({ benchmark }: { benchmark: BenchmarkSetup }): React.JSX.E
     <section className="card" aria-labelledby="env-title">
       <h2 id="env-title">{t("benchmark.Test setup (as reported)")}</h2>
       <p className="muted">{t("benchmark.These values were sent with the publication and are shown as reported. They are not independently verified.")}</p>
+      <p className="muted">{t("benchmark.The publisher is the namespace of the repository the file came from; whoever quantized the weights is listed separately and is often someone else. Quantization describes the weights in the published file, not the KV cache, and it is not a statement about output quality.")}</p>
       {groups.map((group) => (
         <details className="detail-group" key={group.id}>
           <summary className="detail-group-title" id={group.id}>{group.title}</summary>
@@ -262,12 +275,23 @@ function SetupSection({ benchmark }: { benchmark: BenchmarkSetup }): React.JSX.E
                   {field.unit ? <span className="detail-unit"> ({field.unit})</span> : null}
                 </dt>
                 <dd>
-                  {Array.isArray(field.value) ? (
+                  {field.devices && field.devices.length > 0 ? (
+                    <ul className="detail-device-cards">
+                      {field.devices.map((device, index) => (
+                        <li className="detail-device-card" key={index}>
+                          <strong>{device.name}</strong>
+                          <dl className="detail-device-facts">
+                            {device.facts.map((fact) => <Fragment key={fact.label}><dt>{fact.label}</dt><dd>{fact.value}</dd></Fragment>)}
+                          </dl>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : Array.isArray(field.value) ? (
                     <ul className="detail-device-list">
-                      {field.value.map((item, index) => <li key={index}>{item}</li>)}
+                      {field.value.map((item, index) => <li key={index}><SetupValue field={field} text={item} /></li>)}
                     </ul>
                   ) : (
-                    field.value
+                    <SetupValue field={field} text={field.value} />
                   )}
                 </dd>
               </Fragment>
@@ -276,6 +300,20 @@ function SetupSection({ benchmark }: { benchmark: BenchmarkSetup }): React.JSX.E
         </details>
       ))}
     </section>
+  );
+}
+
+/**
+ * A reported value, linked to its public source page only when the field
+ * supplied one for exactly this text. An id that did not validate as a
+ * repository is still shown, just not as a link.
+ */
+function SetupValue({ field, text }: { field: SetupField; text: string }): React.JSX.Element {
+  const { t } = useI18n();
+  const href = field.links?.[text];
+  if (!href) return <>{text}</>;
+  return (
+    <a href={href} target="_blank" rel="noreferrer noopener" aria-label={t("benchmark.{value} on Hugging Face", { value: text })}>{text}</a>
   );
 }
 

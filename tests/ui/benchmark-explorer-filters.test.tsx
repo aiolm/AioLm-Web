@@ -1,9 +1,10 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { I18nProvider } from "@/i18n/client";
+import { createTranslator } from "@/i18n/translate";
 import en from "@/i18n/messages/benchmark/en";
 import { BenchmarkExplorerFilters } from "@/components/benchmark-explorer-filters";
-import { EMPTY_EXPLORER_FILTERS, EXPLORER_FILTER_KEYS, explorerReducer, explorerStateFromSearch } from "@/components/benchmark-explorer-state";
+import { EMPTY_EXPLORER_FILTERS, EXPLORER_FILTER_KEYS, EXPLORER_RANGE_HINTS, explorerReducer, explorerStateFromSearch } from "@/components/benchmark-explorer-state";
 
 function renderFilters(search = "", pending = false) {
   return renderToStaticMarkup(<I18nProvider locale="en" messages={en}><BenchmarkExplorerFilters
@@ -29,7 +30,9 @@ describe("compact filter disclosure", () => {
     for (const key of EXPLORER_FILTER_KEYS.filter(key => !["q", "vendor", "gpu", "sort"].includes(key))) {
       expect(advanced, key).toContain('name="' + key + '"');
     }
-    expect(advanced.match(/class="explorer-advanced-group"/g)).toHaveLength(3);
+    expect(advanced.match(/class="explorer-advanced-group"/g)).toHaveLength(4);
+    // Model identity leads the advanced panel; the primary row is untouched by it.
+    expect(advanced.indexOf('name="publisher"')).toBeLessThan(advanced.indexOf('name="hardware"'));
     expect(advanced).toContain('type="submit"');
     expect(advanced).not.toContain('<details');
   });
@@ -64,4 +67,26 @@ it("returns a shared cursor view to the first page without clearing filters or d
   expect(first.history).toEqual([]);
   expect(first.applied.vendor).toBe("synthetic");
   expect(first.draft.q).toBe("pending search");
+});
+
+describe("stable discovery layout", () => {
+  it("keeps the unapplied-changes line after the disclosure, where it cannot move the trigger", () => {
+    const pending = renderFilters("", true);
+    expect(pending.indexOf("</details>")).toBeLessThan(pending.indexOf("explorer-draft-status"));
+    expect(pending).toContain("Changes not applied.");
+    // The line is always rendered, so turning the message on and off changes no structure.
+    expect(renderFilters()).toContain('<div class="explorer-draft-status" role="status"></div>');
+  });
+
+  it("names the input length range as the largest configured input, not the allocated context", () => {
+    const html = renderFilters();
+    const hintKey = `benchmark.${EXPLORER_RANGE_HINTS.context}`;
+    expect(EXPLORER_RANGE_HINTS.context).toContain("largest input length");
+    expect(en).toHaveProperty(hintKey);
+    expect(html).toContain("Max input length (tokens)");
+    expect(html).toContain(createTranslator(en)(hintKey));
+    // The address keys stay the ones already shared in links.
+    expect(html).toContain('name="context_min"');
+    expect(html).toContain('name="context_max"');
+  });
 });

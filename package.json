@@ -1,6 +1,6 @@
 {
   "name": "aiolm-web",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "AioLM product website and anonymous benchmark explorer (Next.js + PostgreSQL + Turnstile). No accounts in v1.",
   "private": true,
   "scripts": {
@@ -24,7 +24,7 @@
     "node": "22.x"
   },
   "dependencies": {
-    "@aiolm/benchmark-contracts": "file:vendor/aiolm-benchmark-contracts-0.2.0.tgz",
+    "@aiolm/benchmark-contracts": "file:vendor/aiolm-benchmark-contracts-0.3.0.tgz",
     "next": "^15.5.25",
     "postgres": "^3.4.9",
     "react": "^19.3.0",

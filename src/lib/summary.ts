@@ -1,5 +1,7 @@
-import { normalizeSetup, selectedExecutionGpus, type BenchmarkSetup } from "./benchmark-discovery";
+import { normalizePromptLengths, normalizeSetup, selectedExecutionGpus, type BenchmarkSetup } from "./benchmark-discovery";
 export { parseFilters, type BenchmarkFilters } from "./benchmark-discovery";
+import { modelLabelFor, normalizeModelInfo, type BenchmarkModelInfo } from "./model-info";
+export { normalizeModelInfo, type BenchmarkModelInfo } from "./model-info";
 import type { PublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
 
 /**
@@ -18,6 +20,16 @@ export interface BenchmarkSummary {
   status: string;
   mean_tg_tps: number | null;
   mean_e2e_ms: number | null;
+  /** Configured input lengths, ascending and deduplicated. Absent on summaries stored before migration 009. */
+  prompt_lengths?: number[];
+  /** Prefill throughput mean over the rows that measured it. Absent on summaries stored before migration 009. */
+  mean_pp_tps?: number | null;
+  /**
+   * Model metadata exactly as submitted. Absent on summaries stored before
+   * migration 010 and null when the submission described no model, so a reader
+   * can tell "never recorded" from a described model with unknown fields.
+   */
+  model_info?: BenchmarkModelInfo | null;
 }
 
 function mean(values: number[]): number | null {
@@ -29,10 +41,10 @@ export function summarizeBenchmark(benchmark: PublicBenchmarkSubmission): Benchm
   const rows = benchmark.measurements.rows;
   const tg = rows.map((r) => r.tg_tps).filter((v): v is number => typeof v === "number" && Number.isFinite(v));
   const e2e = rows.map((r) => r.e2e_ms).filter((v) => Number.isFinite(v));
-  const modelLabel =
-    benchmark.model.status === "sha256" && benchmark.model.sha256
-      ? `sha256:${benchmark.model.sha256.slice(0, 12)}`
-      : benchmark.model.status;
+  // Prefill is only measured on rows that ran: a failed row reports no throughput,
+  // and averaging it in would understate every result that recovered around it.
+  const pp = rows.filter((r) => !r.failed).map((r) => r.pp_tps).filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+  const modelInfo = normalizeModelInfo(benchmark);
   const gpus = selectedExecutionGpus(benchmark);
   const hardwareLabel =
     gpus.length > 0
@@ -40,7 +52,7 @@ export function summarizeBenchmark(benchmark: PublicBenchmarkSubmission): Benchm
       : (benchmark.environment?.execution.mode ?? "unknown");
   return {
     setup: normalizeSetup(benchmark),
-    model_label: modelLabel,
+    model_label: modelLabelFor(benchmark, modelInfo),
     hardware_label: hardwareLabel,
     method_label: benchmark.method ? `${benchmark.method.id}@${benchmark.method.version}` : "unknown",
     workload_label: `${benchmark.workload.corpus}`,
@@ -50,5 +62,8 @@ export function summarizeBenchmark(benchmark: PublicBenchmarkSubmission): Benchm
     status: benchmark.measurements.status,
     mean_tg_tps: mean(tg),
     mean_e2e_ms: mean(e2e),
+    prompt_lengths: normalizePromptLengths(benchmark.workload.prompt_lengths),
+    mean_pp_tps: mean(pp),
+    model_info: modelInfo,
   };
 }

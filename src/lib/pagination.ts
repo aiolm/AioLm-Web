@@ -47,9 +47,34 @@ export function decodeRowsCursor(cursor: string | null): number {
 
 /** Discovery cursors bind all normalized filters and sorting to their position. */
 export interface ListCursor { createdAt: string; publicId: string; value?: number | null }
+
+/**
+ * Meaning marker for the context condition. A cursor carries the sort value it
+ * stopped at, and migration 009 repointed context from the raw runtime
+ * allocation to the largest configured input length. A cursor minted before
+ * that would resume at a boundary drawn on the old quantity - a 8704-token
+ * allocation compared against input lengths - and silently skip or repeat
+ * results, because the filters and sort it names have not changed.
+ *
+ * Mixing the marker into the binding retires exactly those cursors with the
+ * existing "Cursor does not match this query" error. It is added only for
+ * queries that read context, so cursors for newest, oldest, VRAM, throughput
+ * and duration keep working across the change. Repoint context again and this
+ * value changes again.
+ */
+const CONTEXT_MEANING = "context=max-configured-input-length";
+function contextMeaning(filters: BenchmarkFilters): string | null {
+  const sort = filters.sort ?? "newest";
+  const reads = sort.startsWith("context_") || filters.context_min !== undefined || filters.context_max !== undefined;
+  return reads ? CONTEXT_MEANING : null;
+}
 export function discoveryBinding(filters: BenchmarkFilters): string {
   const normalized = Object.entries(filters).filter(([key]) => key !== "sort").sort(([a], [b]) => a.localeCompare(b));
-  return createHash("sha256").update(JSON.stringify([filters.sort ?? "newest", normalized])).digest("hex");
+  const meaning = contextMeaning(filters);
+  const bound = meaning === null
+    ? [filters.sort ?? "newest", normalized]
+    : [filters.sort ?? "newest", normalized, meaning];
+  return createHash("sha256").update(JSON.stringify(bound)).digest("hex");
 }
 export function encodeDiscoveryCursor(createdAt: string, publicId: string, filters: BenchmarkFilters, value: number | null): string {
   return Buffer.from(JSON.stringify({ c: createdAt, p: publicId, v: value, b: discoveryBinding(filters) })).toString("base64url");

@@ -18,7 +18,7 @@
 #   tests/    never imported by src/.
 #
 # Kept on purpose, because the build needs them: package.json,
-# package-lock.json, vendor/aiolm-benchmark-contracts-0.2.0.tgz (the `file:`
+# package-lock.json, vendor/aiolm-benchmark-contracts-0.3.0.tgz (the `file:`
 # dependency npm installs during the build), src/, next.config.ts,
 # tsconfig.json, eslint.config.mjs (`next build` lints), vercel.json, .nvmrc.
 

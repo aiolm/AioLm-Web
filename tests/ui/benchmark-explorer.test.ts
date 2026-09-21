@@ -37,6 +37,8 @@ import {
 import {
   EXPLORER_MISSING,
   formatDuration,
+  formatPromptLength,
+  formatPromptLengths,
   formatPublishedDate,
   formatSampleCount,
   formatThroughput,
@@ -464,5 +466,36 @@ describe("immediate result sorting", () => {
     expect(explorerReducer(state, { type: "sort", value: "oldest" })).toBe(state);
     const newest = explorerReducer(state, { type: "sort", value: "newest" });
     expect(buildExplorerSearch({ filters: newest.applied, cursor: newest.cursor })).toBe("");
+  });
+});
+
+describe("configured input lengths", () => {
+  it("shortens an exact multiple of 1024 and leaves every other length as measured", () => {
+    expect(formatPromptLength(512)).toBe("512");
+    expect(formatPromptLength(1024)).toBe("1K");
+    expect(formatPromptLength(4096)).toBe("4K");
+    expect(formatPromptLength(8192)).toBe("8K");
+    expect(formatPromptLength(1500)).toBe("1500");
+    expect(formatPromptLength(8704)).toBe("8704");
+  });
+
+  it("lists every reported length once, in ascending order", () => {
+    expect(formatPromptLengths([8192, 512, 4096, 512])).toBe("512 · 4K · 8K");
+    expect(formatPromptLengths([128])).toBe("128");
+  });
+
+  it("stays absent rather than standing in for the context the server allocated", () => {
+    expect(formatPromptLengths(undefined)).toBeNull();
+    expect(formatPromptLengths(null)).toBeNull();
+    expect(formatPromptLengths([])).toBeNull();
+    expect(formatPromptLengths([0, -1, Number.NaN, 1.5] as number[])).toBeNull();
+  });
+
+  it("carries the summary fields the list and the comparison read", () => {
+    const summary = result("0000aaaa", { mean_pp_tps: 128.75, prompt_lengths: [512, 4096] }).summary;
+    expect(formatThroughput(summary.mean_pp_tps)).toBe("128.8");
+    expect(formatPromptLengths(summary.prompt_lengths)).toBe("512 · 4K");
+    // A result published before these fields existed reads as a gap, not as a zero.
+    expect(formatThroughput(result("0000bbbb").summary.mean_pp_tps)).toBe(EXPLORER_MISSING);
   });
 });

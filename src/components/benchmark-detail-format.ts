@@ -52,6 +52,28 @@ export function describeGpu(value: unknown, t: Translator = benchmarkFallback): 
   ].join(" · ");
 }
 
+export interface ReportedDevice {
+  name: string;
+  facts: { label: string; value: string }[];
+}
+
+/** Structured device facts keep model names and driver strings intact. */
+export function describeGpuDetails(value: unknown, t: Translator = benchmarkFallback): ReportedDevice[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((entry) => {
+    const device = asRecord(entry);
+    return {
+      name: device ? displayText(device["name"], t) : t("benchmark.Unknown device"),
+      facts: [
+        { label: t("benchmark.Vendor"), value: displayText(device?.["vendor"], t) },
+        { label: t("benchmark.VRAM"), value: formatMegabytes(device?.["vram_mb"], t) },
+        { label: t("benchmark.Driver"), value: displayText(device?.["driver"], t) },
+        { label: t("benchmark.Integrated"), value: displayText(device?.["integrated"], t) },
+      ],
+    };
+  });
+}
+
 /** One description per device. No devices and no list at all stay different facts. */
 export function describeGpuList(value: unknown, t: Translator = benchmarkFallback): string | string[] {
   if (!Array.isArray(value)) return t("benchmark.Unknown");
@@ -59,10 +81,10 @@ export function describeGpuList(value: unknown, t: Translator = benchmarkFallbac
   return value.map((gpu) => describeGpu(gpu, t));
 }
 
-/** VRAM is published in megabytes and is shown in megabytes; the number is never rescaled. */
+/** The native vram_mb field records binary mebibytes; preserve the reported count. */
 export function formatMegabytes(value: unknown, t: Translator = benchmarkFallback): string {
   if (typeof value !== "number" || !Number.isFinite(value)) return displayText(value, t);
-  return `${groupDigits(value)} MB`;
+  return `${groupDigits(value)} MiB`;
 }
 
 /** A human-scale unit with the published number kept alongside it. */

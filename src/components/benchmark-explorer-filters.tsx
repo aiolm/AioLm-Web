@@ -2,7 +2,7 @@
 import { type ReactNode } from "react";
 import { useI18n } from "@/i18n/client";
 import { EditableCombobox } from "./editable-combobox";
-import { EXPLORER_FILTER_LABELS, EXPLORER_FILTER_PLACEHOLDERS, EXPLORER_RANGE_LABELS, buildExplorerOptionsPath, invalidExplorerRanges, type ExplorerFilters, type ExplorerFilterKey, type EXPLORER_TEXT_KEYS, type EXPLORER_RANGES } from "./benchmark-explorer-state";
+import { EXPLORER_FILTER_LABELS, EXPLORER_FILTER_PLACEHOLDERS, EXPLORER_RANGE_HINTS, EXPLORER_RANGE_LABELS, buildExplorerOptionsPath, invalidExplorerRanges, type ExplorerFilters, type ExplorerFilterKey, type EXPLORER_TEXT_KEYS, type EXPLORER_RANGES } from "./benchmark-explorer-state";
 type TextKey = typeof EXPLORER_TEXT_KEYS[number];
 type Range = typeof EXPLORER_RANGES[number];
 export function BenchmarkExplorerFilters({ draft, onChange, actions, pending }: { draft: ExplorerFilters; onChange: (key: ExplorerFilterKey, value: string) => void; actions?: ReactNode; pending?: boolean }): React.JSX.Element {
@@ -22,6 +22,7 @@ export function BenchmarkExplorerFilters({ draft, onChange, actions, pending }: 
           aria-invalid={invalid.includes(range)} aria-describedby={invalid.includes(range) ? `error-${range}` : undefined}
           onChange={event => onChange(key, event.target.value)} /></div>;
     })}</div>
+    {range in EXPLORER_RANGE_HINTS ? <p className="explorer-range-hint">{t(`benchmark.${EXPLORER_RANGE_HINTS[range as keyof typeof EXPLORER_RANGE_HINTS]}`)}</p> : null}
     {invalid.includes(range) ? <p id={`error-${range}`} className="explorer-validation" role="alert">{t("benchmark.Use whole numbers with minimum ≤ maximum.")}</p> : null}
   </fieldset>;
   return <>
@@ -31,16 +32,19 @@ export function BenchmarkExplorerFilters({ draft, onChange, actions, pending }: 
       <div className="explorer-search-actions">{actions}</div>
     </div>
     <div className="explorer-quick-filters">{(["vendor", "gpu"] as const).map(textField)}</div>
-    <div className="explorer-draft-status" role="status">{pending ? t("benchmark.Changes not applied. Apply filters to update results.") : null}</div>
     <details className="explorer-more-filters">
       <summary>{t("benchmark.More filters")}{advancedCount > 0 ? <span className="explorer-filter-count">{advancedCount}</span> : null}</summary>
       <div className="explorer-advanced-groups">
-        <fieldset className="explorer-advanced-group"><legend>{t("benchmark.Hardware and specifications")}</legend><div className="explorer-group-fields">{(["model", "hardware", "cpu"] as const).map(textField)}{(["vram", "cores"] as const).map(rangeField)}</div></fieldset>
+        {/* Model identity first: publisher, weight quantization and base model answer "which weights ran", which the fingerprint alone does not. */}
+        <fieldset className="explorer-advanced-group"><legend>{t("benchmark.Model")}</legend><div className="explorer-group-fields">{(["model", "publisher", "quantization", "base_model"] as const).map(textField)}</div></fieldset>
+        <fieldset className="explorer-advanced-group"><legend>{t("benchmark.Hardware and specifications")}</legend><div className="explorer-group-fields">{(["hardware", "cpu"] as const).map(textField)}{(["vram", "cores"] as const).map(rangeField)}</div></fieldset>
         <fieldset className="explorer-advanced-group"><legend>{t("benchmark.OS and runtime")}</legend><div className="explorer-group-fields">{(["os", "arch", "runtime", "backend"] as const).map(textField)}</div></fieldset>
         <fieldset className="explorer-advanced-group"><legend>{t("benchmark.Execution and workload")}</legend><div className="explorer-group-fields">{(["context", "parallel", "threads", "gpu_layers"] as const).map(rangeField)}{(["mode", "method", "workload", "flash_attention", "cache_type_k", "cache_type_v", "split_mode"] as const).map(textField)}</div></fieldset>
       </div>
       <div className="explorer-advanced-actions">{actions}</div>
     </details>
+    {/* Last in the panel: an appearing or wrapping status line can no longer move the disclosure trigger above it. */}
+    <div className="explorer-draft-status" role="status">{pending ? t("benchmark.Changes not applied. Apply filters to update results.") : null}</div>
     {invalid.length ? <p className="explorer-validation" role="alert">{t("benchmark.Check numeric ranges before applying filters.")} {invalid.map(range => t(`benchmark.${EXPLORER_RANGE_LABELS[range as Range]}`)).join(", ")}</p> : null}
   </>;
 }
