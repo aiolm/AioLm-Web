@@ -1,4 +1,5 @@
 import type { PublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
+import { findPoint, pointMedian, type PointMetric } from "./benchmark-points";
 import type { BenchmarkSummary } from "./summary";
 
 export interface BenchmarkSetup {
@@ -40,12 +41,31 @@ export type TextFilterKey = typeof TEXT_FILTER_KEYS[number];
  * they stay out of the global search rather than matching everything.
  */
 export const MODEL_INFO_SEARCH_KEYS = ["name", "architecture", "size_label", "quantized_by", "repository", "artifact", "sha256"] as const;
-export type OptionField = Exclude<TextFilterKey, "q">;
+/** Suggestion fields. "point" is not a text filter: it expands the measured operating points. */
+export const POINT_OPTION_FIELD = "point";
+export type OptionField = Exclude<TextFilterKey, "q"> | typeof POINT_OPTION_FIELD;
 export const RANGE_FILTER_KEYS = ["context", "vram", "cores", "parallel", "threads", "gpu_layers"] as const;
 export type RangeFilterKey = typeof RANGE_FILTER_KEYS[number];
 export const SORT_VALUES = ["newest", "oldest", "context_asc", "context_desc", "vram_asc", "vram_desc", "throughput_desc", "duration_asc"] as const;
 export type BenchmarkSort = typeof SORT_VALUES[number];
-export type BenchmarkFilters = Partial<Record<TextFilterKey, string>> & Partial<Record<`${RangeFilterKey}_${"min" | "max"}`, number>> & { sort?: BenchmarkSort };
+/**
+ * The two sorts that rank measured speed. They read one operating point, so
+ * they require one to be named: ranking on a value averaged across input
+ * lengths and concurrencies would put whoever configured the narrowest grid on
+ * top, which is what the point selection exists to stop.
+ */
+const POINT_SORT_METRICS: Partial<Record<BenchmarkSort, PointMetric>> = { throughput_desc: "tg_tps", duration_asc: "e2e_ms" };
+/**
+ * The operating point a list is read at. It is display and ranking basis, not a
+ * filter, unless point_only is set: without it a result that never measured the
+ * point keeps its place in the list and reports the point as missing.
+ */
+export interface BenchmarkPointSelection {
+  point_tokens?: number;
+  point_concurrency?: number;
+  point_only?: boolean;
+}
+export type BenchmarkFilters = Partial<Record<TextFilterKey, string>> & Partial<Record<`${RangeFilterKey}_${"min" | "max"}`, number>> & BenchmarkPointSelection & { sort?: BenchmarkSort };
 export interface BenchmarkOptions { options: Array<{ value: string; count: number }>; has_more: boolean }
 export class DiscoveryQueryError extends Error {}
 export function parseFilters(search: URLSearchParams): BenchmarkFilters {
@@ -66,18 +86,56 @@ export function parseFilters(search: URLSearchParams): BenchmarkFilters {
     }
     if (out[`${key}_min`] !== undefined && out[`${key}_max`] !== undefined && out[`${key}_min`]! > out[`${key}_max`]!) throw new DiscoveryQueryError(`${key} minimum must not exceed maximum.`);
   }
+  Object.assign(out, parseBasisPoint(search));
   const sort = search.get("sort");
   if (sort && !SORT_VALUES.includes(sort as BenchmarkSort)) throw new DiscoveryQueryError("Invalid sort.");
   if (sort && sort !== "newest") out.sort = sort as BenchmarkSort;
+  if (out.sort && POINT_SORT_METRICS[out.sort] && out.point_tokens === undefined) {
+    throw new DiscoveryQueryError("This sort reads one operating point; give point_tokens and point_concurrency.");
+  }
+  return out;
+}
+/**
+ * The named operating point. Both halves name one point together, so one
+ * without the other is rejected rather than silently read as "any concurrency",
+ * which would rank a single-stream result against a batched one.
+ */
+function parseBasisPoint(search: URLSearchParams): BenchmarkPointSelection {
+  const out: BenchmarkPointSelection = {};
+  for (const name of ["point_tokens", "point_concurrency"] as const) {
+    const raw = search.get(name);
+    if (raw === null || raw === "") continue;
+    const value = Number(raw);
+    if (!/^\d+$/.test(raw) || !Number.isSafeInteger(value) || value < 1) throw new DiscoveryQueryError(`${name} must be a whole number of at least 1.`);
+    out[name] = value;
+  }
+  if ((out.point_tokens === undefined) !== (out.point_concurrency === undefined)) {
+    throw new DiscoveryQueryError("point_tokens and point_concurrency name one point together.");
+  }
+  const only = search.get("point_only");
+  if (only !== null && only !== "" && only !== "0" && only !== "1") throw new DiscoveryQueryError("point_only must be 0 or 1.");
+  if (only === "1") {
+    if (out.point_tokens === undefined) throw new DiscoveryQueryError("point_only requires point_tokens and point_concurrency.");
+    out.point_only = true;
+  }
   return out;
 }
 export function parseOptionsQuery(search: URLSearchParams): { field: OptionField; query: string; filters: BenchmarkFilters } {
   const field = search.get("field") as OptionField;
-  if (!TEXT_FILTER_KEYS.includes(field) || (field as string) === "q") throw new DiscoveryQueryError("Invalid option field.");
+  if (field !== POINT_OPTION_FIELD && (!TEXT_FILTER_KEYS.includes(field as TextFilterKey) || (field as string) === "q")) throw new DiscoveryQueryError("Invalid option field.");
   const query = search.get("option_query")?.trim() ?? "";
   if (query.length > 120) throw new DiscoveryQueryError("option_query must be at most 120 characters.");
   const filters = parseFilters(search);
-  delete filters[field];
+  // The field being edited is excluded from its own constraints, so the point
+  // suggestions list every point the other filters still allow rather than only
+  // the one already selected.
+  if (field === POINT_OPTION_FIELD) {
+    delete filters.point_tokens;
+    delete filters.point_concurrency;
+    delete filters.point_only;
+  } else {
+    delete filters[field];
+  }
   return { field, query, filters };
 }
 export function selectedExecutionGpus(b: PublicBenchmarkSubmission) {
@@ -118,16 +176,27 @@ export function textValues(summary: BenchmarkSummary, field: TextFilterKey): str
 export function numericValue(summary: BenchmarkSummary, field: RangeFilterKey): number | null {
   return summary.setup?.[field === "context" ? "prompt_length" : field === "vram" ? "vram_mb" : field] ?? null;
 }
+/** The selected point on this result, or null when it never measured that point. */
+export function selectedPoint(summary: BenchmarkSummary, filters: BenchmarkFilters) {
+  if (filters.point_tokens === undefined || filters.point_concurrency === undefined) return null;
+  return findPoint(summary.points, filters.point_tokens, filters.point_concurrency);
+}
 export function matchesFilters(summary: BenchmarkSummary, filters: BenchmarkFilters): boolean {
   return TEXT_FILTER_KEYS.every(k => !filters[k] || textValues(summary, k).some(v => v.toLowerCase().includes(filters[k]!.toLowerCase()))) && RANGE_FILTER_KEYS.every(k => {
     const value = numericValue(summary, k), min = filters[`${k}_min`], max = filters[`${k}_max`];
     return (min === undefined && max === undefined) || (value !== null && (min === undefined || value >= min) && (max === undefined || value <= max));
-  });
+  }) && (!filters.point_only || selectedPoint(summary, filters) !== null);
 }
-export function sortValue(summary: BenchmarkSummary, sort: BenchmarkSort): number | null {
+/**
+ * Ordering value for the current query. The two speed sorts read the median of
+ * the selected operating point, never a mean taken across different inputs and
+ * concurrencies, and a result that did not measure that point has no value here
+ * and sorts last with the rest of the missing metadata.
+ */
+export function sortValue(summary: BenchmarkSummary, filters: BenchmarkFilters): number | null {
+  const sort = filters.sort ?? "newest";
   if (sort.startsWith("context_")) return summary.setup?.prompt_length ?? null;
   if (sort.startsWith("vram_")) return summary.setup?.vram_mb ?? null;
-  if (sort === "throughput_desc") return summary.mean_tg_tps;
-  if (sort === "duration_asc") return summary.mean_e2e_ms;
-  return null;
+  const metric = POINT_SORT_METRICS[sort];
+  return metric ? pointMedian(selectedPoint(summary, filters), metric) : null;
 }

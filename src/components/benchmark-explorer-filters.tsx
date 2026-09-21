@@ -2,13 +2,15 @@
 import { type ReactNode } from "react";
 import { useI18n } from "@/i18n/client";
 import { EditableCombobox } from "./editable-combobox";
-import { EXPLORER_FILTER_LABELS, EXPLORER_FILTER_PLACEHOLDERS, EXPLORER_RANGE_HINTS, EXPLORER_RANGE_LABELS, buildExplorerOptionsPath, invalidExplorerRanges, type ExplorerFilters, type ExplorerFilterKey, type EXPLORER_TEXT_KEYS, type EXPLORER_RANGES } from "./benchmark-explorer-state";
+import { EXPLORER_BASIS_KEYS, EXPLORER_FILTER_LABELS, EXPLORER_FILTER_PLACEHOLDERS, EXPLORER_RANGE_HINTS, EXPLORER_RANGE_LABELS, buildExplorerOptionsPath, invalidExplorerRanges, type ExplorerFilters, type ExplorerFilterKey, type EXPLORER_TEXT_KEYS, type EXPLORER_RANGES } from "./benchmark-explorer-state";
 type TextKey = typeof EXPLORER_TEXT_KEYS[number];
 type Range = typeof EXPLORER_RANGES[number];
+/** Chosen beside the results, carried here so a submit cannot drop them. */
+const CARRIED_KEYS = [...EXPLORER_BASIS_KEYS, "point_only"] as const;
 export function BenchmarkExplorerFilters({ draft, onChange, actions, pending }: { draft: ExplorerFilters; onChange: (key: ExplorerFilterKey, value: string) => void; actions?: ReactNode; pending?: boolean }): React.JSX.Element {
   const { t } = useI18n();
   const invalid = invalidExplorerRanges(draft);
-  const advancedCount = Object.entries(draft).filter(([key, value]) => !["q", "vendor", "gpu", "sort"].includes(key) && value !== "").length;
+  const advancedCount = Object.entries(draft).filter(([key, value]) => !["q", "vendor", "gpu", "sort", ...CARRIED_KEYS].includes(key) && value !== "").length;
   const textField = (key: TextKey) => <EditableCombobox key={key} name={key} label={t(`benchmark.${EXPLORER_FILTER_LABELS[key]}`)} value={draft[key]}
     placeholder={t(key === "vendor" ? "benchmark.All vendors" : key === "gpu" ? "benchmark.All GPUs" : `benchmark.${EXPLORER_FILTER_PLACEHOLDERS[key as keyof typeof EXPLORER_FILTER_PLACEHOLDERS] ?? "Type any value"}`)}
     optionsUrl={buildExplorerOptionsPath(key, draft[key], draft)} onChange={value => onChange(key, value)}
@@ -47,6 +49,10 @@ export function BenchmarkExplorerFilters({ draft, onChange, actions, pending }: 
       </div>
       <div className="explorer-advanced-actions">{actions}</div>
     </details>
+    {/* The basis point and its narrowing are chosen beside the results, but they
+        belong to this view, so they ride along with a submit instead of being
+        dropped from the address the moment a filter is applied. */}
+    {CARRIED_KEYS.map(key => <input type="hidden" key={key} name={key} value={draft[key]} />)}
     {/* Last in the panel: an appearing or wrapping status line can no longer move the disclosure trigger above it. */}
     <div className="explorer-draft-status" role="status">{pending ? t("benchmark.Changes not applied. Apply filters to update results.") : null}</div>
     {invalid.length ? <p className="explorer-validation" role="alert">{t("benchmark.Check numeric ranges before applying filters.")} {invalid.map(range => t(`benchmark.${EXPLORER_RANGE_LABELS[range as Range]}`)).join(", ")}</p> : null}

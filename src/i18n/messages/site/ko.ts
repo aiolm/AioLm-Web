@@ -1,7 +1,7 @@
 import type { EnglishMessages } from './en';
 const messages = {
   "site.title": "AioLM — 로컬 모델을 하나의 작업 공간에서.",
-  "site.description": "AioLM은 llama.cpp용 데스크톱 작업 공간입니다. GGUF 모델을 탐색하고 런타임을 관리하며 로컬에서 대화하고 성능을 측정하세요. 사용자가 공유한 벤치마크와 전체 실행 환경을 살펴보세요.",
+  "site.description": "AioLM(All-in-One LM)은 llama.cpp용 데스크톱 작업 공간입니다. GGUF 모델을 탐색하고 런타임을 관리하며 로컬에서 대화하고 성능을 측정하세요. 사용자가 공유한 벤치마크와 전체 실행 환경을 살펴보세요.",
   "site.skip": "본문으로 건너뛰기",
   "site.primary": "주 탐색",
   "site.home": "홈",

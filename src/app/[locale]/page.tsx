@@ -26,6 +26,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return publicMetadata(locale, '/', t('site.title'), t('site.description'));
 }
 
+/**
+ * What the product name stands for. It is the same in every language, so it is
+ * a constant rather than a translated string, and it is published as the
+ * schema.org alternateName so an answer engine can tie the two names together.
+ */
+const PRODUCT_NAME_EXPANDED = 'All-in-One LM';
+
 const STEPS = [
   {
     title: "home.choose",
@@ -57,8 +64,8 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   return (
     <>
       <JsonLd data={{ '@context': 'https://schema.org', '@graph': [
-        { '@type': 'WebSite', '@id': `${getServiceOrigin()}/#website`, name: 'AioLM', url: getServiceOrigin(), inLanguage: ['en', 'ko', 'ja', 'zh'] },
-        { '@type': 'SoftwareApplication', '@id': `${getServiceOrigin()}/#application`, name: 'AioLM', url, description: t('home.faqWhatAnswer'), applicationCategory: 'DeveloperApplication', operatingSystem: 'Windows', sameAs: GITHUB_REPOSITORY_URL },
+        { '@type': 'WebSite', '@id': `${getServiceOrigin()}/#website`, name: 'AioLM', alternateName: PRODUCT_NAME_EXPANDED, url: getServiceOrigin(), inLanguage: ['en', 'ko', 'ja', 'zh'] },
+        { '@type': 'SoftwareApplication', '@id': `${getServiceOrigin()}/#application`, name: 'AioLM', alternateName: PRODUCT_NAME_EXPANDED, url, description: t('home.faqWhatAnswer'), applicationCategory: 'DeveloperApplication', operatingSystem: 'Windows', sameAs: GITHUB_REPOSITORY_URL },
         { '@type': 'FAQPage', '@id': `${url}#faq`, inLanguage: locale, mainEntity: faq.map(item => ({ '@type': 'Question', name: item.question, acceptedAnswer: { '@type': 'Answer', text: item.answer } })) },
       ] }} />
       <section className="hero" aria-labelledby="hero-title">

@@ -1,7 +1,9 @@
 # AioLM Website
 
-Product introduction and anonymous public benchmark explorer. Next.js App Router + PostgreSQL
-(Supabase-compatible) + Cloudflare Turnstile. No accounts in v1.
+Website for AioLM — All-in-One LM — the desktop workspace for local language
+models. Product introduction and anonymous public benchmark explorer. Next.js
+App Router + PostgreSQL (Supabase-compatible) + Cloudflare Turnstile. No
+accounts in v1.
 
 - Production site: [aiolm.vercel.app](https://aiolm.vercel.app).
 - Desktop app repository: [aiolm/AioLM](https://github.com/aiolm/AioLM).
@@ -13,7 +15,7 @@ Product introduction and anonymous public benchmark explorer. Next.js App Router
 - Owners: manage via recovery code (`/manage`): result-scoped 30-minute session,
   description edits with `expected_revision`, deletion (tombstone).
 - API: the wire contract is the OpenAPI document shipped by
-  `@aiolm/benchmark-contracts` 0.3.0
+  `@aiolm/benchmark-contracts` 0.5.1
   (`node_modules/@aiolm/benchmark-contracts/schema/openapi.json`). Routes:
   `POST /v1/upload-sessions`, `POST .../verify`, `GET ...`, `POST /v1/benchmark-runs`,
   `GET /v1/benchmark-runs`, `GET /v1/benchmark-runs/<id>`, `GET .../measurements`,
@@ -37,12 +39,17 @@ APIs remain at `/v1/**`. See [language routing and catalogs](docs/internationali
 - `/`: product introduction to the AioLM desktop workspace, with links to the
   GitHub repository, documentation, and benchmark explorer.
 - `/benchmarks`: top search with editable suggestions, grouped hardware, OS,
-  runtime, and execution filters, numeric ranges, and selectable sort order.
-  Filters and sorting remain in the URL. Select up to three results for a
+  runtime, and execution filters, numeric ranges, a basis operating point, and
+  selectable sort order. Filters, basis point and sorting remain in the URL.
+  Every speed is read at one operating point - one input length at one
+  concurrency - so a column compares like for like; the two speed orders rank at
+  the basis point and require one. Select up to three results for a
   summary comparison; differing methods or workloads carry a comparability notice.
   Sorting self-reported measurements does not make different setups comparable.
-- `/benchmarks/[id]`: grouped model, runtime, hardware, workload, execution, and
-  measurement context. Measurement rows load on demand and paginate separately.
+- `/benchmarks/[id]`: the operating points the result measured, with one chosen
+  for the headline metrics, plus grouped model, runtime, hardware, workload,
+  execution, and measurement context. Measurement rows load on demand and
+  paginate separately.
 - `/manage`: recovery-code management for an owner's published result.
 - `/verify/[sessionId]`: verification of an upload session from the desktop app.
 
@@ -88,8 +95,8 @@ See `docs/deployment.md` and `docs/operations.md`.
 ## Contracts
 
 Validation, recovery encoding, and the schema/OpenAPI surface come from
-`@aiolm/benchmark-contracts` 0.3.0, installed from the vendored archive
-`vendor/aiolm-benchmark-contracts-0.3.0.tgz` and integrity-pinned in
+`@aiolm/benchmark-contracts` 0.5.1, installed from the vendored archive
+`vendor/aiolm-benchmark-contracts-0.5.1.tgz` and integrity-pinned in
 `package-lock.json`. The website re-exports that package rather than keeping a
 second copy of the rules, and never imports app sources at runtime. Details and
 the upgrade procedure in `docs/contracts-integration.md`.

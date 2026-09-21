@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { EmptyState, ErrorState, Loading, useJsonFetch } from "./ui";
+import { BenchmarkBasisPoint } from "./benchmark-basis-point";
 import { BenchmarkExplorerComparison } from "./benchmark-explorer-comparison";
 import { BenchmarkExplorerFilters } from "./benchmark-explorer-filters";
 import { BenchmarkExplorerTable } from "./benchmark-explorer-table";
@@ -14,8 +15,11 @@ import {
   EXPLORER_HISTORY_LIMIT,
   EXPLORER_PAGE_PATH,
   activeExplorerFilters,
+  basisPointOf,
   invalidExplorerRanges,
+  isPointSort,
   EXPLORER_SORTS,
+  buildExplorerPointOptionsPath,
   buildExplorerRequestPath,
   buildExplorerSearch,
   canAddToComparison,
@@ -139,6 +143,8 @@ export function BenchmarkBrowser(): React.JSX.Element {
   }, [data?.next_cursor, dispatch]);
 
   const items = data?.items ?? [];
+  const basis = basisPointOf(state.applied);
+  const basisValue = basis ? `${basis.prompt_tokens}/${basis.concurrency}` : "";
   const active = activeExplorerFilters(state.applied);
   const filtered = hasActiveExplorerFilters(state.applied);
   const clearable = filtered || hasActiveExplorerFilters(state.draft);
@@ -179,9 +185,17 @@ export function BenchmarkBrowser(): React.JSX.Element {
               </p>
             </div>
             <div className="explorer-result-actions">
+              <BenchmarkBasisPoint
+                value={basisValue}
+                only={state.applied.point_only === "1"}
+                optionsPath={ready ? buildExplorerPointOptionsPath(state.applied) : ""}
+                onSelect={(value) => dispatch({ type: "basisPoint", value })}
+                onOnlyChange={(value) => dispatch({ type: "pointOnly", value })}
+              />
               <div className="explorer-field explorer-sort"><label className="explorer-field-label" htmlFor="explorer-sort">{t("benchmark.Sort")}</label>
                 <select id="explorer-sort" form="explorer-filter-form" name="sort" className="explorer-field-input" value={state.applied.sort || "newest"} onChange={event => dispatch({ type: "sort", value: event.target.value })}>
-                  {Object.entries(EXPLORER_SORTS).map(([value, label]) => <option value={value} key={value}>{t(`benchmark.${label}`)}</option>)}
+                  {/* Ranking measured speed needs a point to rank at, so those orders wait for one. */}
+                  {Object.entries(EXPLORER_SORTS).map(([value, label]) => <option value={value} key={value} disabled={isPointSort(value) && basis === null}>{t(`benchmark.${label}`)}</option>)}
                 </select>
               </div>
               <button type="button" className="explorer-button explorer-refresh" onClick={reload}>{t("benchmark.Refresh")}</button>
@@ -227,6 +241,7 @@ export function BenchmarkBrowser(): React.JSX.Element {
               <BenchmarkExplorerTable
                 items={items}
                 compare={state.compare}
+                basis={basis}
                 onToggleComparison={(item) => dispatch({ type: "toggleComparison", item })}
               />
               {comparisonFull ? (
@@ -240,6 +255,7 @@ export function BenchmarkBrowser(): React.JSX.Element {
 
           <BenchmarkExplorerComparison
             items={state.compare}
+            basis={basis}
             onRemove={(item) => dispatch({ type: "toggleComparison", item })}
             onClear={() => dispatch({ type: "clearComparison" })}
           />
@@ -266,8 +282,9 @@ export function BenchmarkBrowser(): React.JSX.Element {
       <section className="explorer-guide" aria-labelledby="explorer-guide-title">
         <h2 id="explorer-guide-title" className="explorer-guide-title">{t("benchmark.Compare like for like")}</h2>
         <p className="explorer-guide-text">{t("benchmark.Match the model fingerprint, hardware, workload and measurement method before reading anything into a difference. Results published with a different method or workload measured different work.")}</p>
-        <p className="explorer-guide-text">{t("benchmark.Generation (tok/s) is the mean generation throughput in tokens per second, so higher is faster. Duration (s) is the mean end-to-end time of a measurement in seconds, so lower is faster. The two answer different questions and do not convert into each other.")}</p>
-        <p className="explorer-guide-text">{t("benchmark.Prompt processing (tok/s) is the mean input throughput: how fast a result consumed its prompt. Input context lists the input lengths a result was configured with, and the input length filter and its sorts read the largest of them. The total context the server allocated is a different number and appears on the result page.")}</p>
+        <p className="explorer-guide-text">{t("benchmark.Every speed here is read at one operating point: one input length at one concurrency. Decode (tok/s) is the generation rate, so higher is faster, and Duration (s) is the end-to-end time of one measurement, so lower is faster. The two answer different questions and do not convert into each other.")}</p>
+        <p className="explorer-guide-text">{t("benchmark.Prefill (tok/s) is how fast a result consumed its prompt at that point. Each value is the median of that point's repetitions, with the range they covered beside it. Speeds are never averaged across different input lengths or concurrencies, because such an average describes no configuration that ran.")}</p>
+        <p className="explorer-guide-text">{t("benchmark.Choose a basis point to read every result at the same input length and concurrency; that is also what the two speed orders rank at. Input context lists the input lengths a result was configured with, and the input length filter and its sorts read the largest of them. The total context the server allocated is a different number and appears on the result page.")}</p>
         <p className="explorer-guide-text">{t("benchmark.A missing measurement is shown as an em dash (—), never as a zero. Sorting does not make different setups directly comparable.")}</p>
       </section>
     </div>

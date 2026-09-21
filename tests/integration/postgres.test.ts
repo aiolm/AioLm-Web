@@ -267,8 +267,17 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
         ["c", 10, "2026-01-02"], ["d", 20, "2026-01-01"], ["e", null, "2026-01-03"],
         ["f", null, "2026-01-03"],
       ] as const) {
+        // The two speed sorts read the basis point, so the value under test
+        // lives on the point. "e" measured the point but reported no value and
+        // "f" never measured it; both are missing for those sorts and sort last,
+        // which the retained means below deliberately do not decide.
+        const stat = value === null ? null : { median: value, min: value, max: value };
         await seed(`discovery-sort-${id}`, "discovery-sort", {
           setup: { ...setup, prompt_length: value, vram_mb: value }, mean_tg_tps: value, mean_e2e_ms: value,
+          points: id === "f" ? [] : [{
+            prompt_tokens: 512, concurrency: 1, generation_length: 128, samples: 1,
+            pp_tps: null, tg_tps: stat, ttft_ms: null, e2e_ms: stat,
+          }],
         }, { created: `${created}T00:00:00.000Z` });
       }
       await seed("discovery-model-described", "discovery-model", { model_info: modelInfo() });
@@ -385,8 +394,12 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     ])("pages %s across value, timestamp, ID and null ties without gaps", async (sort, order) => {
       const ids: string[] = [];
       let cursor: string | null = null;
+      // Ranking measured speed names the point it ranks at; the other orders read
+      // configuration and need none.
+      const basis: Record<string, string> = ["throughput_desc", "duration_asc"].includes(sort)
+        ? { point_tokens: "512", point_concurrency: "1" } : {};
       for (let i = 0; i < 8; i++) {
-        const result = await page({ model: "discovery-sort", sort, limit: "1", ...(cursor ? { cursor } : {}) });
+        const result = await page({ model: "discovery-sort", sort, limit: "1", ...basis, ...(cursor ? { cursor } : {}) });
         ids.push(...result.items.map((item) => item.public_id));
         cursor = result.next_cursor;
         if (!cursor) break;
@@ -624,6 +637,123 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     }
   });
 
+  it("backfills operating points from retained chunks with the same arithmetic the helper uses", async () => {
+    if (!admin) throw new Error("integration database unavailable");
+    const MIGRATION = "012_operating_points.sql";
+    const scratchName = `aiolm_web_points_${randomUUID().replace(/-/g, "")}`;
+    await admin.unsafe(`CREATE DATABASE "${scratchName}"`);
+    const scratchUrl = new URL(ADMIN_URL!);
+    scratchUrl.pathname = `/${scratchName}`;
+    const scratch = postgres(scratchUrl.toString(), { max: 1, prepare: false, ssl: false });
+    try {
+      await scratch`create schema bench`;
+      await scratch`create table bench.schema_migrations (filename text primary key, sha256 text not null)`;
+      for (const name of REQUIRED_MIGRATIONS.filter((name) => name < MIGRATION)) {
+        await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", name), "utf8"));
+      }
+
+      const base = syntheticSubmission();
+      const row = (overrides: Partial<(typeof base)["measurements"]["rows"][number]>) =>
+        ({ ...base.measurements.rows[0]!, ...overrides });
+      // A real grid: two input lengths against two concurrencies, repeated, with
+      // an even repetition count so the interpolated median is exercised, plus
+      // the rows both implementations have to skip in the same way.
+      const gridded = syntheticSubmission({
+        measurements: { status: "complete", rows: [
+          row({ prompt_tokens: 512, concurrency: 1, tg_tps: 0.1, e2e_ms: 1000, ttft_ms: 40 }),
+          row({ prompt_tokens: 512, concurrency: 1, tg_tps: 0.3, e2e_ms: 1200, ttft_ms: 60 }),
+          row({ prompt_tokens: 512, concurrency: 4, tg_tps: 61.5, pp_tps: null }),
+          row({ prompt_tokens: 4096, concurrency: 1, tg_tps: 45.25, e2e_ms: 8000 }),
+          row({ prompt_tokens: 4096, concurrency: 1, tg_tps: 44.75, e2e_ms: 8400 }),
+          row({ prompt_tokens: 4096, concurrency: 1, tg_tps: 12, e2e_ms: 30000 }),
+          row({ prompt_tokens: 4096, concurrency: 1, tg_tps: 9999, e2e_ms: 1, failed: true }),
+          row({ prompt_tokens: 1.5, tg_tps: 9999 }),
+          row({ concurrency: 0, tg_tps: 9999 }),
+        ] },
+      });
+      const unmeasured = syntheticSubmission({ measurements: { status: "complete", rows: [] } });
+      const metaOf = (b: typeof base) => JSON.parse(JSON.stringify({ ...b, measurements: { ...b.measurements, rows: [] } }));
+      // What a pre-012 row looks like: an operator-curated label and no points.
+      const curated = (b: typeof base, label: string) => {
+        const { points, points_truncated, ...rest } = summarizeBenchmark(b);
+        void points; void points_truncated;
+        return { ...rest, model_label: label };
+      };
+
+      const submissionIds = new Map<string, string>();
+      for (const [publicId, benchmark, label] of [
+        ["gridded", gridded, "Curated Model A"], ["unmeasured", unmeasured, "Curated Model B"],
+      ] as const) {
+        const submissionId = randomUUID();
+        submissionIds.set(publicId, submissionId);
+        await scratch`insert into bench.benchmark_runs
+          (submission_id, public_id, owner_hash, body_sha256, benchmark, summary, hidden, row_count, byte_size)
+          values (${submissionId}, ${publicId}, ${"0".repeat(64)}, ${"1".repeat(64)},
+            ${scratch.json(metaOf(benchmark) as postgres.JSONValue)},
+            ${scratch.json(JSON.parse(JSON.stringify(curated(benchmark, label))) as postgres.JSONValue)},
+            ${publicId === "gridded"}, ${benchmark.measurements.rows.length}, ${4096})`;
+        // Split across chunks: a point's repetitions must aggregate across them.
+        const chunked = benchmark.measurements.rows;
+        for (const [index, slice] of [chunked.slice(0, 4), chunked.slice(4)].entries()) {
+          if (slice.length === 0) continue;
+          await scratch`insert into bench.benchmark_chunks (submission_id, chunk_index, rows) values (${submissionId}, ${index},
+            ${scratch.json(JSON.parse(JSON.stringify(slice)) as postgres.JSONValue)})`;
+        }
+      }
+      await scratch`insert into bench.benchmark_runs
+        (submission_id, public_id, owner_hash, body_sha256, benchmark, summary, deleted)
+        values (${randomUUID()}, 'tombstone', ${"2".repeat(64)}, ${"3".repeat(64)}, null, null, true)`;
+
+      await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", MIGRATION), "utf8"));
+
+      type Stored = { public_id: string; summary: ReturnType<typeof summarizeBenchmark> | null; benchmark: unknown;
+        owner_hash: string; body_sha256: string; row_count: number; byte_size: number };
+      const stored = new Map((await scratch<Stored[]>`
+        select public_id, summary, benchmark, owner_hash, body_sha256, row_count, byte_size
+        from bench.benchmark_runs`).map((r) => [r.public_id, r]));
+
+      // The hidden run is enriched too, and the curated label survives the merge.
+      // Equality here is the whole point: percentile_cont(0.5) and the helper's
+      // interpolation produce the same doubles for the same rows.
+      expect(stored.get("gridded")!.summary).toEqual({ ...summarizeBenchmark(gridded), model_label: "Curated Model A" });
+      const points = stored.get("gridded")!.summary!.points!;
+      expect(points.map((point) => [point.prompt_tokens, point.concurrency, point.samples]))
+        .toEqual([[512, 1, 2], [512, 4, 1], [4096, 1, 3]]);
+      // Two repetitions interpolate; 0.1 + (0.3 - 0.1) * 0.5 is not (0.1 + 0.3) / 2.
+      expect(points[0]!.tg_tps).toEqual({ median: 0.1 + (0.3 - 0.1) * 0.5, min: 0.1, max: 0.3 });
+      expect(points[0]!.e2e_ms).toEqual({ median: 1100, min: 1000, max: 1200 });
+      // A metric no row of the point reported stays unknown; the others still aggregate.
+      expect(points[1]!.pp_tps).toBeNull();
+      expect(points[1]!.tg_tps!.median).toBe(61.5);
+      // The failed row is skipped, so one cold repetition does not join the point.
+      expect(points[2]!.samples).toBe(3);
+      expect(points[2]!.tg_tps).toEqual({ median: 44.75, min: 12, max: 45.25 });
+      expect(stored.get("gridded")!.summary!.points_truncated).toBe(false);
+      // The retained mixed means are stored data and are left exactly as they were.
+      expect(stored.get("gridded")!.summary!.mean_tg_tps).toBe(summarizeBenchmark(gridded).mean_tg_tps);
+
+      // A run whose rows named no point reads as "measured no point", not as pre-012.
+      expect(stored.get("unmeasured")!.summary).toEqual({ ...summarizeBenchmark(unmeasured), model_label: "Curated Model B" });
+      expect(stored.get("unmeasured")!.summary!.points).toEqual([]);
+      expect(stored.get("unmeasured")!.summary!.points_truncated).toBe(false);
+
+      // Raw metadata, chunks, hashes, capacity counters and the tombstone are left as they were.
+      expect(stored.get("gridded")!.benchmark).toEqual(metaOf(gridded));
+      expect(stored.get("gridded")!.owner_hash).toBe("0".repeat(64));
+      expect(stored.get("gridded")!.body_sha256).toBe("1".repeat(64));
+      expect(stored.get("gridded")!.row_count).toBe(9);
+      expect(stored.get("gridded")!.byte_size).toBe(4096);
+      expect(stored.get("tombstone")!.summary).toBeNull();
+      expect(stored.get("tombstone")!.benchmark).toBeNull();
+      const chunks = await scratch<Array<{ rows: unknown[] }>>`
+        select rows from bench.benchmark_chunks where submission_id = ${submissionIds.get("gridded")!} order by chunk_index`;
+      expect(chunks.flatMap((c) => c.rows)).toEqual(JSON.parse(JSON.stringify(gridded.measurements.rows)));
+    } finally {
+      await scratch.end({ timeout: 5 });
+      await admin.unsafe(`DROP DATABASE "${scratchName}"`);
+    }
+  });
+
   it("enriches summaries that recorded model metadata and leaves every other run exactly as it was", async () => {
     if (!admin) throw new Error("integration database unavailable");
     const MIGRATION = "010_model_metadata.sql";
@@ -815,7 +945,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       "001_init.sql", "002_roles.sql", "003_least_privilege.sql",
       "004_filter_indexes.sql", "005_retention_grants.sql", "006_trgm_filter_indexes.sql",
       "007_readiness_grant.sql", "008_benchmark_discovery.sql", "009_input_context.sql",
-      "010_model_metadata.sql", "011_system_memory.sql",
+      "010_model_metadata.sql", "011_system_memory.sql", "012_operating_points.sql",
     ]);
   });
 

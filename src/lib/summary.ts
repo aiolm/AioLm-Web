@@ -1,5 +1,7 @@
 import { normalizePromptLengths, normalizeSetup, selectedExecutionGpus, type BenchmarkSetup } from "./benchmark-discovery";
 export { parseFilters, type BenchmarkFilters } from "./benchmark-discovery";
+import { summarizePoints, type BenchmarkPoint } from "./benchmark-points";
+export { type BenchmarkPoint } from "./benchmark-points";
 import { modelLabelFor, normalizeModelInfo, type BenchmarkModelInfo } from "./model-info";
 export { normalizeModelInfo, type BenchmarkModelInfo } from "./model-info";
 import type { PublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
@@ -25,6 +27,16 @@ export interface BenchmarkSummary {
   /** Prefill throughput mean over the rows that measured it. Absent on summaries stored before migration 009. */
   mean_pp_tps?: number | null;
   /**
+   * Per-operating-point aggregates, ascending by input length then concurrency.
+   * This is what the pages read: the three mean_* fields above average across
+   * input lengths and concurrencies at once, which describes no configuration
+   * that ran, so they are kept for stored results but are no longer displayed
+   * or sorted on. Absent on summaries stored before migration 012.
+   */
+  points?: BenchmarkPoint[];
+  /** True when the run measured more points than POINT_LIMIT and the stored list was cut. */
+  points_truncated?: boolean;
+  /**
    * Model metadata exactly as submitted. Absent on summaries stored before
    * migration 010 and null when the submission described no model, so a reader
    * can tell "never recorded" from a described model with unknown fields.
@@ -45,6 +57,9 @@ export function summarizeBenchmark(benchmark: PublicBenchmarkSubmission): Benchm
   // and averaging it in would understate every result that recovered around it.
   const pp = rows.filter((r) => !r.failed).map((r) => r.pp_tps).filter((v): v is number => typeof v === "number" && Number.isFinite(v));
   const modelInfo = normalizeModelInfo(benchmark);
+  // Points read every row the run published, failed ones included, because the
+  // grouping itself decides what each row belongs to and drops the failures.
+  const measured = summarizePoints(benchmark.measurements.rows);
   const gpus = selectedExecutionGpus(benchmark);
   const hardwareLabel =
     gpus.length > 0
@@ -64,6 +79,8 @@ export function summarizeBenchmark(benchmark: PublicBenchmarkSubmission): Benchm
     mean_e2e_ms: mean(e2e),
     prompt_lengths: normalizePromptLengths(benchmark.workload.prompt_lengths),
     mean_pp_tps: mean(pp),
+    points: measured.points,
+    points_truncated: measured.truncated,
     model_info: modelInfo,
   };
 }

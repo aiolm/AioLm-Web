@@ -155,7 +155,7 @@ describe("configured input context", () => {
     const summary = summarizeBenchmark(b);
     expect(summary.prompt_lengths).toEqual([]);
     expect(summary.setup!.prompt_length).toBeNull();
-    expect(sortValue(summary, "context_asc")).toBeNull();
+    expect(sortValue(summary, { sort: "context_asc" })).toBeNull();
     for (const filters of [{ context_min: 0 }, { context_max: 8704 }, { context_min: 8704, context_max: 8704 }]) {
       expect(matchesFilters(summary, filters)).toBe(false);
     }
@@ -167,7 +167,7 @@ describe("configured input context", () => {
     b.execution.context_size = 16896;
     const summary = summarizeBenchmark(b);
     expect(numericValue(summary, "context")).toBe(4096);
-    expect(sortValue(summary, "context_desc")).toBe(4096);
+    expect(sortValue(summary, { sort: "context_desc" })).toBe(4096);
     expect(matchesFilters(summary, { context_min: 4096, context_max: 4096 })).toBe(true);
     expect(matchesFilters(summary, { context_min: 8192 })).toBe(false);
     expect(matchesFilters(summary, { context_min: 16896, context_max: 16896 })).toBe(false);

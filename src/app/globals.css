@@ -1952,7 +1952,9 @@ html { scroll-padding-block-start: 88px; }
 }
 .detail-performance-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* One card per metric of the selected operating point; the count follows the
+     metrics, so the track is sized rather than counted. */
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 12px;
   margin-block: 16px;
 }
@@ -1977,6 +1979,68 @@ html { scroll-padding-block-start: 88px; }
   font-weight: 450;
   color: var(--ui-muted);
 }
+/* The range a median came from, and how many repetitions it came from. */
+.detail-metric-spread {
+  font-size: .72rem;
+  color: var(--ui-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Operating points: picking one, and the table of all of them. */
+.detail-point-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin-block-start: 12px;
+}
+.detail-chip-set { border: 0; margin: 0; padding: 0; min-width: 0; }
+.detail-chip-legend {
+  padding: 0;
+  font-size: .75rem;
+  font-weight: 650;
+  color: var(--ui-muted);
+}
+.detail-chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-block-start: 4px; }
+.detail-chip {
+  min-height: 30px;
+  padding: 3px 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: 999px;
+  background: var(--ui-panel-raised);
+  color: var(--ui-ink);
+  font-size: .82rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.detail-chip-on {
+  border-color: var(--ui-accent, var(--ui-ink));
+  background: var(--ui-accent-soft, var(--ui-panel));
+  font-weight: 650;
+}
+.detail-point-reading { font-size: .8rem; margin-block: 10px 0; }
+.detail-points-table { width: 100%; }
+.detail-points-caption { text-align: start; }
+.detail-point-value { display: block; font-variant-numeric: tabular-nums; }
+.detail-point-spread {
+  display: block;
+  font-size: .72rem;
+  color: var(--ui-muted);
+  font-variant-numeric: tabular-nums;
+}
+.detail-point-row-on { background: var(--ui-panel-raised); }
+.detail-point-pick { text-align: start; }
+.detail-point-select {
+  padding: 2px 6px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.detail-points-truncated, .detail-points-empty { font-size: .8rem; }
 .detail-context-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

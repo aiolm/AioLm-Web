@@ -7,19 +7,33 @@
  */
 
 import type { BenchmarkSetup } from "@/lib/benchmark-discovery";
+import { parsePointId, type BenchmarkPoint } from "@/lib/benchmark-points";
 import type { BenchmarkModelInfo } from "./benchmark-model-identity";
 
 export const EXPLORER_TEXT_KEYS = ["q", "model", "publisher", "quantization", "base_model", "hardware", "vendor", "gpu", "cpu", "os", "arch", "runtime", "backend", "mode", "method", "workload", "flash_attention", "cache_type_k", "cache_type_v", "split_mode"] as const;
 export const EXPLORER_RANGES = ["context", "vram", "cores", "parallel", "threads", "gpu_layers"] as const;
 export const EXPLORER_NUMERIC_KEYS = ["context_min", "context_max", "vram_min", "vram_max", "cores_min", "cores_max", "parallel_min", "parallel_max", "threads_min", "threads_max", "gpu_layers_min", "gpu_layers_max"] as const;
-export const EXPLORER_SORTS = { newest: "Newest first", oldest: "Oldest first", context_asc: "Input length: low to high", context_desc: "Input length: high to low", vram_asc: "VRAM: low to high", vram_desc: "VRAM: high to low", throughput_desc: "Generation: fastest first", duration_asc: "Duration: shortest first" } as const;
-export const EXPLORER_FILTER_KEYS = [...EXPLORER_TEXT_KEYS, ...EXPLORER_NUMERIC_KEYS, "sort"] as const;
+export const EXPLORER_SORTS = { newest: "Newest first", oldest: "Oldest first", context_asc: "Input length: low to high", context_desc: "Input length: high to low", vram_asc: "VRAM: low to high", vram_desc: "VRAM: high to low", throughput_desc: "Decode at the basis point: fastest first", duration_asc: "Duration at the basis point: shortest first" } as const;
+/**
+ * The two sorts that rank measured speed read one operating point, so they are
+ * only offered once one is chosen. Ranking on a value averaged across input
+ * lengths and concurrencies would put whoever measured the narrowest grid on top.
+ */
+export const EXPLORER_POINT_SORTS = ["throughput_desc", "duration_asc"] as const;
+/**
+ * The basis point is the reading and ranking basis, not a filter: naming it
+ * changes which number each row reports, not which rows are listed. point_only
+ * is the separate opt-in that does narrow the list, so it stays an ordinary filter.
+ */
+export const EXPLORER_BASIS_KEYS = ["point_tokens", "point_concurrency"] as const;
+export const EXPLORER_FILTER_KEYS = [...EXPLORER_TEXT_KEYS, ...EXPLORER_NUMERIC_KEYS, ...EXPLORER_BASIS_KEYS, "point_only", "sort"] as const;
 export type ExplorerFilterKey = (typeof EXPLORER_FILTER_KEYS)[number];
 export type ExplorerFilters = Record<ExplorerFilterKey, string>;
 export const EXPLORER_RANGE_LABELS = { context: "Max input length (tokens)", vram: "Selected GPU VRAM (MiB)", cores: "Logical cores", parallel: "Parallel sequences", threads: "Threads", gpu_layers: "GPU layers (-1 = all)" } as const;
 export const EXPLORER_FILTER_LABELS: Record<ExplorerFilterKey, string> = {
   q: "Search", model: "Model fingerprint", publisher: "Publisher", quantization: "Weight quantization", base_model: "Base model", hardware: "Hardware", vendor: "GPU vendor", gpu: "GPU model", cpu: "CPU", os: "Operating system", arch: "Architecture", runtime: "Runtime", backend: "Backend", mode: "Execution mode", method: "Measurement method", workload: "Workload", flash_attention: "Flash attention", cache_type_k: "Key cache type", cache_type_v: "Value cache type", split_mode: "Split mode", sort: "Sort",
   context_min: "Minimum input length", context_max: "Maximum input length", vram_min: "Minimum VRAM", vram_max: "Maximum VRAM", cores_min: "Minimum cores", cores_max: "Maximum cores", parallel_min: "Minimum parallel sequences", parallel_max: "Maximum parallel sequences", threads_min: "Minimum threads", threads_max: "Maximum threads", gpu_layers_min: "Minimum GPU layers", gpu_layers_max: "Maximum GPU layers",
+  point_tokens: "Basis input length", point_concurrency: "Basis concurrency", point_only: "Only results measured at the basis point",
 };
 /**
  * The context range and its sorts read the largest input length a result was
@@ -45,6 +59,18 @@ export function buildExplorerOptionsPath(field: string, value: string, filters: 
   params.delete("sort");
   params.set("field", field);
   params.set("option_query", value.trim().slice(0, 120));
+  return `/v1/benchmark-runs/options?${params}`;
+}
+
+/**
+ * Suggestions for the basis point: every point the other conditions still
+ * allow. The basis itself is excluded, so the list does not collapse to the
+ * point already chosen, and sorting is irrelevant to a set of suggestions.
+ */
+export function buildExplorerPointOptionsPath(filters: ExplorerFilters): string {
+  const params = new URLSearchParams(buildExplorerSearch({ filters, cursor: null }));
+  for (const key of [...EXPLORER_BASIS_KEYS, "point_only", "sort"]) params.delete(key);
+  params.set("field", "point");
   return `/v1/benchmark-runs/options?${params}`;
 }
 
@@ -77,8 +103,26 @@ export function sameExplorerFilters(a: ExplorerFilters, b: ExplorerFilters): boo
   return EXPLORER_FILTER_KEYS.every((key) => a[key] === b[key]);
 }
 
+/** The named basis point, or null when the reader has not named one. */
+export function basisPointOf(filters: ExplorerFilters): { prompt_tokens: number; concurrency: number } | null {
+  if (!filters.point_tokens || !filters.point_concurrency) return null;
+  return parsePointId(`${filters.point_tokens}/${filters.point_concurrency}`);
+}
+
+export function isPointSort(sort: string): boolean {
+  return (EXPLORER_POINT_SORTS as readonly string[]).includes(sort);
+}
+
+/**
+ * A view whose numbers are read at a basis point is not a narrowed view, so the
+ * basis alone does not count as filtering. point_only does hide results and counts.
+ */
+function narrowingKeys(): readonly ExplorerFilterKey[] {
+  return EXPLORER_FILTER_KEYS.filter((key) => !(EXPLORER_BASIS_KEYS as readonly string[]).includes(key));
+}
+
 export function hasActiveExplorerFilters(filters: ExplorerFilters): boolean {
-  return EXPLORER_FILTER_KEYS.some((key) => filters[key] !== "");
+  return narrowingKeys().some((key) => filters[key] !== "");
 }
 
 export interface ActiveExplorerFilter {
@@ -87,9 +131,14 @@ export interface ActiveExplorerFilter {
   value: string;
 }
 
-/** Applied filters rendered as removable chips, in a stable field order. */
+/**
+ * Applied filters rendered as removable chips, in a stable field order. The two
+ * halves of the basis point are left out: they name one point together, so
+ * removing one would leave half a point behind, and the control that chose it
+ * is where it is changed.
+ */
 export function activeExplorerFilters(filters: ExplorerFilters): ActiveExplorerFilter[] {
-  return EXPLORER_FILTER_KEYS.filter((key) => filters[key] !== "").map((key) => ({
+  return narrowingKeys().filter((key) => filters[key] !== "").map((key) => ({
     key,
     label: EXPLORER_FILTER_LABELS[key],
     value: filters[key],
@@ -115,13 +164,31 @@ export interface ExplorerLocation {
   cursor: string | null;
 }
 
+/**
+ * A basis point is a pair or it is nothing. A hand-edited or stale address that
+ * carries half of one, an unreadable one, or a point-ranked sort with no point
+ * to rank at, is repaired here rather than forwarded to an API that would
+ * reject the whole request and leave the page with nothing to show.
+ */
+function repairBasis(filters: ExplorerFilters): ExplorerFilters {
+  const repaired = { ...filters };
+  if (basisPointOf(repaired) === null) {
+    repaired.point_tokens = "";
+    repaired.point_concurrency = "";
+  }
+  if (!repaired.point_tokens) repaired.point_only = "";
+  if (repaired.point_only !== "1") repaired.point_only = "";
+  if (!repaired.point_tokens && isPointSort(repaired.sort)) repaired.sort = "";
+  return repaired;
+}
+
 /** Read a shared or bookmarked address back into filters and a page cursor. */
 export function parseExplorerLocation(search: string): ExplorerLocation {
   const params = new URLSearchParams(search);
   const filters: ExplorerFilters = { ...EMPTY_EXPLORER_FILTERS };
   for (const key of EXPLORER_FILTER_KEYS) filters[key] = normalizeValue(params.get(key) ?? "");
   if (!(filters.sort in EXPLORER_SORTS) || filters.sort === "newest") filters.sort = "";
-  return { filters, cursor: sanitizeExplorerCursor(params.get("cursor")) };
+  return { filters: repairBasis(filters), cursor: sanitizeExplorerCursor(params.get("cursor")) };
 }
 
 /** Canonical address for the current view: set filters only, plus the cursor of a later page. */
@@ -200,6 +267,13 @@ export interface ExplorerSummary {
   /** Input lengths the run was configured with, sorted and deduplicated. */
   prompt_lengths?: number[];
   /**
+   * What the explorer reads: one entry per operating point the run measured.
+   * The mean_* fields above mix input lengths and concurrencies together, so
+   * they are no longer displayed. Absent on results stored before migration 012.
+   */
+  points?: BenchmarkPoint[];
+  points_truncated?: boolean;
+  /**
    * Published model metadata. Absent on results stored before the metadata
    * migration and null when the publication carried none, which the explorer
    * reports as unknown rather than filling in from the curated label.
@@ -259,6 +333,8 @@ export type ExplorerAction =
   | { type: "location"; search: string; history?: string[] }
   | { type: "draft"; key: ExplorerFilterKey; value: string }
   | { type: "sort"; value: string }
+  | { type: "basisPoint"; value: string }
+  | { type: "pointOnly"; value: boolean }
   | { type: "apply" }
   | { type: "reset" }
   | { type: "removeFilter"; key: ExplorerFilterKey }
@@ -298,9 +374,35 @@ export function explorerReducer(state: ExplorerState, action: ExplorerAction): E
       return { ...state, draft: { ...state.draft, [action.key]: action.value } };
     case "sort": {
       const sort = action.value !== "newest" && Object.hasOwn(EXPLORER_SORTS, action.value) ? action.value : "";
+      // Ranking measured speed needs a point to rank at; without one the order is refused.
+      if (isPointSort(sort) && basisPointOf(state.applied) === null) return state;
       if (sort === state.applied.sort) return state;
       // Ordering applies to displayed results without submitting unfinished filters.
       return { ...state, applied: { ...state.applied, sort }, draft: { ...state.draft, sort }, cursor: null, history: [] };
+    }
+    case "basisPoint": {
+      // The basis decides which measurement every row reports, so it applies at
+      // once like sorting does, without submitting unfinished filter edits.
+      const point = parsePointId(action.value);
+      const next: ExplorerFilters = {
+        ...state.applied,
+        point_tokens: point ? String(point.prompt_tokens) : "",
+        point_concurrency: point ? String(point.concurrency) : "",
+      };
+      // Dropping the basis drops what point_only narrowed to and what the two
+      // speed sorts ranked at, rather than leaving either pointing at nothing.
+      if (!point) {
+        next.point_only = "";
+        if (isPointSort(next.sort)) next.sort = "";
+      }
+      if (sameExplorerFilters(next, state.applied)) return state;
+      return { ...state, applied: next, draft: { ...state.draft, ...next }, cursor: null, history: [] };
+    }
+    case "pointOnly": {
+      const value = action.value && state.applied.point_tokens ? "1" : "";
+      if (value === state.applied.point_only) return state;
+      const next = { ...state.applied, point_only: value };
+      return { ...state, applied: next, draft: { ...state.draft, point_only: value }, cursor: null, history: [] };
     }
     case "apply": {
       if (invalidExplorerRanges(state.draft).length) return state;

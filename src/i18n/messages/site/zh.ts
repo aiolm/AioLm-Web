@@ -1,7 +1,7 @@
 import type { EnglishMessages } from './en';
 const messages = {
   "site.title": "AioLM — 本地模型，一个工作空间。",
-  "site.description": "AioLM 是用于 llama.cpp 的桌面工作空间：探索 GGUF 模型、管理运行时、本地聊天并测量性能。查看用户自行提交的公开基准测试及其完整配置。",
+  "site.description": "AioLM（All-in-One LM）是用于 llama.cpp 的桌面工作空间：探索 GGUF 模型、管理运行时、本地聊天并测量性能。查看用户自行提交的公开基准测试及其完整配置。",
   "site.skip": "跳转到主要内容",
   "site.primary": "主导航",
   "site.home": "首页",

@@ -16,18 +16,28 @@ import {
   environmentFacts,
   extractGpuList,
   formatDuration,
+  formatMeasuredPoints,
   formatMethodName,
+  formatPointLabel,
   formatPromptLengths,
+  formatSecondsSpread,
   formatThroughput,
+  formatThroughputSpread,
   formatWorkloadName,
   type SummaryFact,
 } from "./benchmark-explorer-format";
+import { defaultPoint, findPoint, pointMedian, type BenchmarkPoint } from "@/lib/benchmark-points";
 import { formatWeightQuantization, modelPublisher, modelValue } from "./benchmark-model-identity";
 
 /**
  * Published results as one native table. Model and Environment are separated
  * so the hardware and runtime scan cleanly while publisher and weight quantization
  * stay beside the model identity.
+ *
+ * Every speed here is read at one operating point, never averaged across the
+ * input lengths and concurrencies a result happened to measure. With a basis
+ * point named, each row reports that point and the column compares like for
+ * like; without one, each row reports its own leading point and says which.
  *
  * Headings are bilingual on ko/ja/zh (local + English nowrap) and English on en.
  * Results are successful-only; failed rows and status badges are omitted.
@@ -63,23 +73,41 @@ function ExplorerCell({ label, className, children }: ExplorerCellProps): React.
   );
 }
 
+/** A measured value with the range its repetitions covered, when they covered one. */
+function MetricCell({ value, spread }: { value: string; spread: string | null }): React.JSX.Element {
+  return (
+    <>
+      <span className="explorer-metric-value">{value}</span>
+      {spread === null ? null : <span className="explorer-metric-spread">{spread}</span>}
+    </>
+  );
+}
+
 export interface BenchmarkExplorerTableProps {
   items: ExplorerItem[];
   compare: ExplorerItem[];
   onToggleComparison: (item: ExplorerItem) => void;
+  /** The point every row is read at, or null to let each row lead with its own. */
+  basis?: { prompt_tokens: number; concurrency: number } | null;
 }
 
 export function BenchmarkExplorerTable({
   items,
   compare,
   onToggleComparison,
+  basis = null,
 }: BenchmarkExplorerTableProps): React.JSX.Element {
   const { locale, t } = useI18n();
   const search = useSearchParams().toString();
   const comparisonFull = compare.length >= EXPLORER_COMPARE_LIMIT;
+  const basisLabel = basis ? formatPointLabel(basis.prompt_tokens, basis.concurrency) : null;
   return (
     <table className="explorer-table">
-      <caption className="explorer-table-caption">{t("benchmark.Published results in your selected order. Each row is a self-reported measurement of one configuration.")}</caption>
+      <caption className="explorer-table-caption">
+        {basisLabel
+          ? t("benchmark.Published results in your selected order, each read at {point}. A result that never measured that point reports it as missing.", { point: basisLabel })
+          : t("benchmark.Published results in your selected order. Each row reports its own leading operating point, which is named in the row.")}
+      </caption>
       <thead className="explorer-table-head">
         <tr className="explorer-head-row">
           <th scope="col" className="explorer-head-cell explorer-head-compare">
@@ -93,9 +121,11 @@ export function BenchmarkExplorerTable({
           </th>
           <th scope="col" className="explorer-head-cell explorer-head-numeric explorer-head-prefill">
             <BilingualHeader local={t("benchmark.Prefill")} en="Prefill" unit="tok/s" locale={locale} />
+            {basisLabel ? <span className="explorer-head-basis">{basisLabel}</span> : null}
           </th>
           <th scope="col" className="explorer-head-cell explorer-head-numeric explorer-head-decode">
             <BilingualHeader local={t("benchmark.Decode")} en="Decode" unit="tok/s" locale={locale} />
+            {basisLabel ? <span className="explorer-head-basis">{basisLabel}</span> : null}
           </th>
           <th scope="col" className="explorer-head-cell explorer-head-setup">
             <BilingualHeader local={t("benchmark.Context / workload")} en="Context / Workload" locale={locale} />
@@ -130,12 +160,30 @@ export function BenchmarkExplorerTable({
             ...envRaw,
           ];
           const contextFormatted = formatPromptLengths(summary.prompt_lengths) ?? t("benchmark.Unknown");
+          // With a basis named every row answers the same question; without one
+          // each row leads with a point it actually measured and says which.
+          const shown: BenchmarkPoint | null = basis
+            ? findPoint(summary.points, basis.prompt_tokens, basis.concurrency)
+            : defaultPoint(summary.points);
+          const measuredPoints = formatMeasuredPoints(summary.points);
+          const duration = pointMedian(shown, "e2e_ms");
           const setupFacts: SummaryFact[] = [
             { key: "context", label: t("benchmark.Input context"), value: contextFormatted },
             { key: "workload", label: t("benchmark.Workload"), value: formatWorkloadName(summary.workload_label, t) },
             { key: "method", label: t("benchmark.Method"), value: formatMethodName(summary.method_label, t) },
-            { key: "count", label: t("benchmark.Measurement count"), value: t("benchmark.{value} runs", { value: String(summary.row_count) }) },
-            ...(summary.mean_e2e_ms != null ? [{ key: "duration", label: t("benchmark.Mean latency"), value: `${formatDuration(summary.mean_e2e_ms)} s` }] : []),
+            {
+              key: "shown-point",
+              label: t("benchmark.Reading at"),
+              value: shown
+                ? t("benchmark.{point} · n={samples}", { point: formatPointLabel(shown.prompt_tokens, shown.concurrency), samples: String(shown.samples) })
+                : t("benchmark.Not measured at this point"),
+            },
+            ...(duration != null ? [{
+              key: "duration",
+              label: t("benchmark.Duration"),
+              value: `${formatDuration(duration)} s${formatSecondsSpread(shown?.e2e_ms) ? ` (${formatSecondsSpread(shown?.e2e_ms)})` : ""}`,
+            }] : []),
+            ...(measuredPoints ? [{ key: "measured-points", label: t("benchmark.Measured points"), value: measuredPoints }] : []),
           ];
           return (
             <tr key={item.public_id} className="explorer-row">
@@ -170,10 +218,10 @@ export function BenchmarkExplorerTable({
                 </div>
               </td>
               <ExplorerCell label={t("benchmark.Prefill (tok/s)")} className="explorer-cell-numeric explorer-cell-prefill">
-                {formatThroughput(summary.mean_pp_tps)}
+                <MetricCell value={formatThroughput(pointMedian(shown, "pp_tps"))} spread={formatThroughputSpread(shown?.pp_tps)} />
               </ExplorerCell>
               <ExplorerCell label={t("benchmark.Decode (tok/s)")} className="explorer-cell-numeric explorer-cell-decode">
-                {formatThroughput(summary.mean_tg_tps)}
+                <MetricCell value={formatThroughput(pointMedian(shown, "tg_tps"))} spread={formatThroughputSpread(shown?.tg_tps)} />
               </ExplorerCell>
               <ExplorerCell label={t("benchmark.Context / workload")} className="explorer-cell-setup">
                 <FactList className="explorer-setup-facts" facts={setupFacts} />
