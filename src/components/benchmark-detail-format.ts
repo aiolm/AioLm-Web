@@ -6,7 +6,7 @@ import { benchmarkFallback } from "./benchmark-i18n";
  * structured value as its JSON - never as a zero, never as "[object Object]".
  */
 
-import { EXPLORER_MISSING, formatVramGb } from "./benchmark-explorer-format";
+import { EXPLORER_MISSING, formatCompactBytes, formatVramGb } from "./benchmark-explorer-format";
 
 /** The same gap glyph the explorer uses, so a missing value reads alike on both pages. */
 export const DETAIL_MISSING = EXPLORER_MISSING;
@@ -57,28 +57,62 @@ export interface ReportedDevice {
   facts: { label: string; value: string }[];
 }
 
-/** Structured device facts keep model names and driver strings intact. */
+/** Structured device facts keep model names and driver strings intact. Identical devices aggregated with count x N. */
 export function describeGpuDetails(value: unknown, t: Translator = benchmarkFallback): ReportedDevice[] {
   if (!Array.isArray(value)) return [];
-  return value.map((entry) => {
-    const device = asRecord(entry);
+  const entries = value.map(asRecord).filter((d): d is Record<string, unknown> => d !== null);
+  const groups: { device: Record<string, unknown>; count: number }[] = [];
+  for (const entry of entries) {
+    const key = [
+      entry["name"] ?? "",
+      entry["vendor"] ?? "",
+      entry["vram_mb"] ?? "",
+      entry["driver"] ?? "",
+      entry["integrated"] ?? "",
+    ].join("|");
+    const existing = groups.find((g) => {
+      const gKey = [
+        g.device["name"] ?? "",
+        g.device["vendor"] ?? "",
+        g.device["vram_mb"] ?? "",
+        g.device["driver"] ?? "",
+        g.device["integrated"] ?? "",
+      ].join("|");
+      return gKey === key;
+    });
+    if (existing) {
+      existing.count += 1;
+    } else {
+      groups.push({ device: entry, count: 1 });
+    }
+  }
+  return groups.map(({ device, count }) => {
+    const baseName = displayText(device["name"], t);
+    const name = count > 1 ? `${baseName} x ${count}` : baseName;
     return {
-      name: device ? displayText(device["name"], t) : t("benchmark.Unknown device"),
+      name,
       facts: [
-        { label: t("benchmark.Vendor"), value: displayText(device?.["vendor"], t) },
-        { label: t("benchmark.VRAM"), value: formatVramGb(device?.["vram_mb"], t) },
-        { label: t("benchmark.Driver"), value: displayText(device?.["driver"], t) },
-        { label: t("benchmark.Integrated"), value: displayText(device?.["integrated"], t) },
+        { label: t("benchmark.Vendor"), value: displayText(device["vendor"], t) },
+        { label: t("benchmark.VRAM"), value: formatVramGb(device["vram_mb"], t) },
+        { label: t("benchmark.Driver"), value: displayText(device["driver"], t) },
+        { label: t("benchmark.Integrated"), value: displayText(device["integrated"], t) },
       ],
     };
   });
 }
 
-/** One description per device. No devices and no list at all stay different facts. */
+/** One description per distinct device type. Identical GPUs aggregated with count x N. */
 export function describeGpuList(value: unknown, t: Translator = benchmarkFallback): string | string[] {
   if (!Array.isArray(value)) return t("benchmark.Unknown");
   if (value.length === 0) return t("benchmark.None reported");
-  return value.map((gpu) => describeGpu(gpu, t));
+  const details = describeGpuDetails(value, t);
+  if (details.length === 0) return t("benchmark.Unknown device");
+  return details.map((d) => {
+    return [
+      `${t("benchmark.Name")}: ${d.name}`,
+      ...d.facts.map((f) => `${f.label}: ${f.value}`),
+    ].join(" · ");
+  });
 }
 
 /**
@@ -109,13 +143,13 @@ export function describeArguments(value: unknown, t: Translator = benchmarkFallb
 /** The native vram_mb field records binary mebibytes; preserve the reported count. */
 export function formatMegabytes(value: unknown, t: Translator = benchmarkFallback): string {
   if (typeof value !== "number" || !Number.isFinite(value)) return displayText(value, t);
-  return `${groupDigits(value)} MiB`;
+  return formatCompactBytes(value * 1024 * 1024, t);
 }
 
 /** A human-scale unit with the published number kept alongside it. */
 export function formatByteSize(value: unknown, t: Translator = benchmarkFallback): string {
   if (typeof value !== "number" || !Number.isFinite(value) || value < 0) return displayText(value, t);
-  const exact = t("benchmark.{value} bytes", { value: groupDigits(value) });
+  const exact = `${groupDigits(Math.round(value))} B`;
   const scaled = scaleBytes(value);
   return scaled === null ? exact : `${scaled} (${exact})`;
 }
@@ -156,17 +190,19 @@ export function statusTone(status: unknown): "ok" | "bad" | "" {
   return "";
 }
 
+const BINARY_SCALE_UNITS = ["KiB", "MiB", "GiB", "TiB", "PiB"] as const;
+const BINARY_SCALE_DECIMALS = [1, 1, 2, 2, 2] as const;
+
 /** Binary scale, or null when the value is small enough that bytes are the readable unit. */
 function scaleBytes(value: number): string | null {
   if (value < 1024) return null;
-  const units = ["KiB", "MiB", "GiB", "TiB", "PiB"] as const;
   let scaled = value / 1024;
   let unitIndex = 0;
-  while (scaled >= 1024 && unitIndex < units.length - 1) {
+  while (scaled >= 1024 && unitIndex < BINARY_SCALE_UNITS.length - 1) {
     scaled /= 1024;
     unitIndex += 1;
   }
-  return `${scaled.toFixed(scaled < 10 ? 2 : 1)} ${units[unitIndex]}`;
+  return `${scaled.toFixed(BINARY_SCALE_DECIMALS[unitIndex])} ${BINARY_SCALE_UNITS[unitIndex]}`;
 }
 
 function structuredText(value: unknown): string {

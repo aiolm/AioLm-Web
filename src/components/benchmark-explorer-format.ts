@@ -21,13 +21,10 @@ export function formatDuration(value: number | null | undefined): string {
   return typeof value === "number" && Number.isFinite(value) ? (value / 1000).toFixed(2) : EXPLORER_MISSING;
 }
 
-/** VRAM formatted in gigabytes (GB). */
+/** VRAM uses the same binary size scale as model and process memory. */
 export function formatVramGb(vramMb: unknown, t: Translator = benchmarkFallback): string {
   if (typeof vramMb !== "number" || !Number.isFinite(vramMb) || vramMb < 0) return t("benchmark.Unknown");
-  if (vramMb === 0) return t("benchmark.{value} GB", { value: "0" });
-  const gb = vramMb / 1024;
-  const formatted = Number.isInteger(gb) ? String(gb) : (Math.round(gb * 10) / 10).toString();
-  return t("benchmark.{value} GB", { value: formatted });
+  return formatCompactBytes(vramMb * 1024 * 1024, t);
 }
 
 /** Measurement rows behind a result, calling out failed rows so a partial run is not read as a clean one. */
@@ -88,21 +85,31 @@ export function formatThroughputSpread(stat: MetricStat | null | undefined): str
   return spread(stat, (value) => formatThroughput(value));
 }
 
+export function formatLatency(value: number | null | undefined): string {
+  return typeof value === "number" && Number.isFinite(value) ? value.toFixed(1) : EXPLORER_MISSING;
+}
+
+export function formatLatencySpread(stat: MetricStat | null | undefined): string | null {
+  return spread(stat, formatLatency);
+}
+
 export function formatSecondsSpread(stat: MetricStat | null | undefined): string | null {
   return spread(stat, (value) => formatDuration(value));
 }
 
+const BINARY_SCALE_UNITS = ["KiB", "MiB", "GiB", "TiB", "PiB"] as const;
+const BINARY_SCALE_DECIMALS = [1, 1, 2, 2, 2] as const;
+
 /** Binary scale, or null when the value is small enough that bytes are the readable unit. */
 function scaleBytes(value: number): string | null {
   if (value < 1024) return null;
-  const units = ["KiB", "MiB", "GiB", "TiB", "PiB"] as const;
   let scaled = value / 1024;
   let unitIndex = 0;
-  while (scaled >= 1024 && unitIndex < units.length - 1) {
+  while (scaled >= 1024 && unitIndex < BINARY_SCALE_UNITS.length - 1) {
     scaled /= 1024;
     unitIndex += 1;
   }
-  return `${scaled.toFixed(scaled < 10 ? 2 : 1)} ${units[unitIndex]}`;
+  return `${scaled.toFixed(BINARY_SCALE_DECIMALS[unitIndex])} ${BINARY_SCALE_UNITS[unitIndex]}`;
 }
 
 function groupDigits(value: number): string {
@@ -115,7 +122,34 @@ function groupDigits(value: number): string {
 /** The same scale without the exact byte count, for a table cell that has to stay narrow. */
 export function formatCompactBytes(value: unknown, t: Translator = benchmarkFallback): string {
   if (typeof value !== "number" || !Number.isFinite(value) || value < 0) return EXPLORER_MISSING;
-  return scaleBytes(value) ?? t("benchmark.{value} bytes", { value: groupDigits(value) });
+  return scaleBytes(value) ?? t("benchmark.{value} B", {value: groupDigits(Math.round(value))});
+}
+
+/**
+ * `8 Core / 16 Thread`, or `16 Thread` alone when the physical core count was
+ * not detected. Hardware detection only reports logical processors on some
+ * platforms, and calling those "cores" overstates the machine, so the physical
+ * half is omitted rather than guessed.
+ */
+export function formatCpuCores(cpu: { logical_cores: number; physical_cores?: number | null }): string {
+  const threads = `${cpu.logical_cores} Thread`;
+  const physical = cpu.physical_cores;
+  return typeof physical === "number" && Number.isFinite(physical) && physical > 0
+    ? `${physical} Core / ${threads}`
+    : threads;
+}
+
+/** Prefer the reported release; old build-only records keep an explicit build label. */
+export function runtimeVersionLabel(version: unknown, build?: unknown): string | null {
+  const text = typeof version === "string" ? version.trim() : "";
+  if (text) {
+    const release = text.match(/(?:^|\bversion:\s*)v?(\d+\.\d+\.\d+(?:-[\w.-]+)?(?:\+[\w.-]+)?)/i)?.[1];
+    if (release) return release;
+    if (/^b?\d+(?:-[\da-f]+)?$/i.test(text)) return "build " + text.replace(/^b/, "");
+    return text;
+  }
+  const fallback = typeof build === "string" || typeof build === "number" ? String(build).trim() : "";
+  return fallback ? "build " + fallback.replace(/^b(?=\d)/, "") : null;
 }
 
 /** One labeled fact. The label travels with the value so neither reads as the other. */
@@ -125,15 +159,26 @@ export interface SummaryFact {
   value: React.ReactNode;
 }
 
-/** Extracts the list of individual GPUs from a summary and its setup. */
+/** Extracts the list of individual GPUs from a summary and its setup, aggregating identical devices with count x N. */
 export function extractGpuList(summary: { hardware_label: string; setup?: { gpus?: string[] | null } }): string[] {
-  if (summary.setup?.gpus && summary.setup.gpus.length > 0) {
-    return summary.setup.gpus;
-  }
+  let raw: string[] = [];
   if (summary.hardware_label && summary.hardware_label.includes(" + ")) {
-    return summary.hardware_label.split(" + ").map((s) => s.trim()).filter(Boolean);
+    raw = summary.hardware_label.split(" + ").map((s) => s.trim()).filter(Boolean);
+  } else if (summary.hardware_label && summary.hardware_label !== "cpu" && summary.hardware_label !== "unknown") {
+    raw = [summary.hardware_label.trim()];
+  } else if (summary.setup?.gpus && summary.setup.gpus.length > 0) {
+    raw = summary.setup.gpus;
   }
-  return summary.hardware_label ? [summary.hardware_label] : [];
+  if (raw.length === 0) return [];
+  const counts = new Map<string, number>();
+  for (const name of raw) {
+    counts.set(name, (counts.get(name) ?? 0) + 1);
+  }
+  const result: string[] = [];
+  for (const [name, count] of counts.entries()) {
+    result.push(count > 1 ? `${name} x ${count}` : name);
+  }
+  return result;
 }
 
 /**
@@ -143,15 +188,17 @@ export function extractGpuList(summary: { hardware_label: string; setup?: { gpus
  * Only reported parts are listed: an unreported one is absent here and named on
  * the result page, where there is room to say so.
  */
-export function environmentFacts(setup: (BenchmarkSetup & { ram_bytes?: number | null }) | undefined, t: Translator = benchmarkFallback): SummaryFact[] {
+export function environmentFacts(setup: (BenchmarkSetup & { ram_bytes?: number | null; physical_cores?: number | null }) | undefined, t: Translator = benchmarkFallback): SummaryFact[] {
   if (!setup) return [];
-  const runtime = [setup.runtime, setup.runtime_version].filter(Boolean).join(" ");
+  const runtime = [setup.runtime, runtimeVersionLabel(setup.runtime_version)].filter(Boolean).join(" ");
   const facts: SummaryFact[] = [];
   if (setup.gpus && setup.gpus.length > 0) {
     facts.push({ key: "gpu", label: t("benchmark.GPU"), value: setup.gpus.join(", ") });
   }
   if (setup.cpu) {
-    facts.push({ key: "cpu", label: t("benchmark.CPU"), value: setup.cpu });
+    const topology = setup.cores == null ? "" : formatCpuCores({ logical_cores: setup.cores, physical_cores: setup.physical_cores });
+    const cpuValue = topology ? `${setup.cpu} · ${topology}` : setup.cpu;
+    facts.push({ key: "cpu", label: t("benchmark.CPU"), value: cpuValue });
   }
   if (setup.ram_bytes != null && setup.ram_bytes > 0) {
     facts.push({ key: "ram", label: t("benchmark.RAM"), value: formatCompactBytes(setup.ram_bytes, t) });
@@ -161,7 +208,7 @@ export function environmentFacts(setup: (BenchmarkSetup & { ram_bytes?: number |
     { key: "runtime", label: t("benchmark.Runtime"), value: runtime },
     { key: "backend", label: t("benchmark.Backend"), value: setup.backend ?? "" },
     { key: "vram", label: t("benchmark.VRAM"), value: setup.vram_mb == null ? "" : formatVramGb(setup.vram_mb, t) },
-    { key: "cores", label: t("benchmark.Logical cores"), value: setup.cores == null ? "" : String(setup.cores) },
+    { key: "cores", label: t("benchmark.Logical cores"), value: setup.cores == null ? "" : formatCpuCores({ logical_cores: setup.cores, physical_cores: setup.physical_cores }) },
   );
   return facts.filter((fact) => fact.value !== "");
 }
@@ -177,18 +224,20 @@ export function formatComparisonOs(setup: BenchmarkSetup | undefined, t: Transla
   return parts.length > 0 ? parts.join(" · ") : t("benchmark.Unknown");
 }
 
-/** Reported CPU and its logical core count, or unknown when neither was recorded. */
-export function formatComparisonCpu(setup: (BenchmarkSetup & { ram_bytes?: number | null }) | undefined, t: Translator = benchmarkFallback): string {
+/** Reported CPU and its core/thread topology, or unknown when neither was recorded. */
+export function formatComparisonCpu(setup: (BenchmarkSetup & { ram_bytes?: number | null; physical_cores?: number | null }) | undefined, t: Translator = benchmarkFallback): string {
   const parts: string[] = [];
   if (typeof setup?.cpu === "string" && setup.cpu !== "") parts.push(setup.cpu);
-  if (setup?.cores != null) parts.push(`${t("benchmark.Logical cores")}: ${setup.cores}`);
+  if (setup?.cores != null) {
+    parts.push(formatCpuCores({ logical_cores: setup.cores, physical_cores: setup.physical_cores }));
+  }
   if (setup?.ram_bytes != null) parts.push(`${t("benchmark.System RAM")}: ${formatCompactBytes(setup.ram_bytes, t)}`);
   return parts.length > 0 ? parts.join(" · ") : t("benchmark.Unknown");
 }
 
 /** Runtime name and version with its backend, or unknown when none was recorded. */
 export function formatComparisonRuntime(setup: BenchmarkSetup | undefined, t: Translator = benchmarkFallback): string {
-  const runtime = [setup?.runtime, setup?.runtime_version].filter((part): part is string => typeof part === "string" && part !== "").join(" ");
+  const runtime = [setup?.runtime, runtimeVersionLabel(setup?.runtime_version)].filter((part): part is string => typeof part === "string" && part !== "").join(" ");
   const parts = [runtime, setup?.backend].filter((part): part is string => typeof part === "string" && part !== "");
   return parts.length > 0 ? parts.join(" · ") : t("benchmark.Unknown");
 }

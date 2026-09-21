@@ -1,3 +1,4 @@
+import { formatCpuCores, runtimeVersionLabel } from "./benchmark-explorer-format";
 import type { Translator } from "@/i18n/types";
 import { benchmarkFallback } from "./benchmark-i18n";
 /**
@@ -125,9 +126,13 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
   );
 
   // Hardware group: Selected GPU only; no installed GPU list. System RAM when reported.
+  const physicalCores = typeof cpu?.["physical_cores"] === "number" && cpu["physical_cores"] > 0 ? cpu["physical_cores"] : null;
+  const logicalCores = cpu?.["logical_cores"];
   const hardwareFields: SetupField[] = [
     { label: t("benchmark.CPU"), value: displayText(cpu?.["name"], t) },
-    { label: t("benchmark.CPU cores"), unit: t("benchmark.logical"), value: displayText(cpu?.["logical_cores"], t) },
+    { label: t("benchmark.CPU cores"), value: typeof logicalCores === "number"
+      ? formatCpuCores({ logical_cores: logicalCores, physical_cores: physicalCores })
+      : displayText(null, t) },
   ];
   if (typeof environment?.["system_memory_bytes"] === "number") {
     hardwareFields.push({
@@ -165,7 +170,7 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
       title: t("benchmark.Runtime and backend"),
       fields: [
         { label: t("benchmark.Runtime"), value: displayText(runtime?.["name"], t) },
-        { label: t("benchmark.Runtime version"), value: displayText(runtime?.["version"], t) },
+        { label: t("benchmark.Runtime version"), value: displayText(runtimeVersionLabel(runtime?.["version"]), t) },
         { label: t("benchmark.Runtime backend"), value: displayText(runtime?.["backend"], t) },
         { label: t("benchmark.Runtime build"), value: displayText(runtime?.["build"], t) },
         { label: t("benchmark.App version"), value: displayText(benchmark.app_version, t) },

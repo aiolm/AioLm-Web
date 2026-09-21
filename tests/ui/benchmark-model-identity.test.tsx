@@ -219,7 +219,10 @@ describe("the result list", () => {
 
     const html = render(<BenchmarkExplorerTable items={[item("a", { setup })]} compare={[]} onToggleComparison={() => {}} />);
     expect(html).toContain('<span class="explorer-fact-label">Backend</span><span class="explorer-fact-value">synthetic-backend<');
-    expect(html).toContain('<span class="explorer-fact-label">VRAM</span><span class="explorer-fact-value">4 GB<');
+    expect(html).toContain('<span class="explorer-fact-label">VRAM</span><span class="explorer-fact-value">4.00 GiB<');
+
+    const htmlWithCpu = render(<BenchmarkExplorerTable items={[item("c", { setup: { ...setup, cpu: "synthetic-cpu" } })]} compare={[]} onToggleComparison={() => {}} />);
+    expect(htmlWithCpu).toContain('<span class="explorer-fact-label">CPU</span><span class="explorer-fact-value">synthetic-cpu · 8 Thread<');
   });
 
   it("keeps the six columns and the workload metadata in the redesigned list", () => {
@@ -287,9 +290,10 @@ describe("the comparison", () => {
       cache_type_k: "f16", cache_type_v: "f16", split_mode: "layer",
     };
     expect(formatComparisonOs(setup, t)).toBe("synthetic-os · x64");
-    expect(formatComparisonCpu(setup, t)).toBe("synthetic-cpu · Logical cores: 8");
+    expect(formatComparisonCpu(setup, t)).toBe("synthetic-cpu · 8 Thread");
+    expect(formatComparisonCpu({ ...setup, physical_cores: 4 }, t)).toBe("synthetic-cpu · 4 Core / 8 Thread");
     expect(formatComparisonRuntime(setup, t)).toBe("synthetic-runtime 1.2 · synthetic-backend");
-    expect(formatComparisonVram(setup, t)).toBe("8 GB");
+    expect(formatComparisonVram(setup, t)).toBe("8.00 GiB");
     expect(formatComparisonExecution(setup, t)).toContain("Parallel requests: 2");
     expect(formatComparisonExecution(setup, t)).toContain("Threads: 8");
     expect(formatComparisonExecution(setup, t)).toContain("K: f16, V: f16");
@@ -309,7 +313,7 @@ describe("the comparison", () => {
     }
     expect(html).toContain("synthetic-os · x64");
     expect(html).toContain("synthetic-runtime 1.2 · synthetic-backend");
-    expect(html).toContain("8 GB");
+    expect(html).toContain("8.00 GiB");
   });
 });
 

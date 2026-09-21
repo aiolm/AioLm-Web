@@ -13,7 +13,7 @@ import {
   explorerDetailHref,
   type ExplorerItem,
 } from "./benchmark-explorer-state";
-import { formatDuration, formatMeasuredPoints, formatPointLabel, formatPromptLengths, formatSampleCount, formatThroughput, formatComparisonCpu, formatComparisonExecution, formatComparisonOs, formatComparisonRuntime, formatComparisonVram } from "./benchmark-explorer-format";
+import { formatLatency, formatDuration, formatMeasuredPoints, formatPointLabel, formatPromptLengths, formatSampleCount, formatThroughput, formatComparisonCpu, formatComparisonExecution, formatComparisonOs, formatComparisonRuntime, formatComparisonVram } from "./benchmark-explorer-format";
 import { defaultPoint, findPoint, pointMedian, type BenchmarkPoint } from "@/lib/benchmark-points";
 import { formatBaseModels, formatWeightQuantization, modelIdentityComparison, modelPublisher, modelValue } from "./benchmark-model-identity";
 
@@ -75,7 +75,7 @@ function comparisonFields(t: Translator, locale: Locale, search: string, basis: 
   },
   { key: "prompt-processing", label: t("benchmark.Prefill (tok/s)"), render: (item) => formatThroughput(pointMedian(shownPoint(item, basis), "pp_tps")) },
   { key: "throughput", label: t("benchmark.Decode (tok/s)"), render: (item) => formatThroughput(pointMedian(shownPoint(item, basis), "tg_tps")) },
-  { key: "ttft", label: t("benchmark.TTFT (s)"), render: (item) => formatDuration(pointMedian(shownPoint(item, basis), "ttft_ms")) },
+  { key: "ttft", label: t("benchmark.TTFT (ms)"), render: (item) => formatLatency(pointMedian(shownPoint(item, basis), "ttft_ms")) },
   { key: "duration", label: t("benchmark.Duration (s)"), render: (item) => formatDuration(pointMedian(shownPoint(item, basis), "e2e_ms")) },
   {
     key: "published",

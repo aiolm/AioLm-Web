@@ -133,6 +133,10 @@ html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   background: var(--ui-bg);
   color: var(--ui-ink);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
@@ -206,7 +210,10 @@ img, video { height: auto; }
   padding-inline: var(--page-gutter);
 }
 
-main { display: block; }
+main {
+  display: block;
+  flex: 1 0 auto;
+}
 
 /*
  * The landing page lays out its own full-bleed bands. Every other page renders

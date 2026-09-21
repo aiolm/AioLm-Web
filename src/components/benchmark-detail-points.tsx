@@ -8,6 +8,8 @@ import {
   formatPointLabel,
   formatPromptLength,
   formatSecondsSpread,
+  formatLatency,
+  formatLatencySpread,
   formatThroughput,
   formatThroughputSpread,
 } from "./benchmark-explorer-format";
@@ -73,7 +75,7 @@ export function BenchmarkPointsPanel({
   const cards = [
     { key: "pp_tps", local: t("benchmark.Prefill"), en: "Prefill", unit: "tok/s", value: formatThroughput(selected.pp_tps?.median), spread: formatThroughputSpread(selected.pp_tps) },
     { key: "tg_tps", local: t("benchmark.Decode"), en: "Decode", unit: "tok/s", value: formatThroughput(selected.tg_tps?.median), spread: formatThroughputSpread(selected.tg_tps) },
-    { key: "ttft_ms", local: t("benchmark.TTFT"), en: "TTFT", unit: "s", value: formatDuration(selected.ttft_ms?.median), spread: formatSecondsSpread(selected.ttft_ms) },
+    { key: "ttft_ms", local: t("benchmark.TTFT"), en: "TTFT", unit: "ms", value: formatLatency(selected.ttft_ms?.median), spread: formatLatencySpread(selected.ttft_ms) },
     { key: "e2e_ms", local: t("benchmark.End-to-end duration"), en: "Duration", unit: "s", value: formatDuration(selected.e2e_ms?.median), spread: formatSecondsSpread(selected.e2e_ms) },
   ];
 
@@ -145,7 +147,7 @@ export function BenchmarkPointsPanel({
               <th scope="col" className="detail-num"><BilingualHeader local={t("benchmark.Repetitions")} en="n" locale={locale} /></th>
               <th scope="col" className="detail-num"><BilingualHeader local={t("benchmark.Prefill")} en="Prefill" unit="tok/s" locale={locale} /></th>
               <th scope="col" className="detail-num"><BilingualHeader local={t("benchmark.Decode")} en="Decode" unit="tok/s" locale={locale} /></th>
-              <th scope="col" className="detail-num"><BilingualHeader local={t("benchmark.TTFT")} en="TTFT" unit="s" locale={locale} /></th>
+              <th scope="col" className="detail-num"><BilingualHeader local={t("benchmark.TTFT")} en="TTFT" unit="ms" locale={locale} /></th>
               <th scope="col" className="detail-num"><BilingualHeader local={t("benchmark.End-to-end duration")} en="Duration" unit="s" locale={locale} /></th>
             </tr>
           </thead>
@@ -165,7 +167,7 @@ export function BenchmarkPointsPanel({
                 <td className="detail-num">{point.samples}</td>
                 <MeasuredCell value={formatThroughput(point.pp_tps?.median)} spread={formatThroughputSpread(point.pp_tps)} />
                 <MeasuredCell value={formatThroughput(point.tg_tps?.median)} spread={formatThroughputSpread(point.tg_tps)} />
-                <MeasuredCell value={formatDuration(point.ttft_ms?.median)} spread={formatSecondsSpread(point.ttft_ms)} />
+                <MeasuredCell value={formatLatency(point.ttft_ms?.median)} spread={formatLatencySpread(point.ttft_ms)} />
                 <MeasuredCell value={formatDuration(point.e2e_ms?.median)} spread={formatSecondsSpread(point.e2e_ms)} />
               </tr>
             ))}

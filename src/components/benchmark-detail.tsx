@@ -80,6 +80,7 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
   const search = useSearchParams().toString();
   const { data, error, reload } = useJsonFetch<Detail>(`/v1/benchmark-runs/${publicId}`, initialData);
   const [rows, setRows] = useState<unknown[] | null>(null);
+  const rowsRef = useRef<unknown[] | null>(null);
   const [rowsCursor, setRowsCursor] = useState<string | null>(null);
   const [rowsTotal, setRowsTotal] = useState<number | null>(null);
   const [rowsError, setRowsError] = useState<string | null>(null);
@@ -102,29 +103,11 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
     };
   }, []);
 
-  // A different result invalidates any in-flight rows request and starts with an empty row cache.
-  useEffect(() => {
-    generationRef.current += 1;
-    try {
-      rowsAbortRef.current?.abort();
-    } catch {
-      // Aborting the previous result fetch is best-effort.
-    }
-    rowsAbortRef.current = null;
-    setRows(null);
-    setRowsCursor(null);
-    setRowsTotal(null);
-    setRowsError(null);
-    setRowsLoading(false);
-    setVisiblePage(0);
-    loadingRef.current = false;
-  }, [publicId]);
-
   const loadRows = useCallback(
     async (cursor: string | null): Promise<void> => {
       if (loadingRef.current) return;
       loadingRef.current = true;
-      const nextPage = cursor ? Math.floor((rows?.length ?? 0) / ROWS_VISIBLE_PAGE_SIZE) : 0;
+      const nextPage = cursor ? Math.floor((rowsRef.current?.length ?? 0) / ROWS_VISIBLE_PAGE_SIZE) : 0;
       const myGeneration = generationRef.current;
       const controller = new AbortController();
       rowsAbortRef.current = controller;
@@ -148,7 +131,9 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
         const successful = json.rows.filter((r) => !isFailedRow(asRecord(r) ?? {}));
         setRows((prev) => {
           const next = cursor && prev ? [...prev, ...successful] : successful;
-          return next.slice(0, 10000);
+          const clamped = next.slice(0, 10000);
+          rowsRef.current = clamped;
+          return clamped;
         });
         setVisiblePage(nextPage);
         setRowsCursor(json.next_cursor);
@@ -171,8 +156,37 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
         if (mountedRef.current) setRowsLoading(false);
       }
     },
-    [publicId, rows?.length],
+    [publicId],
   );
+
+  // Automatically load measurements on entry, and reset on route change.
+  useEffect(() => {
+    generationRef.current += 1;
+    try {
+      rowsAbortRef.current?.abort();
+    } catch {
+      // Aborting the previous result fetch is best-effort.
+    }
+    rowsAbortRef.current = null;
+    setRows(null);
+    rowsRef.current = null;
+    setRowsCursor(null);
+    setRowsTotal(null);
+    setRowsError(null);
+    setRowsLoading(false);
+    setVisiblePage(0);
+    loadingRef.current = false;
+
+    void loadRows(null);
+
+    return () => {
+      try {
+        rowsAbortRef.current?.abort();
+      } catch {
+        // Cleanup abort
+      }
+    };
+  }, [publicId, loadRows]);
 
   const backLink = <p className="detail-back"><Link href={localizedPath(locale, `/benchmarks${search ? `?${search}` : ""}`)}>{t("benchmark.← Back to results")}</Link></p>;
   if (error || !data) return <div className="grid">
@@ -233,11 +247,10 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
       {data.description_md ? <details className="card detail-description"><summary>{t("benchmark.Description")}</summary><SafeMarkdown text={data.description_md} /></details> : null}
 
       <section className="card" aria-labelledby="rows-title">
-        <h2 id="rows-title">{t("benchmark.Measurements")}{rowsTotal !== null ? `(${rowsTotal})` : null}</h2>
+        <h2 id="rows-title">{t("benchmark.Measurements")}{rowsTotal !== null ? ` (${rowsTotal})` : null}</h2>
         <p className="muted">
           {t("benchmark.Load the individual measurements to inspect timing, throughput and memory use for each sample. Each page shows up to {limit} samples.", { limit: ROWS_VISIBLE_PAGE_SIZE })}
         </p>
-        {!rows && !rowsLoading && !rowsError ? <button type="button" onClick={() => void loadRows(null)}>{t("benchmark.Load measurements")}</button> : null}
         {rowsLoading ? <p role="status" className="muted">{t("benchmark.Loading measurements…")}</p> : null}
         {rowsError ? (
           <div className="alert error" role="alert">
