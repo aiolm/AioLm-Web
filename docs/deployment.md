@@ -212,7 +212,7 @@ platform logs. Point an uptime monitor at it; read `config:check` when it turns 
       supplied from the operator secret store (they cannot be pulled back out of
       Vercel — see Validating configuration).
 - [ ] `vercel env ls production` shows exactly the intended keys.
-- [ ] Migrations applied (through `010_model_metadata.sql`); roles
+- [ ] Migrations applied (through `012_operating_points.sql`); roles
        least-privilege; Data API disabled.
 - [ ] `GET /v1/readiness` returns `200 {"status":"ready"}` on the deployed origin.
 - [ ] `DATABASE_MIGRATION_URL` / `DATABASE_MODERATION_URL` are absent from the

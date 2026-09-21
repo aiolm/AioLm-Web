@@ -13,7 +13,9 @@ import { asRecord } from "@/components/benchmark-detail-format";
 import { buildSetupGroups, type BenchmarkSetup, type SetupField } from "@/components/benchmark-detail-fields";
 import { formatWeightQuantization, modelPublisher, modelValue, type BenchmarkModelInfo } from "@/components/benchmark-model-identity";
 import { buildRowColumns, isFailedRow } from "@/components/benchmark-detail-rows";
-import { formatDuration, formatMethodName, formatPromptLengths, formatThroughput, formatWorkloadName } from "@/components/benchmark-explorer-format";
+import { BenchmarkPointsPanel } from "@/components/benchmark-detail-points";
+import { formatMethodName, formatPromptLengths, formatWorkloadName } from "@/components/benchmark-explorer-format";
+import type { BenchmarkPoint } from "@/lib/benchmark-points";
 import { BilingualHeader } from "./benchmark-i18n";
 
 interface Detail {
@@ -23,6 +25,13 @@ interface Detail {
     model_label: string; hardware_label: string; method_label: string; workload_label: string;
     row_count: number; failed_rows: number; mean_tg_tps: number | null; mean_e2e_ms: number | null; status: string;
     mean_pp_tps?: number | null; prompt_lengths?: number[];
+    /**
+     * What the page reports. The mean_* fields above average across input
+     * lengths and concurrencies at once, which describes no configuration that
+     * ran, so they are stored but never shown. Absent before migration 012.
+     */
+    points?: BenchmarkPoint[];
+    points_truncated?: boolean;
     /** Published model metadata, absent on older results and null when none was sent. */
     model_info?: BenchmarkModelInfo | null;
   };
@@ -197,20 +206,7 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
             <span className="detail-fact-value detail-weight-badge">{formatWeightQuantization(summary.model_info ?? null, t)}</span>
           </div>
         </div>
-        <div className="detail-performance-grid">
-          <div className="detail-metric-card">
-            <BilingualHeader local={t("benchmark.Prefill")} en="Prefill" unit="tok/s" locale={locale} />
-            <strong className="detail-metric-value">{formatThroughput(summary.mean_pp_tps)} <small>tok/s</small></strong>
-          </div>
-          <div className="detail-metric-card">
-            <BilingualHeader local={t("benchmark.Decode")} en="Decode" unit="tok/s" locale={locale} />
-            <strong className="detail-metric-value">{formatThroughput(summary.mean_tg_tps)} <small>tok/s</small></strong>
-          </div>
-          <div className="detail-metric-card">
-            <BilingualHeader local={t("benchmark.Mean latency")} en="Mean latency" unit="s" locale={locale} />
-            <strong className="detail-metric-value">{formatDuration(summary.mean_e2e_ms)} <small>s</small></strong>
-          </div>
-        </div>
+        <BenchmarkPointsPanel points={summary.points ?? []} truncated={summary.points_truncated ?? false} />
         <div className="detail-context-grid">
           <div className="detail-fact">
             <span className="detail-fact-label">{t("benchmark.Input context")}</span>

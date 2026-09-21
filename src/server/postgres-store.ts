@@ -258,7 +258,7 @@ export class PostgresBenchmarkStore implements BenchmarkStore {
     const statement = listSql(filters, limit, cursor);
     const rows = await this.sql.unsafe<PublicListItem[]>(statement.query, statement.values);
     const page = rows.slice(0, limit), last = page.at(-1);
-    return { items: page, next_cursor: rows.length > limit && last ? encodeDiscoveryCursor(last.created_at, last.public_id, filters, sortValue(last.summary, filters.sort ?? "newest")) : null };
+    return { items: page, next_cursor: rows.length > limit && last ? encodeDiscoveryCursor(last.created_at, last.public_id, filters, sortValue(last.summary, filters)) : null };
   }
 
   async listOptions(field: OptionField, query: string, filters: BenchmarkFilters): Promise<BenchmarkOptions> {

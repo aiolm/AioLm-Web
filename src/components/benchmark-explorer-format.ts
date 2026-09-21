@@ -1,6 +1,7 @@
 import type React from "react";
 import type { Translator } from "@/i18n/types";
 import type { BenchmarkSetup } from "@/lib/benchmark-discovery";
+import type { BenchmarkPoint, MetricStat } from "@/lib/benchmark-points";
 import { benchmarkFallback } from "./benchmark-i18n";
 /**
  * Cell formatting for the explorer. Values are locale independent so a shared
@@ -55,6 +56,40 @@ export function formatPromptLengths(values: readonly number[] | null | undefined
   if (!Array.isArray(values)) return null;
   const lengths = [...new Set(values.filter((value) => typeof value === "number" && Number.isSafeInteger(value) && value > 0))].sort((a, b) => a - b);
   return lengths.length === 0 ? null : lengths.map(formatPromptLength).join(" · ");
+}
+
+/**
+ * One operating point as a reader names it: the input length it sent and the
+ * number of requests it sent at once. Locale independent, like every other
+ * value here, so a shared link reads the same everywhere.
+ */
+export function formatPointLabel(promptTokens: number, concurrency: number): string {
+  return `${formatPromptLength(promptTokens)} / c${concurrency}`;
+}
+
+/** Every point a result measured, compactly, with a count when the grid is wider than the line. */
+export function formatMeasuredPoints(points: readonly BenchmarkPoint[] | undefined, limit = 6): string | null {
+  if (!points || points.length === 0) return null;
+  const labels = points.map((point) => formatPointLabel(point.prompt_tokens, point.concurrency));
+  return labels.length <= limit ? labels.join(" · ") : `${labels.slice(0, limit).join(" · ")} +${labels.length - limit}`;
+}
+
+/**
+ * The range the median came from. A point whose repetitions all landed on the
+ * same value has no spread to report, and neither does a single sample, so the
+ * line is left off rather than printed as a range of one number.
+ */
+function spread(stat: MetricStat | null | undefined, format: (value: number) => string): string | null {
+  if (!stat || stat.min === stat.max) return null;
+  return `${format(stat.min)}–${format(stat.max)}`;
+}
+
+export function formatThroughputSpread(stat: MetricStat | null | undefined): string | null {
+  return spread(stat, (value) => formatThroughput(value));
+}
+
+export function formatSecondsSpread(stat: MetricStat | null | undefined): string | null {
+  return spread(stat, (value) => formatDuration(value));
 }
 
 /** Binary scale, or null when the value is small enough that bytes are the readable unit. */

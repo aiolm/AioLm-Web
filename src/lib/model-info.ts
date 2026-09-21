@@ -3,8 +3,8 @@ import type { BenchmarkModelMetadata, PublicBenchmarkSubmission } from "@aiolm/b
 /**
  * Public model metadata carried on a summary.
  *
- * Contract 0.3.0 keeps schema_version 1 and adds an OPTIONAL model.metadata
- * block, so a payload without one stays valid. Everything here is either copied
+ * Contract 0.3.0 added an OPTIONAL model.metadata block and schema_version
+ * stays 1, so a payload without one stays valid. Everything here is either copied
  * from that block after validation or derived from the recorded identity; the
  * publisher comes ONLY from the repository namespace, and nothing is ever
  * parsed out of a filename or a curated label. A field that fails validation is

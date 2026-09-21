@@ -1,5 +1,6 @@
 import { encodeDiscoveryCursor, comparePosition, type ListCursor } from "../lib/pagination";
-import { matchesFilters, textValues, sortValue, type BenchmarkOptions, type OptionField } from "../lib/benchmark-discovery";
+import { POINT_OPTION_FIELD, matchesFilters, textValues, sortValue, type BenchmarkOptions, type OptionField } from "../lib/benchmark-discovery";
+import { pointId, readPoints } from "../lib/benchmark-points";
 import { UPLOAD_PERMIT_TTL_MS, permitExpiryForSession, verifyUploadPermit } from "../lib/permits";
 import { quotaKeyForIp, quotaWindowDay, quotaWindowHour } from "../lib/ip";
 import type { BenchmarkFilters } from "../lib/summary";
@@ -228,28 +229,44 @@ export class InMemoryBenchmarkStore implements BenchmarkStore {
 
   async listRuns(filters: BenchmarkFilters, limit: number, cursor: ListCursor | null): Promise<ListResult> {
     const sort = filters.sort ?? "newest";
-    const position = (r: StoredRun): ListCursor => ({ createdAt: r.created_at, publicId: r.public_id, value: sortValue(r.summary, sort) });
+    const position = (r: StoredRun): ListCursor => ({ createdAt: r.created_at, publicId: r.public_id, value: sortValue(r.summary, filters) });
     const rows = [...this.runs.values()].filter(r => !r.deleted && !r.hidden && matchesFilters(r.summary, filters))
       .filter(r => !cursor || comparePosition(position(r), cursor, sort) > 0)
       .sort((a, b) => comparePosition(position(a), position(b), sort));
     const page = rows.slice(0, limit), last = page.at(-1);
     return { items: page.map(r => ({ public_id: r.public_id, summary: r.summary, description_md: r.description_md, revision: r.revision, created_at: r.created_at, updated_at: r.updated_at })),
-      next_cursor: rows.length > limit && last ? encodeDiscoveryCursor(last.created_at, last.public_id, filters, sortValue(last.summary, sort)) : null };
+      next_cursor: rows.length > limit && last ? encodeDiscoveryCursor(last.created_at, last.public_id, filters, sortValue(last.summary, filters)) : null };
   }
 
   async listOptions(field: OptionField, query: string, filters: BenchmarkFilters): Promise<BenchmarkOptions> {
-    const remaining = { ...filters }; delete remaining[field];
+    const remaining = { ...filters };
+    if (field === POINT_OPTION_FIELD) { delete remaining.point_tokens; delete remaining.point_concurrency; delete remaining.point_only; }
+    else delete remaining[field];
     const counts = new Map<string, number>();
+    const order = new Map<string, [number, number]>();
     for (const r of this.runs.values()) {
       if (r.deleted || r.hidden || !matchesFilters(r.summary, remaining)) continue;
-      const candidates = field === "gpu" && remaining.vendor
-        ? (r.benchmark.environment?.execution.selected_gpus ?? []).filter(g => g.vendor?.toLowerCase().includes(remaining.vendor!.toLowerCase())).flatMap(g => g.name ? [g.name] : [])
-        : textValues(r.summary, field);
+      let candidates: string[];
+      if (field === POINT_OPTION_FIELD) {
+        const points = readPoints(r.summary.points);
+        for (const point of points) order.set(pointId(point.prompt_tokens, point.concurrency), [point.prompt_tokens, point.concurrency]);
+        candidates = points.map((point) => pointId(point.prompt_tokens, point.concurrency));
+      } else if (field === "gpu" && remaining.vendor) {
+        candidates = (r.benchmark.environment?.execution.selected_gpus ?? []).filter(g => g.vendor?.toLowerCase().includes(remaining.vendor!.toLowerCase())).flatMap(g => g.name ? [g.name] : []);
+      } else {
+        candidates = textValues(r.summary, field);
+      }
       for (const value of new Set(candidates)) {
         if (value && value.toLowerCase().includes(query.toLowerCase())) counts.set(value, (counts.get(value) ?? 0) + 1);
       }
     }
-    const options = [...counts].map(([value, count]) => ({ value, count })).sort((a,b) => a.value < b.value ? -1 : a.value > b.value ? 1 : 0);
+    // Points order by what they measure; every other field orders by its text.
+    const options = [...counts].map(([value, count]) => ({ value, count })).sort((a, b) => {
+      if (field !== POINT_OPTION_FIELD) return a.value < b.value ? -1 : a.value > b.value ? 1 : 0;
+      const [at, ac] = order.get(a.value) ?? [0, 0];
+      const [bt, bc] = order.get(b.value) ?? [0, 0];
+      return at - bt || ac - bc;
+    });
     return { options: options.slice(0, 30), has_more: options.length > 30 };
   }
 

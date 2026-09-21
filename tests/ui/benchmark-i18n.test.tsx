@@ -35,9 +35,21 @@ vi.mock("@/components/ui", async (importOriginal) => ({
   ...await importOriginal<typeof import("@/components/ui")>(),
   useJsonFetch: () => ({ data: state.data, error: state.error, reload: () => {} }),
 }));
+/**
+ * The point values are what the pages must show. The mean_* fields carry
+ * numbers that appear nowhere else, so a page that fell back to averaging the
+ * whole grid again would print 999 and fail here rather than pass quietly.
+ */
+const point = (prompt_tokens: number, concurrency: number, tg: number, pp: number) => ({
+  prompt_tokens, concurrency, generation_length: 128, samples: 3,
+  pp_tps: { median: pp, min: pp - 1, max: pp + 1 },
+  tg_tps: { median: tg, min: tg - 1, max: tg + 1 },
+  ttft_ms: { median: 340, min: 310, max: 360 },
+  e2e_ms: { median: 1234.6, min: 1200, max: 1300 },
+});
 const item: ExplorerItem = {
   public_id: "synthetic-id", revision: 1, created_at: "2026-01-02T03:04:05.000Z",
-  summary: { model_label: "synthetic-model", hardware_label: "synthetic-device", method_label: "cold-prompt-serving@1", workload_label: "code_python", row_count: 12, failed_rows: 2, status: "partial", mean_tg_tps: 42.25, mean_e2e_ms: 1234.6, mean_pp_tps: 128.75, prompt_lengths: [8192, 512, 4096] },
+  summary: { model_label: "synthetic-model", hardware_label: "synthetic-device", method_label: "cold-prompt-serving@1", workload_label: "code_python", row_count: 12, failed_rows: 2, status: "partial", mean_tg_tps: 999, mean_e2e_ms: 999, mean_pp_tps: 999, prompt_lengths: [8192, 512, 4096], points: [point(512, 1, 42.25, 128.75), point(4096, 1, 21.5, 96.5)], points_truncated: false },
 };
 const benchmark = {
   model: { status: "identified", sha256: "synthetic-checksum", size_bytes: 2048 },
@@ -132,7 +144,9 @@ describe.each(locales)("benchmark localization: %s", locale => {
     expect(html).toContain("detail-hardware-grid");
     expect(html).toContain("System RAM");
     expect(html).toContain(escape(t("benchmark.Test setup (as reported)")));
-    expect(html).not.toContain(escape(t("benchmark.Installed graphics")));
+    // Installed but unselected devices are never shown, so the label no longer
+    // exists in any catalog; the literal is what a regression would reintroduce.
+    expect(html).not.toContain("Installed graphics");
     expect(html).toContain(escape(t("benchmark.Selected graphics")));
     expect(html).toContain("UTC");
     expect(html).toContain("Synthetic user text");

@@ -188,3 +188,19 @@
 @media (max-width: 24rem) {
   .explorer-compact .explorer-facts { flex-direction: column; }
 }
+
+/* The basis point sits with sorting: both decide how the results are read. */
+.explorer-basis { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px 10px; max-width: 26rem; }
+.explorer-compact .explorer-basis-field { min-width: 190px; }
+.explorer-compact .explorer-basis-field .explorer-field-label { font-size: .75rem; margin-bottom: 2px; }
+.explorer-compact .explorer-basis-field select { min-height: 32px; padding: 4px 8px; font-size: .82rem; }
+.explorer-basis-only { display: flex; align-items: center; gap: 6px; font-size: .8rem; min-height: 32px; }
+.explorer-basis-hint { flex-basis: 100%; margin: 0; font-size: .74rem; color: var(--ui-muted); }
+/* The point a speed column is read at, under the column's own name. */
+.explorer-head-basis { display: block; font-weight: 450; font-size: .72rem; color: var(--ui-muted); white-space: nowrap; }
+.explorer-metric-value { display: block; font-variant-numeric: tabular-nums; }
+.explorer-metric-spread { display: block; font-size: .72rem; color: var(--ui-muted); font-variant-numeric: tabular-nums; }
+@media (max-width: 700px) {
+  .explorer-basis { max-width: none; width: 100%; }
+  .explorer-compact .explorer-basis-field { flex: 1; }
+}

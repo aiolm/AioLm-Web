@@ -13,7 +13,8 @@ import {
   explorerDetailHref,
   type ExplorerItem,
 } from "./benchmark-explorer-state";
-import { formatDuration, formatPromptLengths, formatSampleCount, formatThroughput, formatComparisonCpu, formatComparisonExecution, formatComparisonOs, formatComparisonRuntime, formatComparisonVram } from "./benchmark-explorer-format";
+import { formatDuration, formatMeasuredPoints, formatPointLabel, formatPromptLengths, formatSampleCount, formatThroughput, formatComparisonCpu, formatComparisonExecution, formatComparisonOs, formatComparisonRuntime, formatComparisonVram } from "./benchmark-explorer-format";
+import { defaultPoint, findPoint, pointMedian, type BenchmarkPoint } from "@/lib/benchmark-points";
 import { formatBaseModels, formatWeightQuantization, modelIdentityComparison, modelPublisher, modelValue } from "./benchmark-model-identity";
 
 /**
@@ -29,7 +30,16 @@ interface ComparisonField {
   render: (item: ExplorerItem) => React.ReactNode;
 }
 
-function comparisonFields(t: Translator, locale: Locale, search: string): ComparisonField[] { return [
+/**
+ * The point each column is read at. A comparison whose columns report different
+ * operating points is not a comparison, so the basis applies to every column and
+ * a result that never measured it reports the point as missing.
+ */
+function shownPoint(item: ExplorerItem, basis: { prompt_tokens: number; concurrency: number } | null): BenchmarkPoint | null {
+  return basis ? findPoint(item.summary.points, basis.prompt_tokens, basis.concurrency) : defaultPoint(item.summary.points);
+}
+
+function comparisonFields(t: Translator, locale: Locale, search: string, basis: { prompt_tokens: number; concurrency: number } | null): ComparisonField[] { return [
   { key: "publisher", label: t("benchmark.Publisher"), render: (item) => modelValue(modelPublisher(item.summary.model_info ?? null), t) },
   { key: "quantization", label: t("benchmark.Weight quantization"), render: (item) => formatWeightQuantization(item.summary.model_info ?? null, t) },
   { key: "base-model", label: t("benchmark.Base model"), render: (item) => formatBaseModels(item.summary.model_info ?? null, t) },
@@ -48,9 +58,25 @@ function comparisonFields(t: Translator, locale: Locale, search: string): Compar
     label: t("benchmark.Measurement count"),
     render: (item) => formatSampleCount(item.summary.row_count, 0, t),
   },
-  { key: "prompt-processing", label: t("benchmark.Prefill (tok/s)"), render: (item) => formatThroughput(item.summary.mean_pp_tps) },
-  { key: "throughput", label: t("benchmark.Decode (tok/s)"), render: (item) => formatThroughput(item.summary.mean_tg_tps) },
-  { key: "duration", label: t("benchmark.Duration (s)"), render: (item) => formatDuration(item.summary.mean_e2e_ms) },
+  {
+    key: "measured-points",
+    label: t("benchmark.Measured points"),
+    render: (item) => formatMeasuredPoints(item.summary.points) ?? t("benchmark.Unknown"),
+  },
+  {
+    key: "shown-point",
+    label: t("benchmark.Reading at"),
+    render: (item) => {
+      const point = shownPoint(item, basis);
+      return point
+        ? t("benchmark.{point} · n={samples}", { point: formatPointLabel(point.prompt_tokens, point.concurrency), samples: String(point.samples) })
+        : t("benchmark.Not measured at this point");
+    },
+  },
+  { key: "prompt-processing", label: t("benchmark.Prefill (tok/s)"), render: (item) => formatThroughput(pointMedian(shownPoint(item, basis), "pp_tps")) },
+  { key: "throughput", label: t("benchmark.Decode (tok/s)"), render: (item) => formatThroughput(pointMedian(shownPoint(item, basis), "tg_tps")) },
+  { key: "ttft", label: t("benchmark.TTFT (s)"), render: (item) => formatDuration(pointMedian(shownPoint(item, basis), "ttft_ms")) },
+  { key: "duration", label: t("benchmark.Duration (s)"), render: (item) => formatDuration(pointMedian(shownPoint(item, basis), "e2e_ms")) },
   {
     key: "published",
     label: t("benchmark.Published"),
@@ -73,12 +99,15 @@ export interface BenchmarkExplorerComparisonProps {
   items: ExplorerItem[];
   onRemove: (item: ExplorerItem) => void;
   onClear: () => void;
+  /** The point every column is read at, or null to let each column lead with its own. */
+  basis?: { prompt_tokens: number; concurrency: number } | null;
 }
 
 export function BenchmarkExplorerComparison({
   items,
   onRemove,
   onClear,
+  basis = null,
 }: BenchmarkExplorerComparisonProps): React.JSX.Element | null {
   const { locale, t } = useI18n();
   const search = useSearchParams().toString();
@@ -133,7 +162,7 @@ export function BenchmarkExplorerComparison({
             </tr>
           </thead>
           <tbody className="explorer-comparison-body">
-            {comparisonFields(t, locale, search).map((field) => (
+            {comparisonFields(t, locale, search, basis).map((field) => (
               <tr key={field.key} className="explorer-comparison-row">
                 <th scope="row" className="explorer-comparison-field">{field.label}</th>
                 {items.map((item) => (
