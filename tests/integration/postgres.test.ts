@@ -267,8 +267,17 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
         ["c", 10, "2026-01-02"], ["d", 20, "2026-01-01"], ["e", null, "2026-01-03"],
         ["f", null, "2026-01-03"],
       ] as const) {
+        // The two speed sorts read the basis point, so the value under test
+        // lives on the point. "e" measured the point but reported no value and
+        // "f" never measured it; both are missing for those sorts and sort last,
+        // which the retained means below deliberately do not decide.
+        const stat = value === null ? null : { median: value, min: value, max: value };
         await seed(`discovery-sort-${id}`, "discovery-sort", {
           setup: { ...setup, prompt_length: value, vram_mb: value }, mean_tg_tps: value, mean_e2e_ms: value,
+          points: id === "f" ? [] : [{
+            prompt_tokens: 512, concurrency: 1, generation_length: 128, samples: 1,
+            pp_tps: null, tg_tps: stat, ttft_ms: null, e2e_ms: stat,
+          }],
         }, { created: `${created}T00:00:00.000Z` });
       }
       await seed("discovery-model-described", "discovery-model", { model_info: modelInfo() });
@@ -385,8 +394,12 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     ])("pages %s across value, timestamp, ID and null ties without gaps", async (sort, order) => {
       const ids: string[] = [];
       let cursor: string | null = null;
+      // Ranking measured speed names the point it ranks at; the other orders read
+      // configuration and need none.
+      const basis: Record<string, string> = ["throughput_desc", "duration_asc"].includes(sort)
+        ? { point_tokens: "512", point_concurrency: "1" } : {};
       for (let i = 0; i < 8; i++) {
-        const result = await page({ model: "discovery-sort", sort, limit: "1", ...(cursor ? { cursor } : {}) });
+        const result = await page({ model: "discovery-sort", sort, limit: "1", ...basis, ...(cursor ? { cursor } : {}) });
         ids.push(...result.items.map((item) => item.public_id));
         cursor = result.next_cursor;
         if (!cursor) break;
