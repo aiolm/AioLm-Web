@@ -1,37 +1,55 @@
-/* Scoped explorer layout: keep discovery compact and results close to search. */
-.explorer-compact .explorer-filter-set { padding: 10px 14px; }
-.explorer-compact .explorer-search-row { grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 8px; margin-top: 0; }
-.explorer-compact .explorer-search-row .explorer-field-input { min-height: 34px; padding: 5px 10px; font-size: 0.85rem; }
-.explorer-compact .explorer-search-row .explorer-field-label { font-size: 0.78rem; font-weight: 650; margin-bottom: 3px; }
-.explorer-compact .explorer-filter-actions { margin: 0; gap: 6px; }
-.explorer-compact .explorer-filter-actions .explorer-button { min-height: 34px; padding: 5px 12px; font-size: 0.82rem; }
-.explorer-compact .explorer-quick-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 580px; margin-top: 6px; gap: 8px; }
-.explorer-compact .explorer-quick-filters .explorer-field-label { font-size: 0.75rem; font-weight: 650; margin-bottom: 2px; }
-.explorer-compact .explorer-quick-filters .explorer-field-input { min-height: 30px; padding: 4px 8px; font-size: 0.82rem; }
-.explorer-compact .explorer-quick-filters .explorer-combobox-control input { padding-inline-end: 28px; }
-.explorer-compact .explorer-quick-filters .explorer-combobox-toggle { width: 26px; }
-.explorer-compact .explorer-more-filters { margin-top: 6px; }
-.explorer-compact .explorer-more-filters > summary { width: fit-content; min-height: 28px; padding: 3px 10px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-sm); cursor: pointer; font-size: .78rem; font-weight: 600; display: inline-flex; align-items: center; }
+/* Scoped explorer layout: keep discovery compact, aligned, and results readable. */
+.explorer-compact .explorer-filter-set { padding: 14px 16px; }
+.explorer-compact .explorer-search-row { grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; margin-top: 0; }
+.explorer-compact .explorer-search-row .explorer-field-input { min-height: 36px; padding: 6px 12px; font-size: 0.88rem; }
+.explorer-compact .explorer-search-row .explorer-field-label { font-size: 0.8rem; font-weight: 650; margin-bottom: 4px; }
+.explorer-compact .explorer-filter-actions { margin: 0; gap: 8px; }
+.explorer-compact .explorer-filter-actions .explorer-button { min-height: 36px; padding: 6px 14px; font-size: 0.84rem; }
+.explorer-compact .explorer-quick-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; margin-top: 8px; gap: 10px; }
+.explorer-compact .explorer-quick-filters .explorer-field-label { font-size: 0.78rem; font-weight: 650; margin-bottom: 4px; }
+.explorer-compact .explorer-quick-filters .explorer-field-input { min-height: 34px; padding: 5px 10px; font-size: 0.85rem; }
+.explorer-compact .explorer-quick-filters .explorer-combobox-control input { padding-inline-end: 30px; }
+.explorer-compact .explorer-quick-filters .explorer-combobox-toggle { width: 30px; }
+.explorer-compact .explorer-more-filters { margin-top: 10px; }
+.explorer-compact .explorer-more-filters > summary { width: fit-content; min-height: 32px; padding: 5px 12px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); cursor: pointer; font-size: .8rem; font-weight: 600; display: inline-flex; align-items: center; background: var(--ui-surface); }
+.explorer-compact .explorer-more-filters > summary:hover { background: var(--ui-surface-muted); }
 .explorer-compact .explorer-more-filters > summary:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
-.explorer-compact .explorer-filter-count { margin-inline-start: 6px; padding: 1px 5px; font-size: .72rem; border-radius: var(--ui-radius-pill); background: var(--ui-accent-soft); color: var(--ui-accent); font-variant-numeric: tabular-nums; }
-.explorer-compact .explorer-advanced-groups { display: grid; gap: 10px; margin-block: 10px; }
-.explorer-compact .explorer-advanced-group { min-width: 0; padding: 8px 0 0; margin: 0; border: 0; border-top: 1px solid var(--ui-border); }
-.explorer-compact .explorer-advanced-group > legend { padding-inline-end: 10px; font-size: .8rem; font-weight: 650; }
-.explorer-compact .explorer-group-fields { margin-top: 0; gap: 8px; }
-.explorer-compact .explorer-advanced-group .explorer-field-label { font-size: .74rem; margin-bottom: 2px; }
-.explorer-compact .explorer-advanced-group .explorer-field-input { min-height: 28px; padding: 3px 7px; font-size: .8rem; }
-.explorer-compact .explorer-advanced-group .explorer-combobox-control input { padding-inline-end: 26px; }
-.explorer-compact .explorer-advanced-group .explorer-combobox-toggle { width: 24px; }
-.explorer-compact .explorer-range legend { font-size: .75rem; margin-bottom: 3px; }
-.explorer-compact .explorer-range-inputs { gap: 6px; }
-.explorer-compact .explorer-range-inputs label { font-size: .72rem; }
-.explorer-compact .explorer-range-hint { margin-top: 3px; font-size: .72rem; }
-.explorer-compact .explorer-advanced-actions { margin-top: 8px; }
-.explorer-compact .explorer-advanced-actions .explorer-button { min-height: 30px; padding: 4px 10px; font-size: .8rem; }
+.explorer-compact .explorer-filter-count { margin-inline-start: 6px; padding: 1px 6px; font-size: .74rem; border-radius: var(--ui-radius-pill); background: var(--ui-accent-soft); color: var(--ui-accent); font-variant-numeric: tabular-nums; }
+
+/* Advanced filters: roomy, breathable groups with aligned field baselines */
+.explorer-compact .explorer-advanced-groups { display: grid; gap: 18px; margin-block: 16px; }
+.explorer-compact .explorer-advanced-group { min-width: 0; padding: 14px 0 0; margin: 0; border: 0; border-top: 1px solid var(--ui-border); }
+.explorer-compact .explorer-advanced-group > legend { padding-inline-end: 12px; font-size: .85rem; font-weight: 700; margin-bottom: 8px; color: var(--ui-ink); }
+.explorer-compact .explorer-group-fields { margin-top: 0; gap: 12px; align-items: start; }
+
+/* Baseline alignment: fixed label/legend height ensures all input boxes align on the exact same row line */
+.explorer-compact .explorer-advanced-group .explorer-field { display: flex; flex-direction: column; min-width: 0; }
+.explorer-compact .explorer-advanced-group .explorer-field-label,
+.explorer-compact .explorer-range legend {
+  display: block;
+  font-size: .76rem;
+  font-weight: 650;
+  line-height: 1.25;
+  min-height: 2.5em;
+  margin-bottom: 4px;
+  padding: 0;
+  color: var(--ui-ink);
+}
+.explorer-compact .explorer-advanced-group .explorer-field-input { min-height: 34px; height: 34px; padding: 5px 8px; font-size: .82rem; }
+.explorer-compact .explorer-advanced-group .explorer-combobox-control input { padding-inline-end: 28px; }
+.explorer-compact .explorer-advanced-group .explorer-combobox-toggle { width: 26px; }
+.explorer-compact .explorer-range { margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; min-width: 0; }
+.explorer-compact .explorer-range-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.explorer-compact .explorer-range-hint { margin-top: 4px; font-size: .72rem; color: var(--ui-muted); line-height: 1.25; }
+.explorer-compact .explorer-advanced-actions { margin-top: 12px; }
+.explorer-compact .explorer-advanced-actions .explorer-button { min-height: 32px; padding: 5px 12px; font-size: .82rem; }
+
 /* One line of its own line-height is always held, so the status appearing moves nothing. */
-.explorer-compact .explorer-draft-status { min-height: 1.1rem; margin-top: 4px; color: var(--ui-muted); font-size: .75rem; line-height: 1.1rem; }
+.explorer-compact .explorer-draft-status { min-height: 1.2rem; margin-top: 6px; color: var(--ui-muted); font-size: .78rem; line-height: 1.2rem; }
 /* The inactive clear control keeps its box, so Search stays put when it appears. */
 .explorer-compact .explorer-button-reserved { visibility: hidden; }
+
+/* Results section */
 .explorer-compact .explorer-main { padding: 14px 16px; }
 .explorer-compact .explorer-main-header { gap: 8px 16px; margin-block-end: 10px; }
 .explorer-compact .explorer-main-title { font-size: 1.15rem; font-weight: 700; }
@@ -45,16 +63,54 @@
 .explorer-compact .explorer-active-filters-title { font-size: .78rem; }
 .explorer-compact .explorer-active-filter { padding: 2px 2px 2px 8px; font-size: .8rem; }
 .explorer-compact .explorer-active-filter-remove { min-width: 24px; min-height: 24px; padding: 2px 6px; font-size: .75rem; }
-.explorer-compact .explorer-head-cell { padding: 7px 10px; font-size: .78rem; }
-.explorer-compact .explorer-cell { padding: 8px 10px; font-size: .85rem; }
+.explorer-compact .explorer-head-cell { padding: 8px 10px; font-size: .78rem; }
+.explorer-compact .explorer-cell { padding: 10px; font-size: .85rem; vertical-align: top; }
 .explorer-compact .explorer-compare-input { width: 16px; height: 16px; }
-.explorer-compact .explorer-detail-link { font-size: .84rem; }
-.explorer-compact .explorer-identity-hardware,
-.explorer-compact .explorer-setup-workload { font-size: .78rem; margin-block-start: 2px; }
-.explorer-compact .explorer-status { font-size: .74rem; padding: 1px 7px; margin-block-start: 2px; }
+.explorer-compact .explorer-detail-link { font-size: .88rem; font-weight: 700; }
+
+/* Unified Table Facts: clean label-value pairing across Model, Environment, and Setup columns */
+.explorer-compact .explorer-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.explorer-compact .explorer-fact {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+.explorer-compact .explorer-fact-label {
+  color: var(--ui-muted);
+  font-weight: 450;
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+.explorer-compact .explorer-fact-label::after {
+  content: ":";
+  margin-inline-end: 2px;
+}
+.explorer-compact .explorer-fact-value {
+  color: var(--ui-ink);
+  font-weight: 600;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+.explorer-compact .explorer-registered-date {
+  margin-top: 4px;
+  padding-top: 3px;
+  border-top: 1px dashed var(--ui-border);
+}
+
 @media (max-width: 700px) {
   .explorer-compact .explorer-search-row { grid-template-columns: minmax(0, 1fr); }
-  .explorer-compact .explorer-quick-filters { gap: 6px; }
+  .explorer-compact .explorer-quick-filters { grid-template-columns: minmax(0, 1fr); gap: 6px; }
   .explorer-compact .explorer-group-fields { grid-template-columns: minmax(0, 1fr); }
   .explorer-compact .explorer-result-actions { width: 100%; }
   .explorer-compact .explorer-sort { flex: 1; }

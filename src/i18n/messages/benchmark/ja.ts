@@ -265,6 +265,17 @@ const messages = {
   "benchmark.Prefill (tok/s)": "プリフィル (tok/s)",
   "benchmark.Decode (tok/s)": "デコード (tok/s)",
   "benchmark.Not recorded": "未記録",
-  "benchmark.One row per published measurement sample, in the order it was reported.": "報告された順序による公開測定サンプル行です。"
+  "benchmark.One row per published measurement sample, in the order it was reported.": "報告された順序による公開測定サンプル行です。",
+  "benchmark.Registered": "登録日時",
+  "benchmark.Mean latency": "平均所要時間",
+  "benchmark.{value} runs": "{value}回",
+  "benchmark.corpus.code_python": "Pythonコード",
+  "benchmark.corpus.code_mixed": "マルチ言語コード",
+  "benchmark.corpus.novel_ko": "韓国語小説",
+  "benchmark.corpus.novel_en": "英語小説",
+  "benchmark.corpus.novel_ja": "日本語小説",
+  "benchmark.method.cold-prompt-serving": "コールドプロンプト配信",
+  "benchmark.method.warm-prompt-serving": "ウォームプロンプト配信",
+  "benchmark.method.concurrent-prompt-serving": "並行プロンプト配信"
 } satisfies BenchmarkMessages;
 export default messages;

@@ -12,7 +12,15 @@ import {
   isCompared,
   type ExplorerItem,
 } from "./benchmark-explorer-state";
-import { environmentFacts, formatDuration, formatPromptLengths, formatThroughput, type SummaryFact } from "./benchmark-explorer-format";
+import {
+  environmentFacts,
+  formatDuration,
+  formatMethodName,
+  formatPromptLengths,
+  formatThroughput,
+  formatWorkloadName,
+  type SummaryFact,
+} from "./benchmark-explorer-format";
 import { formatWeightQuantization, modelPublisher, modelValue } from "./benchmark-model-identity";
 
 /**
@@ -105,7 +113,19 @@ export function BenchmarkExplorerTable({
             { key: "publisher", label: t("benchmark.Publisher"), value: modelValue(modelPublisher(info), t) },
             { key: "quantization", label: t("benchmark.Weight quantization"), value: formatWeightQuantization(info, t) },
           ];
-          const envFacts = environmentFacts(summary.setup, t).filter(fact => fact.key !== "gpu" && fact.key !== "cores");
+          const envRaw = environmentFacts(summary.setup, t).filter(fact => fact.key !== "gpu" && fact.key !== "cores");
+          const envFacts: SummaryFact[] = [
+            { key: "gpu", label: t("benchmark.GPU"), value: summary.hardware_label },
+            ...envRaw,
+          ];
+          const contextFormatted = formatPromptLengths(summary.prompt_lengths) ?? t("benchmark.Unknown");
+          const setupFacts: SummaryFact[] = [
+            { key: "context", label: t("benchmark.Input context"), value: contextFormatted },
+            { key: "workload", label: t("benchmark.Workload"), value: formatWorkloadName(summary.workload_label, t) },
+            { key: "method", label: t("benchmark.Method"), value: formatMethodName(summary.method_label, t) },
+            { key: "count", label: t("benchmark.Measurement count"), value: t("benchmark.{value} runs", { value: String(summary.row_count) }) },
+            ...(summary.mean_e2e_ms != null ? [{ key: "duration", label: t("benchmark.Mean latency"), value: `${formatDuration(summary.mean_e2e_ms)} s` }] : []),
+          ];
           return (
             <tr key={item.public_id} className="explorer-row">
               <td className="explorer-cell explorer-cell-compare">
@@ -135,7 +155,6 @@ export function BenchmarkExplorerTable({
               <td className="explorer-cell explorer-cell-environment">
                 <span className="explorer-cell-label" aria-hidden="true">{t("benchmark.Environment")}</span>
                 <div className="explorer-cell-value">
-                  <span className="explorer-identity-hardware">{summary.hardware_label}</span>
                   <FactList className="explorer-environment-facts" facts={envFacts} />
                 </div>
               </td>
@@ -146,14 +165,14 @@ export function BenchmarkExplorerTable({
                 {formatThroughput(summary.mean_tg_tps)}
               </ExplorerCell>
               <ExplorerCell label={t("benchmark.Context / workload")} className="explorer-cell-setup">
-                <span className="explorer-result-meta">{t("benchmark.Input context: {value}", { value: formatPromptLengths(summary.prompt_lengths) ?? t("benchmark.Unknown") })}</span>
-                <span className="explorer-setup-workload">{summary.workload_label}</span>
-                <span className="explorer-setup-method">{summary.method_label}</span>
-                <span className="explorer-measurement-meta">
-                  <LocalTime value={item.created_at} />
-                  <span> · {t("benchmark.Measurement count: {value}", { value: String(summary.row_count) })}</span>
-                  {summary.mean_e2e_ms != null ? <span> · {formatDuration(summary.mean_e2e_ms)} s</span> : null}
-                </span>
+                <FactList className="explorer-setup-facts" facts={setupFacts} />
+                <div className="explorer-fact explorer-registered-date">
+                  <span className="explorer-fact-label">{t("benchmark.Registered")}</span>
+                  <span className="explorer-fact-value"><LocalTime value={item.created_at} /></span>
+                </div>
+                {/* Keep screen-reader / test compatibility for compound strings */}
+                <span className="sr-only">{t("benchmark.Input context: {value}", { value: contextFormatted })}</span>
+                <span className="sr-only">{t("benchmark.Measurement count: {value}", { value: String(summary.row_count) })}</span>
               </ExplorerCell>
             </tr>
           );

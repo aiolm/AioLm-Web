@@ -17,10 +17,14 @@ export function BenchmarkExplorerFilters({ draft, onChange, actions, pending }: 
     <legend>{t(`benchmark.${EXPLORER_RANGE_LABELS[range]}`)}</legend>
     <div className="explorer-range-inputs">{(["min", "max"] as const).map(bound => {
       const key = `${range}_${bound}` as const;
-      return <div className="explorer-field" key={key}><label htmlFor={`filter-${key}`}>{t(bound === "min" ? "benchmark.Minimum" : "benchmark.Maximum")}</label>
-        <input id={`filter-${key}`} name={key} className="explorer-field-input" type="text" inputMode={range === "gpu_layers" ? "text" : "numeric"} value={draft[key]}
+      const boundLabel = t(bound === "min" ? "benchmark.Minimum" : "benchmark.Maximum");
+      return <div className="explorer-field" key={key}>
+        <label className="sr-only" htmlFor={`filter-${key}`}>{boundLabel}</label>
+        <input id={`filter-${key}`} name={key} className="explorer-field-input" type="text"
+          placeholder={boundLabel} inputMode={range === "gpu_layers" ? "text" : "numeric"} value={draft[key]}
           aria-invalid={invalid.includes(range)} aria-describedby={invalid.includes(range) ? `error-${range}` : undefined}
-          onChange={event => onChange(key, event.target.value)} /></div>;
+          onChange={event => onChange(key, event.target.value)} />
+      </div>;
     })}</div>
     {range in EXPLORER_RANGE_HINTS ? <p className="explorer-range-hint">{t(`benchmark.${EXPLORER_RANGE_HINTS[range as keyof typeof EXPLORER_RANGE_HINTS]}`)}</p> : null}
     {invalid.includes(range) ? <p id={`error-${range}`} className="explorer-validation" role="alert">{t("benchmark.Use whole numbers with minimum ≤ maximum.")}</p> : null}

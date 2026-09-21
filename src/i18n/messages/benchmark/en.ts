@@ -264,7 +264,18 @@ const messages = {
   "benchmark.Prefill (tok/s)": "Prefill (tok/s)",
   "benchmark.Decode (tok/s)": "Decode (tok/s)",
   "benchmark.Not recorded": "Not recorded",
-  "benchmark.One row per published measurement sample, in the order it was reported.": "One row per published measurement sample, in the order it was reported."
+  "benchmark.One row per published measurement sample, in the order it was reported.": "One row per published measurement sample, in the order it was reported.",
+  "benchmark.Registered": "Registered",
+  "benchmark.Mean latency": "Mean latency",
+  "benchmark.{value} runs": "{value} runs",
+  "benchmark.corpus.code_python": "Python code",
+  "benchmark.corpus.code_mixed": "Mixed code",
+  "benchmark.corpus.novel_ko": "Korean novel",
+  "benchmark.corpus.novel_en": "English novel",
+  "benchmark.corpus.novel_ja": "Japanese novel",
+  "benchmark.method.cold-prompt-serving": "Cold prompt serving",
+  "benchmark.method.warm-prompt-serving": "Warm prompt serving",
+  "benchmark.method.concurrent-prompt-serving": "Concurrent prompt serving"
 } as const;
 export type BenchmarkMessages = { [K in keyof typeof messages]: string };
 export default messages;

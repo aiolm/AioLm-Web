@@ -265,6 +265,17 @@ const messages = {
   "benchmark.Prefill (tok/s)": "프리필 (tok/s)",
   "benchmark.Decode (tok/s)": "디코드 (tok/s)",
   "benchmark.Not recorded": "기록되지 않음",
-  "benchmark.One row per published measurement sample, in the order it was reported.": "보고된 순서대로 표시한 공개 측정 샘플 행입니다."
+  "benchmark.One row per published measurement sample, in the order it was reported.": "보고된 순서대로 표시한 공개 측정 샘플 행입니다.",
+  "benchmark.Registered": "등록 일시",
+  "benchmark.Mean latency": "평균 소요 시간",
+  "benchmark.{value} runs": "{value}회",
+  "benchmark.corpus.code_python": "Python 코드",
+  "benchmark.corpus.code_mixed": "다국어 코드",
+  "benchmark.corpus.novel_ko": "한국어 소설",
+  "benchmark.corpus.novel_en": "영어 소설",
+  "benchmark.corpus.novel_ja": "일본어 소설",
+  "benchmark.method.cold-prompt-serving": "콜드 프롬프트 서빙",
+  "benchmark.method.warm-prompt-serving": "웜 프롬프트 서빙",
+  "benchmark.method.concurrent-prompt-serving": "동시 프롬프트 서빙"
 } satisfies BenchmarkMessages;
 export default messages;

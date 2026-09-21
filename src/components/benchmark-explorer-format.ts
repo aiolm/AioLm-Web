@@ -165,3 +165,42 @@ export function formatComparisonExecution(setup: BenchmarkSetup | undefined, t: 
   }
   return parts.length > 0 ? parts.join(" · ") : t("benchmark.Unknown");
 }
+
+const CORPUS_KEYS: Record<string, string> = {
+  code_python: "benchmark.corpus.code_python",
+  code_mixed: "benchmark.corpus.code_mixed",
+  novel_ko: "benchmark.corpus.novel_ko",
+  novel_en: "benchmark.corpus.novel_en",
+  novel_ja: "benchmark.corpus.novel_ja",
+};
+
+/** Formats workload corpus to a user-friendly name while retaining original identifier. */
+export function formatWorkloadName(workload: string | null | undefined, t: Translator = benchmarkFallback): string {
+  if (!workload) return t("benchmark.Unknown");
+  const key = CORPUS_KEYS[workload];
+  if (key) {
+    return `${t(key)} (${workload})`;
+  }
+  return workload;
+}
+
+const METHOD_KEYS: Record<string, string> = {
+  "cold-prompt-serving": "benchmark.method.cold-prompt-serving",
+  "warm-prompt-serving": "benchmark.method.warm-prompt-serving",
+  "concurrent-prompt-serving": "benchmark.method.concurrent-prompt-serving",
+};
+
+/** Formats benchmark method id@version to a friendly name while retaining original identifier. */
+export function formatMethodName(method: string | null | undefined, t: Translator = benchmarkFallback): string {
+  if (!method) return t("benchmark.Unknown");
+  const atIndex = method.lastIndexOf("@");
+  const baseId = atIndex !== -1 ? method.slice(0, atIndex) : method;
+  const version = atIndex !== -1 ? method.slice(atIndex + 1) : null;
+  const key = METHOD_KEYS[baseId];
+  if (key) {
+    const localized = t(key);
+    const verText = version ? ` (v${version})` : "";
+    return `${localized}${verText} (${method})`;
+  }
+  return method;
+}

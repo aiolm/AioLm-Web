@@ -265,6 +265,17 @@ const messages = {
   "benchmark.Prefill (tok/s)": "预填充 (tok/s)",
   "benchmark.Decode (tok/s)": "解码 (tok/s)",
   "benchmark.Not recorded": "未记录",
-  "benchmark.One row per published measurement sample, in the order it was reported.": "按上报顺序排列的公开测量样本行。"
+  "benchmark.One row per published measurement sample, in the order it was reported.": "按上报顺序排列的公开测量样本行。",
+  "benchmark.Registered": "提交时间",
+  "benchmark.Mean latency": "平均耗时",
+  "benchmark.{value} runs": "{value}次",
+  "benchmark.corpus.code_python": "Python代码",
+  "benchmark.corpus.code_mixed": "多语言代码",
+  "benchmark.corpus.novel_ko": "韩文小说",
+  "benchmark.corpus.novel_en": "英文小说",
+  "benchmark.corpus.novel_ja": "日文小说",
+  "benchmark.method.cold-prompt-serving": "冷启动提示服务",
+  "benchmark.method.warm-prompt-serving": "热启动提示服务",
+  "benchmark.method.concurrent-prompt-serving": "并发提示服务"
 } satisfies BenchmarkMessages;
 export default messages;

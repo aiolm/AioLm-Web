@@ -1833,10 +1833,11 @@ table.data th { color: var(--ui-muted); font-weight: 650; }
  * They wrap as a group, so the cell stays two lines on a wide table and folds
  * one pair per line on a phone without any of them losing its label.
  */
-.explorer-facts { display: flex; flex-wrap: wrap; gap: 2px 12px; margin: 6px 0 0; padding: 0; list-style: none; color: var(--ui-muted); font-size: .78rem; font-weight: 400; }
-.explorer-fact { display: flex; gap: 4px; min-width: 0; overflow-wrap: anywhere; }
-.explorer-fact-label { color: var(--ui-faint); white-space: nowrap; }
-.explorer-fact-value { min-width: 0; }
+.explorer-facts { display: flex; flex-direction: column; gap: 3px; margin: 4px 0 0; padding: 0; list-style: none; color: var(--ui-muted); font-size: .8rem; }
+.explorer-fact { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px; min-width: 0; overflow-wrap: anywhere; }
+.explorer-fact-label { color: var(--ui-muted); white-space: nowrap; font-size: .78rem; }
+.explorer-fact-label::after { content: ":"; margin-inline-end: 2px; }
+.explorer-fact-value { min-width: 0; color: var(--ui-ink); font-weight: 600; }
 /* Model identity qualifies the name directly above it, so it reads first. */
 .explorer-model-facts { margin-block-start: 4px; font-size: .8rem; }
 .explorer-model-facts .explorer-fact-value { color: var(--ui-ink); font-weight: 600; }
