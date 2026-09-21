@@ -1,7 +1,9 @@
 # AioLM Website
 
-Product introduction and anonymous public benchmark explorer. Next.js App Router + PostgreSQL
-(Supabase-compatible) + Cloudflare Turnstile. No accounts in v1.
+Website for AioLM — All In One LM — the desktop workspace for local language
+models. Product introduction and anonymous public benchmark explorer. Next.js
+App Router + PostgreSQL (Supabase-compatible) + Cloudflare Turnstile. No
+accounts in v1.
 
 - Production site: [aiolm.vercel.app](https://aiolm.vercel.app).
 - Desktop app repository: [aiolm/AioLM](https://github.com/aiolm/AioLM).

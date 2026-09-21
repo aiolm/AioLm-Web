@@ -1,6 +1,6 @@
 const messages = {
   "site.title": "AioLM — Local models. One workspace.",
-  "site.description": "AioLM is a desktop workspace for llama.cpp: discover GGUF models, manage runtimes, chat locally, and measure performance. Browse self-reported public benchmarks with their full setup.",
+  "site.description": "AioLM (All In One LM) is a desktop workspace for llama.cpp: discover GGUF models, manage runtimes, chat locally, and measure performance. Browse self-reported public benchmarks with their full setup.",
   "site.skip": "Skip to main content",
   "site.primary": "Primary",
   "site.home": "Home",

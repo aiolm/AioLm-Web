@@ -3,8 +3,11 @@
 Public home and explorer pages have localized canonical/hreflang links and
 Open Graph/Twitter metadata. `/opengraph-image` provides a 1200 × 630 PNG.
 The four homepages render visible product FAQs and matching JSON-LD, plus
-WebSite and SoftwareApplication entities. Only released Windows support is
-advertised; no ratings, rankings or performance claims are invented.
+WebSite and SoftwareApplication entities. Both entities carry the name the
+product is short for, All In One LM, as their schema.org alternateName, and the
+first FAQ answer spells it out in prose, so the two names are tied together for
+a reader and for an answer engine. Only released Windows support is advertised;
+no ratings, rankings or performance claims are invented.
 
 Public benchmark detail pages render their initial data on the server and
 revalidate in the browser. Metadata uses each result's model, hardware, method

@@ -2,7 +2,7 @@ import type { EnglishMessages } from './en';
 const messages = {
   "home.faqTitle": "よくある質問",
   "home.faqWhatQuestion": "AioLMとは何ですか？",
-  "home.faqWhatAnswer": "AioLMはローカル言語モデル向けのデスクトップワークスペースです。GGUFモデルの検索、llama.cppランタイムの管理、ローカルチャット、性能ベンチマークを1つのアプリで利用できます。",
+  "home.faqWhatAnswer": "AioLMはAll In One LMの略で、ローカル言語モデル向けのデスクトップワークスペースです。GGUFモデルの検索、llama.cppランタイムの管理、ローカルチャット、性能ベンチマークを1つのアプリで利用できます。",
   "home.faqOsQuestion": "対応するOSは何ですか？",
   "home.faqOsAnswer": "現在はWindowsに対応しています。macOSとLinuxへの対応は予定されています。",
   "home.faqBenchmarkQuestion": "公開ベンチマークは何を測定していますか？",

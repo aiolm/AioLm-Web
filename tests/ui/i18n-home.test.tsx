@@ -42,6 +42,18 @@ describe('localized static homepage', () => {
     expect(await homeMetadata({ params })).toMatchObject({ alternates: { canonical: '/' + locale, languages: { en: '/en', ko: '/ko', ja: '/ja', zh: '/zh' } } });
     expect(await layoutMetadata({ params })).toMatchObject({ title: { default: site['site.title'] }, description: site['site.description'] });
   });
+  it.each(locales)('says in %s what the product name is short for, in prose and in structured data', async locale => {
+    const params = Promise.resolve({ locale });
+    const [home, site, page] = await Promise.all([getMessages(locale, 'home'), getMessages(locale, 'site'), Home({ params })]);
+    const html = renderToStaticMarkup(await Layout({ params, children: page }));
+    // A reader who asks what AioLM is gets the expansion in the answer itself,
+    // and search results carry it too rather than only the initials.
+    expect(home['home.faqWhatAnswer']).toContain('All In One LM');
+    expect(site['site.description']).toContain('All In One LM');
+    // An answer engine is told the two names belong together instead of having
+    // to infer it from the prose.
+    expect(html).toContain('"alternateName":"All In One LM"');
+  });
   it.each(locales)('renders a localized %s not-found screen and document title', async locale => {
     const params = Promise.resolve({ locale });
     const site = await getMessages(locale, 'site');

@@ -1,7 +1,7 @@
 import type { EnglishMessages } from './en';
 const messages = {
   "site.title": "AioLM — ローカルモデルをひとつのワークスペースで。",
-  "site.description": "AioLMはllama.cpp向けのデスクトップワークスペースです。GGUFモデルの探索、ランタイム管理、ローカルチャット、性能測定をひとつに。ユーザーが公開したベンチマークを実行環境とともに確認できます。",
+  "site.description": "AioLM（All In One LM）はllama.cpp向けのデスクトップワークスペースです。GGUFモデルの探索、ランタイム管理、ローカルチャット、性能測定をひとつに。ユーザーが公開したベンチマークを実行環境とともに確認できます。",
   "site.skip": "本文へスキップ",
   "site.primary": "メインナビゲーション",
   "site.home": "ホーム",
