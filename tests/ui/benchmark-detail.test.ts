@@ -188,7 +188,7 @@ describe("graphics devices", () => {
 
   it("shows every member the contract publishes for a device", () => {
     expect(describeGpu(discrete)).toBe(
-      "Name: synthetic-gpu-a · Vendor: synthetic-vendor · VRAM: 24,576 MiB · Driver: 0.0.0-synthetic · Integrated: No",
+      "Name: synthetic-gpu-a · Vendor: synthetic-vendor · VRAM: 24 GB · Driver: 0.0.0-synthetic · Integrated: No",
     );
   });
 
@@ -215,12 +215,12 @@ describe("graphics devices", () => {
     expect(describeGpu({ ...discrete, integrated: null })).toContain("Integrated: Unknown");
   });
 
-  it("keeps VRAM in the megabytes the contract publishes", () => {
+  it("formats VRAM in gigabytes for display", () => {
     expect(formatMegabytes(24576)).toBe("24,576 MiB");
     expect(formatMegabytes(0)).toBe("0 MiB");
     expect(formatMegabytes(null)).toBe("Unknown");
     const text = describeGpu(discrete);
-    expect(text).not.toMatch(/GiB|GB|bytes/);
+    expect(text).toContain("24 GB");
   });
 
   it("keeps no devices apart from no list at all", () => {
@@ -279,8 +279,8 @@ describe("measurement columns", () => {
     const byKey = new Map(buildRowColumns([row], true).map((c) => [c.key, c]));
     expect(byKey.get("tg_tps")).toMatchObject({ label: "Decode", unit: "tok/s", numeric: true });
     expect(byKey.get("pp_tps")).toMatchObject({ label: "Prefill", unit: "tok/s", numeric: true });
-    expect(byKey.get("e2e_ms")).toMatchObject({ label: "End-to-end duration", unit: "ms", numeric: true });
-    expect(byKey.get("ttft_ms")).toMatchObject({ label: "TTFT", unit: "ms" });
+    expect(byKey.get("e2e_ms")).toMatchObject({ label: "End-to-end duration", unit: "s", numeric: true });
+    expect(byKey.get("ttft_ms")).toMatchObject({ label: "TTFT", unit: "s" });
     expect(byKey.get("prompt_tokens")).toMatchObject({ label: "Prompt", unit: "tokens" });
     // peak_memory_bytes is specifically labeled Peak process memory, not VRAM or system memory
     expect(byKey.get("peak_memory_bytes")).toMatchObject({ label: "Peak process memory", numeric: true });
@@ -313,8 +313,8 @@ describe("measurement columns", () => {
 
   it("formats each cell in the unit its column promises", () => {
     const byKey = new Map(buildRowColumns([row], true).map((c) => [c.key, c]));
-    expect(byKey.get("ttft_ms")?.format(0.62)).toBe("0.6");
-    expect(byKey.get("e2e_ms")?.format(2560)).toBe("2560.0");
+    expect(byKey.get("ttft_ms")?.format(620)).toBe("0.62");
+    expect(byKey.get("e2e_ms")?.format(2560)).toBe("2.56");
     expect(byKey.get("tg_tps")?.format(51.27)).toBe("51.3");
     expect(byKey.get("tg_tps")?.format(null)).toBe(DETAIL_MISSING);
     expect(byKey.get("prompt_tokens")?.format(4096)).toBe("4,096");
@@ -364,7 +364,7 @@ describe("structured measurement devices", () => {
     const devices = describeGpuDetails([{ name: "Synthetic GPU · Revision B", vendor: "Example", vram_mb: 8192, driver: null, integrated: false }]);
     expect(devices[0].name).toBe("Synthetic GPU · Revision B");
     expect(devices[0].facts).toEqual([
-      { label: "Vendor", value: "Example" }, { label: "VRAM", value: "8,192 MiB" },
+      { label: "Vendor", value: "Example" }, { label: "VRAM", value: "8 GB" },
       { label: "Driver", value: "Unknown" }, { label: "Integrated", value: "No" },
     ]);
     expect(describeGpuDetails(null)).toEqual([]);

@@ -266,7 +266,7 @@ export function BenchmarkBrowser(): React.JSX.Element {
       <section className="explorer-guide" aria-labelledby="explorer-guide-title">
         <h2 id="explorer-guide-title" className="explorer-guide-title">{t("benchmark.Compare like for like")}</h2>
         <p className="explorer-guide-text">{t("benchmark.Match the model fingerprint, hardware, workload and measurement method before reading anything into a difference. Results published with a different method or workload measured different work.")}</p>
-        <p className="explorer-guide-text">{t("benchmark.Generation (tok/s) is the mean generation throughput in tokens per second, so higher is faster. Duration (ms) is the mean end-to-end time of a measurement in milliseconds, so lower is faster. The two answer different questions and do not convert into each other.")}</p>
+        <p className="explorer-guide-text">{t("benchmark.Generation (tok/s) is the mean generation throughput in tokens per second, so higher is faster. Duration (s) is the mean end-to-end time of a measurement in seconds, so lower is faster. The two answer different questions and do not convert into each other.")}</p>
         <p className="explorer-guide-text">{t("benchmark.Prompt processing (tok/s) is the mean input throughput: how fast a result consumed its prompt. Input context lists the input lengths a result was configured with, and the input length filter and its sorts read the largest of them. The total context the server allocated is a different number and appears on the result page.")}</p>
         <p className="explorer-guide-text">{t("benchmark.A missing measurement is shown as an em dash (—), never as a zero. Sorting does not make different setups directly comparable.")}</p>
       </section>

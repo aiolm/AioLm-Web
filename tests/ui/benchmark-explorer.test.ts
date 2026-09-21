@@ -39,7 +39,6 @@ import {
   formatDuration,
   formatPromptLength,
   formatPromptLengths,
-  formatPublishedDate,
   formatSampleCount,
   formatThroughput,
 } from "@/components/benchmark-explorer-format";
@@ -386,7 +385,7 @@ describe("result cell formatting", () => {
     expect(formatThroughput(Number.NaN)).toBe(EXPLORER_MISSING);
     expect(formatThroughput(42.25)).toBe("42.3");
     expect(formatDuration(null)).toBe(EXPLORER_MISSING);
-    expect(formatDuration(1234.6)).toBe("1235");
+    expect(formatDuration(1234.6)).toBe("1.23");
   });
 
   it("marks failed measurement rows so a partial run is not read as clean", () => {
@@ -394,10 +393,7 @@ describe("result cell formatting", () => {
     expect(formatSampleCount(12, 3)).toBe("12 (3 failed)");
   });
 
-  it("prints the publication day in UTC so a shared link reads the same everywhere", () => {
-    expect(formatPublishedDate("2026-01-02T03:04:05.000Z")).toBe("2026-01-02");
-    expect(formatPublishedDate("not a date")).toBe(EXPLORER_MISSING);
-  });
+
 });
 
 describe("original browser helper names", () => {

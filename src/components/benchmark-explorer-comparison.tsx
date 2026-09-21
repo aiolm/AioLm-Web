@@ -1,4 +1,5 @@
 "use client";
+import { LocalTime } from "./local-time";
 import { useI18n } from "@/i18n/client";
 import { localizedPath, type Locale } from "@/i18n/config";
 import type { Translator } from "@/i18n/types";
@@ -12,7 +13,7 @@ import {
   explorerDetailHref,
   type ExplorerItem,
 } from "./benchmark-explorer-state";
-import { formatDuration, formatPromptLengths, formatPublishedDate, formatSampleCount, formatThroughput, formatComparisonCpu, formatComparisonExecution, formatComparisonOs, formatComparisonRuntime, formatComparisonVram } from "./benchmark-explorer-format";
+import { formatDuration, formatPromptLengths, formatSampleCount, formatThroughput, formatComparisonCpu, formatComparisonExecution, formatComparisonOs, formatComparisonRuntime, formatComparisonVram } from "./benchmark-explorer-format";
 import { formatBaseModels, formatWeightQuantization, modelIdentityComparison, modelPublisher, modelValue } from "./benchmark-model-identity";
 
 /**
@@ -49,11 +50,11 @@ function comparisonFields(t: Translator, locale: Locale, search: string): Compar
   },
   { key: "prompt-processing", label: t("benchmark.Prefill (tok/s)"), render: (item) => formatThroughput(item.summary.mean_pp_tps) },
   { key: "throughput", label: t("benchmark.Decode (tok/s)"), render: (item) => formatThroughput(item.summary.mean_tg_tps) },
-  { key: "duration", label: t("benchmark.Duration (ms)"), render: (item) => formatDuration(item.summary.mean_e2e_ms) },
+  { key: "duration", label: t("benchmark.Duration (s)"), render: (item) => formatDuration(item.summary.mean_e2e_ms) },
   {
     key: "published",
     label: t("benchmark.Published"),
-    render: (item) => <time dateTime={item.created_at}>{formatPublishedDate(item.created_at)}</time>,
+    render: (item) => <LocalTime value={item.created_at} />,
   },
   {
     key: "detail",

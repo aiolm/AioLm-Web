@@ -20,7 +20,7 @@ import { BenchmarkDetail } from "@/components/benchmark-detail";
 import { buildSetupGroups } from "@/components/benchmark-detail-fields";
 import { buildRowColumns, isFailedRow } from "@/components/benchmark-detail-rows";
 import { describeGpu, formatByteSize, displayText } from "@/components/benchmark-detail-format";
-import { formatUpdatedDate, formatPublishedDate, formatThroughput, formatDuration } from "@/components/benchmark-explorer-format";
+import { formatThroughput, formatDuration } from "@/components/benchmark-explorer-format";
 import { EXPLORER_FILTER_KEYS, EXPLORER_FILTER_LABELS, EXPLORER_FILTER_PLACEHOLDERS, type ExplorerItem } from "@/components/benchmark-explorer-state";
 import BenchmarksPage, { generateMetadata } from "@/app/[locale]/benchmarks/page";
 import BenchmarkPage, { generateMetadata as detailMetadata } from "@/app/[locale]/benchmarks/[id]/page";
@@ -162,12 +162,7 @@ describe.each(locales)("benchmark localization: %s", locale => {
     expect(wrap(locale, await BenchmarksPage({ params }))).toContain(escape(t("benchmark.Benchmark explorer")));
     expect(wrap(locale, await BenchmarkPage({ params }))).toContain(escape(t("benchmark.Loading benchmark…")));
   });
-  it("uses explicit UTC and locale for dates and deterministic measurement precision", () => {
-    const options: Intl.DateTimeFormatOptions = { timeZone: "UTC", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" };
-    const language = { en: "en-US", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN" }[locale];
-    expect(formatUpdatedDate(item.created_at, locale)).toBe(new Intl.DateTimeFormat(language, options).format(new Date(item.created_at)));
-    expect(formatUpdatedDate("invalid", locale)).toBe("—");
-    expect(formatPublishedDate("2026-01-02T01:00:00+09:00")).toBe("2026-01-01");
+  it("uses deterministic measurement precision", () => {
     expect(formatThroughput(42.25)).toBe("42.3");
     expect(formatDuration(null)).toBe("—");
   });

@@ -219,7 +219,7 @@ describe("the result list", () => {
 
     const html = render(<BenchmarkExplorerTable items={[item("a", { setup })]} compare={[]} onToggleComparison={() => {}} />);
     expect(html).toContain('<span class="explorer-fact-label">Backend</span><span class="explorer-fact-value">synthetic-backend<');
-    expect(html).toContain('<span class="explorer-fact-label">VRAM</span><span class="explorer-fact-value">4096 MiB<');
+    expect(html).toContain('<span class="explorer-fact-label">VRAM</span><span class="explorer-fact-value">4 GB<');
   });
 
   it("keeps the six columns and the workload metadata in the redesigned list", () => {
@@ -289,7 +289,7 @@ describe("the comparison", () => {
     expect(formatComparisonOs(setup, t)).toBe("synthetic-os · x64");
     expect(formatComparisonCpu(setup, t)).toBe("synthetic-cpu · Logical cores: 8");
     expect(formatComparisonRuntime(setup, t)).toBe("synthetic-runtime 1.2 · synthetic-backend");
-    expect(formatComparisonVram(setup, t)).toBe("8192 MiB");
+    expect(formatComparisonVram(setup, t)).toBe("8 GB");
     expect(formatComparisonExecution(setup, t)).toContain("Parallel requests: 2");
     expect(formatComparisonExecution(setup, t)).toContain("Threads: 8");
     expect(formatComparisonExecution(setup, t)).toContain("K: f16, V: f16");
@@ -309,7 +309,7 @@ describe("the comparison", () => {
     }
     expect(html).toContain("synthetic-os · x64");
     expect(html).toContain("synthetic-runtime 1.2 · synthetic-backend");
-    expect(html).toContain("8192 MiB");
+    expect(html).toContain("8 GB");
   });
 });
 

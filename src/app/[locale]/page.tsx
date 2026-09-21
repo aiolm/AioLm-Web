@@ -7,13 +7,14 @@ import { createTranslator } from '@/i18n/translate';
 import Link from "next/link";
 import { GITHUB_REPOSITORY_URL, GitHubMark } from "@/components/site-links";
 import { WorkspaceIllustration } from "@/components/workspace-illustration";
+import { InstallCommand } from "@/components/install-command";
 
 /**
  * Product introduction. A fully static server component: no data is fetched and
  * nothing here is interactive beyond native links, so the page ships no client
  * JavaScript of its own.
  *
- * There is intentionally no download or release link anywhere on this page.
+ * Direct installation command for Windows and planned support for macOS and Linux.
  */
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -21,12 +22,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   if (!isLocale(locale)) notFound();
   return { alternates: localeAlternates(locale, '/') };
 }
-
-const PLATFORMS = [
-  { label: "home.windows", icon: <WindowsIcon /> },
-  { label: "home.macos", icon: <AppleIcon /> },
-  { label: "home.linux", icon: <LinuxIcon /> },
-] as const;
 
 const STEPS = [
   {
@@ -61,7 +56,8 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           <div className="hero-copy">
             <h1 className="hero-title" id="hero-title">
               {t('home.heroFirst')}
-              <br />
+              <br className="hero-title-break" />
+              {' '}
               {t('home.heroSecond')}
             </h1>
             <p className="hero-subtitle">
@@ -79,14 +75,18 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
               </Link>
             </div>
 
-            <ul className="hero-platforms">
-              {PLATFORMS.map((platform) => (
-                <li className="hero-platform" key={platform.label}>
-                  <span className="hero-platform-icon" aria-hidden="true">{platform.icon}</span>
-                  {t(platform.label)}
-                </li>
-              ))}
-            </ul>
+            <InstallCommand
+              messages={{
+                windows: t('home.windows'),
+                macos: t('home.macos'),
+                linux: t('home.linux'),
+                title: t('home.installCommandTitle'),
+                copy: t('home.copyCommand'),
+                copied: t('home.copied'),
+                macosPlanned: t('home.macosPlanned'),
+                linuxPlanned: t('home.linuxPlanned'),
+              }}
+            />
           </div>
 
           <div className="hero-figure">
@@ -194,27 +194,4 @@ function DocumentIcon(): React.JSX.Element {
   );
 }
 
-function WindowsIcon(): React.JSX.Element {
-  return (
-    <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false">
-      <path fill="currentColor" d="M0 2.4 6.5 1.5v6H0v-5.1Zm7.4-1L16 0v7.5H7.4v-6.1ZM0 8.5h6.5v6L0 13.6V8.5Zm7.4 0H16V16l-8.6-1.2V8.5Z" />
-    </svg>
-  );
-}
 
-function AppleIcon(): React.JSX.Element {
-  return (
-    <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false">
-      <path fill="currentColor" d="M11.2 8.5c0-1.5 1.2-2.3 1.3-2.3-.7-1-1.8-1.2-2.2-1.2-1-.1-1.9.6-2.4.6s-1.2-.6-2-.6c-1 0-2 .6-2.5 1.5-1.1 1.9-.3 4.6.8 6.1.5.7 1.1 1.5 1.9 1.5s1-.5 2-.5 1.2.5 2 .5 1.3-.7 1.8-1.4c.6-.8.8-1.6.8-1.6s-1.5-.6-1.5-2.6ZM9.7 3.9c.4-.5.7-1.2.6-1.9-.6 0-1.4.4-1.8.9-.4.5-.7 1.2-.6 1.9.7.1 1.4-.3 1.8-.9Z" />
-    </svg>
-  );
-}
-
-function LinuxIcon(): React.JSX.Element {
-  return (
-    <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false">
-      <path {...stroke} d="M9.5 4.2c0-1.2.9-2.2 2.5-2.2s2.5 1 2.5 2.2v2.6c0 1 .6 1.6 1.4 2.6 1 1.3 1.6 2.6 1.9 4.2.2 1.1.7 1.8 1.4 2.5.6.6.4 1.6-.5 1.8-1 .2-2 .5-2.6 1.1-.9.8-2.3 1.2-4.1 1.2s-3.2-.4-4.1-1.2c-.6-.6-1.6-.9-2.6-1.1-.9-.2-1.1-1.2-.5-1.8.7-.7 1.2-1.4 1.4-2.5.3-1.6.9-2.9 1.9-4.2.8-1 1.4-1.6 1.4-2.6V4.2Z" />
-      <path {...stroke} d="M10.4 5.6h.01M13.6 5.6h.01M10.8 8.4c.7.5 1.7.5 2.4 0" />
-    </svg>
-  );
-}

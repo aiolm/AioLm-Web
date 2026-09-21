@@ -1,4 +1,5 @@
 "use client";
+import { LocalTime } from "./local-time";
 
 import "./management-usability.css";
 
@@ -406,7 +407,7 @@ export function ManagementPanel(): React.JSX.Element {
           <dl className="kv">
             <dt>{t("manage.publicId")}</dt><dd>{info.public_id}</dd>
             <dt>{t("manage.revision")}</dt><dd>{number(info.revision)}</dd>
-            <dt>{t("manage.expires")}</dt><dd>{new Date(info.expires_at).toLocaleString(intlLocales[locale], { timeZone: "UTC", timeZoneName: "short" })}</dd>
+            <dt>{t("manage.expires")}</dt><dd><LocalTime value={info.expires_at} /></dd>
           </dl>
           {!csrf ? (
             <p role="status" className="muted">{t("manage.readOnly")}</p>

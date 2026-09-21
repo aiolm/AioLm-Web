@@ -1,4 +1,5 @@
 "use client";
+import { LocalTime } from "./local-time";
 import { useI18n } from "@/i18n/client";
 import { localizedPath } from "@/i18n/config";
 import { useSearchParams } from "next/navigation";
@@ -12,7 +13,7 @@ import { asRecord } from "@/components/benchmark-detail-format";
 import { buildSetupGroups, type BenchmarkSetup, type SetupField } from "@/components/benchmark-detail-fields";
 import { formatWeightQuantization, modelPublisher, modelValue, type BenchmarkModelInfo } from "@/components/benchmark-model-identity";
 import { buildRowColumns, isFailedRow } from "@/components/benchmark-detail-rows";
-import { formatUpdatedDate, formatDuration, formatPromptLengths, formatThroughput } from "@/components/benchmark-explorer-format";
+import { formatDuration, formatPromptLengths, formatThroughput } from "@/components/benchmark-explorer-format";
 import { BilingualHeader } from "./benchmark-i18n";
 
 interface Detail {
@@ -190,10 +191,10 @@ export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.E
         <div className="detail-performance-grid">
           <div><BilingualHeader local={t("benchmark.Prefill")} en="Prefill" locale={locale} /><strong>{formatThroughput(summary.mean_pp_tps)} <small>tok/s</small></strong></div>
           <div><BilingualHeader local={t("benchmark.Decode")} en="Decode" locale={locale} /><strong>{formatThroughput(summary.mean_tg_tps)} <small>tok/s</small></strong></div>
-          <div><BilingualHeader local={t("benchmark.Duration")} en="Duration" locale={locale} /><strong>{formatDuration(summary.mean_e2e_ms)} <small>ms</small></strong></div>
+          <div><BilingualHeader local={t("benchmark.Duration")} en="Duration" locale={locale} /><strong>{formatDuration(summary.mean_e2e_ms)} <small>s</small></strong></div>
         </div>
         <p className="detail-run-summary"><span>{t("benchmark.Input context")}: <strong>{formatPromptLengths(summary.prompt_lengths) ?? "—"}</strong></span><span>{summary.workload_label}</span><span>{t("benchmark.Measurement count")}: {summary.row_count}</span></p>
-        <p className="muted detail-record-date">{t("benchmark.Revision {revision} · updated {date} (UTC)", { revision: data.revision, date: formatUpdatedDate(data.updated_at, locale) })}</p>
+        <p className="muted detail-record-date">{t("benchmark.Revision {revision} · updated", { revision: data.revision })} <LocalTime value={data.updated_at} /></p>
       </section>
 
       <BenchmarkHardwareOverview benchmark={data.benchmark} />

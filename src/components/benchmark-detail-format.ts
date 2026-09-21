@@ -6,7 +6,7 @@ import { benchmarkFallback } from "./benchmark-i18n";
  * structured value as its JSON - never as a zero, never as "[object Object]".
  */
 
-import { EXPLORER_MISSING } from "./benchmark-explorer-format";
+import { EXPLORER_MISSING, formatVramGb } from "./benchmark-explorer-format";
 
 /** The same gap glyph the explorer uses, so a missing value reads alike on both pages. */
 export const DETAIL_MISSING = EXPLORER_MISSING;
@@ -46,7 +46,7 @@ export function describeGpu(value: unknown, t: Translator = benchmarkFallback): 
   return [
     `${t("benchmark.Name")}: ${displayText(gpu["name"], t)}`,
     `${t("benchmark.Vendor")}: ${displayText(gpu["vendor"], t)}`,
-    `${t("benchmark.VRAM")}: ${formatMegabytes(gpu["vram_mb"], t)}`,
+    `${t("benchmark.VRAM")}: ${formatVramGb(gpu["vram_mb"], t)}`,
     `${t("benchmark.Driver")}: ${displayText(gpu["driver"], t)}`,
     `${t("benchmark.Integrated")}: ${displayText(gpu["integrated"], t)}`,
   ].join(" · ");
@@ -66,7 +66,7 @@ export function describeGpuDetails(value: unknown, t: Translator = benchmarkFall
       name: device ? displayText(device["name"], t) : t("benchmark.Unknown device"),
       facts: [
         { label: t("benchmark.Vendor"), value: displayText(device?.["vendor"], t) },
-        { label: t("benchmark.VRAM"), value: formatMegabytes(device?.["vram_mb"], t) },
+        { label: t("benchmark.VRAM"), value: formatVramGb(device?.["vram_mb"], t) },
         { label: t("benchmark.Driver"), value: displayText(device?.["driver"], t) },
         { label: t("benchmark.Integrated"), value: displayText(device?.["integrated"], t) },
       ],
@@ -95,7 +95,12 @@ export function formatByteSize(value: unknown, t: Translator = benchmarkFallback
   return scaled === null ? exact : `${scaled} (${exact})`;
 }
 
-export { formatCompactBytes } from "./benchmark-explorer-format";
+export { formatCompactBytes, formatVramGb } from "./benchmark-explorer-format";
+
+/** Seconds formatted to two decimal places (input in milliseconds). */
+export function formatSeconds(value: unknown): string {
+  return typeof value === "number" && Number.isFinite(value) ? (value / 1000).toFixed(2) : DETAIL_MISSING;
+}
 
 /** One decimal: sub-millisecond per-token times are normal and rounding erases them. */
 export function formatMilliseconds(value: unknown): string {

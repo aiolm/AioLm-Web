@@ -1,5 +1,4 @@
 import type { Translator } from "@/i18n/types";
-import { intlLocales, type Locale } from "@/i18n/config";
 import type { BenchmarkSetup } from "@/lib/benchmark-discovery";
 import { benchmarkFallback } from "./benchmark-i18n";
 /**
@@ -15,9 +14,18 @@ export function formatThroughput(value: number | null | undefined): string {
   return typeof value === "number" && Number.isFinite(value) ? value.toFixed(1) : EXPLORER_MISSING;
 }
 
-/** Mean end-to-end duration in milliseconds. */
+/** Mean end-to-end duration in seconds. */
 export function formatDuration(value: number | null | undefined): string {
-  return typeof value === "number" && Number.isFinite(value) ? String(Math.round(value)) : EXPLORER_MISSING;
+  return typeof value === "number" && Number.isFinite(value) ? (value / 1000).toFixed(2) : EXPLORER_MISSING;
+}
+
+/** VRAM formatted in gigabytes (GB). */
+export function formatVramGb(vramMb: unknown, t: Translator = benchmarkFallback): string {
+  if (typeof vramMb !== "number" || !Number.isFinite(vramMb) || vramMb < 0) return t("benchmark.Unknown");
+  if (vramMb === 0) return t("benchmark.{value} GB", { value: "0" });
+  const gb = vramMb / 1024;
+  const formatted = Number.isInteger(gb) ? String(gb) : (Math.round(gb * 10) / 10).toString();
+  return t("benchmark.{value} GB", { value: formatted });
 }
 
 /** Measurement rows behind a result, calling out failed rows so a partial run is not read as a clean one. */
@@ -25,19 +33,6 @@ export function formatSampleCount(rowCount: number, failedRows: number, t: Trans
   if (!Number.isFinite(rowCount)) return EXPLORER_MISSING;
   const total = String(rowCount);
   return Number.isFinite(failedRows) && failedRows > 0 ? t("benchmark.{total} ({failed} failed)", { total, failed: failedRows }) : total;
-}
-
-/** Publication date as an ISO calendar day in UTC: stable across time zones and server rendering. */
-export function formatPublishedDate(iso: string): string {
-  const parsed = Date.parse(iso);
-  if (Number.isNaN(parsed)) return EXPLORER_MISSING;
-  return new Date(parsed).toISOString().slice(0, 10);
-}
-
-/** Explicit locale and UTC keep the update timestamp stable across server and browser. */
-export function formatUpdatedDate(iso: string, locale: Locale): string {
- const date = new Date(iso);
- return Number.isNaN(date.getTime()) ? EXPLORER_MISSING : new Intl.DateTimeFormat(intlLocales[locale], { timeZone: "UTC", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).format(date);
 }
 
 /**
@@ -118,7 +113,7 @@ export function environmentFacts(setup: (BenchmarkSetup & { ram_bytes?: number |
     { key: "os", label: t("benchmark.OS"), value: setup.os ?? "" },
     { key: "runtime", label: t("benchmark.Runtime"), value: runtime },
     { key: "backend", label: t("benchmark.Backend"), value: setup.backend ?? "" },
-    { key: "vram", label: t("benchmark.VRAM"), value: setup.vram_mb == null ? "" : t("benchmark.{value} MiB", { value: setup.vram_mb }) },
+    { key: "vram", label: t("benchmark.VRAM"), value: setup.vram_mb == null ? "" : formatVramGb(setup.vram_mb, t) },
     { key: "cores", label: t("benchmark.Logical cores"), value: setup.cores == null ? "" : String(setup.cores) },
   );
   return facts.filter((fact) => fact.value !== "");
@@ -153,7 +148,7 @@ export function formatComparisonRuntime(setup: BenchmarkSetup | undefined, t: Tr
 
 /** Selected GPU memory as published, or unknown when it was not recorded. */
 export function formatComparisonVram(setup: BenchmarkSetup | undefined, t: Translator = benchmarkFallback): string {
-  return setup?.vram_mb == null ? t("benchmark.Unknown") : t("benchmark.{value} MiB", { value: setup.vram_mb });
+  return setup?.vram_mb == null ? t("benchmark.Unknown") : formatVramGb(setup.vram_mb, t);
 }
 
 /**

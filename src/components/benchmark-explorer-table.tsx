@@ -1,4 +1,5 @@
 "use client";
+import { LocalTime } from "./local-time";
 import { useI18n } from "@/i18n/client";
 import { localizedPath } from "@/i18n/config";
 import { useSearchParams } from "next/navigation";
@@ -11,7 +12,7 @@ import {
   isCompared,
   type ExplorerItem,
 } from "./benchmark-explorer-state";
-import { environmentFacts, formatDuration, formatPromptLengths, formatPublishedDate, formatThroughput, type SummaryFact } from "./benchmark-explorer-format";
+import { environmentFacts, formatDuration, formatPromptLengths, formatThroughput, type SummaryFact } from "./benchmark-explorer-format";
 import { formatWeightQuantization, modelPublisher, modelValue } from "./benchmark-model-identity";
 
 /**
@@ -149,9 +150,9 @@ export function BenchmarkExplorerTable({
                 <span className="explorer-setup-workload">{summary.workload_label}</span>
                 <span className="explorer-setup-method">{summary.method_label}</span>
                 <span className="explorer-measurement-meta">
-                  <time dateTime={item.created_at}>{formatPublishedDate(item.created_at)}</time>
+                  <LocalTime value={item.created_at} />
                   <span> · {t("benchmark.Measurement count: {value}", { value: String(summary.row_count) })}</span>
-                  {summary.mean_e2e_ms != null ? <span> · {formatDuration(summary.mean_e2e_ms)} ms</span> : null}
+                  {summary.mean_e2e_ms != null ? <span> · {formatDuration(summary.mean_e2e_ms)} s</span> : null}
                 </span>
               </ExplorerCell>
             </tr>

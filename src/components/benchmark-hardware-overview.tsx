@@ -1,6 +1,6 @@
 "use client";
 import { useI18n } from "@/i18n/client";
-import { asRecord, displayText, formatCompactBytes } from "./benchmark-detail-format";
+import { asRecord, displayText, formatCompactBytes, formatVramGb } from "./benchmark-detail-format";
 import { BilingualHeader } from "./benchmark-i18n";
 import type { BenchmarkSetup } from "./benchmark-detail-fields";
 
@@ -16,7 +16,7 @@ export function BenchmarkHardwareOverview({ benchmark }: { benchmark: BenchmarkS
     <h2 id="hardware-overview-title">{t("benchmark.Environment")}</h2>
     <div className="detail-hardware-grid">
       <article><BilingualHeader local={t("benchmark.Selected graphics")} en="Selected GPU" locale={locale} />
-        {gpus.length > 0 ? <ul>{gpus.map((gpu, index) => <li key={index}><strong>{displayText(gpu.name, t)}</strong>{typeof gpu.vram_mb === "number" ? <span>{formatCompactBytes(gpu.vram_mb * 1024 ** 2, t)} VRAM</span> : null}</li>)}</ul> : <strong>{execution?.mode === "cpu" ? "CPU" : "—"}</strong>}
+        {gpus.length > 0 ? <ul>{gpus.map((gpu, index) => <li key={index}><strong>{displayText(gpu.name, t)}</strong>{typeof gpu.vram_mb === "number" ? <span>{formatVramGb(gpu.vram_mb, t)} VRAM</span> : null}</li>)}</ul> : <strong>{execution?.mode === "cpu" ? "CPU" : "—"}</strong>}
       </article>
       <article><BilingualHeader local={t("benchmark.CPU")} en="CPU" locale={locale} /><strong>{displayText(cpu?.name, t)}</strong>{typeof cpu?.logical_cores === "number" ? <span>{t("benchmark.Logical cores")}: {cpu.logical_cores}</span> : null}</article>
       <article><BilingualHeader local={t("benchmark.System memory")} en="System RAM" locale={locale} /><strong>{typeof env?.system_memory_bytes === "number" ? formatCompactBytes(env.system_memory_bytes, t) : "—"}</strong></article>

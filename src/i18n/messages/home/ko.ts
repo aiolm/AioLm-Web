@@ -1,12 +1,17 @@
 import type { EnglishMessages } from './en';
 const messages = {
   "home.heroFirst": "로컬 모델을",
-  "home.heroSecond": "하나의 작업 공간에서.",
+  "home.heroSecond": "하나의 작업 공간에서",
   "home.subtitle": "AioLM에서 GGUF 모델을 탐색하고, llama.cpp 런타임을 관리하고, 로컬에서 대화하며 성능을 측정하세요.",
   "home.explore": "벤치마크 탐색",
   "home.windows": "Windows 앱",
   "home.macos": "macOS 지원 예정",
   "home.linux": "Linux 지원 예정",
+  "home.installCommandTitle": "AioLM 설치",
+  "home.copyCommand": "복사",
+  "home.copied": "복사됨!",
+  "home.macosPlanned": "macOS 지원이 준비 중입니다. 출시 시 curl 설치 명령어가 제공될 예정입니다.",
+  "home.linuxPlanned": "Linux 지원이 준비 중입니다. 출시 시 curl 설치 명령어가 제공될 예정입니다.",
   "home.workflow": "모델 선택부터 성능 측정까지",
   "home.workflowDetail": "직접 만들고 실험하는 사람들을 위한 간편한 로컬 LLM 작업 흐름.",
   "home.choose": "모델 선택",
