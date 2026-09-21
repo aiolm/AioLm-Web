@@ -202,7 +202,7 @@ platform logs. Point an uptime monitor at it; read `config:check` when it turns 
   what each exclusion was checked against. `sql/` and `scripts/` are
   operator-only: nothing enumerates `sql/migrations/` at runtime (readiness
   compares the ledger against `REQUIRED_MIGRATIONS`) and no build step runs a
-   script. `package-lock.json` and `vendor/aiolm-benchmark-contracts-0.5.0.tgz`
+   script. `package-lock.json` and `vendor/aiolm-benchmark-contracts-0.5.1.tgz`
   stay in the upload — the build installs the contracts package from that
   archive.
 
