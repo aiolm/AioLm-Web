@@ -1,5 +1,14 @@
 import type { EnglishMessages } from './en';
 const messages = {
+  "home.faqTitle": "자주 묻는 질문",
+  "home.faqWhatQuestion": "AioLM은 무엇인가요?",
+  "home.faqWhatAnswer": "AioLM은 로컬 언어 모델을 위한 데스크톱 작업 공간입니다. GGUF 모델 탐색, llama.cpp 런타임 관리, 로컬 채팅, 성능 벤치마크를 하나의 앱에서 제공합니다.",
+  "home.faqOsQuestion": "어떤 운영체제를 지원하나요?",
+  "home.faqOsAnswer": "현재 Windows에서 사용할 수 있습니다. macOS와 Linux 지원은 예정되어 있습니다.",
+  "home.faqBenchmarkQuestion": "공개 벤치마크는 무엇을 측정하나요?",
+  "home.faqBenchmarkAnswer": "공개 벤치마크는 AioLM 사용자가 직접 측정해 공유한 결과입니다. 각 결과에는 하드웨어, 런타임, 측정 방법, 워크로드가 포함됩니다. 성능 수치를 비교하기 전에 측정 조건을 확인하세요. 독립적으로 검증된 성능 순위는 아닙니다.",
+  "home.faqAccountQuestion": "벤치마크를 보려면 계정이 필요한가요?",
+  "home.faqAccountAnswer": "공개 벤치마크는 계정 없이 볼 수 있습니다. 결과 게시에는 인증 단계가 있으며, 게시한 결과는 복구 코드로 관리합니다.",
   "home.heroFirst": "로컬 모델을",
   "home.heroSecond": "하나의 작업 공간에서",
   "home.subtitle": "AioLM에서 GGUF 모델을 탐색하고, llama.cpp 런타임을 관리하고, 로컬에서 대화하며 성능을 측정하세요.",

@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { isLocale, localizedPath } from '@/i18n/config';
-import { localeAlternates } from '@/i18n/metadata';
+import { publicMetadata } from '@/lib/seo';
+import { getServiceOrigin } from '@/lib/env';
+import { JsonLd } from '@/components/json-ld';
 import { getMessages } from '@/i18n/server';
 import { createTranslator } from '@/i18n/translate';
 import Link from "next/link";
@@ -20,7 +22,8 @@ import { InstallCommand } from "@/components/install-command";
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
-  return { alternates: localeAlternates(locale, '/') };
+  const t = createTranslator(await getMessages(locale, 'site'));
+  return publicMetadata(locale, '/', t('site.title'), t('site.description'));
 }
 
 const STEPS = [
@@ -49,8 +52,15 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   if (!isLocale(locale)) notFound();
   const [home, site] = await Promise.all([getMessages(locale, 'home'), getMessages(locale, 'site')]);
   const t = createTranslator({ ...site, ...home });
+  const url = new URL(localizedPath(locale, '/'), getServiceOrigin()).href;
+  const faq = ['What', 'Os', 'Benchmark', 'Account'].map(key => ({ question: t(`home.faq${key}Question`), answer: t(`home.faq${key}Answer`) }));
   return (
     <>
+      <JsonLd data={{ '@context': 'https://schema.org', '@graph': [
+        { '@type': 'WebSite', '@id': `${getServiceOrigin()}/#website`, name: 'AioLM', url: getServiceOrigin(), inLanguage: ['en', 'ko', 'ja', 'zh'] },
+        { '@type': 'SoftwareApplication', '@id': `${getServiceOrigin()}/#application`, name: 'AioLM', url, description: t('home.faqWhatAnswer'), applicationCategory: 'DeveloperApplication', operatingSystem: 'Windows', sameAs: GITHUB_REPOSITORY_URL },
+        { '@type': 'FAQPage', '@id': `${url}#faq`, inLanguage: locale, mainEntity: faq.map(item => ({ '@type': 'Question', name: item.question, acceptedAnswer: { '@type': 'Answer', text: item.answer } })) },
+      ] }} />
       <section className="hero" aria-labelledby="hero-title">
         <div className="site-shell hero-inner">
           <div className="hero-copy">
@@ -115,6 +125,11 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             ))}
           </ol>
         </div>
+      </section>
+
+      <section className="product-faq site-shell" aria-labelledby="faq-title" id="faq">
+        <h2 className="section-title" id="faq-title">{t('home.faqTitle')}</h2>
+        {faq.map(item => <article key={item.question}><h3>{item.question}</h3><p>{item.answer}</p></article>)}
       </section>
 
       <section className="closing" aria-labelledby="closing-title">
@@ -193,5 +208,4 @@ function DocumentIcon(): React.JSX.Element {
     </svg>
   );
 }
-
 

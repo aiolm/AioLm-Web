@@ -1,4 +1,13 @@
 const messages = {
+  "home.faqTitle": "Frequently asked questions",
+  "home.faqWhatQuestion": "What is AioLM?",
+  "home.faqWhatAnswer": "AioLM is a desktop workspace for local language models. It brings GGUF model discovery, llama.cpp runtime management, local chat and performance benchmarks into one application.",
+  "home.faqOsQuestion": "Which operating systems does AioLM support?",
+  "home.faqOsAnswer": "AioLM is available for Windows. macOS and Linux support is planned.",
+  "home.faqBenchmarkQuestion": "What do the public benchmarks measure?",
+  "home.faqBenchmarkAnswer": "Public benchmarks are self-reported measurements shared by AioLM users. Each result includes its hardware, runtime, measurement method and workload. Compare those conditions before comparing performance; these results are not an independently verified ranking.",
+  "home.faqAccountQuestion": "Do I need an account to browse benchmarks?",
+  "home.faqAccountAnswer": "No account is required to browse public benchmark results. Publishing uses a verification step, and published results are managed with a recovery code.",
   "home.heroFirst": "Local models.",
   "home.heroSecond": "One workspace.",
   "home.subtitle": "Discover GGUF models, manage llama.cpp runtimes, chat locally, and measure performance with AioLM.",

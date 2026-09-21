@@ -93,11 +93,11 @@ export function isAbortError(err: unknown): boolean {
   return err instanceof DOMException && err.name === "AbortError";
 }
 
-export function useJsonFetch<T>(url: string | null): { data: T | null; error: string | null; reload: () => void } {
+export function useJsonFetch<T>(url: string | null, initialData: T | null = null): { data: T | null; error: string | null; reload: () => void } {
   const { t } = useI18n();
   const [state, setState] = useState<{ url: string | null; data: T | null; error: string | null }>({
-    url: null,
-    data: null,
+    url: initialData === null ? null : url,
+    data: initialData,
     error: null,
   });
   const [nonce, setNonce] = useState(0);

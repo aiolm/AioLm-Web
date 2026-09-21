@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       '/v1/', '/manage', '/verify/',
       ...locales.flatMap(locale => [localizedPath(locale, '/manage'), localizedPath(locale, '/verify/')]),
     ] },
-    sitemap: new URL('/sitemap.xml', getServiceOrigin()).href,
+    sitemap: ['/sitemap.xml', '/benchmarks/sitemap.xml'].map(path => new URL(path, getServiceOrigin()).href),
   };
 }

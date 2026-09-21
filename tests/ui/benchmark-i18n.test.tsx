@@ -29,6 +29,7 @@ const catalogs: Record<Locale, MessageCatalog> = { en, ko, ja, zh };
 const common: Record<Locale, MessageCatalog> = { en: commonEn, ko: commonKo, ja: commonJa, zh: commonZh };
 const state = vi.hoisted(() => ({ search: "model=synthetic-model&hardware=synthetic-device&cursor=abc_123", data: null as unknown, error: null as string | null }));
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(state.search), notFound: () => { throw new Error("not-found"); } }));
+vi.mock('@/server/public-benchmark', () => ({ getPublicBenchmark: async () => ({ state: 'public', data: { id: item.public_id, benchmark, summary: item.summary, description_md: '', revision: 1, created_at: item.created_at, updated_at: item.created_at } }) }));
 vi.mock("@/i18n/server", () => ({ getMessages: async (locale: Locale) => catalogs[locale] }));
 vi.mock("@/components/ui", async (importOriginal) => ({
   ...await importOriginal<typeof import("@/components/ui")>(),
@@ -156,7 +157,7 @@ describe.each(locales)("benchmark localization: %s", locale => {
   it("renders locale routes and advertises canonical locale alternates", async () => {
     const params = Promise.resolve({ locale, id: item.public_id });
     const metadata = await generateMetadata({ params });
-    expect(metadata.title).toBe(t("benchmark.Benchmark explorer"));
+    expect(metadata.title).toEqual({ absolute: `${t('benchmark.Benchmark explorer')} · AioLM` });
     expect(metadata.alternates?.canonical).toBe('/' + locale + '/benchmarks');
     expect((await detailMetadata({ params })).alternates?.canonical).toBe('/' + locale + '/benchmarks/synthetic-id');
     expect(wrap(locale, await BenchmarksPage({ params }))).toContain(escape(t("benchmark.Benchmark explorer")));

@@ -66,10 +66,10 @@ export function canApplyRowsResult(opts: {
   return opts.requestGeneration === opts.currentGeneration;
 }
 
-export function BenchmarkDetail({ publicId }: { publicId: string }): React.JSX.Element {
+export function BenchmarkDetail({ publicId, initialData = null }: { publicId: string; initialData?: Detail | null }): React.JSX.Element {
   const { locale, t } = useI18n();
   const search = useSearchParams().toString();
-  const { data, error, reload } = useJsonFetch<Detail>(`/v1/benchmark-runs/${publicId}`);
+  const { data, error, reload } = useJsonFetch<Detail>(`/v1/benchmark-runs/${publicId}`, initialData);
   const [rows, setRows] = useState<unknown[] | null>(null);
   const [rowsCursor, setRowsCursor] = useState<string | null>(null);
   const [rowsTotal, setRowsTotal] = useState<number | null>(null);

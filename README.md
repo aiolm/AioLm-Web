@@ -46,8 +46,10 @@ APIs remain at `/v1/**`. See [language routing and catalogs](docs/internationali
 - `/manage`: recovery-code management for an owner's published result.
 - `/verify/[sessionId]`: verification of an upload session from the desktop app.
 
-The product introduction is static. Loading and interacting with public benchmark
-results requires JavaScript. The shared theme follows the system light/dark
+The product introduction is static. Public benchmark details include server-rendered
+initial content; filtering, comparisons and measurement pagination require JavaScript.
+See [search and answer discovery](docs/search-discovery.md) for metadata and sitemaps.
+The shared theme follows the system light/dark
 preference and uses the desktop app's semantic colors and official brand assets.
 
 ## Quick start (synthetic local)

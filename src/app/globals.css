@@ -1911,3 +1911,7 @@ html { scroll-padding-block-start: 88px; }
 .detail-description[open] > summary { margin-block-end: 16px; }
 @media (max-width: 1000px) { .detail-hardware-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 480px) { .detail-performance-grid { gap: 10px; } .detail-performance-grid > div { padding-inline-start: 8px; } .detail-performance-grid strong small { display: block; } .detail-hardware-grid { grid-template-columns: minmax(0, 1fr); } }
+.product-faq { padding-block: 48px; }
+.product-faq article { max-width: 76ch; margin-block-start: 28px; }
+.product-faq h3 { font-size: 1.1rem; line-height: 1.5; margin-block: 0 8px; }
+.product-faq p { color: var(--ui-muted); line-height: 1.8; margin: 0; overflow-wrap: anywhere; }

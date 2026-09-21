@@ -1,5 +1,14 @@
 import type { EnglishMessages } from './en';
 const messages = {
+  "home.faqTitle": "よくある質問",
+  "home.faqWhatQuestion": "AioLMとは何ですか？",
+  "home.faqWhatAnswer": "AioLMはローカル言語モデル向けのデスクトップワークスペースです。GGUFモデルの検索、llama.cppランタイムの管理、ローカルチャット、性能ベンチマークを1つのアプリで利用できます。",
+  "home.faqOsQuestion": "対応するOSは何ですか？",
+  "home.faqOsAnswer": "現在はWindowsに対応しています。macOSとLinuxへの対応は予定されています。",
+  "home.faqBenchmarkQuestion": "公開ベンチマークは何を測定していますか？",
+  "home.faqBenchmarkAnswer": "公開ベンチマークはAioLMユーザーが測定して共有した自己申告の結果です。各結果にはハードウェア、ランタイム、測定方法、ワークロードが含まれます。性能を比較する前に測定条件を確認してください。独立した検証によるランキングではありません。",
+  "home.faqAccountQuestion": "ベンチマークの閲覧にアカウントは必要ですか？",
+  "home.faqAccountAnswer": "公開ベンチマークはアカウントなしで閲覧できます。結果の公開には認証手順があり、公開した結果はリカバリーコードで管理します。",
   "home.heroFirst": "ローカルモデルを、",
   "home.heroSecond": "ひとつのワークスペースで。",
   "home.subtitle": "AioLMでGGUFモデルを探し、llama.cppランタイムを管理。ローカルで会話し、性能を測定できます。",

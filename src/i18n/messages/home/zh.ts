@@ -1,5 +1,14 @@
 import type { EnglishMessages } from './en';
 const messages = {
+  "home.faqTitle": "常见问题",
+  "home.faqWhatQuestion": "AioLM 是什么？",
+  "home.faqWhatAnswer": "AioLM 是面向本地语言模型的桌面工作空间，将 GGUF 模型发现、llama.cpp 运行时管理、本地聊天和性能基准测试整合在一个应用中。",
+  "home.faqOsQuestion": "AioLM 支持哪些操作系统？",
+  "home.faqOsAnswer": "目前支持 Windows，macOS 和 Linux 支持正在计划中。",
+  "home.faqBenchmarkQuestion": "公开基准测试测量的是什么？",
+  "home.faqBenchmarkAnswer": "公开基准测试是 AioLM 用户自行测量并分享的结果。每条结果包含硬件、运行时、测量方法和工作负载。比较性能数据前，请先核对测量条件。这些结果并非经过独立验证的性能排名。",
+  "home.faqAccountQuestion": "浏览基准测试需要账号吗？",
+  "home.faqAccountAnswer": "浏览公开基准测试不需要账号。发布结果需要完成验证步骤，已发布的结果通过恢复码管理。",
   "home.heroFirst": "本地模型。",
   "home.heroSecond": "一个工作空间。",
   "home.subtitle": "通过 AioLM 探索 GGUF 模型、管理 llama.cpp 运行时、本地聊天并测量性能。",
