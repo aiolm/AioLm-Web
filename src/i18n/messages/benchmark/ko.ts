@@ -178,6 +178,7 @@ const messages = {
   "benchmark.values": "값",
   "benchmark.Split mode": "분할 모드",
   "benchmark.Tensor split": "텐서 분할",
+  "benchmark.llama-server options": "llama-server 인자",
   "benchmark.Prompt": "프롬프트",
   "benchmark.Concurrency": "동시 실행 수",
   "benchmark.Repetition": "반복",

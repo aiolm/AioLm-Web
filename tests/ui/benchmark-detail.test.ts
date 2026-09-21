@@ -115,9 +115,33 @@ describe("setup groups", () => {
       "KV cache type (values)",
       "Split mode",
       "Tensor split",
+      "llama-server options",
     ]) {
       expect(labels).toContain(label);
     }
+  });
+
+  it("shows the published launch one option per line, keeping each option with its value", () => {
+    const groups = buildSetupGroups(publicSetup({
+      execution: {
+        context_size: 4096, parallel: 1, settings: null,
+        effective_args: ["--ctx-size", "8192", "--sleep-idle-seconds", "-1", "--cache-type-k=q8_0", "--cont-batching"],
+      },
+    }));
+    // A negative value belongs to its option; a switch and an inline value stand alone.
+    expect(valueOf(groups, "llama-server options")).toEqual([
+      "--ctx-size 8192",
+      "--sleep-idle-seconds -1",
+      "--cache-type-k=q8_0",
+      "--cont-batching",
+    ]);
+  });
+
+  it("separates a publication that reported no launch options from one made before they were published", () => {
+    const empty = buildSetupGroups(publicSetup({ execution: { context_size: 4096, parallel: 1, settings: null, effective_args: [] } }));
+    expect(valueOf(empty, "llama-server options")).toBe("None reported");
+    // The synthetic fixture predates the field, as every older publication does.
+    expect(valueOf(buildSetupGroups(publicSetup()), "llama-server options")).toBe("Unknown");
   });
 
   it("never renders a label twice with the same unit", () => {

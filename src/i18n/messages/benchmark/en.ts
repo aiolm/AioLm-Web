@@ -177,6 +177,7 @@ const messages = {
   "benchmark.values": "values",
   "benchmark.Split mode": "Split mode",
   "benchmark.Tensor split": "Tensor split",
+  "benchmark.llama-server options": "llama-server options",
   "benchmark.Prompt": "Prompt",
   "benchmark.Concurrency": "Concurrency",
   "benchmark.Repetition": "Repetition",

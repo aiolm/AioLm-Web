@@ -1,6 +1,6 @@
 # Contracts integration
 
-`@aiolm/benchmark-contracts` 0.3.0 owns the shared data contract: DTOs,
+`@aiolm/benchmark-contracts` 0.5.0 owns the shared data contract: DTOs,
 validation, JSON Schema/OpenAPI, publication bounds, recovery encoding, receipt
 shape. The website consumes that package directly — it does not carry its own
 copy of the rules and never imports app sources at runtime.
@@ -10,7 +10,7 @@ copy of the rules and never imports app sources at runtime.
 The versioned tarball is committed to this repository and installed from there:
 
 ```json
-"@aiolm/benchmark-contracts": "file:vendor/aiolm-benchmark-contracts-0.3.0.tgz"
+"@aiolm/benchmark-contracts": "file:vendor/aiolm-benchmark-contracts-0.5.0.tgz"
 ```
 
 `package-lock.json` pins its `integrity` (`sha512-…`), so `npm ci` fails if the
@@ -74,5 +74,5 @@ Set `CONTRACTS_TARBALL_PATH` to additionally compare a candidate archive
 against the vendored one before adopting a new version:
 
 ```sh
-CONTRACTS_TARBALL_PATH=./aiolm-benchmark-contracts-0.3.0.tgz npm run contracts:check
+CONTRACTS_TARBALL_PATH=./aiolm-benchmark-contracts-0.5.0.tgz npm run contracts:check
 ```

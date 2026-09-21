@@ -178,6 +178,7 @@ const messages = {
   "benchmark.values": "值",
   "benchmark.Split mode": "拆分模式",
   "benchmark.Tensor split": "张量拆分",
+  "benchmark.llama-server options": "llama-server 参数",
   "benchmark.Prompt": "提示词",
   "benchmark.Concurrency": "并发数",
   "benchmark.Repetition": "重复",

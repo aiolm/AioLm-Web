@@ -1514,6 +1514,21 @@ th[style*="text-align: right"] .bilingual-header {
 .detail-rows-scroll { max-width: 100%; }
 .detail-device-list { display: grid; gap: 8px; margin: 0; padding-inline-start: 20px; overflow-wrap: anywhere; }
 
+/* Launch options: one per line, wrapping rather than scrolling sideways. */
+.detail-command {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-mono-bg);
+  color: var(--ui-mono-ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .detail-rows { min-width: 40rem; }
 .detail-rows th { white-space: nowrap; }
 

@@ -16,7 +16,7 @@ import { benchmarkFallback } from "./benchmark-i18n";
  * keeps its own row because it names a different party.
  */
 
-import { asRecord, describeGpuDetails, describeGpuList, type ReportedDevice, displayText, formatByteSize, joinList } from "./benchmark-detail-format";
+import { asRecord, describeArguments, describeGpuDetails, describeGpuList, type ReportedDevice, displayText, formatByteSize, joinList } from "./benchmark-detail-format";
 import {
   formatMetadataSource,
   formatWeightQuantization,
@@ -53,6 +53,8 @@ export interface SetupField {
    */
   links?: Record<string, string>;
   devices?: ReportedDevice[];
+  /** Shown as command text: one entry per line, in a monospaced block. */
+  command?: boolean;
 }
 
 export interface SetupGroup {
@@ -199,6 +201,10 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
         { label: t("benchmark.KV cache type"), unit: t("benchmark.values"), value: displayText(settings?.["cache_type_v"], t) },
         { label: t("benchmark.Split mode"), value: displayText(settings?.["split_mode"], t) },
         { label: t("benchmark.Tensor split"), value: joinList(settings?.["tensor_split"], t) },
+        // The same launch the fields above summarize, kept whole so a reader can
+        // reproduce it. Published without the options that name the publisher's
+        // machine, so a model path is absent by contract, not by omission here.
+        { label: t("benchmark.llama-server options"), value: describeArguments(execution?.["effective_args"], t), command: true },
       ],
     },
   ];

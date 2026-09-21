@@ -178,6 +178,7 @@ const messages = {
   "benchmark.values": "値",
   "benchmark.Split mode": "分割モード",
   "benchmark.Tensor split": "テンソル分割",
+  "benchmark.llama-server options": "llama-server 引数",
   "benchmark.Prompt": "プロンプト",
   "benchmark.Concurrency": "同時実行数",
   "benchmark.Repetition": "繰り返し",

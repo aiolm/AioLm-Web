@@ -24,7 +24,7 @@
     "node": "22.x"
   },
   "dependencies": {
-    "@aiolm/benchmark-contracts": "file:vendor/aiolm-benchmark-contracts-0.4.0.tgz",
+    "@aiolm/benchmark-contracts": "file:vendor/aiolm-benchmark-contracts-0.5.0.tgz",
     "next": "^15.5.25",
     "postgres": "^3.4.9",
     "react": "^19.3.0",

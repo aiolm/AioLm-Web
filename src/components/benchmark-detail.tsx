@@ -311,6 +311,9 @@ function SetupSection({ benchmark }: { benchmark: BenchmarkSetup }): React.JSX.E
                         </li>
                       ))}
                     </ul>
+                  ) : field.command && Array.isArray(field.value) ? (
+                    // Selectable as one block, so the whole launch copies in one go.
+                    <pre className="detail-command">{field.value.join("\n")}</pre>
                   ) : Array.isArray(field.value) ? (
                     <ul className="detail-device-list">
                       {field.value.map((item, index) => <li key={index}><SetupValue field={field} text={item} /></li>)}

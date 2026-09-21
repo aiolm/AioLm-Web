@@ -81,6 +81,31 @@ export function describeGpuList(value: unknown, t: Translator = benchmarkFallbac
   return value.map((gpu) => describeGpu(gpu, t));
 }
 
+/**
+ * The published launch options (`execution.effective_args`), one line per
+ * option so the block reads as a command and can be copied into a local setup.
+ * An option keeps the value it was given: a following token that does not begin
+ * another option is that option's value, which also keeps a negative number
+ * such as `--sleep-idle-seconds -1` on its own option's line.
+ *
+ * Not reported and reported-as-empty are different facts, so an absent list
+ * reads Unknown and an empty one reads as none reported.
+ */
+export function describeArguments(value: unknown, t: Translator = benchmarkFallback): string | string[] {
+  if (!Array.isArray(value)) return t("benchmark.Unknown");
+  const tokens = value.filter((token): token is string => typeof token === "string" && token !== "");
+  if (tokens.length === 0) return t("benchmark.None reported");
+  const isOption = (token: string) => /^--?[a-zA-Z]/.test(token);
+  const lines: string[] = [];
+  for (let index = 0; index < tokens.length; index += 1) {
+    const argument = isOption(tokens[index]!) && index + 1 < tokens.length && !isOption(tokens[index + 1]!)
+      ? tokens[index + 1] : undefined;
+    lines.push(argument === undefined ? tokens[index]! : `${tokens[index]} ${argument}`);
+    if (argument !== undefined) index += 1;
+  }
+  return lines;
+}
+
 /** The native vram_mb field records binary mebibytes; preserve the reported count. */
 export function formatMegabytes(value: unknown, t: Translator = benchmarkFallback): string {
   if (typeof value !== "number" || !Number.isFinite(value)) return displayText(value, t);
