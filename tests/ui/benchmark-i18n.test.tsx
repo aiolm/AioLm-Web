@@ -17,7 +17,8 @@ import { BenchmarkBrowser } from "@/components/benchmark-browser";
 import { BenchmarkExplorerTable } from "@/components/benchmark-explorer-table";
 import { BenchmarkExplorerComparison } from "@/components/benchmark-explorer-comparison";
 import { BenchmarkDetail } from "@/components/benchmark-detail";
-import { buildSetupGroups } from "@/components/benchmark-detail-fields";
+import { BenchmarkHardwareOverview } from "@/components/benchmark-hardware-overview";
+import { buildSetupGroups, type BenchmarkSetup } from "@/components/benchmark-detail-fields";
 import { buildRowColumns, isFailedRow } from "@/components/benchmark-detail-rows";
 import { describeGpu, formatByteSize, displayText } from "@/components/benchmark-detail-format";
 import { formatThroughput, formatDuration } from "@/components/benchmark-explorer-format";
@@ -157,7 +158,7 @@ describe.each(locales)("benchmark localization: %s", locale => {
   it("localizes empty and failed measurement descriptions without altering values or enums", () => {
     expect(displayText(null, t)).toBe(t("benchmark.Unknown"));
     expect(displayText("unidentified", t)).toBe("unidentified");
-    expect(formatByteSize(12, t)).toBe(t("benchmark.{value} bytes", { value: 12 }));
+    expect(formatByteSize(12, t)).toBe("12 B");
     expect(describeGpu({ name: "synthetic-device", integrated: false }, t)).toContain(t("benchmark.No"));
     expect(buildSetupGroups(benchmark, t)[0].title).toBe(t("benchmark.Model"));
     const columns = buildRowColumns([{ failed: true, tg_tps: 42.25, timing_source: "server", synthetic_extra: true }], t, true);
@@ -250,5 +251,82 @@ it("renders multiple GPUs from hardware_label split when setup.gpus is missing",
   expect(html).toContain("explorer-gpu-list");
   expect(html).toContain('<span class="explorer-gpu-item">GPU Alpha</span>');
   expect(html).toContain('<span class="explorer-gpu-item">GPU Beta</span>');
+});
+
+it("aggregates duplicate identical GPUs into count x N in explorer table", () => {
+  const duplicateItem: ExplorerItem = {
+    ...item,
+    public_id: "duplicate-gpu-item",
+    summary: {
+      ...item.summary,
+      hardware_label: "NVIDIA GeForce RTX 4090 + NVIDIA GeForce RTX 4090",
+      setup: {
+        os: "synthetic-os", arch: "x86_64", cpu: "synthetic-cpu", cores: 8,
+        vendors: ["NVIDIA"], gpus: ["NVIDIA GeForce RTX 4090"], vram_mb: 49152,
+        runtime: "vllm", runtime_version: "0.6.2", backend: "cuda", mode: "gpu",
+        context_size: 8192, parallel: 1, threads: 1, gpu_layers: null,
+        flash_attention: "auto", cache_type_k: "f16", cache_type_v: "f16", split_mode: null,
+      },
+    },
+  };
+  const html = wrap("en", <BenchmarkExplorerTable items={[duplicateItem]} compare={[]} onToggleComparison={() => {}} />);
+  expect(html).toContain("NVIDIA GeForce RTX 4090 x 2");
+  expect(html).not.toContain("explorer-gpu-list");
+});
+
+it("renders mixed duplicate and single GPUs with one distinct GPU type per line", () => {
+  const mixedItem: ExplorerItem = {
+    ...item,
+    public_id: "mixed-gpu-item",
+    summary: {
+      ...item.summary,
+      hardware_label: "NVIDIA GeForce RTX 4090 + NVIDIA GeForce RTX 4090 + NVIDIA GeForce RTX 3090",
+      setup: {
+        os: "synthetic-os", arch: "x86_64", cpu: "synthetic-cpu", cores: 8,
+        vendors: ["NVIDIA"], gpus: ["NVIDIA GeForce RTX 4090", "NVIDIA GeForce RTX 3090"], vram_mb: 73728,
+        runtime: "vllm", runtime_version: "0.6.2", backend: "cuda", mode: "gpu",
+        context_size: 8192, parallel: 1, threads: 1, gpu_layers: null,
+        flash_attention: "auto", cache_type_k: "f16", cache_type_v: "f16", split_mode: null,
+      },
+    },
+  };
+  const html = wrap("en", <BenchmarkExplorerTable items={[mixedItem]} compare={[]} onToggleComparison={() => {}} />);
+  expect(html).toContain("explorer-gpu-list");
+  expect(html).toContain('<span class="explorer-gpu-item">NVIDIA GeForce RTX 4090 x 2</span>');
+  expect(html).toContain('<span class="explorer-gpu-item">NVIDIA GeForce RTX 3090</span>');
+});
+
+it("BenchmarkHardwareOverview aggregates identical GPUs, formats CPU topology, and falls back to runtime.build", () => {
+  const gpu = { name: "RTX 4090", vendor: "NVIDIA", vram_mb: 24576, driver: "550", integrated: false };
+  const benchmarkWithHardware = {
+    ...benchmark,
+    environment: {
+      os: "Ubuntu 24.04", arch: "x86_64",
+      cpu: { name: "Ryzen 9 7950X", physical_cores: 16, logical_cores: 32 },
+      execution: { mode: "selected", selected_gpus: [gpu, gpu] },
+      system_memory_bytes: 68719476736,
+    },
+    runtime: { name: "llama.cpp", version: null, build: 3560, backend: "cuda" },
+  };
+  const html = wrap("en", <BenchmarkHardwareOverview benchmark={benchmarkWithHardware as unknown as BenchmarkSetup} />);
+  expect(html).toContain("RTX 4090 x 2");
+  expect(html).toContain("16 Core / 32 Thread");
+  expect(html).toContain("llama.cpp (build 3560)");
+  expect(html).toContain("64.00 GiB");
+});
+
+it("BenchmarkDetail does not render Load measurements button and includes measurements section", () => {
+  state.data = {
+    id: "synthetic-id",
+    benchmark,
+    summary: item.summary,
+    description_md: "",
+    revision: 1,
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+  };
+  const html = wrap("en", <BenchmarkDetail publicId="synthetic-id" initialData={state.data as unknown as Parameters<typeof BenchmarkDetail>[0]["initialData"]} />);
+  expect(html).not.toContain("Load measurements");
+  expect(html).toContain("Measurements");
 });
 

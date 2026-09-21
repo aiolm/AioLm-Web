@@ -144,7 +144,7 @@ export function BenchmarkExplorerTable({
             { key: "publisher", label: t("benchmark.Publisher"), value: modelValue(modelPublisher(info), t) },
             { key: "quantization", label: t("benchmark.Weight quantization"), value: formatWeightQuantization(info, t) },
           ];
-          const envRaw = environmentFacts(summary.setup, t).filter(fact => fact.key !== "gpu" && fact.key !== "cores");
+          const envRaw = environmentFacts(summary.setup, t).filter(fact => fact.key !== "gpu" && (summary.setup?.cpu ? fact.key !== "cores" : true));
           const gpuList = extractGpuList(summary);
           const gpuValue: React.ReactNode = gpuList.length > 1 ? (
             <span className="explorer-gpu-list">
@@ -153,7 +153,7 @@ export function BenchmarkExplorerTable({
               ))}
             </span>
           ) : (
-            summary.hardware_label
+            gpuList[0] ?? summary.hardware_label
           );
           const envFacts: SummaryFact[] = [
             { key: "gpu", label: t("benchmark.GPU"), value: gpuValue },

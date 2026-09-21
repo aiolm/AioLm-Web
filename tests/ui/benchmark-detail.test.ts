@@ -79,7 +79,7 @@ describe("setup groups", () => {
       "Operating system",
       "Architecture",
       "CPU",
-      "CPU cores (logical)",
+      "CPU cores",
       "Run mode",
       "Selected graphics",
       "Allocated context size (tokens)",
@@ -96,7 +96,7 @@ describe("setup groups", () => {
     // System memory is shown when reported
     const withRam = buildSetupGroups(publicSetup({ environment: { system_memory_bytes: 34_359_738_368 } }));
     expect(labelsOf(withRam)).toContain("System memory");
-    expect(valueOf(withRam, "System memory")).toBe("32.0 GiB (34,359,738,368 bytes)");
+    expect(valueOf(withRam, "System memory")).toBe("32.00 GiB (34,359,738,368 B)");
   });
 
   it("publishes the contract fields the flat list left out", () => {
@@ -171,7 +171,7 @@ describe("setup groups", () => {
     );
     expect(valueOf(groups, "Warmup")).toBe("No");
     expect(valueOf(groups, "Graphics selection complete")).toBe("Yes");
-    expect(valueOf(groups, "Model size")).toBe("4.00 GiB (4,294,967,296 bytes)");
+    expect(valueOf(groups, "Model size")).toBe("4.00 GiB (4,294,967,296 B)");
     expect(valueOf(groups, "Model checksum")).toBe("a".repeat(64));
   });
 
@@ -212,7 +212,7 @@ describe("graphics devices", () => {
 
   it("shows every member the contract publishes for a device", () => {
     expect(describeGpu(discrete)).toBe(
-      "Name: synthetic-gpu-a · Vendor: synthetic-vendor · VRAM: 24 GB · Driver: 0.0.0-synthetic · Integrated: No",
+      "Name: synthetic-gpu-a · Vendor: synthetic-vendor · VRAM: 24.00 GiB · Driver: 0.0.0-synthetic · Integrated: No",
     );
   });
 
@@ -239,12 +239,12 @@ describe("graphics devices", () => {
     expect(describeGpu({ ...discrete, integrated: null })).toContain("Integrated: Unknown");
   });
 
-  it("formats VRAM in gigabytes for display", () => {
-    expect(formatMegabytes(24576)).toBe("24,576 MiB");
-    expect(formatMegabytes(0)).toBe("0 MiB");
+  it("formats VRAM in gibibytes for display", () => {
+    expect(formatMegabytes(24576)).toBe("24.00 GiB");
+    expect(formatMegabytes(0)).toBe("0 B");
     expect(formatMegabytes(null)).toBe("Unknown");
     const text = describeGpu(discrete);
-    expect(text).toContain("24 GB");
+    expect(text).toContain("24.00 GiB");
   });
 
   it("keeps no devices apart from no list at all", () => {
@@ -304,7 +304,7 @@ describe("measurement columns", () => {
     expect(byKey.get("tg_tps")).toMatchObject({ label: "Decode", unit: "tok/s", numeric: true });
     expect(byKey.get("pp_tps")).toMatchObject({ label: "Prefill", unit: "tok/s", numeric: true });
     expect(byKey.get("e2e_ms")).toMatchObject({ label: "End-to-end duration", unit: "s", numeric: true });
-    expect(byKey.get("ttft_ms")).toMatchObject({ label: "TTFT", unit: "s" });
+    expect(byKey.get("ttft_ms")).toMatchObject({ label: "TTFT", unit: "ms" });
     expect(byKey.get("prompt_tokens")).toMatchObject({ label: "Prompt", unit: "tokens" });
     // peak_memory_bytes is specifically labeled Peak process memory, not VRAM or system memory
     expect(byKey.get("peak_memory_bytes")).toMatchObject({ label: "Peak process memory", numeric: true });
@@ -337,7 +337,7 @@ describe("measurement columns", () => {
 
   it("formats each cell in the unit its column promises", () => {
     const byKey = new Map(buildRowColumns([row], true).map((c) => [c.key, c]));
-    expect(byKey.get("ttft_ms")?.format(620)).toBe("0.62");
+    expect(byKey.get("ttft_ms")?.format(620)).toBe("620.0");
     expect(byKey.get("e2e_ms")?.format(2560)).toBe("2.56");
     expect(byKey.get("tg_tps")?.format(51.27)).toBe("51.3");
     expect(byKey.get("tg_tps")?.format(null)).toBe(DETAIL_MISSING);
@@ -366,11 +366,11 @@ describe("detail value formatting", () => {
   });
 
   it("keeps byte counts readable without losing the published number", () => {
-    expect(formatByteSize(512)).toBe("512 bytes");
-    expect(formatByteSize(1536)).toBe("1.50 KiB (1,536 bytes)");
+    expect(formatByteSize(512)).toBe("512 B");
+    expect(formatByteSize(1536)).toBe("1.5 KiB (1,536 B)");
     expect(formatByteSize(null)).toBe("Unknown");
-    expect(formatCompactBytes(1536)).toBe("1.50 KiB");
-    expect(formatCompactBytes(512)).toBe("512 bytes");
+    expect(formatCompactBytes(1536)).toBe("1.5 KiB");
+    expect(formatCompactBytes(512)).toBe("512 B");
   });
 
   it("gives the ok tone only to a run that completed", () => {
@@ -388,9 +388,45 @@ describe("structured measurement devices", () => {
     const devices = describeGpuDetails([{ name: "Synthetic GPU · Revision B", vendor: "Example", vram_mb: 8192, driver: null, integrated: false }]);
     expect(devices[0].name).toBe("Synthetic GPU · Revision B");
     expect(devices[0].facts).toEqual([
-      { label: "Vendor", value: "Example" }, { label: "VRAM", value: "8 GB" },
+      { label: "Vendor", value: "Example" }, { label: "VRAM", value: "8.00 GiB" },
       { label: "Driver", value: "Unknown" }, { label: "Integrated", value: "No" },
     ]);
     expect(describeGpuDetails(null)).toEqual([]);
+  });
+
+  it("aggregates identical GPUs with count x N using device identity including VRAM", () => {
+    const gpu1 = { name: "NVIDIA GeForce RTX 4090", vendor: "NVIDIA", vram_mb: 24576, driver: "550.54.14", integrated: false };
+    const gpu2 = { name: "NVIDIA GeForce RTX 4090", vendor: "NVIDIA", vram_mb: 24576, driver: "550.54.14", integrated: false };
+    const gpuDiffVram = { name: "NVIDIA GeForce RTX 4090", vendor: "NVIDIA", vram_mb: 16384, driver: "550.54.14", integrated: false };
+
+    const aggregated = describeGpuDetails([gpu1, gpu2]);
+    expect(aggregated).toHaveLength(1);
+    expect(aggregated[0].name).toBe("NVIDIA GeForce RTX 4090 x 2");
+    expect(aggregated[0].facts).toEqual([
+      { label: "Vendor", value: "NVIDIA" }, { label: "VRAM", value: "24.00 GiB" },
+      { label: "Driver", value: "550.54.14" }, { label: "Integrated", value: "No" },
+    ]);
+
+    const mixedVram = describeGpuDetails([gpu1, gpu2, gpuDiffVram]);
+    expect(mixedVram).toHaveLength(2);
+    expect(mixedVram[0].name).toBe("NVIDIA GeForce RTX 4090 x 2");
+    expect(mixedVram[1].name).toBe("NVIDIA GeForce RTX 4090");
+    expect(mixedVram[1].facts.find(f => f.label === "VRAM")?.value).toBe("16.00 GiB");
+
+    const listText = describeGpuList([gpu1, gpu2]);
+    expect(listText).toHaveLength(1);
+    expect(listText[0]).toContain("Name: NVIDIA GeForce RTX 4090 x 2");
+  });
+
+  it("formats CPU topology with physical and logical cores as N Core / M Thread", () => {
+    const withPhysical = buildSetupGroups(publicSetup({
+      environment: { cpu: { name: "AMD Ryzen 9 7950X", physical_cores: 16, logical_cores: 32 } }
+    }));
+    expect(valueOf(withPhysical, "CPU cores")).toBe("16 Core / 32 Thread");
+
+    const withoutPhysical = buildSetupGroups(publicSetup({
+      environment: { cpu: { name: "AMD Ryzen 9 7950X", logical_cores: 32 } }
+    }));
+    expect(valueOf(withoutPhysical, "CPU cores")).toBe("32 Thread");
   });
 });

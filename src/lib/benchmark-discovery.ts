@@ -4,6 +4,8 @@ import type { BenchmarkSummary } from "./summary";
 
 export interface BenchmarkSetup {
   os: string | null; arch: string | null; cpu: string | null; cores: number | null;
+  /** Physical CPU cores, when measured. `cores` remains the legacy logical thread count. */
+  physical_cores?: number | null;
   /** OS-reported system RAM captured with this run, separate from GPU memory. */
   ram_bytes?: number | null;
   vendors: string[]; gpus: string[]; vram_mb: number | null;
@@ -148,6 +150,7 @@ export function normalizeSetup(b: PublicBenchmarkSubmission): BenchmarkSetup {
   const strings = (values: Array<string | null>) => [...new Set(values.filter((v): v is string => !!v))];
   return {
     os: env?.os ?? null, arch: env?.arch ?? null, cpu: env?.cpu.name ?? null, cores: env?.cpu.logical_cores ?? null,
+    physical_cores: env?.cpu.physical_cores ?? null,
     ram_bytes: env?.system_memory_bytes ?? null,
     vendors: strings(devices.map(g => g.vendor)), gpus: strings(devices.map(g => g.name)),
     vram_mb: devices.length > 0 && env?.execution.selection_complete && devices.every(g => g.vram_mb !== null) ? devices.reduce((sum, g) => sum + g.vram_mb!, 0) : null,

@@ -15,7 +15,7 @@ accounts in v1.
 - Owners: manage via recovery code (`/manage`): result-scoped 30-minute session,
   description edits with `expected_revision`, deletion (tombstone).
 - API: the wire contract is the OpenAPI document shipped by
-  `@aiolm/benchmark-contracts` 0.5.1
+  `@aiolm/benchmark-contracts` 0.6.0
   (`node_modules/@aiolm/benchmark-contracts/schema/openapi.json`). Routes:
   `POST /v1/upload-sessions`, `POST .../verify`, `GET ...`, `POST /v1/benchmark-runs`,
   `GET /v1/benchmark-runs`, `GET /v1/benchmark-runs/<id>`, `GET .../measurements`,
@@ -95,8 +95,8 @@ See `docs/deployment.md` and `docs/operations.md`.
 ## Contracts
 
 Validation, recovery encoding, and the schema/OpenAPI surface come from
-`@aiolm/benchmark-contracts` 0.5.1, installed from the vendored archive
-`vendor/aiolm-benchmark-contracts-0.5.1.tgz` and integrity-pinned in
+`@aiolm/benchmark-contracts` 0.6.0, installed from the vendored archive
+`vendor/aiolm-benchmark-contracts-0.6.0.tgz` and integrity-pinned in
 `package-lock.json`. The website re-exports that package rather than keeping a
 second copy of the rules, and never imports app sources at runtime. Details and
 the upgrade procedure in `docs/contracts-integration.md`.
