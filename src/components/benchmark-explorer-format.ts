@@ -1,3 +1,4 @@
+import type React from "react";
 import type { Translator } from "@/i18n/types";
 import type { BenchmarkSetup } from "@/lib/benchmark-discovery";
 import { benchmarkFallback } from "./benchmark-i18n";
@@ -86,7 +87,18 @@ export function formatCompactBytes(value: unknown, t: Translator = benchmarkFall
 export interface SummaryFact {
   key: string;
   label: string;
-  value: string;
+  value: React.ReactNode;
+}
+
+/** Extracts the list of individual GPUs from a summary and its setup. */
+export function extractGpuList(summary: { hardware_label: string; setup?: { gpus?: string[] | null } }): string[] {
+  if (summary.setup?.gpus && summary.setup.gpus.length > 0) {
+    return summary.setup.gpus;
+  }
+  if (summary.hardware_label && summary.hardware_label.includes(" + ")) {
+    return summary.hardware_label.split(" + ").map((s) => s.trim()).filter(Boolean);
+  }
+  return summary.hardware_label ? [summary.hardware_label] : [];
 }
 
 /**

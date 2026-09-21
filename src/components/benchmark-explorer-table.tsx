@@ -14,6 +14,7 @@ import {
 } from "./benchmark-explorer-state";
 import {
   environmentFacts,
+  extractGpuList,
   formatDuration,
   formatMethodName,
   formatPromptLengths,
@@ -114,8 +115,18 @@ export function BenchmarkExplorerTable({
             { key: "quantization", label: t("benchmark.Weight quantization"), value: formatWeightQuantization(info, t) },
           ];
           const envRaw = environmentFacts(summary.setup, t).filter(fact => fact.key !== "gpu" && fact.key !== "cores");
+          const gpuList = extractGpuList(summary);
+          const gpuValue: React.ReactNode = gpuList.length > 1 ? (
+            <span className="explorer-gpu-list">
+              {gpuList.map((gpu, index) => (
+                <span key={index} className="explorer-gpu-item">{gpu}</span>
+              ))}
+            </span>
+          ) : (
+            summary.hardware_label
+          );
           const envFacts: SummaryFact[] = [
-            { key: "gpu", label: t("benchmark.GPU"), value: summary.hardware_label },
+            { key: "gpu", label: t("benchmark.GPU"), value: gpuValue },
             ...envRaw,
           ];
           const contextFormatted = formatPromptLengths(summary.prompt_lengths) ?? t("benchmark.Unknown");

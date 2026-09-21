@@ -193,3 +193,48 @@ it("keeps the clear control in the layout while it is inactive, so Search never 
     state.search = filtered;
   }
 });
+
+it("renders each GPU on a separate line when multiple GPUs are configured", () => {
+  const multiGpuItem: ExplorerItem = {
+    ...item,
+    public_id: "multi-gpu-id",
+    summary: {
+      ...item.summary,
+      hardware_label: "NVIDIA GeForce RTX 4090 + NVIDIA GeForce RTX 3090",
+        setup: {
+          os: "synthetic-os", arch: "x86_64", cpu: "synthetic-cpu", cores: 8,
+          vendors: ["NVIDIA"], gpus: ["NVIDIA GeForce RTX 4090", "NVIDIA GeForce RTX 3090"], vram_mb: 49152,
+          runtime: "vllm", runtime_version: "0.6.2", backend: "cuda", mode: "gpu",
+          context_size: 8192, parallel: 1, threads: 1, gpu_layers: null,
+          flash_attention: "auto", cache_type_k: "f16", cache_type_v: "f16", split_mode: null,
+        },
+    },
+  };
+  const html = wrap("en", <BenchmarkExplorerTable items={[multiGpuItem]} compare={[]} onToggleComparison={() => {}} />);
+  expect(html).toContain("explorer-gpu-list");
+  expect(html).toContain('<span class="explorer-gpu-item">NVIDIA GeForce RTX 4090</span>');
+  expect(html).toContain('<span class="explorer-gpu-item">NVIDIA GeForce RTX 3090</span>');
+});
+
+it("renders single GPU cleanly without wrapping in multi-gpu list", () => {
+  const html = wrap("en", <BenchmarkExplorerTable items={[item]} compare={[]} onToggleComparison={() => {}} />);
+  expect(html).not.toContain("explorer-gpu-list");
+  expect(html).toContain("synthetic-device");
+});
+
+it("renders multiple GPUs from hardware_label split when setup.gpus is missing", () => {
+  const fallbackItem: ExplorerItem = {
+    ...item,
+    public_id: "multi-gpu-fallback",
+    summary: {
+      ...item.summary,
+      hardware_label: "GPU Alpha + GPU Beta",
+      setup: undefined,
+    },
+  };
+  const html = wrap("en", <BenchmarkExplorerTable items={[fallbackItem]} compare={[]} onToggleComparison={() => {}} />);
+  expect(html).toContain("explorer-gpu-list");
+  expect(html).toContain('<span class="explorer-gpu-item">GPU Alpha</span>');
+  expect(html).toContain('<span class="explorer-gpu-item">GPU Beta</span>');
+});
+

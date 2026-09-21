@@ -13,7 +13,7 @@ import { asRecord } from "@/components/benchmark-detail-format";
 import { buildSetupGroups, type BenchmarkSetup, type SetupField } from "@/components/benchmark-detail-fields";
 import { formatWeightQuantization, modelPublisher, modelValue, type BenchmarkModelInfo } from "@/components/benchmark-model-identity";
 import { buildRowColumns, isFailedRow } from "@/components/benchmark-detail-rows";
-import { formatDuration, formatPromptLengths, formatThroughput } from "@/components/benchmark-explorer-format";
+import { formatDuration, formatMethodName, formatPromptLengths, formatThroughput, formatWorkloadName } from "@/components/benchmark-explorer-format";
 import { BilingualHeader } from "./benchmark-i18n";
 
 interface Detail {
@@ -187,13 +187,48 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
       {backLink}
       <section className="card" aria-labelledby="detail-title">
         <h1 id="detail-title">{summary.model_label}</h1>
-        <p className="detail-model-summary"><span>{modelValue(modelPublisher(summary.model_info ?? null), t)}</span><span className="detail-weight-badge">{formatWeightQuantization(summary.model_info ?? null, t)}</span></p>
-        <div className="detail-performance-grid">
-          <div><BilingualHeader local={t("benchmark.Prefill")} en="Prefill" locale={locale} /><strong>{formatThroughput(summary.mean_pp_tps)} <small>tok/s</small></strong></div>
-          <div><BilingualHeader local={t("benchmark.Decode")} en="Decode" locale={locale} /><strong>{formatThroughput(summary.mean_tg_tps)} <small>tok/s</small></strong></div>
-          <div><BilingualHeader local={t("benchmark.Duration")} en="Duration" locale={locale} /><strong>{formatDuration(summary.mean_e2e_ms)} <small>s</small></strong></div>
+        <div className="detail-meta-row">
+          <div className="detail-fact">
+            <span className="detail-fact-label">{t("benchmark.Publisher")}</span>
+            <span className="detail-fact-value">{modelValue(modelPublisher(summary.model_info ?? null), t)}</span>
+          </div>
+          <div className="detail-fact">
+            <span className="detail-fact-label">{t("benchmark.Weight quantization")}</span>
+            <span className="detail-fact-value detail-weight-badge">{formatWeightQuantization(summary.model_info ?? null, t)}</span>
+          </div>
         </div>
-        <p className="detail-run-summary"><span>{t("benchmark.Input context")}: <strong>{formatPromptLengths(summary.prompt_lengths) ?? "—"}</strong></span><span>{summary.workload_label}</span><span>{t("benchmark.Measurement count")}: {summary.row_count}</span></p>
+        <div className="detail-performance-grid">
+          <div className="detail-metric-card">
+            <BilingualHeader local={t("benchmark.Prefill")} en="Prefill" unit="tok/s" locale={locale} />
+            <strong className="detail-metric-value">{formatThroughput(summary.mean_pp_tps)} <small>tok/s</small></strong>
+          </div>
+          <div className="detail-metric-card">
+            <BilingualHeader local={t("benchmark.Decode")} en="Decode" unit="tok/s" locale={locale} />
+            <strong className="detail-metric-value">{formatThroughput(summary.mean_tg_tps)} <small>tok/s</small></strong>
+          </div>
+          <div className="detail-metric-card">
+            <BilingualHeader local={t("benchmark.Mean latency")} en="Mean latency" unit="s" locale={locale} />
+            <strong className="detail-metric-value">{formatDuration(summary.mean_e2e_ms)} <small>s</small></strong>
+          </div>
+        </div>
+        <div className="detail-context-grid">
+          <div className="detail-fact">
+            <span className="detail-fact-label">{t("benchmark.Input context")}</span>
+            <span className="detail-fact-value">{formatPromptLengths(summary.prompt_lengths) ?? t("benchmark.Unknown")}</span>
+          </div>
+          <div className="detail-fact">
+            <span className="detail-fact-label">{t("benchmark.Workload")}</span>
+            <span className="detail-fact-value">{formatWorkloadName(summary.workload_label, t)}</span>
+          </div>
+          <div className="detail-fact">
+            <span className="detail-fact-label">{t("benchmark.Method")}</span>
+            <span className="detail-fact-value">{formatMethodName(summary.method_label, t)}</span>
+          </div>
+          <div className="detail-fact">
+            <span className="detail-fact-label">{t("benchmark.Measurement count")}</span>
+            <span className="detail-fact-value">{t("benchmark.{value} runs", { value: String(summary.row_count) })}</span>
+          </div>
+        </div>
         <p className="muted detail-record-date">{t("benchmark.Revision {revision} · updated", { revision: data.revision })} <LocalTime value={data.updated_at} /></p>
       </section>
 

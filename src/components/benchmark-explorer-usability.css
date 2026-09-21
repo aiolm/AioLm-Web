@@ -78,15 +78,16 @@
   list-style: none;
 }
 .explorer-compact .explorer-fact {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 6px;
   align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px;
   min-width: 0;
   font-size: 0.8rem;
   line-height: 1.35;
 }
 .explorer-compact .explorer-fact-label {
+  grid-column: 1;
   color: var(--ui-muted);
   font-weight: 450;
   white-space: nowrap;
@@ -97,16 +98,35 @@
   margin-inline-end: 2px;
 }
 .explorer-compact .explorer-fact-value {
+  grid-column: 2;
+  min-width: 0;
   color: var(--ui-ink);
   font-weight: 600;
   font-size: 0.8rem;
   overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.explorer-compact .explorer-gpu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.explorer-compact .explorer-gpu-item {
+  display: block;
+  word-break: break-word;
 }
 .explorer-compact .explorer-registered-date {
   margin-top: 4px;
   padding-top: 3px;
   border-top: 1px dashed var(--ui-border);
 }
+
+/* Balanced column widths: tighten metric columns (Prefill/Decode) to leave generous room for rich text */
+.explorer-compact .explorer-head-compare { width: 1%; }
+.explorer-compact .explorer-head-identity { width: 27%; }
+.explorer-compact .explorer-head-environment { width: 29%; }
+.explorer-compact .explorer-head-numeric { width: 8%; min-width: 80px; }
+.explorer-compact .explorer-head-setup { width: 27%; }
 
 @media (max-width: 700px) {
   .explorer-compact .explorer-search-row { grid-template-columns: minmax(0, 1fr); }
