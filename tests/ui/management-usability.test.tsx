@@ -22,7 +22,8 @@ vi.mock("react", async (original) => ({
 }));
 vi.mock("@/i18n/client", () => ({ useI18n: () => ({ locale: "en", t: (key: string) => key }) }));
 
-import { ManagementPanel } from "@/components/management-panel";
+import { ManagementPanel, takeHandoffFragment } from "@/components/management-panel";
+import { encodeRecoveryCode, RECOVERY_FIXTURE } from "@/lib/recovery";
 import { VerifyPanel } from "@/components/verify-panel";
 import { ReportForm } from "@/components/report-form";
 import { TurnstileWidget } from "@/components/turnstile";
@@ -100,6 +101,167 @@ describe("management draft recovery", () => {
     invoke(button(render(ManagementPanel), "manage.save"), "onClick");
     await flush();
     expect(JSON.parse(fetchMock.mock.calls[4][1].body)).toEqual({ description_md: "Next edit", expected_revision: 2 });
+  });
+});
+
+describe("session replacement", () => {
+  it("asks before a pasted code for another result replaces a dirty draft", async () => {
+    const confirm = vi.fn(() => false);
+    vi.stubGlobal("window", { confirm });
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const tree = await openManagement(fetchMock);
+    invoke(find(tree, e => e.props.id === "desc-draft"), "onChange", { target: { value: "Unsaved draft" } });
+    invoke(find(render(ManagementPanel), e => e.props.id === "recovery-code"), "onChange", { target: { value: encodeRecoveryCode(RECOVERY_FIXTURE) } });
+    invoke(find(render(ManagementPanel), e => e.type === "form"), "onSubmit", event);
+    await flush();
+    expect(confirm).toHaveBeenCalledWith("manage.confirmSwitch");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(find(render(ManagementPanel), e => e.props.id === "desc-draft").props.value).toBe("Unsaved draft");
+  });
+
+  it("drops the previous record and CSRF when a newly minted session cannot be loaded", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await openManagement(fetchMock);
+    fetchMock.mockResolvedValueOnce(response({ id: "s2", csrf_token: "other" })).mockResolvedValueOnce(response({ error: { code: "service_unavailable" } }, 503));
+    invoke(find(render(ManagementPanel), e => e.type === "form"), "onSubmit", event);
+    await flush();
+    const tree = render(ManagementPanel);
+    expect(tree.some(e => e.props.id === "record-title")).toBe(false);
+    expect(find(tree, e => e.props.role === "alert").props.children).toBe("manage.openFailed");
+  });
+});
+
+describe("app handoff fragment", () => {
+  const id = "00000000-0000-4000-8000-0000000000c1";
+  const token = "A".repeat(43);
+  const history = () => ({ replaceState: vi.fn() });
+
+  it("reads the ticket and erases the fragment before anything else", () => {
+    const h = history();
+    expect(takeHandoffFragment({ hash: `#handoff=${id}.${token}`, pathname: "/ko/manage", search: "?x=1" }, h)).toEqual({ id, token });
+    expect(h.replaceState).toHaveBeenCalledWith(null, "", "/ko/manage?x=1");
+  });
+
+  it("erases malformed tickets too and ignores unrelated fragments", () => {
+    const h = history();
+    expect(takeHandoffFragment({ hash: `#handoff=${id}`, pathname: "/en/manage", search: "" }, h)).toBe("invalid");
+    expect(h.replaceState).toHaveBeenCalledWith(null, "", "/en/manage");
+    const untouched = history();
+    expect(takeHandoffFragment({ hash: "#record-title", pathname: "/en/manage", search: "" }, untouched)).toBeNull();
+    expect(untouched.replaceState).not.toHaveBeenCalled();
+  });
+});
+
+describe("recovery file picker", () => {
+  const codeA = encodeRecoveryCode(RECOVERY_FIXTURE);
+  const codeB = encodeRecoveryCode({ ...RECOVERY_FIXTURE, submission_id: "00000000-0000-4000-8000-000000000002" });
+  const recordA = { ...record, submission_id: RECOVERY_FIXTURE.submission_id, public_id: "public-a" };
+  const recordB = { ...record, submission_id: "00000000-0000-4000-8000-000000000002", public_id: "public-b", description_md: "Other" };
+  const picked = (name: string, content: string) => ({ name, size: content.length, lastModified: 0, text: async () => content });
+  const openButtons = (tree: Element[]): Element[] => tree.filter(e => e.type === "button" && (e.props.children === "manage.fileOpen" || e.props.children === "manage.fileRenew"));
+  const storageAccess = vi.fn();
+  const storage = new Proxy({}, { get: (_target, prop) => { storageAccess(prop); return () => null; } });
+  let confirm: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    confirm = vi.fn(() => true);
+    storageAccess.mockClear();
+    vi.stubGlobal("window", { location: { origin: RECOVERY_FIXTURE.origin }, confirm });
+    vi.stubGlobal("localStorage", storage);
+    vi.stubGlobal("sessionStorage", storage);
+  });
+
+  async function pick(...files: ReturnType<typeof picked>[]): Promise<{ tree: Element[]; target: { files: unknown[]; value: string } }> {
+    const target = { files, value: "C:\\fakepath\\a.txt" };
+    invoke(find(render(ManagementPanel), e => e.props.id === "recovery-files"), "onChange", { target });
+    await flush();
+    return { tree: render(ManagementPanel), target };
+  }
+
+  it("opens a picked file through the existing session POST without URLs or browser storage", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const { tree, target } = await pick(picked("a.txt", `${codeA}\n`), picked("b.txt", codeB), picked("junk.txt", "hello"));
+    expect(target.value).toBe("");
+    expect(find(tree, e => e.props.children === "manage.fileStatus.invalid")).toBeTruthy();
+    expect(openButtons(tree)).toHaveLength(2);
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    fetchMock.mockResolvedValueOnce(response({ id: "s", csrf_token: "synthetic-csrf" })).mockResolvedValueOnce(response(recordA));
+    invoke(openButtons(tree)[0]!, "onClick");
+    await flush();
+    expect(fetchMock.mock.calls[0]).toEqual(["/v1/management-sessions", expect.objectContaining({ method: "POST" })]);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ recovery_code: codeA });
+    for (const [url] of fetchMock.mock.calls) expect(String(url)).not.toContain(RECOVERY_FIXTURE.secret);
+
+    const opened = render(ManagementPanel);
+    expect(openButtons(opened).map(e => e.props.children)).toEqual(["manage.fileRenew", "manage.fileOpen"]);
+    expect(find(opened, e => e.type === "a" && e.props.href === "/en/benchmarks/public-a")).toBeTruthy();
+    expect(button(opened, "manage.save").props.disabled).toBe(true);
+    expect(storageAccess).not.toHaveBeenCalled();
+  });
+
+  it("asks before replacing a dirty draft with another result and keeps it when declined", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const { tree } = await pick(picked("a.txt", codeA), picked("b.txt", codeB));
+    fetchMock.mockResolvedValueOnce(response({ id: "s", csrf_token: "csrf-a" })).mockResolvedValueOnce(response(recordA));
+    invoke(openButtons(tree)[0]!, "onClick");
+    await flush();
+    invoke(find(render(ManagementPanel), e => e.props.id === "desc-draft"), "onChange", { target: { value: "Unsaved draft" } });
+
+    confirm.mockReturnValueOnce(false);
+    invoke(openButtons(render(ManagementPanel))[1]!, "onClick");
+    await flush();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(find(render(ManagementPanel), e => e.props.id === "desc-draft").props.value).toBe("Unsaved draft");
+
+    // Renewing the same record never asks and keeps the draft.
+    fetchMock.mockResolvedValueOnce(response({ id: "s2", csrf_token: "csrf-a2" })).mockResolvedValueOnce(response(recordA));
+    invoke(openButtons(render(ManagementPanel))[0]!, "onClick");
+    await flush();
+    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(find(render(ManagementPanel), e => e.props.id === "desc-draft").props.value).toBe("Unsaved draft");
+
+    fetchMock.mockResolvedValueOnce(response({ id: "s3", csrf_token: "csrf-b" })).mockResolvedValueOnce(response(recordB));
+    invoke(openButtons(render(ManagementPanel))[1]!, "onClick");
+    await flush();
+    expect(JSON.parse(fetchMock.mock.calls[4][1].body)).toEqual({ recovery_code: codeB });
+    expect(find(render(ManagementPanel), e => e.props.id === "desc-draft").props.value).toBe("Other");
+  });
+
+  it("marks refused and deleted results, and forgets every file when the session is cleared", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const codeC = encodeRecoveryCode({ ...RECOVERY_FIXTURE, submission_id: "00000000-0000-4000-8000-000000000003" });
+    const { tree } = await pick(picked("a.txt", codeA), picked("b.txt", codeB), picked("c.txt", codeC));
+
+    fetchMock.mockResolvedValueOnce(response({ error: { code: "ownership_missing" } }, 401));
+    invoke(openButtons(tree)[0]!, "onClick");
+    await flush();
+    let current = render(ManagementPanel);
+    expect(find(current, e => e.props.children === "manage.fileStatus.rejected")).toBeTruthy();
+    expect(find(current, e => e.props.role === "alert").props.children).toBe("manage.badCode");
+
+    fetchMock.mockResolvedValueOnce(response({ id: "s", csrf_token: "csrf" })).mockResolvedValueOnce(response({ error: { code: "not_found" } }, 404));
+    invoke(openButtons(current)[0]!, "onClick");
+    await flush();
+    current = render(ManagementPanel);
+    expect(find(current, e => e.props.children === "manage.fileStatus.gone")).toBeTruthy();
+    expect(find(current, e => e.props.role === "alert").props.children).toBe("manage.alreadyDeleted");
+    expect(openButtons(current)).toHaveLength(1);
+
+    fetchMock.mockResolvedValueOnce(response({ id: "s", csrf_token: "csrf" })).mockResolvedValueOnce(response({ ...recordA, submission_id: "00000000-0000-4000-8000-000000000003" }));
+    invoke(openButtons(current)[0]!, "onClick");
+    await flush();
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
+    invoke(button(render(ManagementPanel), "manage.clear"), "onClick");
+    await flush();
+    current = render(ManagementPanel);
+    expect(current.some(e => e.props.children === "a.txt" || e.props.children === "c.txt")).toBe(false);
+    expect(openButtons(current)).toHaveLength(0);
   });
 });
 

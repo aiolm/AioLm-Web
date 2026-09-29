@@ -4,10 +4,12 @@ import { LocalTime } from "./local-time";
 import "./management-usability.css";
 
 import { useI18n } from "@/i18n/client";
-import { intlLocales } from "@/i18n/config";
+import { intlLocales, localizedPath } from "@/i18n/config";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { countCodePoints } from "@aiolm/benchmark-contracts";
+import { decodeRecoveryCode } from "@/lib/recovery";
+import { readRecoveryFiles, type RecoveryFileEntry } from "@/lib/recovery-files";
 import { DESCRIPTION_MAX_CODEPOINTS } from "@/lib/validation";
 import { apiErrorKey, readApiErrorCode, SafeMarkdown } from "./ui";
 
@@ -22,10 +24,10 @@ interface ManagedInfo {
 }
 
 /**
- * Recovery management: paste a recovery code (never in the URL), open a
- * result-scoped session, view hidden state, edit the description with
- * expected_revision, or delete. Cookie session plus CSRF are required
- * for every change.
+ * Recovery management: pick saved recovery files or paste a recovery code
+ * (never in the URL or browser storage), open a result-scoped session, view
+ * hidden state, edit the description with expected_revision, or delete.
+ * Cookie session plus CSRF are required for every change.
  */
 
 export function shouldAdoptServerDescription(isDirty: boolean, prevPublicId: string | null, nextPublicId: string): boolean {
@@ -41,6 +43,30 @@ export function canEditManagement(infoPresent: boolean, csrf: string | null): bo
 /** Generation guard for the mount restore: a slow restore must not overwrite fresher explicit session work. */
 export function isStaleSessionRestore(requestOp: number, currentOp: number): boolean {
   return requestOp !== currentOp;
+}
+
+function submissionOf(recoveryCode: string): string | null {
+  try {
+    return decodeRecoveryCode(recoveryCode).submission_id;
+  } catch {
+    return null;
+  }
+}
+
+const HANDOFF_FRAGMENT = /^#handoff=([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\.([A-Za-z0-9_-]{43})$/;
+
+/**
+ * Read an app handoff (`#handoff=<id>.<token>`) and erase it from the address
+ * bar and history entry at once, whether or not it is well formed.
+ */
+export function takeHandoffFragment(
+  location: { hash: string; pathname: string; search: string },
+  history: { replaceState(data: unknown, unused: string, url?: string): void },
+): { id: string; token: string } | "invalid" | null {
+  if (!location.hash.startsWith("#handoff=")) return null;
+  const match = HANDOFF_FRAGMENT.exec(location.hash);
+  history.replaceState(null, "", `${location.pathname}${location.search}`);
+  return match ? { id: match[1]!, token: match[2]! } : "invalid";
 }
 
 export function managementErrorKey(operation: "open" | "load" | "save" | "delete" | "clear", status: number, code: string | null): string {
@@ -62,13 +88,18 @@ export function ManagementPanel(): React.JSX.Element {
   const [message, setMessage] = useState("");
   const [messageValues, setMessageValues] = useState<Record<string, number>>({});
   const [messageIsError, setMessageIsError] = useState(false);
-  const [operation, setOperation] = useState<"open" | "save" | "reload" | "delete" | "clear" | null>(null);
+  const [operation, setOperation] = useState<"read" | "open" | "save" | "reload" | "delete" | "clear" | null>(null);
+  // Picked recovery files live only in this component's memory.
+  const [files, setFiles] = useState<RecoveryFileEntry[]>([]);
   const busy = operation !== null;
   const dirtyRef = useRef(false);
   const infoRef = useRef<ManagedInfo | null>(null);
   const mountedRef = useRef(true);
   const sessionOpRef = useRef(0);
   const restoreAbortRef = useRef<AbortController | null>(null);
+  const handoffAttemptedRef = useRef(false);
+  const focusRecordRef = useRef(false);
+  const recordTitleRef = useRef<HTMLHeadingElement | null>(null);
   const draftLength = countCodePoints(draft);
 
   const invalidateRestore = useCallback((): void => {
@@ -118,13 +149,14 @@ export function ManagementPanel(): React.JSX.Element {
   );
 
   const loadSession = useCallback(
-    async (opts: { silent?: boolean } = {}): Promise<ManagedInfo | null> => {
+    async (opts: { silent?: boolean; onFailure?: (status: number) => void } = {}): Promise<ManagedInfo | null> => {
       // An explicit reload wins over a slow mount restore.
       invalidateRestore();
       try {
         const res = await fetch("/v1/management-sessions");
         if (!mountedRef.current) return null;
         if (!res.ok) {
+          opts.onFailure?.(res.status);
           if (!opts.silent) {
             if (res.status === 401) setCsrf(null);
             say(managementErrorKey("load", res.status, await readApiErrorCode(res)), res.status !== 401);
@@ -143,11 +175,82 @@ export function ManagementPanel(): React.JSX.Element {
     [applyServerInfo, invalidateRestore, say],
   );
 
-  // Restore a current cookie session after a page reload (read-only until a
-  // fresh code provides editing permission again). A slow restore for a
-  // previous cookie must not overwrite fresher explicit session work or
+  /**
+   * Turn an opening response ({id, csrf_token} + cookie) into a loaded record.
+   * Shared by pasted codes, picked recovery files and app handoffs. Resolves
+   * "rejected" when the service refused the secret (announced with
+   * `rejectedKey`) and "gone" when the record no longer exists. Once a new
+   * session was minted, a failed load clears the previous record and CSRF: the
+   * cookie no longer belongs to them.
+   */
+  const startSession = useCallback(
+    async (open: Promise<Response>, rejectedKey: string, onAccepted?: () => void): Promise<ManagedInfo | "rejected" | "gone" | "failed"> => {
+      const res = await open;
+      if (!mountedRef.current) return "failed";
+      if (!res.ok) {
+        const key = managementErrorKey("open", res.status, await readApiErrorCode(res));
+        say(key === "manage.badCode" ? rejectedKey : key, true);
+        return res.status === 401 ? "rejected" : "failed";
+      }
+      const json = (await res.json()) as { id: string; csrf_token: string };
+      if (!mountedRef.current) return "failed";
+      setCsrf(json.csrf_token);
+      onAccepted?.();
+      const failure = { status: 0 };
+      const current = await loadSession({ silent: true, onFailure: (status) => { failure.status = status; } });
+      if (current) {
+        say("manage.opened", false);
+        return current;
+      }
+      if (!mountedRef.current) return "failed";
+      setCsrf(null);
+      setInfo(null);
+      infoRef.current = null;
+      const gone = failure.status === 404;
+      say(gone ? "manage.alreadyDeleted" : "manage.openFailed", true);
+      return gone ? "gone" : "failed";
+    },
+    [loadSession, say],
+  );
+
+  // On mount: an app handoff (`#handoff=<id>.<token>`) is taken and erased from
+  // the address bar before any request, then redeemed once for an ordinary
+  // session; it never edits or deletes anything. Once a handoff was attempted
+  // on this page the cookie restore below never runs, including on a
+  // StrictMode re-run, so it cannot race or overwrite the handoff.
+  //
+  // Otherwise restore a current cookie session after a page reload (read-only
+  // until a fresh code provides editing permission again). A slow restore for
+  // a previous cookie must not overwrite fresher explicit session work or
   // restore a cleared/deleted session. StrictMode-safe via guard.
   useEffect(() => {
+    const handoff = takeHandoffFragment(window.location, window.history);
+    if (handoff) handoffAttemptedRef.current = true;
+    if (handoff === "invalid") {
+      say("manage.handoffFailed", true);
+    } else if (handoff) {
+      setOperation("open");
+      focusRecordRef.current = true;
+      void (async () => {
+        try {
+          const opened = await startSession(
+            fetch(`/v1/management-handoffs/${handoff.id}/redeem`, {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ handoff_token: handoff.token }),
+            }),
+            "manage.handoffFailed",
+          );
+          if (typeof opened !== "object") focusRecordRef.current = false;
+        } catch {
+          focusRecordRef.current = false;
+          say("error.network", true);
+        } finally {
+          if (mountedRef.current) setOperation(null);
+        }
+      })();
+    }
+    if (handoffAttemptedRef.current) return;
     const myOp = sessionOpRef.current;
     const controller = new AbortController();
     restoreAbortRef.current = controller;
@@ -178,45 +281,83 @@ export function ManagementPanel(): React.JSX.Element {
         // Abort on unmount is best-effort.
       }
     };
-  }, [applyServerInfo, say]);
+  }, [applyServerInfo, say, startSession]);
+
+  // After an app handoff, take the owner straight to the opened record.
+  useEffect(() => {
+    if (!info || !focusRecordRef.current) return;
+    focusRecordRef.current = false;
+    recordTitleRef.current?.scrollIntoView({ block: "start" });
+    recordTitleRef.current?.focus({ preventScroll: true });
+  }, [info]);
+
+  const postRecovery = (recoveryCode: string): Promise<Response> => fetch("/v1/management-sessions", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ recovery_code: recoveryCode }),
+  });
+
+  /** Opening another record replaces the draft; renewing the same one keeps it. */
+  const confirmSwitch = (submissionId: string | null): boolean =>
+    !isDirty || !info || submissionId === null || submissionId === info.submission_id || window.confirm(t("manage.confirmSwitch"));
 
   const openSession = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     if (busy) return;
+    // An undecodable code is refused by the service without replacing anything.
+    if (!confirmSwitch(submissionOf(code.trim()))) return;
     invalidateRestore();
     setOperation("open");
     say("", false);
     try {
-      const res = await fetch("/v1/management-sessions", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ recovery_code: code.trim() }),
-      });
-      if (!mountedRef.current) return;
-      if (!res.ok) {
-        say(
-          managementErrorKey("open", res.status, await readApiErrorCode(res)),
-          true,
-        );
-        return;
-      }
-      const json = (await res.json()) as { id: string; csrf_token: string };
-      if (!mountedRef.current) return;
-      setCsrf(json.csrf_token);
       // The code has served its purpose: drop it immediately, never retain it.
-      setCode("");
-      const current = await loadSession({ silent: true });
-      if (current) {
-        say("manage.opened", false);
-      } else {
-        setCsrf(null);
-        say("manage.openFailed", true);
-      }
+      await startSession(postRecovery(code.trim()), "manage.badCode", () => setCode(""));
     } catch {
       say("error.network", true);
     } finally {
       if (mountedRef.current) setOperation(null);
     }
+  };
+
+  const updateFile = (key: string, change: Partial<RecoveryFileEntry>): void => {
+    setFiles((prev) => prev.map((entry) => (entry.key === key ? { ...entry, ...change } : entry)));
+  };
+
+  const pickFiles = async (input: HTMLInputElement): Promise<void> => {
+    const picked = Array.from(input.files ?? []);
+    // Allow picking the same file again later; the list keeps what was read.
+    input.value = "";
+    if (busy || picked.length === 0) return;
+    setOperation("read");
+    try {
+      const next = await readRecoveryFiles(picked, window.location.origin, files);
+      if (mountedRef.current) setFiles(next);
+    } finally {
+      if (mountedRef.current) setOperation(null);
+    }
+  };
+
+  const openFile = async (entry: RecoveryFileEntry): Promise<void> => {
+    if (busy || !entry.code) return;
+    if (!confirmSwitch(entry.submissionId)) return;
+    invalidateRestore();
+    setOperation("open");
+    say("", false);
+    try {
+      const opened = await startSession(postRecovery(entry.code), "manage.badCode");
+      if (!mountedRef.current) return;
+      if (typeof opened === "object") updateFile(entry.key, { publicId: opened.public_id });
+      else if (opened === "rejected" || opened === "gone") updateFile(entry.key, { status: opened, code: null });
+    } catch {
+      say("error.network", true);
+    } finally {
+      if (mountedRef.current) setOperation(null);
+    }
+  };
+
+  const clearFiles = (): void => {
+    if (busy) return;
+    setFiles([]);
   };
 
   const saveDescription = async (): Promise<void> => {
@@ -309,6 +450,8 @@ export function ManagementPanel(): React.JSX.Element {
       if (!mountedRef.current) return;
       if (res.status === 204 || res.ok) {
         say("manage.deleted", false);
+        const deletedSubmission = info.submission_id;
+        setFiles((prev) => prev.filter((entry) => entry.submissionId !== deletedSubmission));
         setInfo(null);
         infoRef.current = null;
         setCsrf(null);
@@ -342,6 +485,7 @@ export function ManagementPanel(): React.JSX.Element {
         infoRef.current = null;
         setCsrf(null);
         setCode("");
+        setFiles([]);
         setDraft("");
         setIsDirty(false);
         dirtyRef.current = false;
@@ -384,6 +528,46 @@ export function ManagementPanel(): React.JSX.Element {
       <section className="card" aria-labelledby="manage-title">
         <h1 id="manage-title">{t("manage.title")}</h1>
         <p className="muted">{t("manage.intro")}</p>
+        <div className="field">
+          <label htmlFor="recovery-files">{t("manage.files")}</label>
+          <input
+            id="recovery-files" type="file" multiple accept=".txt,text/plain"
+            disabled={busy}
+            onChange={(e) => void pickFiles(e.target)}
+            aria-describedby="recovery-files-hint"
+          />
+          <span id="recovery-files-hint" className="hint">{t("manage.filesHint")}</span>
+        </div>
+        {files.length > 0 ? (
+          <div className="recovery-files">
+            <ul>
+              {files.map((entry) => {
+                const current = info !== null && entry.code !== null && info.submission_id === entry.submissionId;
+                return (
+                  <li key={entry.key} aria-current={current ? "true" : undefined}>
+                    <div>
+                      <strong className="recovery-file-name">{entry.name}</strong>
+                      <span className="hint">
+                        {t("manage.fileSaved")} <LocalTime value={new Date(entry.savedAt).toJSON() ?? ""} />
+                        {entry.submissionId ? <> · {t("manage.fileSubmission")} <code>{entry.submissionId.slice(0, 8)}</code></> : null}
+                        {entry.publicId ? <> · {t("manage.publicId")} <a href={localizedPath(locale, `/benchmarks/${entry.publicId}`)}>{entry.publicId}</a></> : null}
+                      </span>
+                      <span className={entry.code ? "hint" : "hint error"}>{t(current ? "manage.fileCurrent" : `manage.fileStatus.${entry.status}`)}</span>
+                    </div>
+                    {entry.code ? (
+                      <button type="button" disabled={busy} aria-label={`${t(current ? "manage.fileRenew" : "manage.fileOpen")}: ${entry.name}`} onClick={() => void openFile(entry)}>
+                        {t(current ? "manage.fileRenew" : "manage.fileOpen")}
+                      </button>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+            <button type="button" disabled={busy} onClick={clearFiles}>{t("manage.filesClear")}</button>
+          </div>
+        ) : null}
+        <details className="recovery-paste">
+        <summary>{t("manage.pasteTitle")}</summary>
         <form method="POST" action="/v1/management-sessions" onSubmit={(e) => void openSession(e)}>
           <div className="field">
             <label htmlFor="recovery-code">{t("manage.code")}</label>
@@ -398,12 +582,13 @@ export function ManagementPanel(): React.JSX.Element {
           </div>
           <button type="submit" className="primary" disabled={busy}>{operation === "open" ? t("manage.opening") : t("manage.open")}</button>
         </form>
+        </details>
         {message ? <p className={`alert ${messageIsError ? "error" : "info"}`} role={messageIsError ? "alert" : "status"}>{t(message, Object.fromEntries(Object.entries(messageValues).map(([key, value]) => [key, number(value)])))}</p> : null}
       </section>
 
       {info ? (
         <section className="card" aria-labelledby="record-title">
-          <h2 id="record-title">{t("manage.record")} {info.hidden ? t("manage.hidden") : ""}</h2>
+          <h2 id="record-title" ref={recordTitleRef} tabIndex={-1}>{t("manage.record")} {info.hidden ? t("manage.hidden") : ""}</h2>
           <dl className="kv">
             <dt>{t("manage.publicId")}</dt><dd>{info.public_id}</dd>
             <dt>{t("manage.revision")}</dt><dd>{number(info.revision)}</dd>

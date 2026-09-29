@@ -13,7 +13,10 @@ accounts in v1.
   Markdown descriptions, paged measurement rows, Turnstile-gated verification
   and reporting.
 - Owners: manage via recovery code (`/manage`): result-scoped 30-minute session,
-  description edits with `expected_revision`, deletion (tombstone).
+  description edits with `expected_revision`, deletion (tombstone). Saved
+  recovery files can be picked (several at once) and opened from a list, or the
+  desktop app can open the page with a single-use handoff
+  ([management handoff](docs/management-handoff.md)).
 - API: the wire contract is the OpenAPI document shipped by
   `@aiolm/benchmark-contracts` 0.6.0
   (`node_modules/@aiolm/benchmark-contracts/schema/openapi.json`). Routes:
@@ -21,7 +24,9 @@ accounts in v1.
   `GET /v1/benchmark-runs`, `GET /v1/benchmark-runs/<id>`, `GET .../measurements`,
   `POST /v1/management-sessions` + `GET`/`DELETE`, `PATCH .../description`,
   `DELETE ...`, `POST .../reports`. `GET /v1/readiness` is the deployment
-  probe and is not part of the shared contract. Website-specific discovery
+  probe and is not part of the shared contract. `POST /v1/management-handoffs`
+  and `POST /v1/management-handoffs/<id>/redeem` are a website extension
+  documented in [management handoff](docs/management-handoff.md). Website-specific discovery
   query extensions and `GET /v1/benchmark-runs/options` are documented in
   [benchmark discovery](docs/benchmark-discovery.md).
 
@@ -55,7 +60,8 @@ APIs remain at `/v1/**`. See [language routing and catalogs](docs/internationali
   for the headline metrics, plus grouped model, runtime, hardware, workload,
   execution, and measurement context. Measurement rows load on demand and
   paginate separately.
-- `/manage`: recovery-code management for an owner's published result.
+- `/manage`: recovery-file, recovery-code, or app-handoff management for an
+  owner's published result.
 - `/verify/[sessionId]`: verification of an upload session from the desktop app.
 
 The product introduction is static. Public benchmark details include server-rendered

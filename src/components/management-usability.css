@@ -15,6 +15,49 @@
   overflow-wrap: anywhere;
 }
 
+.management-panel .recovery-files ul {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+}
+
+.management-panel .recovery-files li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: .75rem 0;
+  border-bottom: 1px solid var(--ui-border);
+}
+
+.management-panel .recovery-files li > div {
+  display: grid;
+  gap: .25rem;
+  min-width: 0;
+}
+
+.management-panel .recovery-files li[aria-current="true"] .recovery-file-name::before {
+  content: "● ";
+}
+
+.management-panel .recovery-file-name {
+  overflow-wrap: anywhere;
+}
+
+.management-panel .recovery-paste {
+  margin-top: 1.5rem;
+}
+
+.management-panel .recovery-paste > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.management-panel .recovery-paste[open] > summary {
+  margin-bottom: 1rem;
+}
+
 @media (max-width: 600px) {
   .management-panel .management-actions {
     flex-direction: column;
