@@ -303,6 +303,28 @@ export class InMemoryBenchmarkStore implements BenchmarkStore {
     if (m) this.mgmt.set(id, { ...m, revoked_at: new Date().toISOString() });
   }
 
+  async redeemManagementHandoff(
+    handoffId: string,
+    tokenHash: string,
+    session: Omit<ManagementSessionRow, "submission_id" | "revoked_at" | "created_at">,
+  ): Promise<{ outcome: "redeemed"; session: ManagementSessionRow } | { outcome: "invalid" } | { outcome: "deleted" }> {
+    const found = this.mgmt.get(handoffId);
+    if (!found || found.csrf_token_hash !== tokenHash) return { outcome: "invalid" };
+    return this.withLocks([`sub:${found.submission_id}`], async () => {
+      const ticket = this.mgmt.get(handoffId) ?? found;
+      const now = new Date().toISOString();
+      if (this.runs.get(ticket.submission_id)?.deleted) {
+        if (!ticket.revoked_at) this.mgmt.set(handoffId, { ...ticket, revoked_at: now });
+        return { outcome: "deleted" as const };
+      }
+      if (ticket.revoked_at || Date.parse(ticket.expires_at) <= Date.now()) return { outcome: "invalid" as const };
+      this.mgmt.set(handoffId, { ...ticket, revoked_at: now });
+      const full: ManagementSessionRow = { ...session, submission_id: ticket.submission_id, revoked_at: null, created_at: now };
+      this.mgmt.set(session.id, full);
+      return { outcome: "redeemed" as const, session: full };
+    });
+  }
+
   async createReport(row: Omit<ReportRow, "id" | "created_at"> & { id?: string }): Promise<ReportRow> {
     const id = row.id ?? crypto.randomUUID();
     const full: ReportRow = { id, target_submission_id: row.target_submission_id, reason: row.reason, reporter_ip_hmac: row.reporter_ip_hmac, created_at: new Date().toISOString() };

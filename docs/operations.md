@@ -98,7 +98,7 @@ session tables — see `sql/migrations/005_retention_grants.sql`).
 | --- | --- | --- |
 | `bench.quota_buckets` | `expires_at` has passed | — |
 | `bench.reports.reporter_ip_hmac` | 24h after the report row was created | the report row itself |
-| `bench.management_sessions` | 24h after expiry, or 24h after revocation | — |
+| `bench.management_sessions` (including 2-minute app handoff tickets) | 24h after expiry, or 24h after revocation | — |
 | `bench.upload_sessions` | 24h after expiry (sessions and their permits live at most 5 minutes) | — |
 
 Tombstones in `bench.benchmark_runs`, the moderation audit log

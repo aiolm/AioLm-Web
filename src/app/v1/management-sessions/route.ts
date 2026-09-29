@@ -1,8 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { randomBase64Url32 } from "@/lib/crypto";
-import { getServiceOrigin, quotaConfigFromEnv } from "@/lib/env";
+import { getServiceOrigin } from "@/lib/env";
 import { serviceError } from "@/lib/errors";
-import { getClientIp, quotaKeyForIp, quotaWindowMinute } from "@/lib/ip";
 import { MANAGEMENT_SESSION_TTL_MS, ownerHashMatches, signManagementSessionId, verifyManagementSessionCookie } from "@/lib/permits";
 import { BoundedBodyError, SMALL_JSON_MAX_BYTES, readBoundedJson } from "@/lib/request";
 import type { BenchmarkStore } from "@/server/repository";
@@ -12,6 +11,7 @@ import {
   buildManagementCookie, clearManagementCookie, hashCsrfToken,
   parseRecovery, readManagementCookie, requireMutationSession,
 } from "@/server/auth-helpers";
+import { abuseProtectionUnavailable, chargeInvalid, invalidManageGate, managementUnavailable } from "@/server/manage-gate";
 
 export const dynamic = "force-dynamic";
 
@@ -215,57 +215,6 @@ async function currentSession(request: Request, store: BenchmarkStore): Promise<
   return session;
 }
 
-/** Structured, detail-free answer when the management store cannot be reached. */
-function managementUnavailable(): Response {
-  return serviceError(503, "service_unavailable", "Management is temporarily unavailable.", 60);
-}
-
-interface InvalidManageGate {
-  key: string;
-  windowMs: number;
-  limit: number;
-}
-
-/** Quota context for the invalid-attempt budget; null when IP/quota secrets are unavailable. */
-function invalidManageGate(request: Request): InvalidManageGate | null {
-  const quotaSecret = process.env["QUOTA_HMAC_SECRET"] ?? null;
-  const ip = getClientIp(request.headers);
-  if (!ip || !quotaSecret) return null;
-  const config = quotaConfigFromEnv();
-  return {
-    key: quotaKeyForIp(quotaSecret, ip, "invalid-manage", quotaWindowMinute(Date.now())),
-    windowMs: 60_000,
-    limit: config.invalidManagePerMinIp,
-  };
-}
-
-/** Structured fail-closed answer when the invalid-attempt budget cannot be enforced. */
-function abuseProtectionUnavailable(): Response {
-  return serviceError(503, "service_unavailable", "Abuse protection is unavailable.", 60);
-}
-
 function invalidRecovery(): Response {
   return serviceError(401, "ownership_missing", "Recovery code is invalid.");
-}
-
-/**
- * Record one invalid attempt atomically, then answer. Budget overflow answers
- * 429 + Retry-After; a quota store that errors answers 503 rather than letting
- * the unaccounted attempt through.
- */
-async function chargeInvalid(
-  store: BenchmarkStore,
-  gate: InvalidManageGate,
-  onAllowed: () => Response,
-): Promise<Response> {
-  let result: { allowed: boolean; retryAfterSec: number };
-  try {
-    result = await store.quotaGateAtomic(gate.key, gate.windowMs, gate.limit);
-  } catch {
-    return abuseProtectionUnavailable();
-  }
-  if (!result.allowed) {
-    return serviceError(429, "rate_limited", "Too many attempts. Try again shortly.", result.retryAfterSec);
-  }
-  return onAllowed();
 }

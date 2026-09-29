@@ -305,6 +305,40 @@ export class PostgresBenchmarkStore implements BenchmarkStore {
     await this.sql`update bench.management_sessions set revoked_at = now() where id = ${id}`;
   }
 
+  async redeemManagementHandoff(
+    handoffId: string,
+    tokenHash: string,
+    session: Omit<ManagementSessionRow, "submission_id" | "revoked_at" | "created_at">,
+  ): Promise<{ outcome: "redeemed"; session: ManagementSessionRow } | { outcome: "invalid" } | { outcome: "deleted" }> {
+    return this.sql.begin(async (tx) => {
+      const found = await tx<Array<{ submission_id: string }>>`
+        select submission_id from bench.management_sessions
+        where id = ${handoffId} and csrf_token_hash = ${tokenHash} limit 1`;
+      if (!found[0]) return { outcome: "invalid" as const };
+      const submissionId = found[0].submission_id;
+      // Same lock as deleteRun: a deletion and a redemption never interleave.
+      await tx`select pg_advisory_xact_lock(hashtext(${submissionId}))`;
+      const runs = await tx<Array<{ deleted: boolean }>>`
+        select deleted from bench.benchmark_runs where submission_id = ${submissionId} limit 1`;
+      if (!runs[0] || runs[0].deleted) {
+        await tx`update bench.management_sessions set revoked_at = now() where id = ${handoffId} and revoked_at is null`;
+        return { outcome: "deleted" as const };
+      }
+      // The conditional update is the single-use gate: of two concurrent
+      // redemptions only one sees the row still unrevoked.
+      const consumed = await tx`
+        update bench.management_sessions set revoked_at = now()
+        where id = ${handoffId} and revoked_at is null and expires_at > now()`;
+      if (consumed.count !== 1) return { outcome: "invalid" as const };
+      const rows = await tx<ManagementSessionRow[]>`
+        insert into bench.management_sessions (id, submission_id, csrf_token_hash, expires_at)
+        values (${session.id}, ${submissionId}, ${session.csrf_token_hash}, ${session.expires_at})
+        returning id, submission_id, csrf_token_hash, expires_at::text as expires_at,
+          revoked_at::text as revoked_at, created_at::text as created_at`;
+      return { outcome: "redeemed" as const, session: rows[0]! };
+    });
+  }
+
   async createReport(row: Omit<ReportRow, "id" | "created_at"> & { id?: string }): Promise<ReportRow> {
     const id = row.id ?? crypto.randomUUID();
     const rows = await this.sql<ReportRow[]>`

@@ -1246,6 +1246,63 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     }
   });
 
+  it("redeems a management handoff ticket exactly once under the runtime role", async () => {
+    if (!db) return;
+    const rtSql = postgres(runtimeUrl, { max: 2, prepare: false, ssl: false });
+    const rt = new PostgresBenchmarkStore(rtSql);
+    try {
+      const submissionId = randomUUID();
+      const ownerSecret = randomBase64Url32();
+      const body = JSON.stringify({ benchmark: syntheticSubmission({ submission_id: submissionId }), description_md: "integration" });
+      const uploadId = randomUUID();
+      await rt.createUploadSession({
+        session_id: uploadId, submission_id: submissionId, body_sha256: sha256HexUtf8(body),
+        owner_hash: ownerHashFor(ownerSecret), expires_at: new Date(Date.now() + 5 * 60_000).toISOString(),
+      });
+      await rt.markSessionVerified(uploadId);
+      const verifiedUpload = (await rt.getUploadSession(uploadId))!;
+      const permit = mintUploadPermit({
+        permitSecret: PERMIT_SECRET, sessionId: uploadId, submissionId, bodySha256: sha256HexUtf8(body),
+        ownerHash: ownerHashFor(ownerSecret),
+        expiresAtMs: permitExpiryForSession(Date.parse(verifiedUpload.expires_at), Date.parse(verifiedUpload.verified_at!)),
+      }).permit;
+      expect((await rt.acceptRunAtomic(acceptArgs(submissionId, ownerSecret, permit, GENEROUS_QUOTA))).outcome).toBe("created");
+
+      const ticket = randomUUID();
+      const tokenHash = "a".repeat(64);
+      await rt.createManagementSession({
+        id: ticket, submission_id: submissionId, csrf_token_hash: tokenHash, expires_at: new Date(Date.now() + 120_000).toISOString(),
+      });
+      const session = (): { id: string; csrf_token_hash: string; expires_at: string } => ({
+        id: randomUUID(), csrf_token_hash: "b".repeat(64), expires_at: new Date(Date.now() + 30 * 60_000).toISOString(),
+      });
+      expect(await rt.redeemManagementHandoff(ticket, "c".repeat(64), session())).toEqual({ outcome: "invalid" });
+      const results = await Promise.all([
+        rt.redeemManagementHandoff(ticket, tokenHash, session()),
+        rt.redeemManagementHandoff(ticket, tokenHash, session()),
+      ]);
+      const winners = results.flatMap((r) => (r.outcome === "redeemed" ? [r.session] : []));
+      expect(winners).toHaveLength(1);
+      expect(winners[0]!.submission_id).toBe(submissionId);
+      expect(results.map((r) => r.outcome).sort()).toEqual(["invalid", "redeemed"]);
+      expect((await rt.getManagementSession(ticket))!.revoked_at).not.toBeNull();
+      expect(await rt.redeemManagementHandoff(ticket, tokenHash, session())).toEqual({ outcome: "invalid" });
+
+      // Expired tickets never redeem; deletion after issue answers "deleted".
+      const expired = randomUUID();
+      await rt.createManagementSession({ id: expired, submission_id: submissionId, csrf_token_hash: tokenHash, expires_at: new Date(Date.now() + 120_000).toISOString() });
+      await db!`update bench.management_sessions set expires_at = now() - interval '1 second' where id = ${expired}`;
+      expect(await rt.redeemManagementHandoff(expired, tokenHash, session())).toEqual({ outcome: "invalid" });
+      const pending = randomUUID();
+      await rt.createManagementSession({ id: pending, submission_id: submissionId, csrf_token_hash: tokenHash, expires_at: new Date(Date.now() + 120_000).toISOString() });
+      expect(await rt.deleteRun(submissionId)).not.toBeNull();
+      expect(await rt.redeemManagementHandoff(pending, tokenHash, session())).toEqual({ outcome: "deleted" });
+      expect((await db!`select count(*)::int as n from bench.management_sessions where submission_id = ${submissionId} and revoked_at is null`)[0]!.n).toBe(0);
+    } finally {
+      await rtSql.end({ timeout: 5 });
+    }
+  });
+
   it("creates trigram filter indexes when pg_trgm lives outside the default search_path", async () => {
     if (!admin) return;
     // A managed cluster commonly installs pg_trgm into a dedicated `extensions`

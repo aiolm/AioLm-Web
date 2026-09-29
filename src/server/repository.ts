@@ -124,6 +124,20 @@ export interface BenchmarkStore {
   createManagementSession(row: Omit<ManagementSessionRow, "revoked_at" | "created_at">): Promise<ManagementSessionRow>;
   getManagementSession(id: string): Promise<ManagementSessionRow | null>;
   revokeManagementSession(id: string): Promise<void>;
+  /**
+   * App-to-browser handoff tickets are short-lived management_sessions rows
+   * whose hash is a handoff-token hash (never a CSRF hash) and for which no
+   * cookie is ever issued. In ONE atomic unit, serialized with deleteRun on the
+   * same per-submission lock: find the ticket whose hash matches; when its run
+   * is deleted, consume it and answer "deleted"; otherwise revoke the live,
+   * unexpired ticket and create `session` for the same submission. "invalid"
+   * (nothing created) covers unknown, used, expired and mismatched tickets.
+   */
+  redeemManagementHandoff(
+    handoffId: string,
+    tokenHash: string,
+    session: Omit<ManagementSessionRow, "submission_id" | "revoked_at" | "created_at">,
+  ): Promise<{ outcome: "redeemed"; session: ManagementSessionRow } | { outcome: "invalid" } | { outcome: "deleted" }>;
 
   // Reports + audit
   createReport(row: Omit<ReportRow, "id" | "created_at"> & { id?: string }): Promise<ReportRow>;

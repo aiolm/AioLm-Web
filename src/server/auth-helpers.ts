@@ -30,6 +30,14 @@ export function hashCsrfToken(token: string): string {
   return csrfTokenHash(token);
 }
 
+/** Handoff tickets live at most this long between the app and the browser. */
+export const MANAGEMENT_HANDOFF_TTL_MS = 2 * 60 * 1000;
+
+/** Domain-separated from CSRF hashes, so a ticket row can never pass a CSRF check. */
+export function hashHandoffToken(token: string): string {
+  return sha256HexUtf8(`handoff-v1|${token}`);
+}
+
 function timingSafeEqualText(a: string, b: string): boolean {
   const ab = Buffer.from(a, "utf8");
   const bb = Buffer.from(b, "utf8");
