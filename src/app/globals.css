@@ -794,7 +794,7 @@ main > .grid {
 
 .step-detail { margin-block-start: 6px; color: var(--ui-muted); font-size: 0.88rem; }
 
-.closing { padding-block: 0 24px; background: var(--ui-surface); }
+.closing { padding-block: 32px; background: var(--ui-surface); }
 
 .closing-band {
   display: flex;
@@ -1810,6 +1810,7 @@ table.data th { color: var(--ui-muted); font-weight: 650; }
   .kv { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   .kv dd { margin-block-end: 10px; }
 
+  .closing { padding-block: 24px; }
   .closing-band { padding: 20px; }
 }
 

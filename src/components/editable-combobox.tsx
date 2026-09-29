@@ -3,12 +3,12 @@ import { useEffect, useId, useRef, useState } from "react";
 
 interface Option { value: string; count: number }
 interface Props {
-  name: string; label: string; value: string; placeholder: string;
+  name: string; label: string; value: string; placeholder: string; hint?: string;
   optionsUrl: string; onChange: (value: string) => void;
   messages: { toggle: string; loading: string; empty: string; error: string; more: string };
 }
 /** Suggestions are optional: only an explicit selection replaces typed text. */
-export function EditableCombobox({ name, label, value, placeholder, optionsUrl, onChange, messages }: Props): React.JSX.Element {
+export function EditableCombobox({ name, label, value, placeholder, hint, optionsUrl, onChange, messages }: Props): React.JSX.Element {
   const id = useId();
   const [open, setOpen] = useState(false);
   const [composing, setComposing] = useState(false);
@@ -41,7 +41,7 @@ export function EditableCombobox({ name, label, value, placeholder, optionsUrl, 
     <div className="explorer-combobox-control">
     <input ref={input} id={id} name={name} className="explorer-field-input" role="combobox" type="text" autoComplete="off"
       aria-autocomplete="list" aria-expanded={open} aria-controls={`${id}-list`} aria-activedescendant={open && options[active] ? `${id}-${active}` : undefined}
-      maxLength={120} placeholder={placeholder} value={value}
+      maxLength={120} placeholder={placeholder} value={value} aria-describedby={hint ? `${id}-hint` : undefined}
       onFocus={() => setOpen(true)} onClick={() => setOpen(true)}
       onCompositionStart={() => setComposing(true)} onCompositionEnd={() => setComposing(false)}
       onChange={event => { onChange(event.target.value); setOpen(true); setActive(-1); }}
@@ -60,6 +60,7 @@ export function EditableCombobox({ name, label, value, placeholder, optionsUrl, 
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
     </button>
     </div>
+    {hint ? <p id={`${id}-hint`} className="explorer-field-hint">{hint}</p> : null}
     {open ? <div className="explorer-combobox-popup">
       <ul ref={list} id={`${id}-list`} role="listbox" aria-label={label} className="explorer-options">
         {options.map((option, index) => <li id={`${id}-${index}`} key={option.value} role="option" aria-selected={active === index}

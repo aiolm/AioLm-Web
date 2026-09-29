@@ -19,17 +19,17 @@ export default async function BenchmarksPage({ params }: Props): Promise<React.J
   if (!isLocale(locale)) notFound();
   const messages = await getMessages(locale, "benchmark");
   const t = createTranslator(messages);
-  return <I18nProvider locale={locale} messages={messages}>
-    <div className="site-shell page benchmark-page">
-      <div className="page-intro">
+  const introduction = <div className="page-intro">
         <div className="page-intro-copy">
           <h1 className="page-title">{t("benchmark.Benchmark explorer")}</h1>
           <p className="page-subtitle">{t("benchmark.Explore self-reported AioLM benchmark results with the hardware, workload and measurement method they were produced with.")}</p>
         </div>
         <p className="page-intro-note">{t("benchmark.Self-reported results")}</p>
-      </div>
+      </div>;
+  return <I18nProvider locale={locale} messages={messages}>
+    <div className="site-shell page benchmark-page">
       <noscript>{t("benchmark.Enable JavaScript to load, filter and compare published benchmarks.")}</noscript>
-      <Suspense fallback={<p role="status">{t("benchmark.Loading benchmark explorer…")}</p>}><BenchmarkBrowser /></Suspense>
+      <Suspense fallback={<>{introduction}<p role="status">{t("benchmark.Loading benchmark explorer…")}</p></>}><BenchmarkBrowser introduction={introduction} /></Suspense>
     </div>
   </I18nProvider>;
 }

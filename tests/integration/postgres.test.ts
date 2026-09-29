@@ -370,6 +370,40 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       expect((await options({ field: "publisher", model: "discovery-model", option_query: "%" })).options).toEqual([]);
     });
 
+    it("searches and suggests model_query over the label and model identifiers only, like the in-memory store", async () => {
+      const ids = async (query: Record<string, string>) =>
+        (await page({ model: "discovery-model", ...query })).items.map((item) => item.public_id).sort();
+      const both = ["discovery-model-described", "discovery-model-other"];
+      for (const model_query of ["example 8b", "q4/example-8B-Q4_K_M.gguf", "c".repeat(64)]) expect(await ids({ model_query })).toEqual(both);
+      expect(await ids({ model_query: "publisher-org/example-8b-gguf" })).toEqual(["discovery-model-described"]);
+      expect(await ids({ model_query: "other-org/" })).toEqual(["discovery-model-other"]);
+      // The label is searched too, and a run without metadata has nothing else.
+      expect(await ids({ model_query: "discovery-model" })).toEqual([...both, "discovery-model-undescribed"].sort());
+      // Hardware, runtime and descriptive model text belong to q, not to model_query.
+      for (const text of ["testos", "gpu a", "vendor a", "test-runtime", "qwen2", "quantizer org"]) {
+        expect(await ids({ model_query: text }), text).toEqual([]);
+      }
+      expect(await ids({ q: "test-runtime" })).toHaveLength(3);
+      expect(await ids({ q: "qwen2" })).toEqual(both);
+      // Conditions are ANDed with model_query.
+      expect(await ids({ model_query: "example 8b", publisher: "other" })).toEqual(["discovery-model-other"]);
+      expect(await ids({ model_query: "example 8b", gpu: "no such gpu" })).toEqual([]);
+      const suggestions = async (query: Record<string, string>) =>
+        (await options({ field: "model_query", model: "discovery-model", ...query })).options;
+      const offered = await suggestions({});
+      expect(offered).toEqual([
+        { value: "Example 8B", count: 2 }, { value: "Other-Org/example-8B-GGUF", count: 1 }, { value: "Publisher-Org/example-8B-GGUF", count: 1 },
+        { value: "c".repeat(64), count: 2 }, { value: "discovery-model", count: 3 }, { value: "q4/example-8B-Q4_K_M.gguf", count: 2 },
+      ]);
+      // Every suggestion matches again when selected, for as many runs as it was counted for.
+      for (const { value, count } of offered) expect(await ids({ model_query: value }), value).toHaveLength(count);
+      expect((await suggestions({ publisher: "other" })).map((item) => item.value))
+        .toEqual(["Example 8B", "Other-Org/example-8B-GGUF", "c".repeat(64), "discovery-model", "q4/example-8B-Q4_K_M.gguf"]);
+      expect(await suggestions({ model_query: "ignored" })).toEqual(offered);
+      expect(await suggestions({ option_query: "test-runtime" })).toEqual([]);
+      expect(await suggestions({ option_query: "%" })).toEqual([]);
+    });
+
     it("narrows GPU suggestions to matching devices in a mixed-vendor run", async () => {
       expect((await options({ field: "gpu", model: "discovery-vendor-pair", vendor: "vendor b" })).options)
         .toEqual([{ value: "Mixed GPU B", count: 1 }]);

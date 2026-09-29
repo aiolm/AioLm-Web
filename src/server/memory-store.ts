@@ -1,5 +1,5 @@
 import { encodeDiscoveryCursor, comparePosition, type ListCursor } from "../lib/pagination";
-import { POINT_OPTION_FIELD, matchesFilters, textValues, sortValue, type BenchmarkOptions, type OptionField } from "../lib/benchmark-discovery";
+import { POINT_OPTION_FIELD, TEXT_FILTER_MAX_LENGTH, matchesFilters, textValues, sortValue, type BenchmarkOptions, type OptionField } from "../lib/benchmark-discovery";
 import { pointId, readPoints } from "../lib/benchmark-points";
 import { UPLOAD_PERMIT_TTL_MS, permitExpiryForSession, verifyUploadPermit } from "../lib/permits";
 import { quotaKeyForIp, quotaWindowDay, quotaWindowHour } from "../lib/ip";
@@ -255,6 +255,8 @@ export class InMemoryBenchmarkStore implements BenchmarkStore {
         candidates = (r.benchmark.environment?.execution.selected_gpus ?? []).filter(g => g.vendor?.toLowerCase().includes(remaining.vendor!.toLowerCase())).flatMap(g => g.name ? [g.name] : []);
       } else {
         candidates = textValues(r.summary, field);
+        // A model_query value longer than a filter may be would be rejected once chosen, so it is not offered.
+        if (field === "model_query") candidates = candidates.filter(v => v.length <= TEXT_FILTER_MAX_LENGTH);
       }
       for (const value of new Set(candidates)) {
         if (value && value.toLowerCase().includes(query.toLowerCase())) counts.set(value, (counts.get(value) ?? 0) + 1);

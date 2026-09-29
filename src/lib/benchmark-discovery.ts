@@ -34,8 +34,15 @@ export function normalizePromptLengths(values: readonly number[] | null | undefi
 export function largestPromptLength(values: readonly number[] | null | undefined): number | null {
   return normalizePromptLengths(values).at(-1) ?? null;
 }
-export const TEXT_FILTER_KEYS = ["q", "model", "publisher", "quantization", "base_model", "hardware", "vendor", "gpu", "cpu", "os", "arch", "runtime", "backend", "mode", "method", "workload", "flash_attention", "cache_type_k", "cache_type_v", "split_mode"] as const;
+export const TEXT_FILTER_KEYS = ["q", "model", "model_query", "publisher", "quantization", "base_model", "hardware", "vendor", "gpu", "cpu", "os", "arch", "runtime", "backend", "mode", "method", "workload", "flash_attention", "cache_type_k", "cache_type_v", "split_mode"] as const;
 export type TextFilterKey = typeof TEXT_FILTER_KEYS[number];
+export const TEXT_FILTER_MAX_LENGTH = 120;
+/**
+ * The dedicated filters whose values q also searches. model_query is left out:
+ * it is a narrower model search, not one more source for the global one, so
+ * listing it in TEXT_FILTER_KEYS must not widen what q has always matched.
+ */
+export const GLOBAL_SEARCH_FILTER_KEYS = TEXT_FILTER_KEYS.filter(k => k !== "q" && k !== "model_query");
 /**
  * Model metadata q searches beyond the dedicated publisher/quantization/base_model
  * filters: the precise identifiers a reader would paste in to find one exact
@@ -43,6 +50,14 @@ export type TextFilterKey = typeof TEXT_FILTER_KEYS[number];
  * they stay out of the global search rather than matching everything.
  */
 export const MODEL_INFO_SEARCH_KEYS = ["name", "architecture", "size_label", "quantized_by", "repository", "artifact", "sha256"] as const;
+/**
+ * What model_query searches beside model_label: only the identifiers that name
+ * one exact model. Hardware, runtime, status and the descriptive model fields
+ * stay with q, and publisher/quantization/base_model keep their own filters.
+ * The hash is the one the summary records, so a run that described no model is
+ * found by its label (sha256: and the first 12 characters), as it is by q.
+ */
+export const MODEL_QUERY_INFO_KEYS = ["name", "repository", "artifact", "sha256"] as const;
 /** Suggestion fields. "point" is not a text filter: it expands the measured operating points. */
 export const POINT_OPTION_FIELD = "point";
 export type OptionField = Exclude<TextFilterKey, "q"> | typeof POINT_OPTION_FIELD;
@@ -74,7 +89,7 @@ export function parseFilters(search: URLSearchParams): BenchmarkFilters {
   const out: BenchmarkFilters = {};
   for (const key of TEXT_FILTER_KEYS) {
     const value = search.get(key)?.trim();
-    if (value && value.length > 120) throw new DiscoveryQueryError(`${key} must be at most 120 characters.`);
+    if (value && value.length > TEXT_FILTER_MAX_LENGTH) throw new DiscoveryQueryError(`${key} must be at most ${TEXT_FILTER_MAX_LENGTH} characters.`);
     if (value) out[key] = value;
   }
   for (const key of RANGE_FILTER_KEYS) {
@@ -126,7 +141,7 @@ export function parseOptionsQuery(search: URLSearchParams): { field: OptionField
   const field = search.get("field") as OptionField;
   if (field !== POINT_OPTION_FIELD && (!TEXT_FILTER_KEYS.includes(field as TextFilterKey) || (field as string) === "q")) throw new DiscoveryQueryError("Invalid option field.");
   const query = search.get("option_query")?.trim() ?? "";
-  if (query.length > 120) throw new DiscoveryQueryError("option_query must be at most 120 characters.");
+  if (query.length > TEXT_FILTER_MAX_LENGTH) throw new DiscoveryQueryError(`option_query must be at most ${TEXT_FILTER_MAX_LENGTH} characters.`);
   const filters = parseFilters(search);
   // The field being edited is excluded from its own constraints, so the point
   // suggestions list every point the other filters still allow rather than only
@@ -165,7 +180,8 @@ export function textValues(summary: BenchmarkSummary, field: TextFilterKey): str
   // hand-edited row must never crash matching: only strings are searchable, so
   // a boolean, number, or nested object in model metadata reads as unknown.
   const infoString = (value: unknown): string | null => (typeof value === "string" && value ? value : null);
-  if (field === "q") return [...new Set(TEXT_FILTER_KEYS.filter(k => k !== "q").flatMap(k => textValues(summary, k)).concat(summary.setup?.runtime_version ?? [], summary.status, MODEL_INFO_SEARCH_KEYS.map(k => infoString(summary.model_info?.[k])).filter((v): v is string => v !== null)))];
+  if (field === "q") return [...new Set(GLOBAL_SEARCH_FILTER_KEYS.flatMap(k => textValues(summary, k)).concat(summary.setup?.runtime_version ?? [], summary.status, MODEL_INFO_SEARCH_KEYS.map(k => infoString(summary.model_info?.[k])).filter((v): v is string => v !== null)))];
+  if (field === "model_query") return [...new Set([infoString(summary.model_label), ...MODEL_QUERY_INFO_KEYS.map(k => infoString(summary.model_info?.[k]))].filter((v): v is string => v !== null))];
   if (["model", "hardware", "method", "workload"].includes(field)) return [summary[`${field}_label` as "model_label"]];
   if (field === "base_model") {
     const values = summary.model_info?.base_models;

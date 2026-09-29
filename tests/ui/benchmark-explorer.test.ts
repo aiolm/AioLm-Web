@@ -69,6 +69,32 @@ function withCompare(state: ExplorerState, items: ExplorerItem[]): ExplorerState
 }
 
 describe("shareable filter links", () => {
+  it("keeps model lookup independent from legacy keywords through apply, removal and navigation", () => {
+    const search = "?q=synthetic-gpu&model=legacy-label&model_query=synthetic-repo&gpu=synthetic-gpu&cursor=page2";
+    let state = explorerStateFromSearch(search);
+    expect(parseExplorerLocation(buildExplorerSearch({ filters: state.applied, cursor: state.cursor })).filters).toEqual(state.applied);
+    const chips = activeExplorerFilters(state.applied);
+    expect(chips.find(chip => chip.key === "q")?.label).toBe("All-fields keyword");
+    expect(chips.find(chip => chip.key === "model")?.label).toBe("Model label");
+    expect(chips.find(chip => chip.key === "model_query")?.label).toBe("Model");
+    state = explorerReducer(state, { type: "draft", key: "model_query", value: "new-model" });
+    expect(state.applied.model_query).toBe("synthetic-repo");
+    state = explorerReducer(state, { type: "apply" });
+    expect(state.applied).toMatchObject({ model_query: "new-model", q: "synthetic-gpu", model: "legacy-label", gpu: "synthetic-gpu" });
+    expect(state.cursor).toBeNull();
+    state = explorerReducer(state, { type: "removeFilter", key: "q" });
+    expect(state.draft.q).toBe("");
+    expect(state.applied).toMatchObject({ q: "", model_query: "new-model", gpu: "synthetic-gpu" });
+    state = explorerReducer(state, { type: "location", search, history: [] });
+    expect(state.applied).toMatchObject({ q: "synthetic-gpu", model_query: "synthetic-repo" });
+    expect(explorerReducer(state, { type: "reset" }).applied).toEqual(EMPTY_EXPLORER_FILTERS);
+  });
+
+  it("scopes model suggestions to other conditions without keeping its own query as a filter", () => {
+    const filters = explorerStateFromSearch("?q=legacy&model_query=synthetic&gpu=synthetic-gpu&runtime=custom").applied;
+    const path = new URL(buildExplorerOptionsPath("model_query", "  artifact.gguf  ", filters), "https://example.test");
+    expect(Object.fromEntries(path.searchParams)).toEqual({ q: "legacy", gpu: "synthetic-gpu", runtime: "custom", field: "model_query", option_query: "artifact.gguf" });
+  });
   it("loads filters and the page cursor from the address on arrival", () => {
     const state = explorerStateFromSearch("?model=sha256%3A0000aaaa&workload=synthetic-corpus&cursor=Q3Vyc29yMQ");
     expect(state.applied).toEqual({
@@ -189,7 +215,7 @@ describe("applying, resetting and removing filters", () => {
     expect(activeExplorerFilters(state.applied).map((filter) => filter.key)).toEqual(["model", "workload"]);
     expect(activeExplorerFilters(state.applied)[0]).toEqual({
       key: "model",
-      label: "Model fingerprint",
+      label: "Model label",
       value: "sha256:0000aaaa",
     });
   });

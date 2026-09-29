@@ -1,25 +1,33 @@
-import { MODEL_INFO_SEARCH_KEYS, POINT_OPTION_FIELD, RANGE_FILTER_KEYS, TEXT_FILTER_KEYS, type BenchmarkFilters, type OptionField, type TextFilterKey } from "../lib/benchmark-discovery";
+import { GLOBAL_SEARCH_FILTER_KEYS, MODEL_INFO_SEARCH_KEYS, MODEL_QUERY_INFO_KEYS, POINT_OPTION_FIELD, RANGE_FILTER_KEYS, TEXT_FILTER_KEYS, TEXT_FILTER_MAX_LENGTH, type BenchmarkFilters, type OptionField, type TextFilterKey } from "../lib/benchmark-discovery";
 import { POINT_METRIC_KEYS, type PointMetric } from "../lib/benchmark-points";
 import type { ListCursor } from "../lib/pagination";
 
 // Identifiers and SQL expressions come exclusively from the fixed contract whitelist.
+/** Text filters that read one summary expression; q and model_query each search several. */
+type SingleTextField = Exclude<TextFilterKey, "q" | "model_query">;
 /**
  * Fields whose value is a JSON array. Their filter prefilter, their per-element
  * predicate and their option expansion all read the same path, so a filter and
  * the suggestions offered for it can never drift apart.
  */
-export const ARRAY_TEXT_PATHS: Partial<Record<Exclude<TextFilterKey, "q">, string>> = {
+export const ARRAY_TEXT_PATHS: Partial<Record<SingleTextField, string>> = {
   vendor: "summary->'setup'->'vendors'",
   gpu: "summary->'setup'->'gpus'",
   base_model: "summary->'model_info'->'base_models'",
 };
-export function textExpression(field: Exclude<TextFilterKey, "q">): string {
+export function textExpression(field: SingleTextField): string {
   if (["model", "hardware", "method", "workload"].includes(field)) return `summary->>'${field}_label'`;
   const arrayPath = ARRAY_TEXT_PATHS[field];
   if (arrayPath) return `bench.discovery_array_text(${arrayPath})`;
   if (field === "publisher" || field === "quantization") return `summary->'model_info'->>'${field}'`;
   return `summary->'setup'->>'${field}'`;
 }
+/**
+ * The model_query surface: the model label and the identifying model_info fields.
+ * The filter and its suggestions read this one list, so a suggested value always
+ * matches again once it is selected.
+ */
+export const MODEL_QUERY_EXPRESSIONS = ["summary->>'model_label'", ...MODEL_QUERY_INFO_KEYS.map(k => `summary->'model_info'->>'${k}'`)];
 // "context" reads the largest configured input length; setup.context_size stays the raw allocation.
 export function numericExpression(field: string): string {
   return `(summary->'setup'->>'${field === "context" ? "prompt_length" : field === "vram" ? "vram_mb" : field}')::double precision`;
@@ -57,7 +65,7 @@ export function literalPattern(value: string): string { return `%${value.replace
 export function discoverySql(filters: BenchmarkFilters) {
   const values: (string | number | null)[] = [];
   const bind = (v: string | number | null) => { values.push(v); return `$${values.length}`; };
-  const match = (field: Exclude<TextFilterKey, "q">, pattern: string) => {
+  const match = (field: SingleTextField, pattern: string) => {
     const expr = textExpression(field);
     const arrayPath = ARRAY_TEXT_PATHS[field];
     // The joined text narrows using the expression index; the per-element test
@@ -69,7 +77,9 @@ export function discoverySql(filters: BenchmarkFilters) {
   for (const key of TEXT_FILTER_KEYS) {
     if (!filters[key]) continue;
     const pattern = bind(literalPattern(filters[key]!));
-    clauses.push(key === "q" ? `(${TEXT_FILTER_KEYS.filter(k => k !== "q").map(k => match(k, pattern)).concat([`summary->'setup'->>'runtime_version' ilike ${pattern}`, `summary->>'status' ilike ${pattern}`], MODEL_INFO_SEARCH_KEYS.map(k => `summary->'model_info'->>'${k}' ilike ${pattern}`)).join(" or ")})` : match(key, pattern));
+    // Each condition is one AND-ed clause; q and model_query OR their own separate value lists inside it.
+    if (key === "model_query") clauses.push(`(${MODEL_QUERY_EXPRESSIONS.map(expr => `${expr} ilike ${pattern}`).join(" or ")})`);
+    else clauses.push(key === "q" ? `(${GLOBAL_SEARCH_FILTER_KEYS.map(k => match(k, pattern)).concat([`summary->'setup'->>'runtime_version' ilike ${pattern}`, `summary->>'status' ilike ${pattern}`], MODEL_INFO_SEARCH_KEYS.map(k => `summary->'model_info'->>'${k}' ilike ${pattern}`)).join(" or ")})` : match(key, pattern));
   }
   for (const key of RANGE_FILTER_KEYS) for (const bound of ["min", "max"] as const) {
     const value = filters[`${key}_${bound}`];
@@ -117,6 +127,11 @@ export function optionsSql(field: OptionField, query: string, filters: Benchmark
       from bench.benchmark_runs cross join lateral ${POINT_ROWS}
       where ${clauses.join(" and ")} and jsonb_typeof(point->'prompt_tokens') = 'number' and jsonb_typeof(point->'concurrency') = 'number'
       ) as candidates where value ilike ${optionPattern} group by value, tokens, concurrency order by tokens, concurrency limit 31` };
+  }
+  // Every searched model value becomes one candidate, counted once per run. A
+  // value longer than a filter may be is not offered: choosing it would be rejected.
+  if (field === "model_query") {
+    return { values, query: `select value, count(*)::int as count from (select distinct public_id, candidate.value as value from bench.benchmark_runs cross join lateral (values ${MODEL_QUERY_EXPRESSIONS.map(expr => `(${expr})`).join(", ")}) as candidate(value) where ${clauses.join(" and ")}) as candidates where value <> '' and char_length(value) <= ${TEXT_FILTER_MAX_LENGTH} and value ilike ${optionPattern} group by value order by value collate "C" limit 31` };
   }
   // Narrow candidates using the expression index before expanding array options.
   // The final per-value predicate still rejects matches spanning array entries.

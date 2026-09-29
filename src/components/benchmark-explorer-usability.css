@@ -1,79 +1,113 @@
-/* Scoped explorer layout: keep discovery compact, aligned, and results readable. */
-.explorer-compact .explorer-filter-set { padding: 14px 16px; }
-.explorer-compact .explorer-search-row { grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; margin-top: 0; }
-.explorer-compact .explorer-search-row .explorer-field-input { min-height: 36px; padding: 6px 12px; font-size: 0.88rem; }
-.explorer-compact .explorer-search-row .explorer-field-label { font-size: 0.8rem; font-weight: 650; margin-bottom: 4px; }
-.explorer-compact .explorer-filter-actions { margin: 0; gap: 8px; }
-.explorer-compact .explorer-filter-actions .explorer-button { min-height: 36px; padding: 6px 14px; font-size: 0.84rem; }
-.explorer-compact .explorer-quick-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; margin-top: 8px; gap: 10px; }
-.explorer-compact .explorer-quick-filters .explorer-field-label { font-size: 0.78rem; font-weight: 650; margin-bottom: 4px; }
-.explorer-compact .explorer-quick-filters .explorer-field-input { min-height: 34px; padding: 5px 10px; font-size: 0.85rem; }
-.explorer-compact .explorer-quick-filters .explorer-combobox-control input { padding-inline-end: 30px; }
-.explorer-compact .explorer-quick-filters .explorer-combobox-toggle { width: 30px; }
-.explorer-compact .explorer-more-filters { margin-top: 10px; }
-.explorer-compact .explorer-more-filters > summary { width: fit-content; min-height: 32px; padding: 5px 12px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); cursor: pointer; font-size: .8rem; font-weight: 600; display: inline-flex; align-items: center; background: var(--ui-surface); }
-.explorer-compact .explorer-more-filters > summary:hover { background: var(--ui-surface-muted); }
-.explorer-compact .explorer-more-filters > summary:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
-.explorer-compact .explorer-filter-count { margin-inline-start: 6px; padding: 1px 6px; font-size: .74rem; border-radius: var(--ui-radius-pill); background: var(--ui-accent-soft); color: var(--ui-accent); font-variant-numeric: tabular-nums; }
-
-/* Advanced filters: roomy, breathable groups with aligned field baselines */
-.explorer-compact .explorer-advanced-groups { display: grid; gap: 18px; margin-block: 16px; }
-.explorer-compact .explorer-advanced-group { min-width: 0; padding: 14px 0 0; margin: 0; border: 0; border-top: 1px solid var(--ui-border); }
-.explorer-compact .explorer-advanced-group > legend { padding-inline-end: 12px; font-size: .85rem; font-weight: 700; margin-bottom: 8px; color: var(--ui-ink); }
-.explorer-compact .explorer-group-fields { margin-top: 0; gap: 12px; align-items: start; }
-
-/* Baseline alignment: fixed label/legend height ensures all input boxes align on the exact same row line */
-.explorer-compact .explorer-advanced-group .explorer-field { display: flex; flex-direction: column; min-width: 0; }
-.explorer-compact .explorer-advanced-group .explorer-field-label,
-.explorer-compact .explorer-range legend {
-  display: block;
-  font-size: .76rem;
-  font-weight: 650;
-  line-height: 1.25;
-  min-height: 2.5em;
-  margin-bottom: 4px;
-  padding: 0;
-  color: var(--ui-ink);
+/* All discovery inputs live in the sidebar; the main column is for results. */
+.explorer-compact { font-size: 1rem; line-height: 1.6; }
+.explorer-compact:lang(ko),
+.explorer-compact:lang(ko) .explorer-fact-value { word-break: keep-all; overflow-wrap: anywhere; }
+.explorer-compact:lang(ko) :is(h1, h2, h3, summary) { letter-spacing: 0; }
+.explorer-compact .explorer-layout { grid-template-columns: 300px minmax(0, 1fr); gap: 24px; }
+.explorer-compact .explorer-main-column { min-width: 0; display: grid; align-content: start; gap: 18px; container-type: inline-size; }
+.explorer-main-column .page-intro { margin: 0; gap: 12px; align-items: start; }
+.explorer-main-column .page-title { font-size: clamp(1.5rem, 2.2vw, 2rem); }
+.explorer-main-column .page-subtitle { font-size: 1rem; line-height: 1.65; }
+.explorer-main-column .page-intro-note { flex-shrink: 0; }
+.explorer-compact .explorer-filter-set { display: block; margin: 0; padding: 20px; }
+.explorer-sidebar-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 16px; border-bottom: 2px solid var(--ui-border); }
+.explorer-sidebar-title { margin: 0; font-size: 1.25rem; font-weight: 750; }
+.explorer-sidebar-reset { padding: 8px 0; border: 0; background: none; color: var(--ui-accent); font: inherit; font-size: .875rem; cursor: pointer; }
+.explorer-sidebar-reset:disabled { color: var(--ui-muted); opacity: .6; cursor: default; }
+.explorer-compact .explorer-sidebar-toggle { display: none; }
+.explorer-compact .explorer-filter-group { margin: 0; border: 0; border-top: 1px solid var(--ui-border); padding: 0; }
+.explorer-compact .explorer-filter-group:first-child { border-top: 0; }
+.explorer-filter-group-title { display: flex; align-items: center; gap: 8px; margin: 0; padding: 18px 0 14px; font-size: 1.0625rem; font-weight: 750; color: var(--ui-ink); }
+.explorer-secondary-filters > summary { display: flex; align-items: center; gap: 8px; list-style: none; cursor: pointer; }
+.explorer-secondary-filters > summary::-webkit-details-marker { display: none; }
+.explorer-secondary-filters > summary:focus-visible,
+.explorer-sidebar-reset:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 3px; border-radius: 3px; }
+.explorer-compact .explorer-filter-count { margin: 0; padding: 1px 6px; border-radius: var(--ui-radius-pill); background: var(--ui-accent-soft); color: var(--ui-accent); font-size: .8125rem; font-variant-numeric: tabular-nums; }
+.explorer-compact .explorer-group-fields { grid-template-columns: minmax(0, 1fr); margin: 0; gap: 16px; padding-bottom: 20px; }
+/* Advanced fields have their own inset surface and a plus/minus trigger. */
+.explorer-secondary-filters { min-width: 0; margin-inline-start: 8px; border: 1px solid var(--ui-border-strong); border-inline-start: 3px solid var(--ui-accent); border-radius: var(--ui-radius-md); background: var(--ui-sidebar); }
+.explorer-compact .explorer-secondary-filters > summary { min-height: 44px; padding: 10px 12px; color: var(--ui-ink); font-size: .875rem; font-weight: 650; line-height: 1.5; }
+.explorer-secondary-filters .explorer-filter-count { margin-inline-start: auto; white-space: nowrap; }
+.explorer-sidebar-groups > .explorer-secondary-filters { margin: 0 0 20px; }
+.explorer-secondary-filters > summary::before { content: ""; flex: 0 0 12px; width: 12px; height: 12px; color: var(--ui-accent); background: linear-gradient(currentColor, currentColor) center / 12px 2px no-repeat, linear-gradient(currentColor, currentColor) center / 2px 12px no-repeat; }
+.explorer-secondary-filters[open] > summary::before { background-size: 12px 2px, 0 0; }
+.explorer-secondary-filters > summary:hover { background-color: var(--ui-surface-muted); border-radius: var(--ui-radius-sm); }
+.explorer-secondary-filters[open] > summary { border-bottom: 1px solid var(--ui-border); }
+.explorer-compact .explorer-secondary-filters .explorer-group-fields { padding: 14px 12px 16px; }
+.explorer-compact .explorer-rail .explorer-field-label,
+.explorer-compact .explorer-range legend { font-size: .875rem; font-weight: 600; line-height: 1.5; color: var(--ui-ink); }
+.explorer-compact .explorer-rail .explorer-field-input { min-height: 44px; padding: 9px 10px; font-size: 1rem; line-height: 1.5; border-color: var(--ui-border-strong); }
+.explorer-compact .explorer-field-input::placeholder { color: var(--ui-faint); opacity: 1; }
+.explorer-compact .explorer-combobox-toggle { color: var(--ui-muted); }
+.explorer-compact .explorer-rail .explorer-combobox-control input { padding-inline-end: 32px; }
+.explorer-compact .explorer-range { margin: 0; padding: 0; border: 0; min-width: 0; }
+.explorer-compact .explorer-range legend { margin-bottom: 6px; padding: 0; }
+.explorer-compact .explorer-rail .explorer-field { gap: 6px; }
+.explorer-compact .explorer-range-inputs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.explorer-compact .explorer-range-hint { margin: 8px 0 0; font-size: .8125rem; color: var(--ui-muted); line-height: 1.6; }
+.explorer-field-hint { margin: 0; color: var(--ui-muted); font-size: .8125rem; line-height: 1.6; }
+.explorer-sidebar-actions { position: sticky; bottom: 0; z-index: 2; margin: 0 -20px -20px; padding: 12px 20px 20px; border-top: 1px solid var(--ui-border-strong); background: var(--ui-surface); border-radius: 0 0 var(--ui-radius-lg) var(--ui-radius-lg); }
+.explorer-sidebar-actions > .explorer-button { width: 100%; min-height: 44px; font-size: 1rem; }
+.explorer-compact .explorer-draft-status { margin: 0 0 10px; color: var(--ui-ink); font-size: .875rem; line-height: 1.6; }
+.explorer-draft-status:empty { display: none; }
+/* The guide follows results in the same column, independent of sidebar height. */
+.explorer-compact .explorer-guide-text { font-size: .9375rem; line-height: 1.75; }
+@media (max-width: 1100px) {
+  .explorer-compact .explorer-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .explorer-compact .explorer-sidebar-toggle { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; width: 100%; }
+  .explorer-sidebar-content { margin-top: 10px; }
+  .explorer-sidebar-content[data-open="false"] { display: none; }
 }
-.explorer-compact .explorer-advanced-group .explorer-field-input { min-height: 34px; height: 34px; padding: 5px 8px; font-size: .82rem; }
-.explorer-compact .explorer-advanced-group .explorer-combobox-control input { padding-inline-end: 28px; }
-.explorer-compact .explorer-advanced-group .explorer-combobox-toggle { width: 26px; }
-.explorer-compact .explorer-range { margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; min-width: 0; }
-.explorer-compact .explorer-range-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.explorer-compact .explorer-range-hint { margin-top: 4px; font-size: .72rem; color: var(--ui-muted); line-height: 1.25; }
-.explorer-compact .explorer-advanced-actions { margin-top: 12px; }
-.explorer-compact .explorer-advanced-actions .explorer-button { min-height: 32px; padding: 5px 12px; font-size: .82rem; }
-
-/* One line of its own line-height is always held, so the status appearing moves nothing. */
-.explorer-compact .explorer-draft-status { min-height: 1.2rem; margin-top: 6px; color: var(--ui-muted); font-size: .78rem; line-height: 1.2rem; }
-/* The inactive clear control keeps its box, so Search stays put when it appears. */
-.explorer-compact .explorer-button-reserved { visibility: hidden; }
+@media (max-width: 700px) {
+  .explorer-main-column .page-intro { flex-direction: column; }
+  .explorer-compact .explorer-main-column { gap: 14px; }
+}
 
 /* Results section */
-.explorer-compact .explorer-main { padding: 14px 16px; }
-.explorer-compact .explorer-main-header { gap: 8px 16px; margin-block-end: 10px; }
-.explorer-compact .explorer-main-title { font-size: 1.15rem; font-weight: 700; }
-.explorer-compact .explorer-main-subtitle { margin-block-start: 2px; font-size: .82rem; }
-.explorer-compact .explorer-result-actions { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 8px; }
+/* A narrow result column needs the same readable cards as a narrow viewport. */
+@container (min-width: 600px) and (max-width: 950px) {
+  .explorer-compact .explorer-table,
+  .explorer-compact .explorer-table-body,
+  .explorer-compact .explorer-row { display: block; width: auto; }
+  .explorer-compact .explorer-table-head { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .explorer-compact .explorer-row { margin-bottom: 12px; padding: 12px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-lg); background: var(--ui-panel-raised); }
+  .explorer-compact .explorer-table .explorer-cell { display: grid; width: auto; grid-template-columns: minmax(0, 9rem) minmax(0, 1fr); gap: 4px 12px; padding: 6px 0; text-align: left; }
+  .explorer-compact .explorer-cell-label { display: block; font-weight: 650; }
+}
+.explorer-compact .explorer-main { padding: 20px; }
+.explorer-compact .explorer-main-header { gap: 18px; margin-block-end: 20px; }
+.explorer-compact .explorer-main-heading { flex-basis: 100%; }
+.explorer-compact .explorer-main-title { font-size: 1.25rem; font-weight: 750; }
+.explorer-result-count { margin: 4px 0 0; font-size: .875rem; color: var(--ui-muted); font-variant-numeric: tabular-nums; }
+.explorer-compact .explorer-main-subtitle { margin-block-start: 6px; font-size: .9375rem; }
+.explorer-compact .explorer-result-actions { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px 16px; width: 100%; padding: 16px; border-radius: var(--ui-radius-md); background: var(--ui-panel-raised); }
 .explorer-compact .explorer-sort { min-width: 160px; }
-.explorer-compact .explorer-sort .explorer-field-label { font-size: .75rem; margin-bottom: 2px; }
-.explorer-compact .explorer-sort select { min-height: 32px; padding: 4px 8px; font-size: .82rem; }
-.explorer-compact .explorer-refresh { min-height: 32px; padding: 4px 12px; font-size: .82rem; }
-.explorer-compact .explorer-active-filters { margin-block-end: 10px; }
-.explorer-compact .explorer-active-filters-title { font-size: .78rem; }
-.explorer-compact .explorer-active-filter { padding: 2px 2px 2px 8px; font-size: .8rem; }
-.explorer-compact .explorer-active-filter-remove { min-width: 24px; min-height: 24px; padding: 2px 6px; font-size: .75rem; }
-.explorer-compact .explorer-head-cell { padding: 8px 10px; font-size: .78rem; }
-.explorer-compact .explorer-cell { padding: 10px; font-size: .85rem; vertical-align: top; }
+.explorer-compact .explorer-sort .explorer-field-label { font-size: .875rem; margin-bottom: 4px; }
+.explorer-compact .explorer-sort select { min-height: 40px; padding: 8px 10px; font-size: .9375rem; }
+.explorer-compact .explorer-refresh { min-height: 40px; padding: 8px 12px; font-size: .9375rem; }
+.explorer-compact .explorer-active-filters { margin: 0; padding: 0; border: 0; }
+.explorer-compact .explorer-active-filters-title { font-size: .875rem; color: var(--ui-ink); }
+.explorer-compact .explorer-active-filter { padding: 4px 4px 4px 12px; font-size: .875rem; }
+.explorer-compact .explorer-active-filter-remove { min-width: 28px; min-height: 28px; padding: 2px 6px; font-size: 1.0625rem; }
+.explorer-compact .explorer-head-cell { padding: 14px 10px; font-size: .875rem; color: var(--ui-ink); }
+.explorer-compact .explorer-cell { padding: 20px 10px; font-size: .9375rem; line-height: 1.6; vertical-align: top; }
 .explorer-compact .explorer-compare-input { width: 16px; height: 16px; }
-.explorer-compact .explorer-detail-link { font-size: .88rem; font-weight: 700; }
+.explorer-compact .explorer-detail-link { font-family: inherit; font-size: 1.0625rem; line-height: 1.5; font-weight: 700; text-decoration: none; }
+.explorer-compact .explorer-detail-link:hover { text-decoration: underline; }
+.explorer-compact .explorer-metric-value { font-size: 1.125rem; font-weight: 650; }
+.explorer-compact .explorer-metric-spread,
+.explorer-compact .explorer-head-basis { font-size: .8125rem; line-height: 1.5; }
+.explorer-compact .bilingual-header { line-height: 1.5; }
+.explorer-compact :is(.bilingual-en, .bilingual-sub, .bilingual-unit) { font-size: .8125rem; }
+.explorer-compact .explorer-options li { min-height: 40px; padding: 8px 10px; font-size: .9375rem; }
+.explorer-compact .explorer-option-status { font-size: .8125rem; line-height: 1.6; }
 
 /* Unified Table Facts: clean label-value pairing across Model, Environment, and Setup columns */
 .explorer-compact .explorer-facts {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  margin: 4px 0 0;
+  gap: 6px;
+  margin: 8px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -83,15 +117,15 @@
   column-gap: 6px;
   align-items: baseline;
   min-width: 0;
-  font-size: 0.8rem;
-  line-height: 1.35;
+  font-size: .875rem;
+  line-height: 1.6;
 }
 .explorer-compact .explorer-fact-label {
   grid-column: 1;
   color: var(--ui-muted);
-  font-weight: 450;
+  font-weight: 400;
   white-space: nowrap;
-  font-size: 0.78rem;
+  font-size: .875rem;
 }
 .explorer-compact .explorer-fact-label::after {
   content: ":";
@@ -101,8 +135,8 @@
   grid-column: 2;
   min-width: 0;
   color: var(--ui-ink);
-  font-weight: 600;
-  font-size: 0.8rem;
+  font-weight: 500;
+  font-size: .875rem;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
@@ -129,23 +163,17 @@
 .explorer-compact .explorer-head-setup { width: 27%; }
 
 @media (max-width: 700px) {
-  .explorer-compact .explorer-search-row { grid-template-columns: minmax(0, 1fr); }
-  .explorer-compact .explorer-quick-filters { grid-template-columns: minmax(0, 1fr); gap: 6px; }
-  .explorer-compact .explorer-group-fields { grid-template-columns: minmax(0, 1fr); }
   .explorer-compact .explorer-result-actions { width: 100%; }
   .explorer-compact .explorer-sort { flex: 1; }
-  .explorer-compact .explorer-field-input { font-size: .9rem; }
+  .explorer-compact .explorer-field-input { font-size: 1rem; }
 }
 
 .explorer-compact .explorer-table-caption { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
 @media (max-width: 700px) {
-  .explorer-compact .explorer-search-row { grid-template-columns: minmax(0, 1fr) auto; margin-top: 0; gap: 6px; }
-  .explorer-compact .explorer-search-actions .explorer-filter-actions { display: contents; }
-  .explorer-compact .explorer-search-actions .explorer-button-quiet { display: none; }
   .explorer-compact .explorer-main { padding: 12px; }
   .explorer-compact .explorer-main-header { gap: 8px; }
   .explorer-compact .explorer-sort { min-width: 0; }
-  .explorer-compact .explorer-table .explorer-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto; gap: 4px 10px; }
+  .explorer-compact .explorer-table .explorer-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto; gap: 12px; padding: 16px; }
   .explorer-compact .explorer-table .explorer-cell { min-width: 0; padding: 2px 0; }
   .explorer-compact .explorer-table .explorer-cell-identity { grid-column: 1 / 3; grid-row: 1; padding-inline-end: 8px; grid-template-columns: minmax(0, 1fr); }
   .explorer-compact .explorer-table .explorer-cell-identity > .explorer-cell-label { display: none; }
@@ -158,19 +186,6 @@
   .explorer-compact .explorer-cell-numeric .explorer-cell-value { font-size: 1rem; font-weight: 650; }
 }
 
-/*
- * Discovery controls stack in document order on one column. The disclosure keeps
- * a single anchor and its panel grows underneath it, so opening or closing
- * "More filters" never moves the summary or the controls above it.
- */
-@media (min-width: 701px) {
-  .explorer-compact .explorer-filter-set { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
-  .explorer-compact .explorer-group-fields { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .explorer-compact .explorer-search-row,
-  .explorer-compact .explorer-quick-filters,
-  .explorer-compact .explorer-draft-status,
-  .explorer-compact .explorer-more-filters { margin: 0; }
-}
 @media (max-width: 700px) {
   .explorer-compact .explorer-table .explorer-cell-compare { position: relative; z-index: 1; }
 }
@@ -182,8 +197,8 @@
 /* Model identity and environment stay labeled when the row stacks; the pairs
    simply get one line each instead of sharing one. */
 @media (max-width: 700px) {
-  .explorer-compact .explorer-facts { gap: 2px 8px; }
-  .explorer-compact .explorer-model-facts { font-size: .74rem; }
+  .explorer-compact .explorer-facts { gap: 6px 8px; }
+  .explorer-compact .explorer-model-facts { font-size: .875rem; }
 }
 @media (max-width: 24rem) {
   .explorer-compact .explorer-facts { flex-direction: column; }
@@ -192,10 +207,10 @@
 /* The basis point sits with sorting: both decide how the results are read. */
 .explorer-basis { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px 10px; max-width: 26rem; }
 .explorer-compact .explorer-basis-field { min-width: 190px; }
-.explorer-compact .explorer-basis-field .explorer-field-label { font-size: .75rem; margin-bottom: 2px; }
-.explorer-compact .explorer-basis-field select { min-height: 32px; padding: 4px 8px; font-size: .82rem; }
-.explorer-basis-only { display: flex; align-items: center; gap: 6px; font-size: .8rem; min-height: 32px; }
-.explorer-basis-hint { flex-basis: 100%; margin: 0; font-size: .74rem; color: var(--ui-muted); }
+.explorer-compact .explorer-basis-field .explorer-field-label { font-size: .875rem; margin-bottom: 4px; }
+.explorer-compact .explorer-basis-field select { min-height: 40px; padding: 8px 10px; font-size: .9375rem; }
+.explorer-basis-only { display: flex; align-items: center; gap: 8px; font-size: .875rem; min-height: 40px; }
+.explorer-basis-hint { flex-basis: 100%; margin: 0; font-size: .8125rem; line-height: 1.6; color: var(--ui-muted); }
 /* The point a speed column is read at, under the column's own name. */
 .explorer-head-basis { display: block; font-weight: 450; font-size: .72rem; color: var(--ui-muted); white-space: nowrap; }
 .explorer-metric-value { display: block; font-variant-numeric: tabular-nums; }

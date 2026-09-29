@@ -4,7 +4,7 @@ import { useI18n } from "@/i18n/client";
 import { localizedPath } from "@/i18n/config";
 import { useSearchParams } from "next/navigation";
 
-import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useState, type ReactNode } from "react";
 import { EmptyState, ErrorState, Loading, useJsonFetch } from "./ui";
 import { BenchmarkBasisPoint } from "./benchmark-basis-point";
 import { BenchmarkExplorerComparison } from "./benchmark-explorer-comparison";
@@ -49,18 +49,19 @@ export const sameBrowserFilters = sameExplorerFilters;
 export type BrowserFilters = ExplorerFilters;
 
 /**
- * Systematic browsing of published results: grouped discovery controls above the result
+ * Systematic browsing of published results: grouped discovery controls beside the result
  * table, filters kept in the page address so a view can be shared, browser back
  * and forward moving between views, and an optional hand-picked comparison.
  * Only summary fields are requested; measurement rows stay on the detail page.
  */
-export function BenchmarkBrowser(): React.JSX.Element {
+export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } = {}): React.JSX.Element {
   const { locale, t } = useI18n();
   const searchParams = useSearchParams();
   const routeSearch = searchParams.toString();
   const [state, reduce] = useReducer(explorerReducer, routeSearch, explorerStateFromSearch);
   const [observedSearch, setObservedSearch] = useState(routeSearch);
   const [ready, setReady] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Next Link navigation does not emit popstate. Reconcile its query before
   // committing a render, so neither the form nor the fetch sees the old view.
@@ -127,15 +128,17 @@ export function BenchmarkBrowser(): React.JSX.Element {
       if (invalidExplorerRanges(state.draft).length) return;
       if (sameExplorerFilters(normalizeExplorerFilters(state.draft), state.applied)) reload();
       dispatch({ type: "apply" });
-      const advanced = event.currentTarget.querySelector<HTMLDetailsElement>(".explorer-more-filters");
-      if (advanced?.open) {
-        advanced.open = false;
-        const heading = document.getElementById("explorer-results-title");
-        heading?.focus({ preventScroll: true });
-        heading?.scrollIntoView({ block: "start" });
+      // Keep desktop sections in place; free the result area after a mobile apply.
+      if (window.matchMedia("(max-width: 1100px)").matches && sidebarOpen) {
+        setSidebarOpen(false);
+        requestAnimationFrame(() => {
+          const heading = document.getElementById("explorer-results-title");
+          heading?.focus({ preventScroll: true });
+          heading?.scrollIntoView({ block: "start" });
+        });
       }
     },
-    [state.draft, state.applied, reload, dispatch],
+    [state.draft, state.applied, reload, dispatch, sidebarOpen],
   );
 
   const goNext = useCallback(() => {
@@ -148,38 +151,65 @@ export function BenchmarkBrowser(): React.JSX.Element {
   const active = activeExplorerFilters(state.applied);
   const filtered = hasActiveExplorerFilters(state.applied);
   const clearable = filtered || hasActiveExplorerFilters(state.draft);
+  const invalidDraft = invalidExplorerRanges(state.draft).length > 0;
   const comparisonFull = !canAddToComparison(state.compare);
   const canPage = data !== null && (data.next_cursor !== null || state.cursor !== null || state.history.length > 0);
 
   return (
     <div className="explorer explorer-compact">
       <div className="explorer-layout">
-        <div className="explorer-rail">
+        <aside className="explorer-rail" aria-label={t("benchmark.Filters")}>
+          <button type="button" className="explorer-button explorer-sidebar-toggle"
+            aria-expanded={sidebarOpen} aria-controls="explorer-sidebar-content" onClick={() => setSidebarOpen(open => !open)}>
+            {t(sidebarOpen ? "benchmark.Hide filters" : "benchmark.Find models and filter")}
+            {active.length > 0 ? <span className="explorer-filter-count">{active.length}</span> : null}
+          </button>
+          <div id="explorer-sidebar-content" className="explorer-sidebar-content" data-open={sidebarOpen}>
           <form id="explorer-filter-form" className="explorer-filters" method="GET" action={localizedPath(locale, EXPLORER_PAGE_PATH)} onSubmit={applyFilters}>
             <fieldset className="explorer-filter-set">
               <legend className="explorer-filter-legend sr-only">{t("benchmark.Filters")}</legend>
+              <div className="explorer-sidebar-header">
+                <h2 className="explorer-sidebar-title">{t("benchmark.Filters")}</h2>
+                <button type="button" className="explorer-sidebar-reset" disabled={!clearable}
+                  onClick={() => dispatch({ type: "reset" })}>{t("benchmark.Clear filters")}</button>
+              </div>
               <BenchmarkExplorerFilters draft={state.draft} onChange={(key, value) => dispatch({ type: "draft", key, value })}
-                pending={!sameExplorerFilters(state.draft, state.applied)}
-                actions={
-                  <div className="explorer-filter-actions">
-                    <button type="submit" disabled={invalidExplorerRanges(state.draft).length > 0} className="explorer-button explorer-button-primary">{t("benchmark.Search")}</button>
-                    {/* Kept in the layout while inactive so applying or clearing a filter never moves Search. */}
-                    <button
-                      type="button"
-                      className={clearable ? "explorer-button explorer-button-quiet" : "explorer-button explorer-button-quiet explorer-button-reserved"}
-                      onClick={() => dispatch({ type: "reset" })}
-                    >{t("benchmark.Clear filters")}</button>
-                  </div>
-                }
+                actions={<>
+                  <p className="explorer-draft-status" role="status">{!sameExplorerFilters(normalizeExplorerFilters(state.draft), state.applied)
+                    ? t("benchmark.Changes not applied. Apply filters to update results.") : null}</p>
+                  <button type="submit" disabled={invalidDraft} className="explorer-button explorer-button-primary">{t("benchmark.Apply filters")}</button>
+                </>}
               />
             </fieldset>
           </form>
-        </div>
+          </div>
+        </aside>
 
+        <div className="explorer-main-column">
+          {introduction}
+          {active.length > 0 ? (
+            <div className="explorer-active-filters">
+              <h3 className="explorer-active-filters-title">{t("benchmark.Active filters")}</h3>
+              <ul className="explorer-active-filter-list">
+                {active.map((filter) => (
+                  <li className="explorer-active-filter" key={filter.key}>
+                    <span className="explorer-active-filter-text">
+                      <span className="explorer-active-filter-key">{t(`benchmark.${filter.label}`)}:</span> {filter.key === "sort" ? t(`benchmark.${EXPLORER_SORTS[filter.value as keyof typeof EXPLORER_SORTS]}`) : filter.value}
+                    </span>
+                    <button type="button" className="explorer-active-filter-remove"
+                      onClick={() => dispatch({ type: "removeFilter", key: filter.key })}
+                      aria-label={t("benchmark.Remove the {filter} filter", { filter: t(`benchmark.${filter.label}`) })}
+                    ><span aria-hidden="true">×</span></button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         <section className="explorer-main" aria-labelledby="explorer-results-title">
           <div className="explorer-main-header">
             <div className="explorer-main-heading">
               <h2 id="explorer-results-title" tabIndex={-1} className="explorer-main-title">{t("benchmark.Published results")}</h2>
+              {data ? <p className="explorer-result-count" role="status">{t("benchmark.{count} results on this page", { count: items.length })}</p> : null}
               <p className="explorer-main-subtitle">
                 {t("benchmark.Select up to {limit} results to compare their setup.", { limit: EXPLORER_COMPARE_LIMIT })}
               </p>
@@ -201,27 +231,6 @@ export function BenchmarkBrowser(): React.JSX.Element {
               <button type="button" className="explorer-button explorer-refresh" onClick={reload}>{t("benchmark.Refresh")}</button>
             </div>
           </div>
-
-          {active.length > 0 ? (
-            <div className="explorer-active-filters">
-              <h3 className="explorer-active-filters-title">{t("benchmark.Active filters")}</h3>
-              <ul className="explorer-active-filter-list">
-                {active.map((filter) => (
-                  <li className="explorer-active-filter" key={filter.key}>
-                    <span className="explorer-active-filter-text">
-                      <span className="explorer-active-filter-key">{t(`benchmark.${filter.label}`)}:</span> {filter.key === "sort" ? t(`benchmark.${EXPLORER_SORTS[filter.value as keyof typeof EXPLORER_SORTS]}`) : filter.value}
-                    </span>
-                    <button
-                      type="button"
-                      className="explorer-active-filter-remove"
-                      onClick={() => dispatch({ type: "removeFilter", key: filter.key })}
-                      aria-label={t("benchmark.Remove the {filter} filter", { filter: t(`benchmark.${filter.label}`) })}
-                    >{t("benchmark.Remove")}</button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
 
           {!ready || (!data && !error) ? <Loading label={t("benchmark.Loading published benchmarks…")} /> : null}
           {error ? <ErrorState message={error} onRetry={reload} /> : null}
@@ -277,16 +286,17 @@ export function BenchmarkBrowser(): React.JSX.Element {
             </nav>
           ) : null}
         </section>
-      </div>
 
-      <section className="explorer-guide" aria-labelledby="explorer-guide-title">
+        <section className="explorer-guide" aria-labelledby="explorer-guide-title">
         <h2 id="explorer-guide-title" className="explorer-guide-title">{t("benchmark.Compare like for like")}</h2>
         <p className="explorer-guide-text">{t("benchmark.Match the model fingerprint, hardware, workload and measurement method before reading anything into a difference. Results published with a different method or workload measured different work.")}</p>
         <p className="explorer-guide-text">{t("benchmark.Every speed here is read at one operating point: one input length at one concurrency. Decode (tok/s) is the generation rate, so higher is faster, and Duration (s) is the end-to-end time of one measurement, so lower is faster. The two answer different questions and do not convert into each other.")}</p>
         <p className="explorer-guide-text">{t("benchmark.Prefill (tok/s) is how fast a result consumed its prompt at that point. Each value is the median of that point's repetitions, with the range they covered beside it. Speeds are never averaged across different input lengths or concurrencies, because such an average describes no configuration that ran.")}</p>
         <p className="explorer-guide-text">{t("benchmark.Choose a basis point to read every result at the same input length and concurrency; that is also what the two speed orders rank at. Input context lists the input lengths a result was configured with, and the input length filter and its sorts read the largest of them. The total context the server allocated is a different number and appears on the result page.")}</p>
         <p className="explorer-guide-text">{t("benchmark.A missing measurement is shown as an em dash (—), never as a zero. Sorting does not make different setups directly comparable.")}</p>
-      </section>
+        </section>
+        </div>
+      </div>
     </div>
   );
 }

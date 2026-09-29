@@ -6,43 +6,54 @@ import en from "@/i18n/messages/benchmark/en";
 import { BenchmarkExplorerFilters } from "@/components/benchmark-explorer-filters";
 import { EMPTY_EXPLORER_FILTERS, EXPLORER_FILTER_KEYS, EXPLORER_RANGE_HINTS, explorerReducer, explorerStateFromSearch } from "@/components/benchmark-explorer-state";
 
-function renderFilters(search = "", pending = false) {
+function renderFilters(search = "") {
   return renderToStaticMarkup(<I18nProvider locale="en" messages={en}><BenchmarkExplorerFilters
-    draft={explorerStateFromSearch(search).draft} pending={pending} onChange={() => {}}
-    actions={<><button type="submit">Apply filters</button><button type="button">Clear filters</button></>}
+    draft={explorerStateFromSearch(search).draft} onChange={() => {}}
+    actions={<button type="submit">Apply filters</button>}
   /></I18nProvider>);
 }
 
-describe("compact filter disclosure", () => {
-  it("starts with search and just vendor/GPU discovery, with apply beside search", () => {
+describe("sidebar filter disclosures", () => {
+  it("keeps common conditions always visible and only collapses advanced settings", () => {
     const html = renderFilters();
-    const visible = html.split('<details')[0];
-    expect([...visible.matchAll(/name="([^"]+)"/g)].map(match => match[1])).toEqual(["q", "vendor", "gpu"]);
-    expect(visible).toContain('type="submit"');
-    expect(visible.indexOf('type="submit"')).toBeLessThan(visible.indexOf('name="vendor"'));
-    expect(html.match(/<details/g)).toHaveLength(1);
-    expect(html).toContain('<details class="explorer-more-filters">');
-    expect(html).toContain('<summary>More filters');
-    expect(html).not.toContain(' open=');
+    const groups = html.split('<section class="explorer-filter-group"').slice(1);
+    expect(groups).toHaveLength(3);
+    const visible = groups.map(group => group.split('<details')[0]).join('');
+    expect([...visible.matchAll(/name="([^"]+)"/g)].map(match => match[1])).toEqual(["model_query", "quantization", "vendor", "gpu", "vram_min", "vram_max", "os"]);
+    expect(html.match(/<details class="explorer-secondary-filters">/g)).toHaveLength(4);
+    expect(html).toContain('<details class="explorer-secondary-filters"><summary><span>Measurement settings');
+    expect(html.match(/type="submit"/g)).toHaveLength(1);
   });
-  it("retains every advanced field inside one native disclosure with semantic groups", () => {
-    const advanced = renderFilters().split('<details')[1];
-    for (const key of EXPLORER_FILTER_KEYS.filter(key => !["q", "vendor", "gpu", "sort"].includes(key))) {
-      expect(advanced, key).toContain('name="' + key + '"');
+  it("renders every sidebar field once and carries legacy and result controls separately", () => {
+    const html = renderFilters();
+    const carriedKeys = ["hardware", "q", "model", "point_tokens", "point_concurrency", "point_only"];
+    const names = [...html.matchAll(/name="([^"]+)"/g)].map(match => match[1]);
+    for (const key of EXPLORER_FILTER_KEYS.filter(key => key !== "sort")) {
+      expect(names.filter(name => name === key), key).toHaveLength(1);
     }
-    expect(advanced.match(/class="explorer-advanced-group"/g)).toHaveLength(4);
-    // Model identity leads the advanced panel; the primary row is untouched by it.
-    expect(advanced.indexOf('name="publisher"')).toBeLessThan(advanced.indexOf('name="hardware"'));
-    expect(advanced).toContain('type="submit"');
-    expect(advanced).not.toContain('<details');
+    for (const key of carriedKeys) {
+      expect(html, key).toContain('type="hidden" name="' + key + '"');
+      expect(html.lastIndexOf('</details>')).toBeLessThan(html.indexOf('name="' + key + '"'));
+    }
+    expect(names).not.toContain('sort');
   });
-  it("keeps linked advanced values collapsed and shows their count and unapplied status", () => {
-    const html = renderFilters("?os=synthetic&context_min=128", true);
-    expect(html).not.toContain(' open=');
-    expect(html).toContain('explorer-filter-count">2</span>');
+  it("opens linked secondary and measurement conditions and counts each range once", () => {
+    const html = renderFilters("?hardware=synthetic-gpu&os=synthetic&runtime=custom&context_min=128&context_max=4096");
+    expect(html).toContain('class="explorer-secondary-filters" open=""');
+    expect(html).toContain('class="explorer-secondary-filters" open=""><summary><span>Measurement settings</span><span class="explorer-filter-count">1 selected</span>');
+    expect(html).toContain('Execution environment<span class="explorer-filter-count">2</span>');
     expect(html).toContain('value="synthetic"');
-    expect(html).toContain('Changes not applied. Select Search to update results.');
-    expect(renderFilters()).not.toContain('Changes not applied.');
+    expect(html).toContain('type="hidden" name="hardware" value="synthetic-gpu"');
+    expect(renderFilters("?hardware=synthetic-gpu")).not.toContain('explorer-filter-count');
+  });
+  it("reveals invalid numeric ranges and associates their errors with the fields", () => {
+    const draft = { ...EMPTY_EXPLORER_FILTERS, cores_min: "8", cores_max: "4", threads_min: "invalid" };
+    const html = renderToStaticMarkup(<I18nProvider locale="en" messages={en}><BenchmarkExplorerFilters draft={draft} onChange={() => {}} /></I18nProvider>);
+    expect(html).toContain('aria-invalid="true" aria-describedby="error-cores"');
+    expect(html).toContain('aria-invalid="true" aria-describedby="error-threads"');
+    expect(html).toContain('class="explorer-secondary-filters" open=""');
+    expect(html).toContain('class="explorer-secondary-filters" open=""><summary><span>Measurement settings</span>');
+    expect(html).toContain('Check numeric ranges before applying filters.');
   });
   it("keeps results stable while editing then applies or clears the complete draft", () => {
     let state = explorerStateFromSearch("?vendor=synthetic&cursor=page2", [""]);
@@ -70,14 +81,6 @@ it("returns a shared cursor view to the first page without clearing filters or d
 });
 
 describe("stable discovery layout", () => {
-  it("keeps the unapplied-changes line after the disclosure, where it cannot move the trigger", () => {
-    const pending = renderFilters("", true);
-    expect(pending.indexOf("</details>")).toBeLessThan(pending.indexOf("explorer-draft-status"));
-    expect(pending).toContain("Changes not applied.");
-    // The line is always rendered, so turning the message on and off changes no structure.
-    expect(renderFilters()).toContain('<div class="explorer-draft-status" role="status"></div>');
-  });
-
   it("names the input length range as the largest configured input, not the allocated context", () => {
     const html = renderFilters();
     const hintKey = `benchmark.${EXPLORER_RANGE_HINTS.context}`;

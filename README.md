@@ -38,9 +38,14 @@ APIs remain at `/v1/**`. See [language routing and catalogs](docs/internationali
 
 - `/`: product introduction to the AioLM desktop workspace, with links to the
   GitHub repository, documentation, and benchmark explorer.
-- `/benchmarks`: top search with editable suggestions, grouped hardware, OS,
-  runtime, and execution filters, numeric ranges, a basis operating point, and
-  selectable sort order. Filters, basis point and sorting remain in the URL.
+- `/benchmarks`: a left filter sidebar with model, hardware, execution environment,
+  and measurement groups; results alongside it. Common conditions
+  stay visible and secondary conditions expand with editable suggestions and
+  numeric ranges. Find a model matches only the model name, repository, file,
+  and hash (`model_query`); links carrying the older all-fields `q` or label-only
+  `model` keep their meaning. Narrow screens use a collapsible filter panel.
+  Apply filters submits the draft; basis point and sorting apply immediately.
+  Filters, basis point and sorting remain in the URL.
   Every speed is read at one operating point - one input length at one
   concurrency - so a column compares like for like; the two speed orders rank at
   the basis point and require one. Select up to three results for a

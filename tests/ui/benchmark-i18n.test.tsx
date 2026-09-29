@@ -80,7 +80,7 @@ describe.each(locales)("benchmark localization: %s", locale => {
     const html = wrap(locale, <BenchmarkBrowser />);
     expect(html).toContain('action="/' + locale + '/benchmarks"');
     expect(html).toContain(escape(t("benchmark.Filters")));
-    expect(html).toContain(escape(t("benchmark.Remove the {filter} filter", { filter: t("benchmark.Model fingerprint") })));
+    expect(html).toContain(escape(t("benchmark.Remove the {filter} filter", { filter: t("benchmark.Model label") })));
     expect(html).toContain('value="synthetic-model"');
     for (const key of EXPLORER_FILTER_KEYS) expect(html).toContain('name="' + key + '"');
     expect(html).toContain('role="combobox"');
@@ -89,7 +89,8 @@ describe.each(locales)("benchmark localization: %s", locale => {
     expect(html).toContain(escape(t("benchmark.Max input length (tokens)")));
     expect(html).toContain(escape(t("benchmark.Input length: high to low")));
     expect(html).toContain(escape(t("benchmark.Matches the largest input length a result was configured with, not the total context the server allocated.")));
-    expect(html).toContain(escape(t("benchmark.GPU name or vendor")));
+    expect(html).not.toContain(escape(t("benchmark.GPU name or vendor")));
+    expect(html).toContain('type="hidden" name="hardware" value="synthetic-device"');
     expect(html).not.toContain("benchmark.");
   });
   it("renders localized empty and error states", () => {
@@ -195,15 +196,22 @@ it("rejects unsupported benchmark route locales", async () => {
   await expect(BenchmarkPage({ params })).rejects.toThrow("not-found");
 });
 
-it("keeps the clear control in the layout while it is inactive, so Search never moves", () => {
+it("keeps model lookup and a single apply action in the sidebar, with no main search", () => {
   const filtered = state.search;
   try {
     state.search = "";
     const unfiltered = wrap("en", <BenchmarkBrowser />);
-    expect(unfiltered).toContain("explorer-button-reserved");
+    expect(unfiltered).toContain('class="explorer-sidebar-reset" disabled=""');
     expect(unfiltered).toContain(en["benchmark.Clear filters"]);
+    const main = unfiltered.split('class="explorer-main-column"')[1];
+    expect(main).not.toContain('name="q"');
+    expect(main).not.toContain('name="model_query"');
+    expect(main).not.toContain('type="submit"');
+    expect(unfiltered).toContain('name="model_query"');
+    expect(unfiltered.match(/type="submit"/g)).toHaveLength(1);
+    expect(unfiltered).toContain('<p class="explorer-draft-status" role="status"></p>');
     state.search = filtered;
-    expect(wrap("en", <BenchmarkBrowser />)).not.toContain("explorer-button-reserved");
+    expect(wrap("en", <BenchmarkBrowser />)).not.toContain('class="explorer-sidebar-reset" disabled=""');
   } finally {
     state.search = filtered;
   }
@@ -329,4 +337,3 @@ it("BenchmarkDetail does not render Load measurements button and includes measur
   expect(html).not.toContain("Load measurements");
   expect(html).toContain("Measurements");
 });
-

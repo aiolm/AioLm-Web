@@ -15,6 +15,7 @@ benchmark metadata and measurement rows are not loaded by the explorer.
 | --- | --- |
 | q | Search public labels, hardware, OS, runtime, settings, status, and precise model identifiers |
 | model, hardware, method, workload | Existing summary label filters |
+| model_query | Narrow model search: the model label, name, repository, artifact, and hash; never hardware, runtime, or status |
 | publisher, quantization, base_model | Model publisher, weight quantization, and upstream model IDs |
 | vendor, gpu, cpu | Selected GPU vendor/model and CPU name |
 | os, arch, runtime, backend, mode | Environment and runtime filters |
@@ -30,7 +31,7 @@ benchmark metadata and measurement rows are not loaded by the explorer.
 
 Text filters accept any literal case-insensitive substring, up to 120 characters.
 Percent, underscore, and backslash are ordinary search characters. Empty fields are
-ignored. Ranges are inclusive, require safe whole numbers, and reject an inverted
+ignored. Conditions from different fields are ANDed. Ranges are inclusive, require safe whole numbers, and reject an inverted
 minimum/maximum with HTTP 400. Unknown metadata never passes a numeric range and is
 displayed as missing rather than zero.
 
@@ -68,8 +69,8 @@ select Search to restart at the first page while retaining its filters.
 
 ## Searchable suggestions
 
-GET /v1/benchmark-runs/options accepts field (one text filter other than q, or
-point), option_query (optional literal search within that field), and the other list
+GET /v1/benchmark-runs/options accepts field (one text filter other than q, model_query
+included, or point), option_query (optional literal search within that field), and the other list
 filters. It returns { options: [{ value, count }], has_more }. At most 30 options
 are returned; typing searches all matching records before the limit is applied.
 Counts represent distinct visible runs. Hidden and deleted records never contribute.
@@ -80,6 +81,12 @@ measure rather than by how the pair spells out, so 512/1 precedes 4096/1. The
 basis point and point_only are excluded from their own suggestions, so the list
 offers every point the other conditions still allow instead of collapsing to the
 one already chosen.
+
+field=model_query suggests only model values: each run contributes its label, name,
+repository, artifact, and hash, and a value that repeats within a run (a label equal to
+its name) counts that run once. Hardware, runtime, and status text is never suggested.
+A value longer than the 120-character filter limit is not offered, because choosing it
+would be rejected. Every suggestion matches model_query again once selected.
 
 The field being edited is excluded from its own filter constraints, while other
 conditions still narrow its candidates. Selecting a GPU vendor narrows GPU names
@@ -224,6 +231,19 @@ recorded no metadata never matches these filters, and each of its metadata
 fields reads as unknown - the same word a single unrecorded field uses, because
 it is the same fact.
 
+model_query is the narrow model search beside them. It matches a case-insensitive
+substring of the model label or of the model_info name, repository, artifact, or
+sha256; a run matches when any one of those values does, and the condition is ANDed
+with every other filter, so model_query plus a GPU filter lists only runs on that GPU.
+Hardware, runtime version, status, architecture, size label, quantizer, and base
+models never match it; they stay with q and, for base models, their own filter. The hash is
+the one the summary records with model metadata, so a run that described no model is
+found by its label - sha256: and the first 12 hash characters - exactly as before.
+q and model are unchanged: q keeps its broad search surface, model still reads the
+label alone, and links made before model_query keep their meaning. The same text
+limit applies. Cursors bind model_query like any other condition; cursors issued
+before it existed carry no such condition and keep working.
+
 Migration 010 backfills model_info onto retained summaries whose stored payload
 actually carries a metadata object, using the same validators as the
 application helper. Curated model labels are never replaced, rows without
@@ -231,16 +251,62 @@ metadata are not written at all, and raw benchmark metadata, measurement rows,
 hashes, capacity counters, and tombstones are left untouched. It also adds
 trigram indexes for the three new filters where pg_trgm is available.
 
-## Compact explorer controls
+## Sidebar explorer controls
 
-Search, GPU vendor, and GPU model are the default discovery controls. A single
-native “More filters” disclosure holds all remaining fields in hardware,
-OS/runtime, and execution/workload groups. Its count includes populated advanced
-fields, including values restored from shared links; closing it preserves drafts.
-The Search button sits beside the query and repeats after the advanced fields. A pending
-changes message distinguishes edited controls from the applied result chips.
-Clear filters resets both drafts and results, including pagination, and is also
-available in the filtered empty state. Comparison selections survive reset.
+On screens wider than 1100px, a 300px filter sidebar sits beside the page title,
+active-filter chips, and results. The comparison guide follows the results inside
+the same main column, so a taller sidebar cannot push it down or leave a gap above it.
+There is no separate top search: finding a model is the first control in the sidebar.
+Model, Hardware, and Execution environment are
+always-visible sections whose headings count their populated conditions. Only their
+Advanced filters and the Measurement settings group collapse, and each shows how many
+of its conditions are selected. Measurement settings starts closed unless it contains
+a restored condition.
+
+- Model exposes Find a model and weight quantization; Advanced filters holds base
+  model and publisher. Find a model is model_query: it searches the model name,
+  repository, file (artifact), and SHA-256 hash, and its suggestions list only those
+  values. Its hint reads "Search model names, repositories, files or SHA-256 hashes."
+- Hardware exposes GPU vendor, GPU model, and selected GPU VRAM in MiB;
+  Advanced filters holds CPU and logical cores.
+- Execution environment exposes OS; Advanced filters holds runtime, backend,
+  and architecture.
+- Measurement settings holds input length, parallel sequences, threads, GPU
+  layers, execution mode, method, workload, and the remaining execution settings.
+
+Advanced filters use an inset, tinted panel with an accent rule and a plus/minus
+trigger, distinct from the larger primary group headings. Inputs use 16px text;
+field labels and result metadata use 14px, with larger model names and metrics.
+Korean text prefers word boundaries when wrapping. These presentation changes
+preserve the existing filters and disclosure behavior.
+
+Populated advanced groups open when restored from a link. A minimum/maximum
+pair counts as one condition in group badges. Closing a disclosure preserves
+its controls and draft values, and invalid numeric ranges reveal their group.
+One Apply filters button, pinned to the bottom of the sidebar, submits the complete
+draft; a status line beside it reports unapplied changes, and invalid ranges are
+reported in the sidebar and block applying. The sort select belongs to the sidebar
+form through its native `form` attribute.
+The sidebar header's Clear filters stays visible, disabled when no filters can
+be cleared. It resets drafts, results, and pagination; comparison selections
+survive. Reset is also available in the filtered empty state.
+
+At 1100px and below, Find models and filter (Hide filters while open) shows the
+sidebar above the results. Applying closes this outer panel and moves focus to the results heading after layout
+updates. Desktop submissions preserve each disclosure's open/closed state.
+Results use labeled cards when the viewport or available result column is too
+narrow for the full table.
+
+The generic Hardware input is omitted because its GPU names, vendor fallbacks,
+and execution-mode values overlap the dedicated GPU and execution filters, and the
+old top search and Model fingerprint inputs are gone in favor of Find a model.
+Existing `hardware`, `q`, and `model` query parameters keep their original matching
+behavior: hardware matches as before, q remains the broad all-fields search, and
+model still reads the model label alone. Each remains visible as a removable
+active-filter chip (Hardware, All-fields keyword, Model label), and a hidden input
+preserves it when submitting the form; they have no editable input and do not
+count toward group badges. Find a model writes model_query, so it never changes
+what an old q or model link matches.
 
 The basis point sits beside the results with sorting, because both decide how the
 results are read rather than which are listed. Its options are the points that
@@ -255,14 +321,13 @@ silently drop the point every row is read at.
 
 Sorting sits beside the results and applies immediately to the current query.
 It resets pagination without applying or discarding unfinished filter edits,
-including invalid ranges. Search and filter changes still require Search.
+including invalid ranges. Search and filter changes require Apply filters.
 URL sharing, browser history, free-text suggestions, and keyset paging retain
 their existing behavior. Disclosure state is local presentation, not URL state.
 
 A result link preserves the current query. When a shared cursor or a return from
 a detail page has no previous-page history, First page provides a way back to
-the beginning while retaining filters. Applying advanced fields closes their
-panel and moves focus to the result heading.
+the beginning while retaining filters.
 
 
 Published measurement policy: new submissions must be complete, non-empty, and contain no failed rows. Local diagnostic records remain local. System RAM is an optional measurement-time capacity in environment.system_memory_bytes and summary.setup.ram_bytes; it is not GPU VRAM or peak process memory. Model display names may omit encoding suffixes, but weight encoding always comes from model metadata, never from the display label.

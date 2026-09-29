@@ -380,15 +380,14 @@ describe("the advanced filters", () => {
         <BenchmarkExplorerFilters draft={explorerStateFromSearch("?publisher=synthetic-org").draft} onChange={() => {}} />
       </I18nProvider>,
     );
-    const advanced = html.split("<details")[1];
-    const group = advanced.split('class="explorer-advanced-group"')[1];
-    for (const key of ["model", "publisher", "quantization", "base_model"]) expect(group, key).toContain('name="' + key + '"');
+    const group = html.split('class="explorer-filter-group"')[1];
+    for (const key of ["model_query", "publisher", "quantization", "base_model"]) expect(group, key).toContain('name="' + key + '"');
     // Typed text survives: suggestions are optional, the field is not a select.
-    expect(advanced).toContain('value="synthetic-org"');
-    expect(advanced.match(/role="combobox"/g)?.length).toBeGreaterThanOrEqual(4);
-    // The primary row keeps only search and the two quick filters.
-    const primary = html.split("<details")[0];
-    expect([...primary.matchAll(/name="([^"]+)"/g)].map((match) => match[1])).toEqual(["q", "vendor", "gpu"]);
+    expect(group).toContain('value="synthetic-org"');
+    expect(group.match(/role="combobox"/g)?.length).toBe(4);
+    // Quantization is immediately visible; linked model details also open.
+    expect(group.split('class="explorer-secondary-filters"')[0]).toContain('name="quantization"');
+    expect(group).toContain('class="explorer-secondary-filters" open=""');
   });
 });
 
