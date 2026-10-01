@@ -1,0 +1,45 @@
+name: Supabase keepalive
+
+# Temporary Free-plan keepalive. Delete this file after upgrading Supabase,
+# or stop it under Actions > Supabase keepalive > Disable workflow.
+# /v1/readiness is uncached and reads the database migration ledger.
+# This is best effort: Supabase pausing is not guaranteed to be prevented.
+# GitHub may delay runs and disables public-repo schedules after 60 days
+# without repository activity. Re-enable the workflow if that happens.
+# https://supabase.com/docs/guides/platform/free-project-pausing
+
+on:
+  # Verify immediately when this file is added or changed on main.
+  push:
+    branches: [main]
+    paths: ['.github/workflows/supabase-keepalive.yml']
+  schedule:
+    # Three requests/day, off the busy start of the hour (00:23/08:23/16:23 UTC).
+    - cron: '23 */8 * * *'
+  workflow_dispatch:
+
+# No checkout, credentials, repository access, or dependency installation.
+permissions: {}
+
+jobs:
+  keepalive:
+    if: github.repository == 'aiolm/AioLm-Web'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - name: Check production database readiness
+        shell: bash
+        run: |
+          status="$(curl --fail --silent --show-error \
+            --connect-timeout 10 --max-time 25 \
+            --retry 2 --retry-all-errors --retry-delay 5 --retry-max-time 90 \
+            --header 'Cache-Control: no-cache' \
+            --output "$RUNNER_TEMP/readiness.json" --write-out '%{http_code}' \
+            'https://aiolm.vercel.app/v1/readiness')"
+          if [[ "$status" != '200' ]] || \
+             ! jq --exit-status 'type == "object" and .status == "ready"' \
+               "$RUNNER_TEMP/readiness.json" > /dev/null; then
+            echo '::error::Database readiness probe did not return HTTP 200 with status=ready'
+            exit 1
+          fi
+          echo 'Database readiness confirmed'
