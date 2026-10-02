@@ -1,0 +1,216 @@
+/* ==========================================================================
+   Shared selection and disclosure controls — Orchid Periwinkle.
+   Borderless gradient triggers, a persistent chevron and keyboard focus.
+   Portaled menus use --ui-ink; the filter rail uses --ui-rail-* instead.
+   ========================================================================== */
+
+/* ---------------------------------------------------------- trigger ---- */
+
+.ui-select { position: relative; min-width: 0; }
+.ui-select-trigger {
+  display: flex;
+  width: 100%;
+  min-height: var(--control-min);
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: var(--control-pad-block) var(--control-pad-inline);
+  border: 0;
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-input);
+  color: var(--ui-ink);
+  font: inherit;
+  font-size: var(--fs-body);
+  font-weight: 400;
+  line-height: 1.45;
+  text-align: start;
+  cursor: pointer;
+}
+.ui-select-trigger:hover:not(:disabled) { background: var(--ui-input-hover, var(--ui-input)); }
+.ui-select-trigger[aria-expanded="true"] { outline: 2px solid var(--ui-focus); outline-offset: 1px; }
+.ui-select-trigger:focus-visible,
+.explorer-combobox-toggle:focus-visible {
+  outline: 2px solid var(--ui-focus);
+  outline-offset: 2px;
+  border-radius: var(--ui-radius-sm);
+}
+.ui-select-trigger:disabled { opacity: .55; cursor: not-allowed; }
+.ui-select-value { min-width: 0; white-space: normal; overflow-wrap: normal; }
+.ui-select-chevron { flex: 0 0 16px; width: 16px; height: 16px; color: var(--ui-muted); opacity: 1; transition: transform 150ms ease, color 120ms ease; }
+.ui-select:hover .ui-select-chevron, .explorer-combobox-control:hover .ui-select-chevron { color: var(--ui-ink); }
+[aria-expanded="true"] > .ui-select-chevron { color: var(--ui-ink); transform: rotate(180deg); }
+
+/* Result toolbar controls sit beside 40px buttons; the header selector is sized to its label. */
+.explorer-result-actions .ui-select-trigger { min-height: var(--control-min); }
+.language-selector .ui-select-trigger { width: auto; }
+
+/* ------------------------------------------------------------- menu ---- */
+
+.ui-menu {
+  position: fixed;
+  width: max-content;
+  max-width: min(22rem, calc(100vw - 16px));
+  z-index: 60;
+  margin: 0;
+  padding: 4px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  border: 0;
+  border-radius: var(--ui-radius-menu, 10px);
+  background: var(--ui-menu-surface, var(--ui-surface));
+  color: var(--ui-ink);
+  box-shadow: var(--ui-elev-menu, var(--ui-elev-2));
+  font-size: var(--fs-body);
+  line-height: 1.45;
+}
+.ui-menu--above { transform: translateY(-100%); }
+/* Free-text suggestions stay attached to their field instead of floating in a portal. */
+.ui-menu.ui-menu--inline { position: absolute; z-index: 25; top: 100%; left: 0; right: 0; width: auto; max-width: none; margin-top: 4px; padding: 0; overflow: hidden; }
+.ui-menu--inline .explorer-options { max-height: 240px; margin: 0; padding: 4px; overflow-y: auto; overscroll-behavior: contain; list-style: none; }
+.explorer-combobox-toggle {
+  position: absolute;
+  inset-block: 1px;
+  inset-inline-end: 1px;
+  display: grid;
+  width: 32px;
+  min-height: 0;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ui-radius-sm);
+  background: transparent;
+  color: var(--ui-muted);
+  cursor: pointer;
+}
+.explorer-combobox-toggle:hover { background: var(--ui-surface-muted); color: var(--ui-ink); }
+.explorer-combobox-toggle:focus-visible { outline-offset: -4px; }
+
+.ui-menu .ui-option {
+  position: relative;
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px 6px 18px;
+  border-radius: var(--ui-radius-sm);
+  outline: 0;
+  background: transparent;
+  color: var(--ui-ink);
+  font-size: var(--fs-body);
+  line-height: 1.45;
+  cursor: pointer;
+}
+.ui-option-label { min-width: 0; white-space: normal; overflow-wrap: normal; }
+.ui-menu--inline .ui-option-label { flex: 1; }
+/* Virtual keyboard focus needs a shape with contrast, not just a pale fill. */
+.ui-menu .ui-option.is-highlighted::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 7px;
+  top: calc(50% - 2px);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ui-accent);
+}
+/* Suggestions are identifiers (hashes, repository paths) with no break points; only they may break anywhere. */
+.ui-menu--inline .ui-option > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.ui-menu--inline .ui-option > .explorer-option-count { flex-shrink: 0; }
+.ui-menu .ui-option:hover,
+.ui-menu .ui-option.is-highlighted { outline: 0; background: var(--ui-surface-muted); }
+/* In free-text suggestions aria-selected marks the active option, so the committed
+   value is flagged separately; in fixed selects aria-selected is the value. */
+.ui-menu .ui-option.is-committed,
+.ui-menu:not(.ui-menu--inline) .ui-option[aria-selected="true"] { color: var(--ui-accent); font-weight: 550; }
+.ui-menu .ui-option[aria-disabled="true"] { color: var(--ui-faint); opacity: .55; cursor: not-allowed; }
+.ui-option-check { flex: 0 0 16px; width: 16px; height: 16px; color: var(--ui-accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-select-chevron, details > summary::after { transition: none; }
+}
+@media (forced-colors: active) {
+  .ui-menu .ui-option.is-highlighted::before { background: Highlight; forced-color-adjust: none; }
+  .ui-menu .ui-option-check { color: Highlight; }
+}
+
+/* ------------------------------------------------------- disclosures ---- */
+/* Native <details> keeps its semantics; only the indicator changes to one
+   understated chevron at the inline end that turns when the section opens. */
+
+details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure) > summary {
+  display: flex;
+  min-height: 36px;
+  padding-block: var(--control-pad-block);
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  cursor: pointer;
+  line-height: 1.5;
+}
+details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure) > summary::-webkit-details-marker { display: none; }
+details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure) > summary::before { content: none; }
+details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure) > summary::after {
+  content: "";
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  margin-inline-start: auto;
+  background: var(--ui-muted);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='m6 8 4 4 4-4' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 16px 16px no-repeat;
+  transition: transform 150ms ease;
+}
+details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure)[open] > summary::after { transform: rotate(180deg); background: var(--ui-ink); }
+details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure) > summary:focus-visible {
+  outline: 2px solid var(--ui-focus);
+  outline-offset: 2px;
+  border-radius: var(--ui-radius-sm);
+}
+/* A selection count already sits at the inline end; the chevron follows it. */
+details.explorer-secondary-filters > summary:has(.explorer-filter-count)::after { margin-inline-start: 0; }
+.explorer-rail details.explorer-secondary-filters > summary::after { background: var(--ui-rail-muted); }
+.explorer-rail details.explorer-secondary-filters[open] > summary::after { background: var(--ui-rail-ink); }
+.management-panel details.recovery-paste > summary { min-height: 36px; }
+
+@media (max-width: 700px), (pointer: coarse) {
+  .ui-menu .ui-option { min-height: 44px; }
+  details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure) > summary,
+  .management-panel details.recovery-paste > summary { min-height: 44px; }
+}
+
+/* ---------------------------------------------------- action glyphs ---- */
+/* A leading glyph in the control's own ink names the kind of action, so a
+   button reads as a button even where its fill sits close to the canvas.
+   It adds no idle frame and carries no text for assistive technology. */
+
+[data-action-glyph]::before {
+  content: "";
+  display: inline-block;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-inline-end: 6px;
+  vertical-align: -3px;
+  background: currentColor;
+  -webkit-mask: var(--action-glyph) center / 16px 16px no-repeat;
+  mask: var(--action-glyph) center / 16px 16px no-repeat;
+}
+[data-action-glyph="refresh"] { --action-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M16 8a6 6 0 1 0 .1 4M16 3.5V8h-4.5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+[data-action-glyph="open"] { --action-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M11 4h4a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-4M4 10h8M9 7l3 3-3 3' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+[data-action-glyph="sign-out"] { --action-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M9 4H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h4M8 10h8M13 7l3 3-3 3' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+[data-action-glyph="delete"] { --action-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10M9 9v4M11 9v4' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+[data-action-glyph="clear"] { --action-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5.5 5.5l9 9M14.5 5.5l-9 9' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"); }
+[data-action-glyph="previous"] { --action-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M12 5l-5 5 5 5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+[data-action-glyph="next"] { --action-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M8 5l5 5-5 5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+[data-action-glyph="more"] { --action-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 8l5 5 5-5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+[data-action-glyph="columns"] { --action-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M4 4.5h12v11H4zM8 4.5v11M12 4.5v11' fill='none' stroke='black' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+[data-action-glyph="send"] { --action-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M3.5 9.5 16.5 4l-5.5 13-2-5.5z' fill='none' stroke='black' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+[data-action-glyph="filter"] { --action-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M3.5 5h13l-5 6v4.5l-3 1V11z' fill='none' stroke='black' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+[data-action-glyph="home"] { --action-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M3.5 9.5 10 4l6.5 5.5M5.5 8v8h9V8' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+[data-action-glyph="list"] { --action-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M7.5 5.5h9M7.5 10h9M7.5 14.5h9M3.5 5.5h.5M3.5 10h.5M3.5 14.5h.5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"); }
+@media (forced-colors: active) {
+  [data-action-glyph]::before { forced-color-adjust: none; background: currentColor; }
+  [data-action-glyph]:disabled::before { background: GrayText; }
+}

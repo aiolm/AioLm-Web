@@ -1,4 +1,6 @@
 "use client";
+import "./ui-controls.css";
+import "./benchmark-detail.css";
 import { LocalTime } from "./local-time";
 import { useI18n } from "@/i18n/client";
 import { localizedPath } from "@/i18n/config";
@@ -16,7 +18,7 @@ import { buildRowColumns, isFailedRow } from "@/components/benchmark-detail-rows
 import { BenchmarkPointsPanel } from "@/components/benchmark-detail-points";
 import { formatMethodName, formatPromptLengths, formatWorkloadName } from "@/components/benchmark-explorer-format";
 import type { BenchmarkPoint } from "@/lib/benchmark-points";
-import { BilingualHeader } from "./benchmark-i18n";
+import { ColumnHeading } from "./benchmark-i18n";
 
 interface Detail {
   id: string;
@@ -189,7 +191,7 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
   }, [publicId, loadRows]);
 
   const backLink = <p className="detail-back"><Link href={localizedPath(locale, `/benchmarks${search ? `?${search}` : ""}`)}>{t("benchmark.← Back to results")}</Link></p>;
-  if (error || !data) return <div className="grid">
+  if (error || !data) return <div className="grid benchmark-detail">
     {backLink}
     <section className="card">
       <h1>{t("benchmark.Benchmark result")}</h1>
@@ -206,9 +208,9 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
 
 
   return (
-    <div className="grid">
+    <div className="grid benchmark-detail">
       {backLink}
-      <section className="card" aria-labelledby="detail-title">
+      <section className="card detail-summary" aria-labelledby="detail-title">
         <h1 id="detail-title">{summary.model_label}</h1>
         <div className="detail-meta-row">
           <div className="detail-fact">
@@ -220,6 +222,8 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
             <span className="detail-fact-value detail-weight-badge">{formatWeightQuantization(summary.model_info ?? null, t)}</span>
           </div>
         </div>
+        {/* What ran on which machine comes before any number read from it. */}
+        <BenchmarkHardwareOverview benchmark={data.benchmark} />
         <BenchmarkPointsPanel points={summary.points ?? []} truncated={summary.points_truncated ?? false} />
         <div className="detail-context-grid">
           <div className="detail-fact">
@@ -242,8 +246,6 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
         <p className="muted detail-record-date">{t("benchmark.Revision {revision} · updated", { revision: data.revision })} <LocalTime value={data.updated_at} /></p>
       </section>
 
-      <BenchmarkHardwareOverview benchmark={data.benchmark} />
-
       {data.description_md ? <details className="card detail-description"><summary>{t("benchmark.Description")}</summary><SafeMarkdown text={data.description_md} /></details> : null}
 
       <section className="card" aria-labelledby="rows-title">
@@ -256,7 +258,7 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
           <div className="alert error" role="alert">
             <p>{t(rowsError)}</p>
             <p>
-              <button type="button" onClick={() => void loadRows(retryCursor)} disabled={rowsLoading}>{t("benchmark.Retry loading measurements")}</button>
+              <button type="button" className="alert-action" data-action-glyph="refresh" onClick={() => void loadRows(retryCursor)} disabled={rowsLoading}>{t("benchmark.Retry loading measurements")}</button>
             </p>
           </div>
         ) : null}
@@ -272,7 +274,7 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
         ) : null}
         {rows && rowsCursor && !rowsError ? (
           <p>
-            <button type="button" onClick={() => void loadRows(rowsCursor)} disabled={rowsLoading}>
+            <button type="button" data-action-glyph="more" onClick={() => void loadRows(rowsCursor)} disabled={rowsLoading}>
               {rowsLoading ? t("benchmark.Loading…") : t("benchmark.Load more")}
             </button>
           </p>
@@ -369,7 +371,7 @@ function RowsPreview({
   pageCount: number;
   onPage: (page: number) => void;
 }): React.JSX.Element {
-  const { locale, t } = useI18n();
+  const { t } = useI18n();
   const [showDetailed, setShowDetailed] = useState(false);
   // A row that is not an object still takes its place in the table, as gaps. Failures are defensively excluded.
   const filtered = rows.filter((row) => !isFailedRow(asRecord(row) ?? {}));
@@ -383,6 +385,7 @@ function RowsPreview({
         <button
           type="button"
           className="detail-metrics-toggle"
+          data-action-glyph="columns"
           onClick={() => setShowDetailed((prev) => !prev)}
           aria-pressed={showDetailed}
         >
@@ -403,12 +406,7 @@ function RowsPreview({
             <tr>
               {columns.map((column) => (
                 <th key={column.key} scope="col" className={column.numeric ? "detail-num" : undefined} style={{ whiteSpace: "nowrap" }}>
-                  <BilingualHeader
-                    local={column.localLabel ?? column.label}
-                    en={column.enLabel}
-                    unit={column.unit}
-                    locale={locale}
-                  />
+                  <ColumnHeading label={column.label} unit={column.unit} />
                 </th>
               ))}
             </tr>
@@ -431,8 +429,8 @@ function RowsPreview({
       </p>
       {pageCount > 1 ? (
         <nav aria-label={t("benchmark.Loaded measurement pages")}>
-          <button type="button" onClick={() => onPage(Math.max(0, page - 1))} disabled={page <= 0}>{t("benchmark.Previous rows")}</button>{" "}
-          <button type="button" onClick={() => onPage(Math.min(pageCount - 1, page + 1))} disabled={page + 1 >= pageCount}>{t("benchmark.Next rows")}</button>
+          <button type="button" data-action-glyph="previous" onClick={() => onPage(Math.max(0, page - 1))} disabled={page <= 0}>{t("benchmark.Previous rows")}</button>{" "}
+          <button type="button" data-action-glyph="next" onClick={() => onPage(Math.min(pageCount - 1, page + 1))} disabled={page + 1 >= pageCount}>{t("benchmark.Next rows")}</button>
         </nav>
       ) : null}
     </div>

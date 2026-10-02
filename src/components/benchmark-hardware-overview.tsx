@@ -2,7 +2,7 @@
 import { useI18n } from "@/i18n/client";
 import { asRecord, displayText, formatCompactBytes, formatVramGb } from "./benchmark-detail-format";
 import { formatCpuCores, runtimeVersionLabel } from "./benchmark-explorer-format";
-import { BilingualHeader } from "./benchmark-i18n";
+import { ColumnHeading } from "./benchmark-i18n";
 import type { BenchmarkSetup } from "./benchmark-detail-fields";
 
 interface AggregatedGpu {
@@ -41,7 +41,7 @@ function aggregateGpus(gpus: Record<string, unknown>[]): AggregatedGpu[] {
 
 /** Measurement-time hardware is visible before optional reproducibility details. */
 export function BenchmarkHardwareOverview({ benchmark }: { benchmark: BenchmarkSetup }): React.JSX.Element {
-  const { locale, t } = useI18n();
+  const { t } = useI18n();
   const env = asRecord(benchmark.environment);
   const cpu = asRecord(env?.cpu);
   const execution = asRecord(env?.execution);
@@ -52,11 +52,11 @@ export function BenchmarkHardwareOverview({ benchmark }: { benchmark: BenchmarkS
   const runtimeVersion = runtimeVersionLabel(runtime?.version, runtime?.build);
 
   return (
-    <section className="card" aria-labelledby="hardware-overview-title">
+    <section className="card detail-environment" aria-labelledby="hardware-overview-title">
       <h2 id="hardware-overview-title">{t("benchmark.Environment")}</h2>
       <div className="detail-hardware-grid">
         <article className="detail-hardware-card">
-          <BilingualHeader local={t("benchmark.Selected graphics")} en="Selected GPU" locale={locale} />
+          <ColumnHeading label={t("benchmark.Selected graphics")} />
           {gpus.length > 0 ? (
             <ul className="detail-hardware-gpus">
               {gpus.map(({ gpu, count }, index) => {
@@ -81,7 +81,7 @@ export function BenchmarkHardwareOverview({ benchmark }: { benchmark: BenchmarkS
         </article>
 
         <article className="detail-hardware-card">
-          <BilingualHeader local={t("benchmark.CPU")} en="CPU" locale={locale} />
+          <ColumnHeading label={t("benchmark.CPU")} />
           <strong>{displayText(cpu?.name, t)}</strong>
           {typeof cpu?.logical_cores === "number" ? (
             <div className="detail-fact">
@@ -101,12 +101,12 @@ export function BenchmarkHardwareOverview({ benchmark }: { benchmark: BenchmarkS
         </article>
 
         <article className="detail-hardware-card">
-          <BilingualHeader local={t("benchmark.System memory")} en="System RAM" locale={locale} />
+          <ColumnHeading label={t("benchmark.System memory")} />
           <strong>{typeof env?.system_memory_bytes === "number" ? formatCompactBytes(env.system_memory_bytes, t) : "—"}</strong>
         </article>
 
         <article className="detail-hardware-card">
-          <BilingualHeader local={t("benchmark.Runtime and backend")} en="Runtime / Backend" locale={locale} />
+          <ColumnHeading label={t("benchmark.Runtime and backend")} />
           <div className="detail-hardware-facts">
             {runtime?.name ? (
               <div className="detail-fact">

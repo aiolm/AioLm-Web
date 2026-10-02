@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useI18n } from "@/i18n/client";
-import { BilingualHeader } from "./benchmark-i18n";
+import { ColumnHeading } from "./benchmark-i18n";
 import type { BenchmarkPoint } from "@/lib/benchmark-points";
 import {
   formatDuration,
@@ -42,7 +42,7 @@ export function BenchmarkPointsPanel({
   points: readonly BenchmarkPoint[];
   truncated?: boolean;
 }): React.JSX.Element {
-  const { locale, t } = useI18n();
+  const { t } = useI18n();
   // Selection is an index: two points can share an input length and concurrency
   // while differing in generation length, and an index names one of them exactly.
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -73,10 +73,10 @@ export function BenchmarkPointsPanel({
   };
 
   const cards = [
-    { key: "pp_tps", local: t("benchmark.Prefill"), en: "Prefill", unit: "tok/s", value: formatThroughput(selected.pp_tps?.median), spread: formatThroughputSpread(selected.pp_tps) },
-    { key: "tg_tps", local: t("benchmark.Decode"), en: "Decode", unit: "tok/s", value: formatThroughput(selected.tg_tps?.median), spread: formatThroughputSpread(selected.tg_tps) },
-    { key: "ttft_ms", local: t("benchmark.TTFT"), en: "TTFT", unit: "ms", value: formatLatency(selected.ttft_ms?.median), spread: formatLatencySpread(selected.ttft_ms) },
-    { key: "e2e_ms", local: t("benchmark.End-to-end duration"), en: "Duration", unit: "s", value: formatDuration(selected.e2e_ms?.median), spread: formatSecondsSpread(selected.e2e_ms) },
+    { key: "pp_tps", label: t("benchmark.Prefill"), unit: "tok/s", value: formatThroughput(selected.pp_tps?.median), spread: formatThroughputSpread(selected.pp_tps) },
+    { key: "tg_tps", label: t("benchmark.Decode"), unit: "tok/s", value: formatThroughput(selected.tg_tps?.median), spread: formatThroughputSpread(selected.tg_tps) },
+    { key: "ttft_ms", label: t("benchmark.TTFT"), unit: "ms", value: formatLatency(selected.ttft_ms?.median), spread: formatLatencySpread(selected.ttft_ms) },
+    { key: "e2e_ms", label: t("benchmark.End-to-end duration"), unit: "s", value: formatDuration(selected.e2e_ms?.median), spread: formatSecondsSpread(selected.e2e_ms) },
   ];
 
   return (
@@ -123,7 +123,7 @@ export function BenchmarkPointsPanel({
       <div className="detail-performance-grid">
         {cards.map((card) => (
           <div className="detail-metric-card" key={card.key}>
-            <BilingualHeader local={card.local} en={card.en} unit={card.unit} locale={locale} />
+            <span className="detail-metric-label">{card.label}</span>
             <strong className="detail-metric-value">{card.value} <small>{card.unit}</small></strong>
             <span className="detail-metric-spread">
               {card.spread
@@ -141,14 +141,14 @@ export function BenchmarkPointsPanel({
           </caption>
           <thead>
             <tr>
-              <th scope="col"><BilingualHeader local={t("benchmark.Input length")} en="Input" unit={t("benchmark.tokens")} locale={locale} /></th>
-              <th scope="col"><BilingualHeader local={t("benchmark.Concurrency")} en="Concurrency" locale={locale} /></th>
-              {variedGeneration ? <th scope="col"><BilingualHeader local={t("benchmark.Generation length")} en="Generation" unit={t("benchmark.tokens")} locale={locale} /></th> : null}
-              <th scope="col" className="detail-num"><BilingualHeader local={t("benchmark.Repetitions")} en="n" locale={locale} /></th>
-              <th scope="col" className="detail-num"><BilingualHeader local={t("benchmark.Prefill")} en="Prefill" unit="tok/s" locale={locale} /></th>
-              <th scope="col" className="detail-num"><BilingualHeader local={t("benchmark.Decode")} en="Decode" unit="tok/s" locale={locale} /></th>
-              <th scope="col" className="detail-num"><BilingualHeader local={t("benchmark.TTFT")} en="TTFT" unit="ms" locale={locale} /></th>
-              <th scope="col" className="detail-num"><BilingualHeader local={t("benchmark.End-to-end duration")} en="Duration" unit="s" locale={locale} /></th>
+              <th scope="col"><ColumnHeading label={t("benchmark.Input length")} unit={t("benchmark.tokens")} /></th>
+              <th scope="col"><ColumnHeading label={t("benchmark.Concurrency")} /></th>
+              {variedGeneration ? <th scope="col"><ColumnHeading label={t("benchmark.Generation length")} unit={t("benchmark.tokens")} /></th> : null}
+              <th scope="col" className="detail-num"><ColumnHeading label={t("benchmark.Repetitions")} /></th>
+              <th scope="col" className="detail-num"><ColumnHeading label={t("benchmark.Prefill")} unit="tok/s" /></th>
+              <th scope="col" className="detail-num"><ColumnHeading label={t("benchmark.Decode")} unit="tok/s" /></th>
+              <th scope="col" className="detail-num"><ColumnHeading label={t("benchmark.TTFT")} unit="ms" /></th>
+              <th scope="col" className="detail-num"><ColumnHeading label={t("benchmark.End-to-end duration")} unit="s" /></th>
             </tr>
           </thead>
           <tbody>

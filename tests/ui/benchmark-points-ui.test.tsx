@@ -138,7 +138,7 @@ describe("the points a result measured", () => {
     expect(html).toContain("61.2");
     expect(html).toContain("4K");
     // The generation length is fixed for this run, so it is not a column of one repeated number.
-    expect(html).not.toContain("Generation</span>");
+    expect(html).not.toContain("Generation length</span>");
   });
 
   it("offers the concurrencies the selected input length actually measured", () => {
@@ -152,7 +152,7 @@ describe("the points a result measured", () => {
 
   it("adds a generation length column only when the run varied it", () => {
     const varied = [point(512, 1), { ...point(512, 1), generation_length: 512 }];
-    expect(render(<BenchmarkPointsPanel points={varied} />)).toContain("Generation</span>");
+    expect(render(<BenchmarkPointsPanel points={varied} />)).toContain("Generation length</span>");
   });
 
   it("says a result named no point rather than showing an invented speed", () => {

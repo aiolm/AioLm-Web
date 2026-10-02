@@ -67,8 +67,13 @@ APIs remain at `/v1/**`. See [language routing and catalogs](docs/internationali
 The product introduction is static. Public benchmark details include server-rendered
 initial content; filtering, comparisons and measurement pagination require JavaScript.
 See [search and answer discovery](docs/search-discovery.md) for metadata and sitemaps.
-The shared theme follows the system light/dark
-preference and uses the desktop app's semantic colors and official brand assets.
+The shared Orchid Periwinkle theme follows the system light/dark preference and
+uses the desktop app's colors, gradients and brand mark. There is no palette
+selector. Approved colors live in `src/theme/palette-data.json`; run
+`npm run theme:generate` after changing them to regenerate the shared CSS tokens
+and calibrated text/focus colors. Notice colors live in
+`src/theme/status-tones.json`, with distinct icons and readable foregrounds on
+soft gradients. Page components use these semantic tokens.
 
 ## Quick start (synthetic local)
 
@@ -80,6 +85,11 @@ npm run db:migrate
 npm run dev
 npm test
 ```
+
+Development output lives in `.next-dev/`; production builds and `npm run start`
+use `.next/`, so a build cannot overwrite a running development server's chunks.
+The development command binds to `localhost:3000` and refuses a second instance
+on that address. Run only one development server per checkout.
 
 Publishing stays disabled until `DATABASE_URL`, `PERMIT_HMAC_SECRET`,
 `MANAGEMENT_HMAC_SECRET`, `QUOTA_HMAC_SECRET`, `TURNSTILE_SECRET_KEY`, and

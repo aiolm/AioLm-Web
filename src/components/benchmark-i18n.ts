@@ -4,40 +4,20 @@ import type { Translator } from "@/i18n/types";
 /** English fallback for pure helpers used without a page provider. */
 export const benchmarkFallback: Translator = (key, values = {}) => key.replace(/^benchmark\./, "").replace(/\{(\w+)\}/g, (match, name: string) => String(values[name] ?? match));
 
-export interface BilingualHeaderProps {
-  local: string;
-  en: string;
+export interface ColumnHeadingProps {
+  label: string;
   unit?: string;
-  locale: string;
-  className?: string;
 }
 
 /**
- * Two-line bilingual column header for ko/ja/zh: concise local label on top,
- * English label (+ optional unit) on bottom, each nowrap.
- * On English (en): single line with English label (+ optional unit).
+ * A column heading in the reader’s language only. A reported unit sits on its
+ * own quiet line so numeric columns stay narrow and keep their unit in view.
  */
-export function BilingualHeader({
-  local,
-  en,
-  unit,
-  locale,
-  className,
-}: BilingualHeaderProps): React.JSX.Element {
-  const isEn = locale === "en" || local.trim().toLowerCase() === en.toLowerCase();
-  const cls = className ? `bilingual-header ${className}` : "bilingual-header";
-  if (isEn) {
-    return React.createElement(
-      "span",
-      { className: cls },
-      React.createElement("span", { className: "bilingual-en" }, en),
-      unit ? React.createElement("span", { className: "bilingual-unit" }, ` (${unit})`) : null,
-    );
-  }
+export function ColumnHeading({ label, unit }: ColumnHeadingProps): React.JSX.Element {
   return React.createElement(
     "span",
-    { className: cls },
-    React.createElement("span", { className: "bilingual-local" }, local),
-    React.createElement("span", { className: "bilingual-sub" }, `${en}${unit ? ` (${unit})` : ""}`),
+    { className: "column-heading" },
+    React.createElement("span", { className: "column-heading-label" }, label),
+    unit ? React.createElement("span", { className: "column-heading-unit" }, unit) : null,
   );
 }

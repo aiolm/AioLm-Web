@@ -12,7 +12,7 @@
 }
 
 .management-panel .kv dd {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .management-panel .recovery-files ul {
@@ -42,7 +42,90 @@
 }
 
 .management-panel .recovery-file-name {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+}
+
+.management-panel .recovery-files {
+  margin-block: 24px;
+  padding-block: 20px;
+  border-block: 1px solid var(--ui-border);
+}
+
+.management-panel .recovery-paste {
+  padding-block: 16px;
+  border-block: 1px solid var(--ui-border);
+}
+
+.management-panel .recovery-paste > summary,
+.report-disclosure > summary {
+  line-height: 1.65;
+}
+
+.management-panel textarea {
+  min-height: 12rem;
+  line-height: 1.75;
+}
+
+.management-panel input[type="file"] {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  border: 0;
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-input);
+  color: var(--ui-ink);
+  font: inherit;
+  font-size: var(--fs-body);
+}
+
+/* The native picker button is the page's main action: action fill and an
+   upload glyph drawn in the action ink (--ui-on-accent: #242424 in both modes). */
+.management-panel input[type="file"] {
+  --file-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 13V4M6.5 7.5 10 4l3.5 3.5M4 13v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2' fill='none' stroke='%23FFFFFF' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --file-muted-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 13V4M6.5 7.5 10 4l3.5 3.5M4 13v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2' fill='none' stroke='%23646464' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+@media (prefers-color-scheme: dark) {
+  .management-panel input[type="file"] {
+    --file-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 13V4M6.5 7.5 10 4l3.5 3.5M4 13v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2' fill='none' stroke='%23242424' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    --file-muted-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 13V4M6.5 7.5 10 4l3.5 3.5M4 13v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2' fill='none' stroke='%23D1D1D1' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+}
+
+.management-panel input[type="file"]::file-selector-button {
+  margin-inline-end: 12px;
+  padding: 8px 12px 8px 34px;
+  border: 0;
+  border-radius: var(--ui-radius-sm);
+  background: var(--file-glyph) left 12px center / 16px 16px no-repeat, var(--ui-action-gradient);
+  color: var(--ui-on-accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.management-panel input[type="file"]:hover:not(:disabled)::file-selector-button {
+  filter: brightness(.96);
+}
+
+.management-panel input[type="file"]:disabled {
+  cursor: not-allowed;
+}
+
+.management-panel input[type="file"]:disabled::file-selector-button {
+  background: var(--file-muted-glyph) left 12px center / 16px 16px no-repeat, var(--ui-field-gradient);
+  color: var(--ui-muted);
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+@media (forced-colors: active) {
+  .management-panel input[type="file"]::file-selector-button {
+    padding-inline-start: 12px;
+    background: ButtonFace;
+    color: ButtonText;
+    outline: 1px solid ButtonText;
+  }
 }
 
 .management-panel .recovery-paste {

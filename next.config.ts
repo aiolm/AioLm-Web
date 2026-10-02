@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -21,4 +22,10 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default function config(phase: string): NextConfig {
+  return {
+    ...nextConfig,
+    // A production build clears its output; keep live dev chunks elsewhere.
+    distDir: phase === PHASE_DEVELOPMENT_SERVER ? ".next-dev" : ".next",
+  };
+}

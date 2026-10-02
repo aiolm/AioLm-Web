@@ -5,7 +5,7 @@ import { localizedPath } from "@/i18n/config";
 import { useSearchParams } from "next/navigation";
 
 import Link from "next/link";
-import { BilingualHeader } from "./benchmark-i18n";
+import { ColumnHeading } from "./benchmark-i18n";
 import {
   EXPLORER_COMPARE_LIMIT,
   explorerDetailHref,
@@ -39,7 +39,11 @@ import { formatWeightQuantization, modelPublisher, modelValue } from "./benchmar
  * point named, each row reports that point and the column compares like for
  * like; without one, each row reports its own leading point and says which.
  *
- * Headings are bilingual on ko/ja/zh (local + English nowrap) and English on en.
+ * Each row keeps its own context and workload in view; everything else that
+ * qualifies a number sits in one disclosure per row, so no fact is lost and no
+ * condition is assumed to be shared by the other rows.
+ *
+ * Headings are in the page language only.
  * Results are successful-only; failed rows and status badges are omitted.
  */
 
@@ -49,7 +53,7 @@ function FactList({ className, facts }: { className: string; facts: SummaryFact[
   return (
     <ul className={`explorer-facts ${className}`}>
       {facts.map((fact) => (
-        <li className="explorer-fact" key={fact.key}>
+        <li className="explorer-fact" data-fact={fact.key} key={fact.key}>
           <span className="explorer-fact-label">{fact.label}</span>
           <span className="explorer-fact-value">{fact.value}</span>
         </li>
@@ -111,24 +115,24 @@ export function BenchmarkExplorerTable({
       <thead className="explorer-table-head">
         <tr className="explorer-head-row">
           <th scope="col" className="explorer-head-cell explorer-head-compare">
-            <BilingualHeader local={t("benchmark.Compare")} en="Compare" locale={locale} />
+            <ColumnHeading label={t("benchmark.Compare")} />
           </th>
           <th scope="col" className="explorer-head-cell explorer-head-identity explorer-head-model">
-            <BilingualHeader local={t("benchmark.Model")} en="Model" locale={locale} />
+            <ColumnHeading label={t("benchmark.Model")} />
           </th>
           <th scope="col" className="explorer-head-cell explorer-head-environment">
-            <BilingualHeader local={t("benchmark.Environment")} en="Environment" locale={locale} />
+            <ColumnHeading label={t("benchmark.Environment")} />
           </th>
           <th scope="col" className="explorer-head-cell explorer-head-numeric explorer-head-prefill">
-            <BilingualHeader local={t("benchmark.Prefill")} en="Prefill" unit="tok/s" locale={locale} />
+            <ColumnHeading label={t("benchmark.Prefill")} unit="tok/s" />
             {basisLabel ? <span className="explorer-head-basis">{basisLabel}</span> : null}
           </th>
           <th scope="col" className="explorer-head-cell explorer-head-numeric explorer-head-decode">
-            <BilingualHeader local={t("benchmark.Decode")} en="Decode" unit="tok/s" locale={locale} />
+            <ColumnHeading label={t("benchmark.Decode")} unit="tok/s" />
             {basisLabel ? <span className="explorer-head-basis">{basisLabel}</span> : null}
           </th>
           <th scope="col" className="explorer-head-cell explorer-head-setup">
-            <BilingualHeader local={t("benchmark.Context / workload")} en="Context / Workload" locale={locale} />
+            <ColumnHeading label={t("benchmark.Context / workload")} />
           </th>
         </tr>
       </thead>
@@ -138,12 +142,10 @@ export function BenchmarkExplorerTable({
           const selected = isCompared(compare, item.public_id);
           const identity = { model: summary.model_label, hardware: summary.hardware_label };
           const info = summary.model_info ?? null;
-          // Publisher and weight quantization qualify the model name itself, so
-          // they stay next to it and name their gaps instead of disappearing.
-          const modelFacts: SummaryFact[] = [
-            { key: "publisher", label: t("benchmark.Publisher"), value: modelValue(modelPublisher(info), t) },
-            { key: "quantization", label: t("benchmark.Weight quantization"), value: formatWeightQuantization(info, t) },
-          ];
+          // Weight quantization qualifies the model name itself, so it stays next to
+          // it; both it and the publisher name their gaps instead of disappearing.
+          const quantizationFact: SummaryFact = { key: "quantization", label: t("benchmark.Weight quantization"), value: formatWeightQuantization(info, t) };
+          const publisherFact: SummaryFact = { key: "publisher", label: t("benchmark.Publisher"), value: modelValue(modelPublisher(info), t) };
           const envRaw = environmentFacts(summary.setup, t).filter(fact => fact.key !== "gpu" && (summary.setup?.cpu ? fact.key !== "cores" : true));
           const gpuList = extractGpuList(summary);
           const gpuValue: React.ReactNode = gpuList.length > 1 ? (
@@ -159,6 +161,9 @@ export function BenchmarkExplorerTable({
             { key: "gpu", label: t("benchmark.GPU"), value: gpuValue },
             ...envRaw,
           ];
+          // The device and backend identify the environment at a glance; the rest qualifies it.
+          const environmentSummary = envFacts.filter(fact => fact.key === "gpu" || fact.key === "backend");
+          const environmentDetails = envFacts.filter(fact => fact.key !== "gpu" && fact.key !== "backend");
           const contextFormatted = formatPromptLengths(summary.prompt_lengths) ?? t("benchmark.Unknown");
           // With a basis named every row answers the same question; without one
           // each row leads with a point it actually measured and says which.
@@ -167,28 +172,30 @@ export function BenchmarkExplorerTable({
             : defaultPoint(summary.points);
           const measuredPoints = formatMeasuredPoints(summary.points);
           const duration = pointMedian(shown, "e2e_ms");
-          const setupFacts: SummaryFact[] = [
-            { key: "context", label: t("benchmark.Input context"), value: contextFormatted },
-            { key: "workload", label: t("benchmark.Workload"), value: formatWorkloadName(summary.workload_label, t) },
+          const readingFact: SummaryFact = {
+            key: "shown-point",
+            label: t("benchmark.Reading at"),
+            value: shown
+              ? t("benchmark.{point} · n={samples}", { point: formatPointLabel(shown.prompt_tokens, shown.concurrency), samples: String(shown.samples) })
+              : t("benchmark.Not measured at this point"),
+          };
+          const detailFacts: SummaryFact[] = [
+            publisherFact,
+            ...environmentDetails,
             { key: "method", label: t("benchmark.Method"), value: formatMethodName(summary.method_label, t) },
-            {
-              key: "shown-point",
-              label: t("benchmark.Reading at"),
-              value: shown
-                ? t("benchmark.{point} · n={samples}", { point: formatPointLabel(shown.prompt_tokens, shown.concurrency), samples: String(shown.samples) })
-                : t("benchmark.Not measured at this point"),
-            },
             ...(duration != null ? [{
               key: "duration",
               label: t("benchmark.Duration"),
               value: `${formatDuration(duration)} s${formatSecondsSpread(shown?.e2e_ms) ? ` (${formatSecondsSpread(shown?.e2e_ms)})` : ""}`,
             }] : []),
             ...(measuredPoints ? [{ key: "measured-points", label: t("benchmark.Measured points"), value: measuredPoints }] : []),
+            { key: "registered", label: t("benchmark.Registered"), value: <LocalTime value={item.created_at} /> },
           ];
           return (
             <tr key={item.public_id} className="explorer-row">
               <td className="explorer-cell explorer-cell-compare">
                 <span className="explorer-cell-label" aria-hidden="true">{t("benchmark.Compare")}</span>
+                <label className="explorer-compare-control">
                 <input
                   className="explorer-compare-input"
                   type="checkbox"
@@ -197,6 +204,7 @@ export function BenchmarkExplorerTable({
                   onChange={() => onToggleComparison(item)}
                   aria-label={t(selected ? "benchmark.Remove {model} on {hardware} from the comparison" : "benchmark.Add {model} on {hardware} to the comparison", identity)}
                 />
+                </label>
               </td>
               <th scope="row" className="explorer-cell explorer-cell-identity explorer-cell-model">
                 <span className="explorer-cell-label" aria-hidden="true">{t("benchmark.Model")}</span>
@@ -208,13 +216,13 @@ export function BenchmarkExplorerTable({
                   >
                     {summary.model_label}
                   </Link>
-                  <FactList className="explorer-model-facts" facts={modelFacts} />
+                  <FactList className="explorer-model-facts" facts={[quantizationFact]} />
                 </div>
               </th>
               <td className="explorer-cell explorer-cell-environment">
                 <span className="explorer-cell-label" aria-hidden="true">{t("benchmark.Environment")}</span>
                 <div className="explorer-cell-value">
-                  <FactList className="explorer-environment-facts" facts={envFacts} />
+                  <FactList className="explorer-environment-facts" facts={environmentSummary} />
                 </div>
               </td>
               <ExplorerCell label={t("benchmark.Prefill (tok/s)")} className="explorer-cell-numeric explorer-cell-prefill">
@@ -224,13 +232,17 @@ export function BenchmarkExplorerTable({
                 <MetricCell value={formatThroughput(pointMedian(shown, "tg_tps"))} spread={formatThroughputSpread(shown?.tg_tps)} />
               </ExplorerCell>
               <ExplorerCell label={t("benchmark.Context / workload")} className="explorer-cell-setup">
-                <FactList className="explorer-setup-facts" facts={setupFacts} />
-                <div className="explorer-fact explorer-registered-date">
-                  <span className="explorer-fact-label">{t("benchmark.Registered")}</span>
-                  <span className="explorer-fact-value"><LocalTime value={item.created_at} /></span>
-                </div>
-                {/* Keep screen-reader / test compatibility for compound strings */}
+                {/* Whole lines: the configured input lengths, then the workload they ran. */}
+                <span className="explorer-setup-line explorer-setup-context" aria-hidden="true">{contextFormatted}</span>
                 <span className="sr-only">{t("benchmark.Input context: {value}", { value: contextFormatted })}</span>
+                <span className="explorer-setup-line explorer-setup-workload">
+                  <span className="sr-only">{t("benchmark.Workload")} </span>{formatWorkloadName(summary.workload_label, t)}
+                </span>
+                <FactList className="explorer-setup-facts" facts={[readingFact]} />
+                <details className="explorer-row-details">
+                  <summary aria-label={t("benchmark.Setup and provenance for {model} on {hardware}", identity)}>{t("benchmark.Setup and provenance")}</summary>
+                  <FactList className="explorer-detail-facts" facts={detailFacts} />
+                </details>
                 <span className="sr-only">{t("benchmark.Measurement count: {value}", { value: String(summary.row_count) })}</span>
               </ExplorerCell>
             </tr>

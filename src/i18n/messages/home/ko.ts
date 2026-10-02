@@ -19,6 +19,7 @@ const messages = {
   "home.installCommandTitle": "AioLM 설치",
   "home.copyCommand": "복사",
   "home.copied": "복사됨!",
+  "home.copyFailed": "복사하지 못했습니다. 명령어를 직접 선택해 복사하세요.",
   "home.macosPlanned": "macOS 지원이 준비 중입니다. 출시 시 curl 설치 명령어가 제공될 예정입니다.",
   "home.linuxPlanned": "Linux 지원이 준비 중입니다. 출시 시 curl 설치 명령어가 제공될 예정입니다.",
   "home.workflow": "모델 선택부터 성능 측정까지",
@@ -32,12 +33,6 @@ const messages = {
   "home.closing": "수치와 함께 실행 환경도 살펴보세요",
   "home.closingDetail": "공개된 벤치마크에는 측정 방법, 워크로드, 하드웨어 정보가 포함되어 있어 실행 환경을 비교할 수 있습니다.",
   "home.browse": "벤치마크 둘러보기",
-  "home.models": "모델",
-  "home.runtimes": "런타임",
-  "home.chat": "채팅",
-  "home.benchmarks": "벤치마크",
-  "home.library": "GGUF 모델 라이브러리",
-  "home.libraryDetail": "로컬 모델 탐색 및 정리",
   "home.runtime": "런타임 관리",
   "home.runtimeDetail": "llama.cpp 백엔드 선택",
   "home.conversation": "로컬 대화",
@@ -45,6 +40,7 @@ const messages = {
   "home.performance": "성능 벤치마크",
   "home.performanceDetail": "실행 환경 측정 및 검토",
   "home.overview": "작업 공간 개요",
-  "home.caption": "AioLM 데스크톱 작업 공간은 GGUF 모델 라이브러리, llama.cpp 런타임 관리, 로컬 대화, 성능 벤치마크를 하나의 창에 모았습니다."
+  "home.screenshotAlt": "AioLM 데스크톱 앱의 모델 실행 화면. 공개 GGUF 예시 모델 네 개가 표시되어 있고, Qwen3-8B-Instruct가 llama.cpp 런타임에 로드되어 있습니다.",
+  "home.caption": "AioLM 데스크톱 앱의 모델 실행 화면: 로컬 GGUF 라이브러리, 로드된 모델, llama.cpp 런타임을 하나의 창에서 확인할 수 있습니다. 공개 예시 모델로 표시했습니다."
 } satisfies Record<keyof EnglishMessages, string>;
 export default messages;

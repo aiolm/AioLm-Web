@@ -1,0 +1,168 @@
+/* Palette treatment applies throughout the existing page structure. */
+body { background-image: var(--ui-canvas-gradient); }
+/* Multiline controls scale with enlarged text without overlapping their lines. */
+:root :is(input[type="text"], input[type="search"], input[type="password"], textarea, button, .button, .ui-option) { line-height: 1.45; }
+:root .explorer-compact .explorer-field-input { line-height: 1.45; }
+.themed-brand-mark { display: block; flex: none; background: var(--ui-brand-icon) center / contain no-repeat; }
+.site-header .site-brand { font-size: 18px; letter-spacing: -.025em; }
+.site-header .site-nav-link[aria-current="page"] { position: relative; background: transparent; color: var(--ui-ink); box-shadow: none; }
+.site-header .site-nav-link[aria-current="page"]::after { content: ''; position: absolute; height: 2px; inset-inline: 10px; inset-block-end: -4px; background: var(--ui-indicator-gradient); }
+.site-header .site-nav-link { white-space: nowrap; }
+.button-primary, .button.primary, button.primary, .explorer-compact .explorer-button-primary,
+.explorer-sidebar-actions > .explorer-button-primary {
+  border: 0; background: var(--ui-action-gradient); color: var(--ui-on-accent);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%), 0 1px 2px rgb(0 0 0 / 7%);
+}
+.button-primary:hover, .button.primary:hover, button.primary:hover, .explorer-compact .explorer-button-primary:hover,
+.explorer-sidebar-actions > .explorer-button-primary:hover { background: var(--ui-action-gradient); filter: brightness(.98); }
+.button-primary:active, .button.primary:active, button.primary:active, .explorer-compact .explorer-button-primary:active,
+.explorer-sidebar-actions > .explorer-button-primary:active { background: var(--ui-action-gradient); }
+.button.secondary, .home-secondary-button { background: var(--ui-action-secondary-gradient); color: var(--ui-action-secondary-ink); }
+/* Action surfaces are distinct from pale fields and static tags. */
+.button-outline, .home-secondary-button,
+.explorer-compact :is(.explorer-refresh, .explorer-comparison-clear, .explorer-page-previous, .explorer-page-next, .explorer-sidebar-toggle),
+.install-copy-button,
+.management-panel button:not(.primary):not(.danger) {
+  background: var(--ui-action-secondary-gradient);
+  color: var(--ui-action-secondary-ink);
+}
+:is(.button-outline, .home-secondary-button):hover,
+.explorer-compact :is(.explorer-refresh, .explorer-comparison-clear, .explorer-page-previous, .explorer-page-next, .explorer-sidebar-toggle):hover:not(:disabled),
+.install-copy-button:hover:not(:disabled),
+.management-panel button:not(.primary):not(.danger):hover:not(:disabled) {
+  background: var(--ui-action-secondary-gradient-hover);
+  color: var(--ui-action-secondary-ink-hover);
+  filter: none;
+}
+/* Text actions keep an explicit cue even where a filled surface would be noisy. */
+.explorer-compact :is(.explorer-sidebar-reset, .explorer-comparison-remove):not(:disabled) {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* Inactive actions use a quiet gradient distinct from the active action fill. */
+:root button:disabled,
+:root .management-panel button:disabled,
+:root .explorer-compact button:disabled,
+:root .ui-select .ui-select-trigger:disabled {
+  background: var(--ui-field-gradient);
+  color: var(--ui-muted);
+  opacity: 1;
+  filter: none;
+  box-shadow: none;
+  font-weight: 500;
+  cursor: not-allowed;
+}
+.explorer-compact .explorer-rail { background: var(--ui-rail-gradient); border-radius: 6px; }
+.explorer-sidebar-actions { background: transparent; }
+.explorer-compact .explorer-rail .explorer-validation { color: var(--ui-rail-error); }
+input[type="text"], input[type="search"], input[type="password"], textarea, select,
+.ui-select .ui-select-trigger, .explorer-compact .explorer-field-input { background: var(--ui-field-rest-gradient); }
+.ui-select .ui-select-trigger:hover:not(:disabled),
+.explorer-compact .explorer-field-input:hover { background: var(--ui-field-hover-gradient); }
+/* Explorer component styles load later. Editable comboboxes keep the shared
+   field fill without receiving the pencil used by plain text controls. */
+:root .explorer-compact .explorer-field-input[role="combobox"] {
+  background-image: var(--ui-field-rest-gradient);
+}
+:root .explorer-compact .explorer-field-input[role="combobox"]:is(:hover, :focus) {
+  background-image: var(--ui-field-hover-gradient);
+}
+.ui-menu .ui-option:hover, .ui-menu .ui-option.is-highlighted,
+.ui-menu .ui-option.is-committed, .ui-menu:not(.ui-menu--inline) .ui-option[aria-selected="true"] {
+  background: var(--ui-soft-gradient); color: var(--ui-soft-ink);
+}
+.ui-menu .ui-option-check { color: var(--ui-soft-ink); }
+/* Native checkmarks retain browser semantics; the accent contrasts with the canvas. */
+input:is([type="checkbox"], [type="radio"]) { accent-color: var(--ui-accent); }
+input::placeholder, textarea::placeholder { color: var(--ui-muted); opacity: 1; }
+/* A persistent edit glyph identifies otherwise empty fields without an idle frame. */
+input:is([type="text"], [type="search"], [type="password"]):not([role="combobox"]),
+.explorer-compact .explorer-field-input:not([role="combobox"]),
+textarea {
+  padding-inline-end: 32px;
+  background-image: var(--ui-edit-icon), var(--ui-field-rest-gradient);
+  background-repeat: no-repeat;
+  background-position: right 10px center, center;
+  background-size: 14px 14px, auto;
+}
+/* Hover/focus fills use background shorthands upstream. Restore every layer
+   property together so the edit glyph cannot revert to auto sizing and tiling. */
+input:is([type="text"], [type="search"], [type="password"]):not([role="combobox"]):is(:hover, :focus),
+.explorer-compact .explorer-field-input:not([role="combobox"]):is(:hover, :focus),
+textarea:is(:hover, :focus) {
+  background-image: var(--ui-edit-icon), var(--ui-field-hover-gradient);
+  background-repeat: no-repeat;
+  background-position: right 10px center, center;
+  background-size: 14px 14px, auto;
+}
+textarea, textarea:is(:hover, :focus) { background-position: right 10px top 10px, center; }
+.benchmark-detail :is(.detail-chip-on, .detail-point-select[aria-pressed="true"]) {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+.explorer-compact .explorer-model-facts .explorer-fact-value { background: var(--ui-secondary-gradient); color: var(--ui-secondary-ink); }
+.explorer-compact .explorer-active-filter { background: var(--ui-soft-gradient); color: var(--ui-soft-ink); }
+.benchmark-detail .detail-chip-on { border: 0; background: var(--ui-selected-gradient); color: var(--ui-selected-ink); }
+.benchmark-detail .detail-environment .detail-hardware-grid { background: var(--ui-device-gradient); }
+.benchmark-detail .detail-weight-badge { background: var(--ui-secondary-gradient); color: var(--ui-secondary-ink); }
+.home-hero { background: transparent; }
+/* Filled tags and interactive states use the same treatments as their siblings.
+   Icons, transparent text actions and reading structure keep their own contrast. */
+@media (forced-colors: none) {
+  .status, .explorer-status, .explorer-filter-count,
+  .empty-state-art, .explorer-guide::before { background-image: var(--ui-soft-gradient); }
+  .status.ok, .explorer-status-complete { background-image: var(--tone-success-gradient); }
+  .status.bad, .explorer-status-failed { background-image: var(--tone-error-gradient); }
+  .explorer-status-partial, .explorer-comparison-caveat { background-image: var(--tone-warning-gradient); }
+  .explorer-compact .explorer-compare-limit { background-image: var(--tone-warning-gradient); }
+  :root .install-copy-button.copied:not(:disabled) { background: var(--tone-success-gradient); color: var(--tone-success-ink); }
+  .button.secondary:hover { background: var(--ui-action-secondary-gradient-hover); color: var(--ui-action-secondary-ink-hover); }
+  :root .explorer-compact .explorer-button:not(.explorer-button-primary, .explorer-button-quiet):not(:disabled) { background: var(--ui-action-secondary-gradient); color: var(--ui-action-secondary-ink); }
+  :root .explorer-compact .explorer-button:not(.explorer-button-primary, .explorer-button-quiet):hover:not(:disabled),
+  :root .alert .alert-action:hover:not(:disabled) { background: var(--ui-action-secondary-gradient-hover); color: var(--ui-action-secondary-ink-hover); filter: none; }
+  .site-header .site-nav-link:hover, .site-header-github:hover,
+  .explorer-basis-help > summary:hover, .ui-select .explorer-combobox-toggle:hover,
+  .benchmark-detail .detail-point-row-on { background-image: var(--ui-soft-gradient); }
+  select:hover { background: var(--ui-field-hover-gradient); }
+  pre, .install-cmd-code, .detail-command { background-image: var(--ui-mono-gradient); }
+}
+@media (max-width: 900px) {
+  .explorer-compact .explorer-rail { background: transparent; }
+  .explorer-compact .explorer-sidebar-content { background: var(--ui-rail-gradient); }
+}
+@media (forced-colors: active) {
+  :root :is(button, .button), :root button.primary, :root .button-primary {
+    background: ButtonFace;
+    color: ButtonText;
+    outline: 1px solid ButtonText;
+    box-shadow: none;
+  }
+  :root :is(button, .button):focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+  :root button:disabled {
+    color: GrayText;
+    outline-color: GrayText;
+  }
+  input[type="text"], input[type="search"], input[type="password"], textarea, select, .ui-select-trigger { border: 1px solid CanvasText; }
+  .site-nav-link[aria-current="page"], .benchmark-detail .detail-chip-on { outline: 1px solid Highlight; }
+  :root input:is([type="text"], [type="search"], [type="password"]):not([role="combobox"]),
+  :root .explorer-compact .explorer-field-input:not([role="combobox"]),
+  :root textarea,
+  :root .explorer-compact .explorer-field-input[role="combobox"],
+  :root .explorer-compact .explorer-field-input[role="combobox"]:is(:hover, :focus) { background-image: none; }
+}
+
+/* Component CSS loads later; keep the approved rail tint on desktop,
+   sticky actions and the open mobile panel without painting a closed panel. */
+@media (forced-colors: none) and (min-width: 901px) {
+  :root .explorer-compact .explorer-rail { background-image: var(--ui-rail-gradient); }
+}
+@media (forced-colors: none) {
+  :root .explorer-compact .explorer-sidebar-actions { background-image: var(--ui-rail-gradient); }
+}
+@media (forced-colors: none) and (max-width: 900px) {
+  :root .explorer-compact .explorer-sidebar-content { background-image: var(--ui-rail-gradient); }
+}

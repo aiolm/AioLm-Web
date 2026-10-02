@@ -4,7 +4,7 @@
   "description": "AioLM product website and anonymous benchmark explorer (Next.js + PostgreSQL + Turnstile). No accounts in v1.",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --hostname localhost --port 3000",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -16,7 +16,8 @@
     "prune": "tsx scripts/prune.ts",
     "moderate": "tsx scripts/moderate.ts",
     "contracts:check": "tsx scripts/contracts-check.ts",
-    "config:check": "tsx scripts/config-check.ts"
+    "config:check": "tsx scripts/config-check.ts",
+    "theme:generate": "node scripts/generate-theme-palettes.mjs"
   },
   "keywords": [],
   "type": "module",

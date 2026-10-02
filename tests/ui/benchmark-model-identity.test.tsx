@@ -237,6 +237,40 @@ describe("the result list", () => {
     expect(html).not.toContain("explorer-status");
   });
 
+  it("keeps each row's own context and workload in view and every other fact in one disclosure", () => {
+    const setup = {
+      os: "synthetic-os", arch: null, cpu: "synthetic-cpu", cores: 8, vendors: [], gpus: ["synthetic-gpu"], vram_mb: 4096,
+      runtime: "synthetic-runtime", runtime_version: "1.2", backend: "synthetic-backend", mode: null,
+      context_size: null, parallel: null, threads: null, gpu_layers: null,
+      flash_attention: null, cache_type_k: null, cache_type_v: null, split_mode: null,
+    };
+    const point = { prompt_tokens: 512, concurrency: 1, generation_length: 128, samples: 3, pp_tps: { median: 100, min: 90, max: 110 }, tg_tps: { median: 10, min: 9, max: 11 }, ttft_ms: null, e2e_ms: { median: 2000, min: 1900, max: 2100 } };
+    const rows = [
+      item("a", { model_info: info(), setup, prompt_lengths: [512, 4096], points: [point] }),
+      item("b", { model_info: info(), setup, workload_label: "code_python", prompt_lengths: [8192], points: [point] }),
+    ];
+    const html = render(<BenchmarkExplorerTable items={rows} compare={[]} onToggleComparison={() => {}} />);
+    const [first, second] = html.split('<tr class="explorer-row">').slice(1);
+    // Nothing is hoisted into a shared caption: each row states what it ran.
+    expect(first).toContain(">512 · 4K<");
+    expect(first).toContain("synthetic-corpus");
+    expect(second).toContain(">8K<");
+    expect(second).toContain("Python code (code_python)");
+    for (const row of [first, second]) {
+      expect(row.match(/<details/g)).toHaveLength(1);
+      const details = row.slice(row.indexOf("<details"), row.indexOf("</details>"));
+      expect(details).toContain('aria-label="Setup and provenance for synthetic-model on synthetic-gpu"');
+      for (const fact of ["Publisher", "CPU", "OS", "Runtime", "VRAM", "Method", "Duration", "Measured points", "Registered"]) {
+        expect(details).toContain('<span class="explorer-fact-label">' + fact + "</span>");
+      }
+      expect(details).toContain("synthetic-org");
+      expect(details).toContain("2.00 s (1.90–2.10)");
+      // The device, backend, quantization and point being read stay outside the disclosure.
+      const visible = row.replace(details, "");
+      for (const value of [">synthetic-gpu<", ">synthetic-backend<", ">Q4_K_M<", "512 / c1 · n=3", ">100.0<", ">90.0–110.0<"]) expect(visible).toContain(value);
+    }
+  });
+
   it("keeps supporting lists inside a block parent so the markup stays valid", () => {
     const html = render(<BenchmarkExplorerTable items={[item("a", { model_info: info() })]} compare={[]} onToggleComparison={() => {}} />);
     expect(html).toContain('<div class="explorer-cell-value">');

@@ -31,16 +31,32 @@ describe('localized static homepage', () => {
     const params = Promise.resolve({ locale });
     const [messages, site, page] = await Promise.all([getMessages(locale, 'home'), getMessages(locale, 'site'), Home({ params })]);
     const html = renderToStaticMarkup(await Layout({ params, children: page }));
-    expect(html).toContain('<html lang="' + locale + '">');
+    expect(html).toContain('<html lang="' + locale + '" data-palette="13">');
     expect(html).toContain(messages['home.heroFirst']);
     expect(html).toContain(messages['home.windows']);
     expect(html).toContain(messages['home.choose']);
-    expect(html).toContain(messages['home.library']);
+    expect(html).toContain(messages['home.caption']);
+    expect(html).toContain('alt="' + messages['home.screenshotAlt'] + '"');
+    expect(html).toContain('https://github.com/aiolm/AioLM/releases/latest/download/install.ps1 | iex');
     expect(html).toContain(site['site.skip']);
     expect(html).toContain('href="/' + locale + '/benchmarks"');
     expect(html).not.toMatch(/>(?:home|site)\.[a-zA-Z]+</);
     expect(await homeMetadata({ params })).toMatchObject({ alternates: { canonical: '/' + locale, languages: { en: '/en', ko: '/ko', ja: '/ja', zh: '/zh' } } });
     expect(await layoutMetadata({ params })).toMatchObject({ title: { default: site['site.title'] }, description: site['site.description'] });
+  });
+  it.each(locales)('shows the %s visitor the real app screenshot that matches their color scheme', async locale => {
+    const html = renderToStaticMarkup(await Home({ params: Promise.resolve({ locale }) }));
+    const picture = html.match(/<picture>.*?<\/picture>/)?.[0] ?? '';
+    expect(picture).toMatch(/<source media="\(prefers-color-scheme: dark\)" srcSet="[^"]*%2Fscreenshots%2Fproduct-models-en-dark\.png/);
+    expect(picture).toMatch(/<img [^>]*src="[^"]*%2Fscreenshots%2Fproduct-models-en-light\.png/);
+  });
+  it.each(locales)('names each %s install platform once instead of repeating it in a badge', async locale => {
+    const html = renderToStaticMarkup(await Home({ params: Promise.resolve({ locale }) }));
+    const tabs = [...html.matchAll(/<button[^>]*role="tab"[^>]*>(.*?)<\/button>/g)].map(match => match[1].replace(/<[^>]+>/g, ''));
+    expect(tabs).toHaveLength(3);
+    for (const [tab, platform] of tabs.map((tab, index) => [tab, ['Windows', 'macOS', 'Linux'][index]])) {
+      expect(tab.split(platform)).toHaveLength(2);
+    }
   });
   it.each(locales)('says in %s what the product name is short for, in prose and in structured data', async locale => {
     const params = Promise.resolve({ locale });

@@ -174,7 +174,7 @@ export function TurnstileWidget({
   return (
     <div>
       <div ref={ref} />
-      {error ? <p className="error" role="alert">{t(error)}</p> : null}
+      {error ? <p className="hint error" role="alert">{t(error)}</p> : null}
     </div>
   );
 }

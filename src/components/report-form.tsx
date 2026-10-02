@@ -1,6 +1,7 @@
 "use client";
 
 import "./management-usability.css";
+import "./ui-controls.css";
 
 import { useI18n } from "@/i18n/client";
 import { intlLocales } from "@/i18n/config";
@@ -34,6 +35,9 @@ export function ReportForm({ publicId }: { publicId: string }): React.JSX.Elemen
   const mountedRef = useRef(true);
   const sendingRef = useRef(false);
   const completedRef = useRef(false);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const doneRef = useRef<HTMLDivElement | null>(null);
+  const restoreFocusRef = useRef(false);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -41,6 +45,16 @@ export function ReportForm({ publicId }: { publicId: string }): React.JSX.Elemen
       mountedRef.current = false;
     };
   }, []);
+
+  // Disabling the focused button drops focus to the page while sending. Give
+  // it back afterwards, or move it to the confirmation that replaces the form.
+  useEffect(() => {
+    if (state === "sending" || !restoreFocusRef.current) return;
+    restoreFocusRef.current = false;
+    const active = document.activeElement;
+    if (active && active !== document.body && active !== buttonRef.current) return;
+    (state === "done" ? doneRef.current : buttonRef.current)?.focus();
+  }, [state]);
 
   const handleVerify = useCallback((value: string): void => {
     if (!mountedRef.current || completedRef.current || sendingRef.current) return;
@@ -72,6 +86,7 @@ export function ReportForm({ publicId }: { publicId: string }): React.JSX.Elemen
       return;
     }
     sendingRef.current = true;
+    restoreFocusRef.current = typeof document !== "undefined" && document.activeElement === buttonRef.current;
     setState("sending");
     setMessage("");
     try {
@@ -109,7 +124,7 @@ export function ReportForm({ publicId }: { publicId: string }): React.JSX.Elemen
     }
   };
 
-  if (state === "done") return <div className="alert info" role="status"><p>{t(message)}</p></div>;
+  if (state === "done") return <div ref={doneRef} tabIndex={-1} className="alert success" role="status"><p>{t(message)}</p></div>;
 
   return (
     <details className="card report-disclosure" onToggle={(event) => {
@@ -131,7 +146,7 @@ export function ReportForm({ publicId }: { publicId: string }): React.JSX.Elemen
           <span id="report-hint" className="hint">{t("report.hint")}</span>
         </div>
         {expanded ? <TurnstileWidget key={widgetKey} action="benchmark_report" onVerify={handleVerify} onExpire={handleExpire} /> : null}
-        <p><button type="submit" disabled={state === "sending"}>{state === "sending" ? t("report.sending") : t("report.send")}</button></p>
+        <p><button ref={buttonRef} type="submit" data-action-glyph="send" disabled={state === "sending"}>{state === "sending" ? t("report.sending") : t("report.send")}</button></p>
         {state === "error" && message ? <p id="report-error" className="alert error" role="alert">{t(message)}</p> : null}
       </form>
     </details>

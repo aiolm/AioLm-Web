@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
+import "./ui-controls.css";
 
 interface Option { value: string; count: number }
 interface Props {
@@ -37,10 +38,10 @@ export function EditableCombobox({ name, label, value, placeholder, hint, option
   }, [active, open]);
   const choose = (option: Option) => { onChange(option.value); setOpen(false); setActive(-1); input.current?.focus(); };
   return <div className="explorer-field explorer-combobox" onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) { setOpen(false); setActive(-1); } }}>
-    <label className="explorer-field-label" htmlFor={id}>{label}</label>
+    <label id={`${id}-label`} className="explorer-field-label" htmlFor={id}>{label}</label>
     <div className="explorer-combobox-control">
     <input ref={input} id={id} name={name} className="explorer-field-input" role="combobox" type="text" autoComplete="off"
-      aria-autocomplete="list" aria-expanded={open} aria-controls={`${id}-list`} aria-activedescendant={open && options[active] ? `${id}-${active}` : undefined}
+      aria-autocomplete="list" aria-expanded={open} aria-controls={open ? `${id}-list` : undefined} aria-activedescendant={open && options[active] ? `${id}-${active}` : undefined}
       maxLength={120} placeholder={placeholder} value={value} aria-describedby={hint ? `${id}-hint` : undefined}
       onFocus={() => setOpen(true)} onClick={() => setOpen(true)}
       onCompositionStart={() => setComposing(true)} onCompositionEnd={() => setComposing(false)}
@@ -50,22 +51,25 @@ export function EditableCombobox({ name, label, value, placeholder, hint, option
         if (event.key === "ArrowDown" || event.key === "ArrowUp") {
           event.preventDefault(); setOpen(true);
           setActive(index => options.length ? (index < 0 ? (event.key === "ArrowDown" ? 0 : options.length - 1) : (index + (event.key === "ArrowDown" ? 1 : -1) + options.length) % options.length) : -1);
-        } else if (event.key === "Escape") { event.preventDefault(); setOpen(false); setActive(-1); }
+        } else if (event.key === "Escape" && open) { event.preventDefault(); event.stopPropagation(); setOpen(false); setActive(-1); }
         else if (event.key === "Enter" && open && options[active]) { event.preventDefault(); choose(options[active]); }
         else if (event.key === "Tab") { setOpen(false); setActive(-1); }
       }} />
-    <button type="button" className="explorer-combobox-toggle" aria-label={messages.toggle} aria-expanded={open} aria-controls={`${id}-list`}
+    <button type="button" className="explorer-combobox-toggle" aria-label={messages.toggle} aria-expanded={open} aria-controls={open ? `${id}-list` : undefined}
       onMouseDown={event => event.preventDefault()}
       onClick={() => { const next = !open; input.current?.focus(); setOpen(next); setActive(-1); }}>
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      <svg className="ui-select-chevron" width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m6 8 4 4 4-4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" /></svg>
     </button>
     </div>
     {hint ? <p id={`${id}-hint`} className="explorer-field-hint">{hint}</p> : null}
-    {open ? <div className="explorer-combobox-popup">
-      <ul ref={list} id={`${id}-list`} role="listbox" aria-label={label} className="explorer-options">
+    {open ? <div className="explorer-combobox-popup ui-menu ui-menu--inline">
+      <ul ref={list} id={`${id}-list`} role="listbox" aria-labelledby={`${id}-label`} className="explorer-options">
         {options.map((option, index) => <li id={`${id}-${index}`} key={option.value} role="option" aria-selected={active === index}
+          className={`ui-option${active === index ? " is-highlighted" : ""}${option.value === value ? " is-committed" : ""}`}
           onMouseDown={event => event.preventDefault()} onClick={() => choose(option)}>
-          <span>{option.value}</span><span className="explorer-option-count">{option.count}</span>
+          <span className="ui-option-label">{option.value}</span>
+          {option.value === value ? <svg className="ui-option-check" width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" /></svg> : null}
+          <span className="explorer-option-count">{option.count}</span>
         </li>)}
       </ul>
       <p className="explorer-option-status" role="status">{!current ? messages.loading : current.error ? messages.error : !options.length ? messages.empty : current.more ? messages.more : null}</p>

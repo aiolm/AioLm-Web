@@ -1,5 +1,6 @@
 node_modules/
 .next/
+.next-dev/
 out/
 dist/
 *.tsbuildinfo
@@ -12,3 +13,4 @@ tmp/
 .env*
 # Synthetic placeholders only, and the documented source of the variable list.
 !.env.example
+.playwright-mcp/

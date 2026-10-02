@@ -29,6 +29,9 @@ export function VerifyPanel({ sessionId }: { sessionId: string }): React.JSX.Ele
   const mountedRef = useRef(true);
   const sendingRef = useRef(false);
   const completedRef = useRef(false);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const messageRef = useRef<HTMLParagraphElement | null>(null);
+  const restoreFocusRef = useRef(false);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -36,6 +39,16 @@ export function VerifyPanel({ sessionId }: { sessionId: string }): React.JSX.Ele
       mountedRef.current = false;
     };
   }, []);
+
+  // Disabling the focused button drops focus to the page while sending. Give
+  // it back afterwards, or move it to the completion message once it stays disabled.
+  useEffect(() => {
+    if (state === "sending" || !restoreFocusRef.current) return;
+    restoreFocusRef.current = false;
+    const active = document.activeElement;
+    if (active && active !== document.body && active !== buttonRef.current) return;
+    (state === "done" ? messageRef.current : buttonRef.current)?.focus();
+  }, [state]);
 
   const handleVerify = useCallback((value: string): void => {
     if (!mountedRef.current || completedRef.current || sendingRef.current) return;
@@ -61,6 +74,7 @@ export function VerifyPanel({ sessionId }: { sessionId: string }): React.JSX.Ele
       return;
     }
     sendingRef.current = true;
+    restoreFocusRef.current = typeof document !== "undefined" && document.activeElement === buttonRef.current;
     setState("sending");
     setMessage("");
     try {
@@ -99,7 +113,7 @@ export function VerifyPanel({ sessionId }: { sessionId: string }): React.JSX.Ele
   };
 
   return (
-    <div className="grid">
+    <div className="grid verify-page">
       <section className="card" aria-labelledby="verify-title" aria-busy={state === "sending"}>
         <h1 id="verify-title">{t("verify.title")}</h1>
         <p className="muted">
@@ -107,11 +121,11 @@ export function VerifyPanel({ sessionId }: { sessionId: string }): React.JSX.Ele
         </p>
         {state !== "done" ? <TurnstileWidget key={widgetKey} action="benchmark_publish" onVerify={handleVerify} onExpire={handleExpire} /> : null}
         <p>
-          <button type="button" className="primary" disabled={state === "sending" || state === "done"} onClick={() => void submit()}>
+          <button ref={buttonRef} type="button" className="primary" disabled={state === "sending" || state === "done"} onClick={() => void submit()}>
             {t(state === "done" ? "verify.completed" : state === "sending" ? "verify.sending" : "verify.continue")}
           </button>
         </p>
-        {message ? <p className={`alert ${state === "error" ? "error" : "info"}`} role={state === "error" ? "alert" : "status"}>{t(message)}</p> : null}
+        {message ? <p ref={messageRef} tabIndex={-1} className={`alert ${state === "error" ? "error" : state === "done" ? "success" : "info"}`} role={state === "error" ? "alert" : "status"}>{t(message)}</p> : null}
       </section>
     </div>
   );

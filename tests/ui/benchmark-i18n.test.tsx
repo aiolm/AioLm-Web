@@ -87,7 +87,9 @@ describe.each(locales)("benchmark localization: %s", locale => {
     expect(html).toContain('aria-autocomplete="list"');
     expect(html).toContain('aria-expanded="false"');
     expect(html).toContain(escape(t("benchmark.Max input length (tokens)")));
-    expect(html).toContain(escape(t("benchmark.Input length: high to low")));
+    // The sort menu renders its options only while open; closed, it shows the committed order and submits it with the filters.
+    expect(html).toContain('<span class="ui-select-value">' + escape(t("benchmark.Newest first")) + '</span>');
+    expect(html).toContain('type="hidden" form="explorer-filter-form" name="sort" value="newest"');
     expect(html).toContain(escape(t("benchmark.Matches the largest input length a result was configured with, not the total context the server allocated.")));
     expect(html).not.toContain(escape(t("benchmark.GPU name or vendor")));
     expect(html).toContain('type="hidden" name="hardware" value="synthetic-device"');
@@ -115,6 +117,10 @@ describe.each(locales)("benchmark localization: %s", locale => {
     expect(html).toContain("128.8");
     expect(html).toContain(escape(t("benchmark.Prefill (tok/s)")));
     expect(html).toContain(escape(t("benchmark.Decode (tok/s)")));
+    // Column headings speak the page language once; English is not repeated beneath them.
+    const head = html.slice(html.indexOf("<thead"), html.indexOf("</thead>"));
+    for (const key of ["Compare", "Model", "Environment", "Prefill", "Decode", "Context / workload"]) expect(head).toContain(escape(t("benchmark." + key)));
+    if (locale !== "en") expect(head).not.toMatch(/Compare|Model|Environment|Prefill|Decode|Workload/);
     expect(html).toContain(escape(t("benchmark.Input context: {value}", { value: "512 · 4K · 8K" })));
     expect(html).not.toContain("benchmark.");
   });
@@ -142,9 +148,12 @@ describe.each(locales)("benchmark localization: %s", locale => {
     expect(html).toContain('/' + locale + '/benchmarks?model=synthetic-model&amp;hardware=synthetic-device&amp;cursor=abc_123');
     expect(html).toContain(escape(t("benchmark.Input context")));
     expect(html).toContain(escape(t("benchmark.Prefill")));
-    expect(html).toContain("Prefill");
     expect(html).toContain("detail-hardware-grid");
-    expect(html).toContain("System RAM");
+    expect(html).toContain(escape(t("benchmark.System memory")));
+    // Former English sub-labels are gone in every locale, including their units' names.
+    expect(html).not.toContain("System RAM");
+    expect(html).not.toContain("Selected GPU");
+    if (locale !== "en") expect(html).not.toMatch(/>(?:Prefill|Decode|Duration|Concurrency)</);
     expect(html).toContain(escape(t("benchmark.Test setup (as reported)")));
     // Installed but unselected devices are never shown, so the label no longer
     // exists in any catalog; the literal is what a regression would reintroduce.

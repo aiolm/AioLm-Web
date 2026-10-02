@@ -10,6 +10,7 @@ import { BenchmarkBasisPoint } from "./benchmark-basis-point";
 import { BenchmarkExplorerComparison } from "./benchmark-explorer-comparison";
 import { BenchmarkExplorerFilters } from "./benchmark-explorer-filters";
 import { BenchmarkExplorerTable } from "./benchmark-explorer-table";
+import { UiSelect } from "./ui-select";
 import {
   EXPLORER_COMPARE_LIMIT,
   EXPLORER_HISTORY_LIMIT,
@@ -129,7 +130,7 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
       if (sameExplorerFilters(normalizeExplorerFilters(state.draft), state.applied)) reload();
       dispatch({ type: "apply" });
       // Keep desktop sections in place; free the result area after a mobile apply.
-      if (window.matchMedia("(max-width: 1100px)").matches && sidebarOpen) {
+      if (window.matchMedia("(max-width: 900px)").matches && sidebarOpen) {
         setSidebarOpen(false);
         requestAnimationFrame(() => {
           const heading = document.getElementById("explorer-results-title");
@@ -157,6 +158,7 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
 
   return (
     <div className="explorer explorer-compact">
+      {introduction}
       <div className="explorer-layout">
         <aside className="explorer-rail" aria-label={t("benchmark.Filters")}>
           <button type="button" className="explorer-button explorer-sidebar-toggle"
@@ -186,7 +188,6 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
         </aside>
 
         <div className="explorer-main-column">
-          {introduction}
           {active.length > 0 ? (
             <div className="explorer-active-filters">
               <h3 className="explorer-active-filters-title">{t("benchmark.Active filters")}</h3>
@@ -210,6 +211,7 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
             <div className="explorer-main-heading">
               <h2 id="explorer-results-title" tabIndex={-1} className="explorer-main-title">{t("benchmark.Published results")}</h2>
               {data ? <p className="explorer-result-count" role="status">{t("benchmark.{count} results on this page", { count: items.length })}</p> : null}
+              <button type="button" className="explorer-button explorer-refresh" data-action-glyph="refresh" onClick={reload}>{t("benchmark.Refresh")}</button>
               <p className="explorer-main-subtitle">
                 {t("benchmark.Select up to {limit} results to compare their setup.", { limit: EXPLORER_COMPARE_LIMIT })}
               </p>
@@ -222,13 +224,12 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
                 onSelect={(value) => dispatch({ type: "basisPoint", value })}
                 onOnlyChange={(value) => dispatch({ type: "pointOnly", value })}
               />
-              <div className="explorer-field explorer-sort"><label className="explorer-field-label" htmlFor="explorer-sort">{t("benchmark.Sort")}</label>
-                <select id="explorer-sort" form="explorer-filter-form" name="sort" className="explorer-field-input" value={state.applied.sort || "newest"} onChange={event => dispatch({ type: "sort", value: event.target.value })}>
-                  {/* Ranking measured speed needs a point to rank at, so those orders wait for one. */}
-                  {Object.entries(EXPLORER_SORTS).map(([value, label]) => <option value={value} key={value} disabled={isPointSort(value) && basis === null}>{t(`benchmark.${label}`)}</option>)}
-                </select>
+              <div className="explorer-field explorer-sort"><label className="explorer-field-label" id="explorer-sort-label" htmlFor="explorer-sort">{t("benchmark.Sort")}</label>
+                {/* Ranking measured speed needs a point to rank at, so those orders wait for one. */}
+                <UiSelect id="explorer-sort" form="explorer-filter-form" name="sort" labelledBy="explorer-sort-label" value={state.applied.sort || "newest"}
+                  options={Object.entries(EXPLORER_SORTS).map(([value, label]) => ({ value, label: t(`benchmark.${label}`), disabled: isPointSort(value) && basis === null }))}
+                  onChange={value => dispatch({ type: "sort", value })} />
               </div>
-              <button type="button" className="explorer-button explorer-refresh" onClick={reload}>{t("benchmark.Refresh")}</button>
             </div>
           </div>
 
@@ -244,7 +245,7 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
               }
             />
           ) : null}
-          {data && items.length === 0 && filtered ? <button type="button" className="explorer-button" onClick={() => dispatch({ type: "reset" })}>{t("benchmark.Clear filters")}</button> : null}
+          {data && items.length === 0 && filtered ? <button type="button" className="explorer-button" data-action-glyph="clear" onClick={() => dispatch({ type: "reset" })}>{t("benchmark.Clear filters")}</button> : null}
           {data && items.length > 0 ? (
             <div className="explorer-results">
               <BenchmarkExplorerTable
@@ -274,12 +275,14 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
               <button
                 type="button"
                 className="explorer-button explorer-page-previous"
+                data-action-glyph="previous"
                 onClick={() => dispatch({ type: state.history.length ? "previousPage" : "firstPage" })}
                 disabled={state.history.length === 0 && state.cursor === null}
               >{t(state.history.length ? "benchmark.Previous page" : "benchmark.First page")}</button>
               <button
                 type="button"
                 className="explorer-button explorer-page-next"
+                data-action-glyph="next"
                 onClick={goNext}
                 disabled={!data?.next_cursor}
               >{t("benchmark.Next page")}</button>
@@ -287,14 +290,14 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
           ) : null}
         </section>
 
-        <section className="explorer-guide" aria-labelledby="explorer-guide-title">
-        <h2 id="explorer-guide-title" className="explorer-guide-title">{t("benchmark.Compare like for like")}</h2>
+        <details className="explorer-guide">
+        <summary><span id="explorer-guide-title" className="explorer-guide-title">{t("benchmark.Compare like for like")}</span></summary>
         <p className="explorer-guide-text">{t("benchmark.Match the model fingerprint, hardware, workload and measurement method before reading anything into a difference. Results published with a different method or workload measured different work.")}</p>
         <p className="explorer-guide-text">{t("benchmark.Every speed here is read at one operating point: one input length at one concurrency. Decode (tok/s) is the generation rate, so higher is faster, and Duration (s) is the end-to-end time of one measurement, so lower is faster. The two answer different questions and do not convert into each other.")}</p>
         <p className="explorer-guide-text">{t("benchmark.Prefill (tok/s) is how fast a result consumed its prompt at that point. Each value is the median of that point's repetitions, with the range they covered beside it. Speeds are never averaged across different input lengths or concurrencies, because such an average describes no configuration that ran.")}</p>
         <p className="explorer-guide-text">{t("benchmark.Choose a basis point to read every result at the same input length and concurrency; that is also what the two speed orders rank at. Input context lists the input lengths a result was configured with, and the input length filter and its sorts read the largest of them. The total context the server allocated is a different number and appears on the result page.")}</p>
         <p className="explorer-guide-text">{t("benchmark.A missing measurement is shown as an em dash (—), never as a zero. Sorting does not make different setups directly comparable.")}</p>
-        </section>
+        </details>
         </div>
       </div>
     </div>

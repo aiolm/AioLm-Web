@@ -81,6 +81,14 @@ it("returns a shared cursor view to the first page without clearing filters or d
 });
 
 describe("stable discovery layout", () => {
+  it("only references mounted suggestions and connects range explanations to both bounds", () => {
+    const html = renderFilters();
+    expect(html).not.toContain("aria-controls=");
+    expect(html.match(/aria-describedby="hint-context"/g)).toHaveLength(2);
+    expect(html).toContain('id="hint-context"');
+    const invalid = renderFilters("?context_min=100&context_max=50");
+    expect(invalid.match(/aria-describedby="hint-context error-context"/g)).toHaveLength(2);
+  });
   it("names the input length range as the largest configured input, not the allocated context", () => {
     const html = renderFilters();
     const hintKey = `benchmark.${EXPLORER_RANGE_HINTS.context}`;

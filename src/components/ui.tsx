@@ -56,9 +56,12 @@ export function Loading({ label }: { label?: string }): React.JSX.Element {
 export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }): React.JSX.Element {
   const { t } = useI18n();
   return (
-    <div className="alert error" role="alert">
+    <div className="alert error alert-retry" role="alert">
       <p><strong>{t("common.errorTitle")}</strong> {message}</p>
-      {onRetry ? <button type="button" onClick={onRetry}>{t("common.retry")}</button> : null}
+      {onRetry ? <button type="button" className="alert-action" onClick={onRetry}>
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="M16 8a6 6 0 1 0 .1 4M16 3.5V8h-4.5" /></svg>
+        {t("common.retry")}
+      </button> : null}
     </div>
   );
 }

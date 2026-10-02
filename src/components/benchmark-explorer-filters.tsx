@@ -2,6 +2,7 @@
 import { useState, type ReactNode } from "react";
 import { useI18n } from "@/i18n/client";
 import { EditableCombobox } from "./editable-combobox";
+import "./ui-controls.css";
 import { EXPLORER_BASIS_KEYS, EXPLORER_FILTER_LABELS, EXPLORER_FILTER_PLACEHOLDERS, EXPLORER_RANGE_HINTS, EXPLORER_RANGE_LABELS, buildExplorerOptionsPath, invalidExplorerRanges, type ExplorerFilters, type ExplorerFilterKey, type EXPLORER_TEXT_KEYS, type EXPLORER_RANGES } from "./benchmark-explorer-state";
 type TextKey = typeof EXPLORER_TEXT_KEYS[number];
 type Range = typeof EXPLORER_RANGES[number];
@@ -48,15 +49,16 @@ export function BenchmarkExplorerFilters({ draft, onChange, actions }: { draft: 
     <div className="explorer-range-inputs">{(["min", "max"] as const).map(bound => {
       const key = `${range}_${bound}` as const;
       const boundLabel = t(bound === "min" ? "benchmark.Minimum" : "benchmark.Maximum");
+      const description = [range in EXPLORER_RANGE_HINTS ? `hint-${range}` : "", invalid.includes(range) ? `error-${range}` : ""].filter(Boolean).join(" ") || undefined;
       return <div className="explorer-field" key={key}>
         <label className="sr-only" htmlFor={`filter-${key}`}>{boundLabel}</label>
         <input id={`filter-${key}`} name={key} className="explorer-field-input" type="text"
           placeholder={boundLabel} inputMode={range === "gpu_layers" ? "text" : "numeric"} value={draft[key]}
-          aria-invalid={invalid.includes(range)} aria-describedby={invalid.includes(range) ? `error-${range}` : undefined}
+          aria-invalid={invalid.includes(range)} aria-describedby={description}
           onChange={event => onChange(key, event.target.value)} />
       </div>;
     })}</div>
-    {range in EXPLORER_RANGE_HINTS ? <p className="explorer-range-hint">{t(`benchmark.${EXPLORER_RANGE_HINTS[range as keyof typeof EXPLORER_RANGE_HINTS]}`)}</p> : null}
+    {range in EXPLORER_RANGE_HINTS ? <p id={`hint-${range}`} className="explorer-range-hint">{t(`benchmark.${EXPLORER_RANGE_HINTS[range as keyof typeof EXPLORER_RANGE_HINTS]}`)}</p> : null}
     {invalid.includes(range) ? <p id={`error-${range}`} className="explorer-validation" role="alert">{t("benchmark.Use whole numbers with minimum ≤ maximum.")}</p> : null}
   </fieldset>;
   return <>

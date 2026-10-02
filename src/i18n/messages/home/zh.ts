@@ -19,6 +19,7 @@ const messages = {
   "home.installCommandTitle": "安装 AioLM",
   "home.copyCommand": "复制",
   "home.copied": "已复制!",
+  "home.copyFailed": "无法复制。请选中命令并手动复制。",
   "home.macosPlanned": "计划支持 macOS。发布时将提供 curl 安装命令。",
   "home.linuxPlanned": "计划支持 Linux。发布时将提供 curl 安装命令。",
   "home.workflow": "从模型选择到性能测量",
@@ -32,12 +33,6 @@ const messages = {
   "home.closing": "了解数据背后的配置",
   "home.closingDetail": "公开的基准测试包含测量方法、工作负载和硬件信息，便于比较不同配置。",
   "home.browse": "浏览基准测试",
-  "home.models": "模型",
-  "home.runtimes": "运行时",
-  "home.chat": "聊天",
-  "home.benchmarks": "基准测试",
-  "home.library": "GGUF 模型库",
-  "home.libraryDetail": "查找并整理本地模型",
   "home.runtime": "运行时管理",
   "home.runtimeDetail": "选择 llama.cpp 后端",
   "home.conversation": "本地对话",
@@ -45,6 +40,7 @@ const messages = {
   "home.performance": "性能基准测试",
   "home.performanceDetail": "测量并检查配置",
   "home.overview": "工作空间概览",
-  "home.caption": "AioLM 桌面工作空间将 GGUF 模型库、llama.cpp 运行时管理、本地对话和性能基准测试整合在一个窗口中。"
+  "home.screenshotAlt": "AioLM 桌面应用的运行模型页面，列出了四个公开的 GGUF 演示模型，Qwen3-8B-Instruct 已加载到 llama.cpp 运行时。",
+  "home.caption": "AioLM 桌面应用的运行模型页面：在一个窗口中查看本地 GGUF 模型库、已加载的模型及其 llama.cpp 运行时。图中使用的是公开演示模型。"
 } satisfies Record<keyof EnglishMessages, string>;
 export default messages;

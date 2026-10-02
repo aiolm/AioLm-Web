@@ -110,6 +110,7 @@ describe("management page mount", () => {
     hooks.effects.forEach((effect) => effect());
     await flush();
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(["/v1/management-sessions"]);
-    expect(render().find((e) => e.props.role === "status")?.props.children).toBe("manage.restored");
+    const status = render().find((e) => e.props.role === "status");
+    expect(nodes(status?.props.children as ReactNode).map((e) => e.props.children)).toEqual(["manage.restored"]);
   });
 });

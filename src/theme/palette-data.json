@@ -1,0 +1,298 @@
+[
+  {
+    "id": "13",
+    "name": "오키드 페리윙클",
+    "description": "스카이 · 페리윙클 · 로즈 / 버튼·탐색·그래프에 이어지는 그라데이션",
+    "gradient": [
+      "#79D4FF",
+      "#7993EE",
+      "#D875B8"
+    ],
+    "themes": {
+      "light": {
+        "bg": "#FDFEFF",
+        "surface": "#FDFDFF",
+        "ink": "#242424",
+        "muted": "#646464",
+        "line": "#DFE6FA",
+        "field": "#F5F8FF",
+        "rail": "#DFF3FE",
+        "railInk": "#242424",
+        "railMuted": "#5E5E5E",
+        "railHover": "#DDE6FF",
+        "selected": "#BBE6FE",
+        "selectedInk": "#242424",
+        "action": "#7AB9F9",
+        "actionInk": "#242424",
+        "soft": "#F2FAFF",
+        "softInk": "#303030"
+      },
+      "dark": {
+        "bg": "#34394B",
+        "surface": "#3A4155",
+        "ink": "#F5F5F5",
+        "muted": "#D1D1D1",
+        "line": "#4F5A7C",
+        "field": "#404965",
+        "rail": "#394768",
+        "railInk": "#F5F5F5",
+        "railMuted": "#D3D3D3",
+        "railHover": "#434F77",
+        "selected": "#43578B",
+        "selectedInk": "#F5F5F5",
+        "action": "#7AB9F9",
+        "actionInk": "#242424",
+        "soft": "#3F496D",
+        "softInk": "#F5F5F5"
+      }
+    },
+    "primarySeed": "#7993EE",
+    "accentSeed": "#D875B8",
+    "effects": {
+      "light": {
+        "action": {
+          "stops": [
+            "#73C6F1",
+            "#7AB9F9",
+            "#87AAFC"
+          ],
+          "css": "linear-gradient(135deg in srgb,#73C6F1,#7AB9F9,#87AAFC)",
+          "inks": [
+            "#242424"
+          ]
+        },
+        "rail": {
+          "stops": [
+            "#DFF3FE",
+            "#E4F1FF",
+            "#E8EFFE"
+          ],
+          "css": "linear-gradient(180deg in srgb,#DFF3FE,#E4F1FF,#E8EFFE)",
+          "inks": [
+            "#242424",
+            "#5E5E5E"
+          ]
+        },
+        "selected": {
+          "stops": [
+            "#BFE6FD",
+            "#CBE0FE"
+          ],
+          "css": "linear-gradient(108deg in srgb,#BFE6FD,#CBE0FE)",
+          "inks": [
+            "#242424"
+          ]
+        },
+        "soft": {
+          "stops": [
+            "#F4F8FE",
+            "#F2F6FC"
+          ],
+          "css": "linear-gradient(180deg in srgb,#F4F8FE,#F2F6FC)",
+          "inks": [
+            "#303030"
+          ]
+        },
+        "secondary": {
+          "stops": [
+            "#FAEDF5",
+            "#F8EBF3"
+          ],
+          "css": "linear-gradient(180deg in srgb,#FAEDF5,#F8EBF3)",
+          "inks": [
+            "#242424"
+          ]
+        },
+        "field": {
+          "stops": [
+            "#F7FAFF",
+            "#F5F8FD"
+          ],
+          "css": "linear-gradient(180deg in srgb,#F7FAFF,#F5F8FD)",
+          "inks": [
+            "#242424",
+            "#646464"
+          ]
+        },
+        "canvas": {
+          "stops": [
+            "#FDFEFF",
+            "#FBFDFF",
+            "#FCFCFE"
+          ],
+          "css": "linear-gradient(132deg in srgb,#FDFEFF,#FBFDFF,#FCFCFE)",
+          "inks": [
+            "#242424",
+            "#646464"
+          ]
+        },
+        "device": {
+          "stops": [
+            "#FAFCFF",
+            "#F8FAFD"
+          ],
+          "css": "linear-gradient(180deg in srgb,#FAFCFF,#F8FAFD)",
+          "inks": [
+            "#242424",
+            "#646464"
+          ]
+        },
+        "chart": {
+          "stops": [
+            "#79D4FF",
+            "#7993EE"
+          ],
+          "css": "linear-gradient(90deg in srgb,#79D4FF,#7993EE)",
+          "inks": []
+        },
+        "chartAlt": {
+          "stops": [
+            "#7993EE",
+            "#D875B8"
+          ],
+          "css": "linear-gradient(90deg in srgb,#7993EE,#D875B8)",
+          "inks": []
+        },
+        "indicator": {
+          "stops": [
+            "#5595B4",
+            "#5568A8",
+            "#985282"
+          ],
+          "css": "linear-gradient(112deg in srgb,#5595B4,#5568A8,#985282)",
+          "inks": []
+        },
+        "navIndicator": {
+          "stops": [
+            "#49809B",
+            "#456E98",
+            "#495990"
+          ],
+          "css": "linear-gradient(135deg in srgb,#49809B,#456E98,#495990)",
+          "inks": []
+        }
+      },
+      "dark": {
+        "action": {
+          "stops": [
+            "#73C6F1",
+            "#7AB9F9",
+            "#87AAFC"
+          ],
+          "css": "linear-gradient(135deg in srgb,#73C6F1,#7AB9F9,#87AAFC)",
+          "inks": [
+            "#242424"
+          ]
+        },
+        "rail": {
+          "stops": [
+            "#3B4869",
+            "#394667"
+          ],
+          "css": "linear-gradient(180deg in srgb,#3B4869,#394667)",
+          "inks": [
+            "#F5F5F5",
+            "#D3D3D3"
+          ]
+        },
+        "selected": {
+          "stops": [
+            "#46598D",
+            "#44578B",
+            "#425589"
+          ],
+          "css": "linear-gradient(180deg in srgb,#46598D,#44578B,#425589)",
+          "inks": [
+            "#F5F5F5"
+          ]
+        },
+        "soft": {
+          "stops": [
+            "#455074",
+            "#434E72"
+          ],
+          "css": "linear-gradient(180deg in srgb,#455074,#434E72)",
+          "inks": [
+            "#F5F5F5"
+          ]
+        },
+        "secondary": {
+          "stops": [
+            "#444F6C",
+            "#424D6A"
+          ],
+          "css": "linear-gradient(180deg in srgb,#444F6C,#424D6A)",
+          "inks": [
+            "#ECBADC"
+          ]
+        },
+        "field": {
+          "stops": [
+            "#444F6B",
+            "#424D69"
+          ],
+          "css": "linear-gradient(180deg in srgb,#444F6B,#424D69)",
+          "inks": [
+            "#F5F5F5",
+            "#D1D1D1"
+          ]
+        },
+        "canvas": {
+          "stops": [
+            "#34394B"
+          ],
+          "css": "none",
+          "inks": [
+            "#F5F5F5",
+            "#D1D1D1"
+          ]
+        },
+        "device": {
+          "stops": [
+            "#3C445A",
+            "#3A4258"
+          ],
+          "css": "linear-gradient(180deg in srgb,#3C445A,#3A4258)",
+          "inks": [
+            "#F5F5F5",
+            "#D1D1D1"
+          ]
+        },
+        "chart": {
+          "stops": [
+            "#79D4FF",
+            "#7993EE"
+          ],
+          "css": "linear-gradient(90deg in srgb,#79D4FF,#7993EE)",
+          "inks": []
+        },
+        "chartAlt": {
+          "stops": [
+            "#7993EE",
+            "#D875B8"
+          ],
+          "css": "linear-gradient(90deg in srgb,#7993EE,#D875B8)",
+          "inks": []
+        },
+        "indicator": {
+          "stops": [
+            "#79D4FF",
+            "#72B5FA",
+            "#7993EE"
+          ],
+          "css": "linear-gradient(112deg in srgb,#79D4FF,#72B5FA,#7993EE)",
+          "inks": []
+        },
+        "navIndicator": {
+          "stops": [
+            "#99DEFF",
+            "#93C7FB",
+            "#99ADF2"
+          ],
+          "css": "linear-gradient(135deg in srgb,#99DEFF,#93C7FB,#99ADF2)",
+          "inks": []
+        }
+      }
+    }
+  }
+]

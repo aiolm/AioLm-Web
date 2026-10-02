@@ -2,6 +2,7 @@
 import { LocalTime } from "./local-time";
 
 import "./management-usability.css";
+import "./ui-controls.css";
 
 import { useI18n } from "@/i18n/client";
 import { intlLocales, localizedPath } from "@/i18n/config";
@@ -89,6 +90,8 @@ export function ManagementPanel(): React.JSX.Element {
   const [messageValues, setMessageValues] = useState<Record<string, number>>({});
   const [messageIsError, setMessageIsError] = useState(false);
   const [operation, setOperation] = useState<"read" | "open" | "save" | "reload" | "delete" | "clear" | null>(null);
+  // The pasted code the service just refused stays marked invalid until it is edited.
+  const [codeRejected, setCodeRejected] = useState(false);
   // Picked recovery files live only in this component's memory.
   const [files, setFiles] = useState<RecoveryFileEntry[]>([]);
   const busy = operation !== null;
@@ -100,6 +103,8 @@ export function ManagementPanel(): React.JSX.Element {
   const handoffAttemptedRef = useRef(false);
   const focusRecordRef = useRef(false);
   const recordTitleRef = useRef<HTMLHeadingElement | null>(null);
+  const accessTitleRef = useRef<HTMLHeadingElement | null>(null);
+  const operationFocusRef = useRef<HTMLElement | null>(null);
   const draftLength = countCodePoints(draft);
 
   const invalidateRestore = useCallback((): void => {
@@ -291,6 +296,26 @@ export function ManagementPanel(): React.JSX.Element {
     recordTitleRef.current?.focus({ preventScroll: true });
   }, [info]);
 
+  /** Start an explicit operation, remembering the control that had focus before it is disabled. */
+  const begin = (next: NonNullable<typeof operation>): void => {
+    operationFocusRef.current = typeof document === "undefined" ? null : document.activeElement as HTMLElement | null;
+    setOperation(next);
+  };
+
+  // Disabling the focused control drops focus to the page. When the operation
+  // ends, give focus back to it, or to the nearest heading when it is gone or
+  // stays unavailable (deleted record, saved draft).
+  useEffect(() => {
+    if (busy) return;
+    const trigger = operationFocusRef.current;
+    operationFocusRef.current = null;
+    if (!trigger) return;
+    const active = document.activeElement;
+    if (active && active !== document.body && active !== trigger) return;
+    const usable = trigger.isConnected && !trigger.matches(":disabled");
+    (usable ? trigger : recordTitleRef.current ?? accessTitleRef.current)?.focus({ preventScroll: true });
+  }, [busy]);
+
   const postRecovery = (recoveryCode: string): Promise<Response> => fetch("/v1/management-sessions", {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -307,11 +332,13 @@ export function ManagementPanel(): React.JSX.Element {
     // An undecodable code is refused by the service without replacing anything.
     if (!confirmSwitch(submissionOf(code.trim()))) return;
     invalidateRestore();
-    setOperation("open");
+    begin("open");
     say("", false);
+    setCodeRejected(false);
     try {
       // The code has served its purpose: drop it immediately, never retain it.
-      await startSession(postRecovery(code.trim()), "manage.badCode", () => setCode(""));
+      const opened = await startSession(postRecovery(code.trim()), "manage.badCode", () => setCode(""));
+      if (opened === "rejected" && mountedRef.current) setCodeRejected(true);
     } catch {
       say("error.network", true);
     } finally {
@@ -328,7 +355,7 @@ export function ManagementPanel(): React.JSX.Element {
     // Allow picking the same file again later; the list keeps what was read.
     input.value = "";
     if (busy || picked.length === 0) return;
-    setOperation("read");
+    begin("read");
     try {
       const next = await readRecoveryFiles(picked, window.location.origin, files);
       if (mountedRef.current) setFiles(next);
@@ -341,7 +368,7 @@ export function ManagementPanel(): React.JSX.Element {
     if (busy || !entry.code) return;
     if (!confirmSwitch(entry.submissionId)) return;
     invalidateRestore();
-    setOperation("open");
+    begin("open");
     say("", false);
     try {
       const opened = await startSession(postRecovery(entry.code), "manage.badCode");
@@ -374,7 +401,7 @@ export function ManagementPanel(): React.JSX.Element {
       say("manage.tooLong", true, { count: draftLength, max: DESCRIPTION_MAX_CODEPOINTS });
       return;
     }
-    setOperation("save");
+    begin("save");
     try {
       const res = await fetch(`/v1/benchmark-runs/${info.public_id}/description`, {
         method: "PATCH",
@@ -441,7 +468,7 @@ export function ManagementPanel(): React.JSX.Element {
     }
     if (!window.confirm(t("manage.confirmDelete"))) return;
     invalidateRestore();
-    setOperation("delete");
+    begin("delete");
     try {
       const res = await fetch(`/v1/benchmark-runs/${info.public_id}`, {
         method: "DELETE",
@@ -476,7 +503,7 @@ export function ManagementPanel(): React.JSX.Element {
     if (busy) return;
     if (isDirty && !window.confirm(t("manage.confirmClear"))) return;
     invalidateRestore();
-    setOperation("clear");
+    begin("clear");
     try {
       const res = await fetch("/v1/management-sessions", { method: "DELETE", headers: csrf ? { "x-csrf-token": csrf } : {} });
       if (!mountedRef.current) return;
@@ -485,6 +512,7 @@ export function ManagementPanel(): React.JSX.Element {
         infoRef.current = null;
         setCsrf(null);
         setCode("");
+        setCodeRejected(false);
         setFiles([]);
         setDraft("");
         setIsDirty(false);
@@ -511,7 +539,7 @@ export function ManagementPanel(): React.JSX.Element {
 
   const reload = async (): Promise<void> => {
     if (busy) return;
-    setOperation("reload");
+    begin("reload");
     say("");
     try {
       if (await loadSession()) say("manage.reloaded");
@@ -521,13 +549,17 @@ export function ManagementPanel(): React.JSX.Element {
   };
 
   const canEdit = canEditManagement(info !== null, csrf);
+  const messageText = message ? t(message, Object.fromEntries(Object.entries(messageValues).map(([key, value]) => [key, number(value)]))) : "";
   const showSavedComparison = info !== null && isDirty && draft !== info.description_md;
 
   return (
     <div className="grid management-panel" aria-busy={busy}>
-      <section className="card" aria-labelledby="manage-title">
-        <h1 id="manage-title">{t("manage.title")}</h1>
+      <section className="card management-access" aria-labelledby="manage-title">
+        <div className="management-intro">
+        <h1 id="manage-title" ref={accessTitleRef} tabIndex={-1}>{t("manage.title")}</h1>
         <p className="muted">{t("manage.intro")}</p>
+        </div>
+        <div className="management-access-body">
         <div className="field">
           <label htmlFor="recovery-files">{t("manage.files")}</label>
           <input
@@ -555,7 +587,7 @@ export function ManagementPanel(): React.JSX.Element {
                       <span className={entry.code ? "hint" : "hint error"}>{t(current ? "manage.fileCurrent" : `manage.fileStatus.${entry.status}`)}</span>
                     </div>
                     {entry.code ? (
-                      <button type="button" disabled={busy} aria-label={`${t(current ? "manage.fileRenew" : "manage.fileOpen")}: ${entry.name}`} onClick={() => void openFile(entry)}>
+                      <button type="button" data-action-glyph={current ? "refresh" : "open"} disabled={busy} aria-label={`${t(current ? "manage.fileRenew" : "manage.fileOpen")}: ${entry.name}`} onClick={() => void openFile(entry)}>
                         {t(current ? "manage.fileRenew" : "manage.fileOpen")}
                       </button>
                     ) : null}
@@ -563,7 +595,7 @@ export function ManagementPanel(): React.JSX.Element {
                 );
               })}
             </ul>
-            <button type="button" disabled={busy} onClick={clearFiles}>{t("manage.filesClear")}</button>
+            <button type="button" data-action-glyph="clear" disabled={busy} onClick={clearFiles}>{t("manage.filesClear")}</button>
           </div>
         ) : null}
         <details className="recovery-paste">
@@ -574,20 +606,24 @@ export function ManagementPanel(): React.JSX.Element {
             <textarea
               id="recovery-code" name="recovery_code" required autoComplete="off" autoCapitalize="none" spellCheck={false}
               placeholder="aiolm-recovery-v1.…"
-              value={code} onChange={(e) => setCode(e.target.value)}
+              value={code} onChange={(e) => { setCode(e.target.value); setCodeRejected(false); }}
               disabled={busy}
-              aria-describedby="recovery-hint"
+              aria-describedby={codeRejected ? "recovery-hint manage-message" : "recovery-hint"}
+              aria-invalid={codeRejected}
             />
             <span id="recovery-hint" className="hint">{t("manage.codeHint")}</span>
           </div>
           <button type="submit" className="primary" disabled={busy}>{operation === "open" ? t("manage.opening") : t("manage.open")}</button>
         </form>
         </details>
-        {message ? <p className={`alert ${messageIsError ? "error" : "info"}`} role={messageIsError ? "alert" : "status"}>{t(message, Object.fromEntries(Object.entries(messageValues).map(([key, value]) => [key, number(value)])))}</p> : null}
+        {message && messageIsError ? <p id="manage-message" className="alert error" role="alert">{messageText}</p> : null}
+        {/* Stays mounted so a status inserted later is still announced. */}
+        <div role="status">{message && !messageIsError ? <p className={`alert ${message === "manage.noSession" ? "info" : "success"}`}>{messageText}</p> : null}</div>
+        </div>
       </section>
 
       {info ? (
-        <section className="card" aria-labelledby="record-title">
+        <section className="card management-record" aria-labelledby="record-title">
           <h2 id="record-title" ref={recordTitleRef} tabIndex={-1}>{t("manage.record")} {info.hidden ? t("manage.hidden") : ""}</h2>
           <dl className="kv">
             <dt>{t("manage.publicId")}</dt><dd>{info.public_id}</dd>
@@ -595,17 +631,18 @@ export function ManagementPanel(): React.JSX.Element {
             <dt>{t("manage.expires")}</dt><dd><LocalTime value={info.expires_at} /></dd>
           </dl>
           {!csrf ? (
-            <p role="status" className="muted">{t("manage.readOnly")}</p>
+            <p id="desc-read-only" role="status" className="muted">{t("manage.readOnly")}</p>
           ) : null}
           <div className="field">
             <label htmlFor="desc-draft">{t("manage.description", { max: number(DESCRIPTION_MAX_CODEPOINTS) })}</label>
             <textarea
               id="desc-draft" value={draft} onChange={(e) => onDraftChange(e.target.value)}
               disabled={busy}
-              aria-describedby="desc-count"
+              aria-describedby={csrf ? "desc-count" : "desc-count desc-read-only"}
               aria-invalid={draftLength > DESCRIPTION_MAX_CODEPOINTS}
             />
-            <span id="desc-count" className="hint" aria-live="polite">
+            {/* Not live: announcing the count on every keystroke drowns out typing. */}
+            <span id="desc-count" className="hint">
               {t("manage.count", { count: number(draftLength), max: number(DESCRIPTION_MAX_CODEPOINTS) })}
               {draftLength > DESCRIPTION_MAX_CODEPOINTS ? t("manage.overLimit") : ""}
               {isDirty ? t("manage.unsaved") : ""}
@@ -621,9 +658,9 @@ export function ManagementPanel(): React.JSX.Element {
           ) : null}
           <div className="management-actions">
             <button type="button" className="primary" disabled={busy || !canEdit || !isDirty || draftLength > DESCRIPTION_MAX_CODEPOINTS} onClick={() => void saveDescription()}>{t(operation === "save" ? "manage.saving" : "manage.save")}</button>{" "}
-            <button type="button" disabled={busy} onClick={() => void reload()}>{t(operation === "reload" ? "manage.reloading" : "manage.reload")}</button>{" "}
-            <button type="button" className="danger" disabled={busy || !canEdit} onClick={() => void remove()}>{t(operation === "delete" ? "manage.deleting" : "manage.delete")}</button>{" "}
-            <button type="button" disabled={busy || !canEdit} onClick={() => void signOut()}>{t(operation === "clear" ? "manage.clearing" : "manage.clear")}</button>
+            <button type="button" data-action-glyph="refresh" disabled={busy} onClick={() => void reload()}>{t(operation === "reload" ? "manage.reloading" : "manage.reload")}</button>{" "}
+            <button type="button" className="danger" data-action-glyph="delete" disabled={busy || !canEdit} onClick={() => void remove()}>{t(operation === "delete" ? "manage.deleting" : "manage.delete")}</button>{" "}
+            <button type="button" data-action-glyph="sign-out" disabled={busy || !canEdit} onClick={() => void signOut()}>{t(operation === "clear" ? "manage.clearing" : "manage.clear")}</button>
           </div>
         </section>
       ) : null}

@@ -1,221 +1,290 @@
-/* All discovery inputs live in the sidebar; the main column is for results. */
-.explorer-compact { font-size: 1rem; line-height: 1.6; }
-.explorer-compact:lang(ko),
-.explorer-compact:lang(ko) .explorer-fact-value { word-break: keep-all; overflow-wrap: anywhere; }
-.explorer-compact:lang(ko) :is(h1, h2, h3, summary) { letter-spacing: 0; }
-.explorer-compact .explorer-layout { grid-template-columns: 300px minmax(0, 1fr); gap: 24px; }
-.explorer-compact .explorer-main-column { min-width: 0; display: grid; align-content: start; gap: 18px; container-type: inline-size; }
-.explorer-main-column .page-intro { margin: 0; gap: 12px; align-items: start; }
-.explorer-main-column .page-title { font-size: clamp(1.5rem, 2.2vw, 2rem); }
-.explorer-main-column .page-subtitle { font-size: 1rem; line-height: 1.65; }
-.explorer-main-column .page-intro-note { flex-shrink: 0; }
-.explorer-compact .explorer-filter-set { display: block; margin: 0; padding: 20px; }
-.explorer-sidebar-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 16px; border-bottom: 2px solid var(--ui-border); }
-.explorer-sidebar-title { margin: 0; font-size: 1.25rem; font-weight: 750; }
-.explorer-sidebar-reset { padding: 8px 0; border: 0; background: none; color: var(--ui-accent); font: inherit; font-size: .875rem; cursor: pointer; }
-.explorer-sidebar-reset:disabled { color: var(--ui-muted); opacity: .6; cursor: default; }
+/*
+ * The explorer is one calm workspace: a quiet filter rail on the left, the page
+ * title and result controls beside it, then a native ruled table. Main text and
+ * controls read at 14px, supporting facts at 13px, and measurements use tabular
+ * figures so digits line up down each column.
+ */
+/* The spanning filter rail may grow; its extra height belongs to the results
+   row, never to the title row above it. */
+.explorer.explorer-compact { grid-template-columns: 224px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 0 32px; font-size: var(--fs-body); line-height: 1.5; }
+.explorer-compact:lang(ko) { word-break: keep-all; }
+/* The rail spans the title and the results, so the title sits beside it rather than above. */
+.explorer-compact .explorer-layout { display: contents; }
+.explorer-compact > .page-intro { grid-column: 2; grid-row: 1; align-self: start; align-items: flex-end; gap: 12px 32px; margin: 0 0 20px; padding-block-end: 20px; border-bottom: 1px solid var(--ui-border); }
+.explorer-compact > .page-intro .page-title { font-size: var(--fs-page-title); font-weight: 650; line-height: 1.25; letter-spacing: -.02em; }
+.explorer-compact > .page-intro .page-subtitle { margin-block-start: 8px; font-size: var(--fs-body); line-height: 1.6; max-width: 72ch; }
+.explorer-compact > .page-intro .page-intro-note { font-size: var(--fs-support); }
+.explorer-compact .explorer-rail { grid-column: 1; grid-row: 1 / span 2; align-self: stretch; padding: 20px 16px; border-radius: var(--ui-radius-lg); background: var(--ui-rail); color: var(--ui-rail-ink); }
+.explorer-compact .explorer-main-column { grid-column: 2; grid-row: 2; min-width: 0; display: grid; align-content: start; gap: 20px; container-type: inline-size; }
+
+/* ---------------------------------------------------------------- rail --- */
+.explorer-sidebar-content { --ui-focus: var(--ui-rail-focus); }
+.explorer-compact .explorer-filter-set { display: block; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.explorer-sidebar-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding-block: 0 12px; }
+.explorer-sidebar-title { margin: 0; font-size: var(--fs-body); font-weight: 600; color: var(--ui-rail-ink); }
+.explorer-sidebar-reset { min-height: var(--control-min); max-inline-size: 100%; padding: var(--control-pad-block) var(--control-pad-inline); border: 0; border-radius: var(--ui-radius-sm); background: none; color: var(--ui-rail-muted); font: inherit; font-size: var(--fs-support); cursor: pointer; }
+.explorer-sidebar-reset:hover:not(:disabled) { color: var(--ui-rail-ink); }
+.explorer-sidebar-reset:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; border-radius: 4px; }
+.explorer-sidebar-reset:disabled { opacity: .5; cursor: default; }
 .explorer-compact .explorer-sidebar-toggle { display: none; }
-.explorer-compact .explorer-filter-group { margin: 0; border: 0; border-top: 1px solid var(--ui-border); padding: 0; }
+.explorer-compact .explorer-filter-group { margin: 0; padding: 0; border: 0; border-top: 1px solid var(--ui-rail-border); }
 .explorer-compact .explorer-filter-group:first-child { border-top: 0; }
-.explorer-filter-group-title { display: flex; align-items: center; gap: 8px; margin: 0; padding: 18px 0 14px; font-size: 1.0625rem; font-weight: 750; color: var(--ui-ink); }
-.explorer-secondary-filters > summary { display: flex; align-items: center; gap: 8px; list-style: none; cursor: pointer; }
+.explorer-filter-group-title { display: flex; align-items: center; gap: 8px; margin: 0; padding: 14px 0 10px; font-size: var(--fs-body); font-weight: 600; color: var(--ui-rail-ink); }
+.explorer-compact .explorer-sidebar-groups > .explorer-secondary-filters { border-top: 1px solid var(--ui-rail-border); }
+.explorer-secondary-filters > summary { display: flex; align-items: center; gap: 8px; min-height: var(--control-min); font-size: var(--fs-support); color: var(--ui-muted); list-style: none; cursor: pointer; }
+.explorer-secondary-filters > summary:hover { color: var(--ui-ink); }
 .explorer-secondary-filters > summary::-webkit-details-marker { display: none; }
+.explorer-secondary-filters > summary::before { content: ""; width: 6px; height: 6px; flex-shrink: 0; margin-inline: 2px 4px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); transition: transform 150ms ease; }
+.explorer-secondary-filters[open] > summary::before { transform: rotate(45deg); }
+.explorer-sidebar-groups > .explorer-secondary-filters > summary { min-height: max(36px, var(--control-min)); font-size: var(--fs-body); font-weight: 600; color: var(--ui-ink); }
+.explorer-compact .explorer-rail .explorer-secondary-filters > summary { color: var(--ui-rail-muted); }
+.explorer-compact .explorer-rail .explorer-secondary-filters > summary:hover { color: var(--ui-rail-ink); }
+.explorer-compact .explorer-rail .explorer-sidebar-groups > .explorer-secondary-filters > summary { color: var(--ui-rail-ink); }
 .explorer-secondary-filters > summary:focus-visible,
-.explorer-sidebar-reset:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 3px; border-radius: 3px; }
-.explorer-compact .explorer-filter-count { margin: 0; padding: 1px 6px; border-radius: var(--ui-radius-pill); background: var(--ui-accent-soft); color: var(--ui-accent); font-size: .8125rem; font-variant-numeric: tabular-nums; }
-.explorer-compact .explorer-group-fields { grid-template-columns: minmax(0, 1fr); margin: 0; gap: 16px; padding-bottom: 20px; }
-/* Advanced fields have their own inset surface and a plus/minus trigger. */
-.explorer-secondary-filters { min-width: 0; margin-inline-start: 8px; border: 1px solid var(--ui-border-strong); border-inline-start: 3px solid var(--ui-accent); border-radius: var(--ui-radius-md); background: var(--ui-sidebar); }
-.explorer-compact .explorer-secondary-filters > summary { min-height: 44px; padding: 10px 12px; color: var(--ui-ink); font-size: .875rem; font-weight: 650; line-height: 1.5; }
-.explorer-secondary-filters .explorer-filter-count { margin-inline-start: auto; white-space: nowrap; }
-.explorer-sidebar-groups > .explorer-secondary-filters { margin: 0 0 20px; }
-.explorer-secondary-filters > summary::before { content: ""; flex: 0 0 12px; width: 12px; height: 12px; color: var(--ui-accent); background: linear-gradient(currentColor, currentColor) center / 12px 2px no-repeat, linear-gradient(currentColor, currentColor) center / 2px 12px no-repeat; }
-.explorer-secondary-filters[open] > summary::before { background-size: 12px 2px, 0 0; }
-.explorer-secondary-filters > summary:hover { background-color: var(--ui-surface-muted); border-radius: var(--ui-radius-sm); }
-.explorer-secondary-filters[open] > summary { border-bottom: 1px solid var(--ui-border); }
-.explorer-compact .explorer-secondary-filters .explorer-group-fields { padding: 14px 12px 16px; }
-.explorer-compact .explorer-rail .explorer-field-label,
-.explorer-compact .explorer-range legend { font-size: .875rem; font-weight: 600; line-height: 1.5; color: var(--ui-ink); }
-.explorer-compact .explorer-rail .explorer-field-input { min-height: 44px; padding: 9px 10px; font-size: 1rem; line-height: 1.5; border-color: var(--ui-border-strong); }
-.explorer-compact .explorer-field-input::placeholder { color: var(--ui-faint); opacity: 1; }
-.explorer-compact .explorer-combobox-toggle { color: var(--ui-muted); }
-.explorer-compact .explorer-rail .explorer-combobox-control input { padding-inline-end: 32px; }
+.explorer-sidebar-reset:focus-visible,
+.explorer-row-details > summary:focus-visible,
+.explorer-guide > summary:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; border-radius: 4px; }
+.explorer-compact .explorer-filter-count { margin: 0; padding: 0 7px; border-radius: 5px; background: var(--ui-rail-hover); color: var(--ui-rail-ink); font-size: var(--fs-small); font-weight: 500; line-height: 1.6; font-variant-numeric: tabular-nums; }
+.explorer-compact .explorer-group-fields { grid-template-columns: minmax(0, 1fr); margin: 0 0 16px; gap: 14px; }
+.explorer-compact .explorer-field-label,
+.explorer-compact .explorer-range legend { font-size: var(--fs-support); font-weight: 500; line-height: 1.45; color: var(--ui-rail-muted); }
+.explorer-compact .explorer-field-input { min-height: var(--control-min); padding: 5px 10px; border: 0; border-radius: var(--ui-radius-sm); background: var(--ui-input); color: var(--ui-ink); font-size: var(--fs-body); line-height: 20px; }
+.explorer-compact .explorer-field-input:hover { background: var(--ui-input-hover, var(--ui-input)); }
+.explorer-compact .explorer-field-input:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 1px; }
+.explorer-compact .explorer-field-input::placeholder { color: var(--ui-muted); opacity: 1; }
+/* Validation foreground is calibrated against the selected rail palette. */
+.explorer-compact .explorer-rail .explorer-validation { color: var(--ui-rail-error); }
+.explorer-compact .explorer-combobox-control input { padding-inline-end: 32px; }
 .explorer-compact .explorer-range { margin: 0; padding: 0; border: 0; min-width: 0; }
 .explorer-compact .explorer-range legend { margin-bottom: 6px; padding: 0; }
 .explorer-compact .explorer-rail .explorer-field { gap: 6px; }
-.explorer-compact .explorer-range-inputs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
-.explorer-compact .explorer-range-hint { margin: 8px 0 0; font-size: .8125rem; color: var(--ui-muted); line-height: 1.6; }
-.explorer-field-hint { margin: 0; color: var(--ui-muted); font-size: .8125rem; line-height: 1.6; }
-.explorer-sidebar-actions { position: sticky; bottom: 0; z-index: 2; margin: 0 -20px -20px; padding: 12px 20px 20px; border-top: 1px solid var(--ui-border-strong); background: var(--ui-surface); border-radius: 0 0 var(--ui-radius-lg) var(--ui-radius-lg); }
-.explorer-sidebar-actions > .explorer-button { width: 100%; min-height: 44px; font-size: 1rem; }
-.explorer-compact .explorer-draft-status { margin: 0 0 10px; color: var(--ui-ink); font-size: .875rem; line-height: 1.6; }
+.explorer-compact .explorer-range-inputs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.explorer-range-hint, .explorer-field-hint { margin: 6px 0 0; color: var(--ui-muted); font-size: var(--fs-support); line-height: 1.45; }
+.explorer-compact .explorer-rail :is(.explorer-range-hint, .explorer-field-hint) { color: var(--ui-rail-muted); }
+.explorer-compact .explorer-validation { font-size: var(--fs-support); }
+.explorer-sidebar-actions { position: sticky; bottom: 0; z-index: 2; margin: 0 -16px; padding: 12px 16px; border-top: 1px solid var(--ui-rail-border); background: var(--ui-rail); }
+.explorer-sidebar-actions > .explorer-button { width: 100%; min-height: var(--control-min); font-size: var(--fs-body); }
+.explorer-compact .explorer-draft-status { margin: 0 0 10px; font-size: var(--fs-support); line-height: 1.45; color: var(--ui-muted); }
+.explorer-compact .explorer-rail .explorer-draft-status { color: var(--ui-rail-muted); }
 .explorer-draft-status:empty { display: none; }
-/* The guide follows results in the same column, independent of sidebar height. */
-.explorer-compact .explorer-guide-text { font-size: .9375rem; line-height: 1.75; }
-@media (max-width: 1100px) {
-  .explorer-compact .explorer-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
-  .explorer-compact .explorer-sidebar-toggle { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; width: 100%; }
-  .explorer-sidebar-content { margin-top: 10px; }
-  .explorer-sidebar-content[data-open="false"] { display: none; }
-}
-@media (max-width: 700px) {
-  .explorer-main-column .page-intro { flex-direction: column; }
-  .explorer-compact .explorer-main-column { gap: 14px; }
-}
 
-/* Results section */
-/* A narrow result column needs the same readable cards as a narrow viewport. */
-@container (min-width: 600px) and (max-width: 950px) {
-  .explorer-compact .explorer-table,
-  .explorer-compact .explorer-table-body,
-  .explorer-compact .explorer-row { display: block; width: auto; }
-  .explorer-compact .explorer-table-head { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  .explorer-compact .explorer-row { margin-bottom: 12px; padding: 12px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-lg); background: var(--ui-panel-raised); }
-  .explorer-compact .explorer-table .explorer-cell { display: grid; width: auto; grid-template-columns: minmax(0, 9rem) minmax(0, 1fr); gap: 4px 12px; padding: 6px 0; text-align: left; }
-  .explorer-compact .explorer-cell-label { display: block; font-weight: 650; }
-}
-.explorer-compact .explorer-main { padding: 20px; }
-.explorer-compact .explorer-main-header { gap: 18px; margin-block-end: 20px; }
-.explorer-compact .explorer-main-heading { flex-basis: 100%; }
-.explorer-compact .explorer-main-title { font-size: 1.25rem; font-weight: 750; }
-.explorer-result-count { margin: 4px 0 0; font-size: .875rem; color: var(--ui-muted); font-variant-numeric: tabular-nums; }
-.explorer-compact .explorer-main-subtitle { margin-block-start: 6px; font-size: .9375rem; }
-.explorer-compact .explorer-result-actions { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px 16px; width: 100%; padding: 16px; border-radius: var(--ui-radius-md); background: var(--ui-panel-raised); }
-.explorer-compact .explorer-sort { min-width: 160px; }
-.explorer-compact .explorer-sort .explorer-field-label { font-size: .875rem; margin-bottom: 4px; }
-.explorer-compact .explorer-sort select { min-height: 40px; padding: 8px 10px; font-size: .9375rem; }
-.explorer-compact .explorer-refresh { min-height: 40px; padding: 8px 12px; font-size: .9375rem; }
-.explorer-compact .explorer-active-filters { margin: 0; padding: 0; border: 0; }
-.explorer-compact .explorer-active-filters-title { font-size: .875rem; color: var(--ui-ink); }
-.explorer-compact .explorer-active-filter { padding: 4px 4px 4px 12px; font-size: .875rem; }
-.explorer-compact .explorer-active-filter-remove { min-width: 28px; min-height: 28px; padding: 2px 6px; font-size: 1.0625rem; }
-.explorer-compact .explorer-head-cell { padding: 14px 10px; font-size: .875rem; color: var(--ui-ink); }
-.explorer-compact .explorer-cell { padding: 20px 10px; font-size: .9375rem; line-height: 1.6; vertical-align: top; }
-.explorer-compact .explorer-compare-input { width: 16px; height: 16px; }
-.explorer-compact .explorer-detail-link { font-family: inherit; font-size: 1.0625rem; line-height: 1.5; font-weight: 700; text-decoration: none; }
-.explorer-compact .explorer-detail-link:hover { text-decoration: underline; }
-.explorer-compact .explorer-metric-value { font-size: 1.125rem; font-weight: 650; }
-.explorer-compact .explorer-metric-spread,
-.explorer-compact .explorer-head-basis { font-size: .8125rem; line-height: 1.5; }
-.explorer-compact .bilingual-header { line-height: 1.5; }
-.explorer-compact :is(.bilingual-en, .bilingual-sub, .bilingual-unit) { font-size: .8125rem; }
-.explorer-compact .explorer-options li { min-height: 40px; padding: 8px 10px; font-size: .9375rem; }
-.explorer-compact .explorer-option-status { font-size: .8125rem; line-height: 1.6; }
+/* ----------------------------------------------------- result controls --- */
+.explorer-compact .explorer-main { padding: 0; border: 0; border-radius: 0; background: transparent; }
+.explorer-compact .explorer-main-header { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-block-end: 12px; }
+.explorer-compact .explorer-main-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.explorer-compact .explorer-main-title { font-size: var(--fs-section); font-weight: 600; line-height: 1.4; }
+.explorer-compact .explorer-main-title:focus { outline: none; }
+.explorer-result-count { margin: 0; font-size: var(--fs-support); color: var(--ui-muted); font-variant-numeric: tabular-nums; }
+.explorer-compact .explorer-main-subtitle { flex-basis: 100%; margin: 0; font-size: var(--fs-support); line-height: 1.45; }
+.explorer-compact .explorer-result-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; width: 100%; padding: 0; border: 0; background: transparent; }
+/* Labels sit beside their menus, as in a native toolbar. */
+.explorer-compact .explorer-result-actions .explorer-field { display: flex; align-items: center; gap: 10px; }
+.explorer-compact .explorer-result-actions .explorer-field-label { flex-shrink: 0; color: var(--ui-ink); font-size: var(--fs-body); font-weight: 400; }
+.explorer-compact .explorer-basis { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; min-width: 0; }
+.explorer-compact .explorer-basis-field .ui-select { width: 17rem; max-width: 100%; }
+.explorer-compact .explorer-sort { margin-inline-start: auto; }
+.explorer-compact .explorer-sort .ui-select { width: 20rem; max-width: 100%; }
+.explorer-compact .explorer-refresh { align-self: center; margin-inline-start: auto; min-height: var(--control-min); padding: var(--control-pad-block) var(--control-pad-inline); border: 0; border-radius: var(--ui-radius-sm); font-size: var(--fs-body); font-weight: 500; }
+.explorer-basis-only { display: flex; align-items: center; gap: 8px; min-height: var(--control-min); font-size: var(--fs-body); }
+.explorer-basis-only input { width: 16px; height: 16px; accent-color: var(--ui-accent); }
+.explorer-basis-label-row { display: flex; align-items: center; gap: 4px; }
+.explorer-basis-help { position: relative; }
+.explorer-basis-help > summary { display: grid; place-items: center; width: 28px; height: 28px; color: var(--ui-muted); list-style: none; cursor: pointer; border-radius: var(--ui-radius-sm); }
+.explorer-basis-help > summary::-webkit-details-marker { display: none; }
+.explorer-basis-help > summary:hover { color: var(--ui-ink); background: var(--ui-surface-muted); }
+.explorer-basis-help > summary:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 1px; }
+.explorer-basis-hint { position: absolute; inset-block-start: 32px; inset-inline-start: 0; z-index: 10; width: 300px; max-width: calc(100vw - 32px); margin: 0; padding: 12px 14px; border: 0; border-radius: var(--ui-radius-menu, 10px); background: var(--ui-menu-surface); box-shadow: var(--ui-elev-menu, var(--ui-elev-2)); font-size: var(--fs-support); line-height: 1.55; color: var(--ui-ink); }
+.explorer-basis-unavailable { flex-basis: 100%; margin: 0; font-size: var(--fs-support); line-height: 1.45; color: var(--ui-muted); }
+.explorer-compact .explorer-active-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0; padding: 0; border: 0; }
+.explorer-compact .explorer-active-filters-title { margin: 0; font-size: var(--fs-support); font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--ui-muted); }
+.explorer-compact .explorer-active-filter-list { margin: 0; }
+.explorer-compact .explorer-active-filter { padding: 2px 2px 2px 10px; border-color: var(--ui-border); border-radius: var(--ui-radius-sm); background: var(--ui-accent-soft); font-size: var(--fs-support); }
+.explorer-compact .explorer-active-filter-remove { min-width: 28px; min-height: 28px; padding: 2px 6px; border-radius: 5px; font-size: var(--fs-body); }
+.explorer-compact .explorer-compare-limit { padding: 10px 14px; border: 0; background: var(--tone-warning-gradient); color: var(--tone-warning-ink); font-size: var(--fs-support); border-radius: var(--ui-radius-md); }
 
-/* Unified Table Facts: clean label-value pairing across Model, Environment, and Setup columns */
-.explorer-compact .explorer-facts {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 8px 0 0;
-  padding: 0;
-  list-style: none;
-}
-.explorer-compact .explorer-fact {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  column-gap: 6px;
-  align-items: baseline;
-  min-width: 0;
-  font-size: .875rem;
-  line-height: 1.6;
-}
-.explorer-compact .explorer-fact-label {
-  grid-column: 1;
-  color: var(--ui-muted);
-  font-weight: 400;
-  white-space: nowrap;
-  font-size: .875rem;
-}
-.explorer-compact .explorer-fact-label::after {
-  content: ":";
-  margin-inline-end: 2px;
-}
-.explorer-compact .explorer-fact-value {
-  grid-column: 2;
-  min-width: 0;
-  color: var(--ui-ink);
-  font-weight: 500;
-  font-size: .875rem;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-.explorer-compact .explorer-gpu-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.explorer-compact .explorer-gpu-item {
-  display: block;
-  word-break: break-word;
-}
-.explorer-compact .explorer-registered-date {
-  margin-top: 4px;
-  padding-top: 3px;
-  border-top: 1px dashed var(--ui-border);
-}
-
-/* Balanced column widths: tighten metric columns (Prefill/Decode) to leave generous room for rich text */
-.explorer-compact .explorer-head-compare { width: 1%; }
-.explorer-compact .explorer-head-identity { width: 27%; }
-.explorer-compact .explorer-head-environment { width: 29%; }
-.explorer-compact .explorer-head-numeric { width: 8%; min-width: 80px; }
-.explorer-compact .explorer-head-setup { width: 27%; }
-
-@media (max-width: 700px) {
-  .explorer-compact .explorer-result-actions { width: 100%; }
-  .explorer-compact .explorer-sort { flex: 1; }
-  .explorer-compact .explorer-field-input { font-size: 1rem; }
-}
-
+/* --------------------------------------------------------------- table --- */
+/* Native row and column headings remain intact when the presentation stacks. */
+.explorer-compact .explorer-table { width: 100%; table-layout: fixed; border-top: 1px solid var(--ui-border); }
 .explorer-compact .explorer-table-caption { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
-@media (max-width: 700px) {
-  .explorer-compact .explorer-main { padding: 12px; }
-  .explorer-compact .explorer-main-header { gap: 8px; }
-  .explorer-compact .explorer-sort { min-width: 0; }
-  .explorer-compact .explorer-table .explorer-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto; gap: 12px; padding: 16px; }
-  .explorer-compact .explorer-table .explorer-cell { min-width: 0; padding: 2px 0; }
-  .explorer-compact .explorer-table .explorer-cell-identity { grid-column: 1 / 3; grid-row: 1; padding-inline-end: 8px; grid-template-columns: minmax(0, 1fr); }
-  .explorer-compact .explorer-table .explorer-cell-identity > .explorer-cell-label { display: none; }
-  .explorer-compact .explorer-table .explorer-cell-compare { grid-column: 3; grid-row: 1; justify-self: end; align-self: start; display: flex; flex-direction: column; align-items: center; gap: 0; }
-  .explorer-compact .explorer-compare-input { margin: 6px 8px; }
+.explorer-compact .explorer-head-cell { padding: 10px; border: 0; border-bottom: 1px solid var(--ui-border); background: transparent; color: var(--ui-muted); font-size: var(--fs-small); font-weight: 500; line-height: 1.4; vertical-align: bottom; white-space: normal; }
+.explorer-compact .explorer-head-compare { width: 3.5rem; }
+.explorer-compact:lang(en) .explorer-head-compare { width: 5.5rem; }
+.explorer-compact .explorer-head-identity { width: 25%; }
+.explorer-compact .explorer-head-environment { width: 20%; }
+.explorer-compact .explorer-head-numeric { width: 7rem; min-width: 0; }
+.explorer-compact .explorer-head-setup { width: auto; }
+.column-heading { display: inline-flex; flex-direction: column; }
+.column-heading-unit { color: var(--ui-faint); font-weight: 400; font-variant-numeric: tabular-nums; }
+.explorer-compact .explorer-head-numeric .column-heading { align-items: flex-end; }
+.explorer-compact .explorer-head-basis { display: block; color: var(--ui-faint); font-size: var(--fs-small); font-weight: 400; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.explorer-compact .explorer-cell { padding: 12px 10px; border-bottom: 1px solid var(--ui-border); font-size: var(--fs-body); line-height: 1.5; vertical-align: top; }
+.explorer-compact .explorer-row:hover { background: var(--ui-surface-muted); }
+.explorer-compare-control { display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center; cursor: pointer; }
+.explorer-compact .explorer-compare-input { width: 16px; height: 16px; margin: 0; accent-color: var(--ui-accent); }
+.explorer-compact .explorer-detail-link { color: var(--ui-accent); font-family: inherit; font-size: var(--fs-body); line-height: 1.45; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; overflow-wrap: anywhere; }
+.explorer-compact .explorer-detail-link:hover { color: var(--ui-accent); text-decoration: underline; text-underline-offset: 3px; }
+.explorer-compact .explorer-detail-link:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; border-radius: 3px; }
+.explorer-compact .explorer-metric-value { display: block; font-size: var(--fs-body); font-weight: 600; }
+.explorer-compact .explorer-metric-spread { display: block; margin-block-start: 2px; font-size: var(--fs-support); line-height: 1.45; color: var(--ui-muted); }
+.explorer-compact .explorer-table :is(.explorer-metric-value, .explorer-metric-spread) { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.explorer-compact .explorer-table .explorer-cell-value { overflow-wrap: break-word; }
+.explorer-compact .explorer-option-status { font-size: var(--fs-support); line-height: 1.45; }
+
+/* Facts inside cells: values lead, labels stay for readers who need them. */
+.explorer-compact .explorer-facts { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; color: inherit; font-size: var(--fs-support); list-style: none; }
+.explorer-compact .explorer-fact { display: block; min-width: 0; font-size: var(--fs-support); line-height: 1.45; }
+.explorer-compact .explorer-fact-label { color: var(--ui-muted); font-size: inherit; font-weight: 400; white-space: nowrap; }
+.explorer-compact .explorer-fact-label::after { content: " "; margin: 0; white-space: normal; }
+.explorer-compact .explorer-fact-value { color: var(--ui-ink); font-weight: 400; word-break: normal; overflow-wrap: break-word; }
+.explorer-compact:lang(ko) .explorer-fact-value { word-break: keep-all; }
+/* The column heading already names these, so only assistive technology hears the label. */
+.explorer-compact :is(.explorer-model-facts, .explorer-environment-facts) .explorer-fact-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.explorer-compact .explorer-model-facts { margin-block-start: 6px; }
+.explorer-compact .explorer-model-facts .explorer-fact-value { display: inline-block; padding: 0 7px; border-radius: 5px; background: var(--ui-secondary-gradient); color: var(--ui-secondary-ink); font-size: var(--fs-support); font-weight: 500; line-height: 1.6; overflow-wrap: anywhere; }
+.explorer-compact .explorer-environment-facts { display: block; }
+.explorer-compact .explorer-environment-facts .explorer-fact { display: inline; }
+.explorer-compact .explorer-environment-facts [data-fact="gpu"] .explorer-fact-value { font-size: var(--fs-body); }
+.explorer-compact .explorer-environment-facts [data-fact="backend"] .explorer-fact-value { color: var(--ui-muted); }
+/* The backend travels with the last word of the device name, never alone after a line break. */
+.explorer-compact .explorer-environment-facts [data-fact="backend"] { white-space: nowrap; }
+.explorer-compact .explorer-environment-facts [data-fact="gpu"] + [data-fact="backend"]::before { content: "\00a0· "; color: var(--ui-faint); }
+.explorer-compact .explorer-gpu-list { display: block; }
+.explorer-compact .explorer-gpu-item { display: block; }
+/* Context and workload read as whole lines; the point being read follows. */
+.explorer-compact .explorer-setup-line { display: block; overflow-wrap: break-word; }
+.explorer-compact .explorer-setup-context { color: var(--ui-ink); font-size: var(--fs-body); font-variant-numeric: tabular-nums; }
+.explorer-compact .explorer-setup-workload { margin: 0; color: var(--ui-ink); font-size: var(--fs-support); }
+.explorer-compact .explorer-setup-facts { margin-block-start: 2px; }
+/* A value moves to the next line whole instead of splitting "512 / c1" across two. */
+.explorer-compact .explorer-setup-facts .explorer-fact-value { display: inline-block; font-variant-numeric: tabular-nums; }
+.explorer-compact .explorer-row-details { margin-block-start: 6px; }
+.explorer-compact .explorer-row-details > summary { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; color: var(--ui-accent); font-size: var(--fs-support); line-height: 1.45; list-style: none; cursor: pointer; }
+.explorer-row-details > summary::-webkit-details-marker { display: none; }
+.explorer-row-details > summary::after { content: ""; width: 6px; height: 6px; flex-shrink: 0; margin-block-start: -3px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); transition: transform 150ms ease; }
+.explorer-row-details[open] > summary::after { margin-block-start: 3px; transform: rotate(225deg); }
+.explorer-row-details > summary:hover { text-decoration: underline; text-underline-offset: 3px; }
+.explorer-compact .explorer-detail-facts { gap: 6px; margin-block-start: 8px; padding-block-start: 10px; border-top: 1px solid var(--ui-border); }
+.explorer-compact .explorer-detail-facts .explorer-fact { display: grid; grid-template-columns: 7.5em minmax(0, 1fr); gap: 0 12px; }
+.explorer-compact .explorer-detail-facts .explorer-fact-label { white-space: normal; }
+.explorer-compact .explorer-detail-facts .explorer-fact-label::after { content: none; }
+
+/* ----------------------------------------------------------- comparison --- */
+.explorer-compact .explorer-comparison { margin: 8px 0 0; padding: 24px 0 0; border: 0; border-top: 1px solid var(--ui-border); border-radius: 0; background: transparent; }
+.explorer-compact .explorer-comparison-header { align-items: center; }
+.explorer-compact .explorer-comparison-title { font-size: var(--fs-section); font-weight: 600; line-height: 1.4; }
+.explorer-compact .explorer-comparison-clear { min-height: var(--control-min); padding: var(--control-pad-block) var(--control-pad-inline); border: 0; border-radius: var(--ui-radius-sm); font-size: var(--fs-body); font-weight: 500; }
+.explorer-compact .explorer-comparison-note { max-width: 90ch; margin-block-start: 8px; font-size: var(--fs-support); line-height: 1.55; }
+.explorer-compact .explorer-comparison-caveat { max-width: 90ch; margin-block-start: 12px; font-size: var(--fs-support); line-height: 1.55; }
+.explorer-compact .explorer-comparison-scroll { margin-block-start: 16px; border-top: 1px solid var(--ui-border); }
+.explorer-compact .explorer-comparison-scroll:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
+.explorer-compact .explorer-comparison-caption { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
+.explorer-compact :is(.explorer-comparison-field-head, .explorer-comparison-item-head) { padding: 10px 12px; border-bottom: 1px solid var(--ui-border); font-size: var(--fs-small); font-weight: 500; }
+.explorer-compact .explorer-comparison-field-head { width: 11rem; }
+.explorer-compact .explorer-comparison-item-title { font-family: inherit; font-size: var(--fs-body); font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; }
+.explorer-compact .explorer-comparison-remove { min-height: var(--control-min); margin-block-start: 4px; padding: var(--control-pad-block) var(--control-pad-inline); border: 0; border-radius: var(--ui-radius-sm); background: none; color: var(--ui-accent); font-size: var(--fs-support); }
+.explorer-compact .explorer-comparison-remove:hover { text-decoration: underline; text-underline-offset: 3px; }
+.explorer-compact .explorer-comparison-remove:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
+.explorer-compact .explorer-comparison-field { padding: 10px 12px; font-size: var(--fs-support); font-weight: 500; white-space: normal; }
+.explorer-compact .explorer-comparison-body td { padding: 10px 12px; border: 0; font-size: var(--fs-body); line-height: 1.5; }
+.explorer-compact .explorer-comparison-row:hover { background: var(--ui-surface-muted); }
+.explorer-compact .explorer-comparison-body :is(.explorer-comparison-cell-prompt-processing, .explorer-comparison-cell-throughput, .explorer-comparison-cell-ttft, .explorer-comparison-cell-duration, .explorer-comparison-cell-samples, .explorer-comparison-cell-shown-point, .explorer-comparison-cell-input-context, .explorer-comparison-cell-measured-points) { font-variant-numeric: tabular-nums; }
+.explorer-compact .explorer-comparison-body :is(.explorer-comparison-cell-prompt-processing, .explorer-comparison-cell-throughput) { font-weight: 600; }
+.explorer-compact .explorer-comparison-body .explorer-detail-link { color: var(--ui-accent); font-weight: 500; }
+
+/* ----------------------------------------------------- paging and guide --- */
+.explorer-compact :is(.explorer-page-previous, .explorer-page-next) { min-height: var(--control-min); padding: var(--control-pad-block) var(--control-pad-inline); border: 0; border-radius: var(--ui-radius-sm); font-size: var(--fs-body); font-weight: 500; }
+.explorer-compact .explorer-guide { display: block; margin-block-start: 8px; padding: 0; border: 0; border-block: 1px solid var(--ui-border); border-radius: 0; background: transparent; }
+.explorer-compact .explorer-guide::before { display: none; }
+.explorer-guide > summary { display: flex; align-items: center; justify-content: space-between; min-height: max(40px, var(--control-min)); list-style: none; cursor: pointer; }
+.explorer-guide > summary::-webkit-details-marker { display: none; }
+.explorer-guide > summary::after { content: ""; width: 7px; height: 7px; margin-inline: 8px; border-right: 1.5px solid var(--ui-muted); border-bottom: 1.5px solid var(--ui-muted); transform: rotate(45deg); transition: transform 150ms ease; }
+.explorer-guide[open] > summary::after { transform: rotate(225deg); }
+.explorer-compact .explorer-guide-title { font-size: var(--fs-body); font-weight: 600; }
+.explorer-compact .explorer-guide-text { margin-block: 0 14px; font-size: var(--fs-body); line-height: 1.65; max-width: 80ch; }
+
+@media (max-width: 1200px) {
+  .explorer.explorer-compact { grid-template-columns: 200px minmax(0, 1fr); column-gap: 28px; }
+  .explorer-compact .explorer-rail { padding-inline: 14px; }
+  .explorer-sidebar-actions { margin-inline: -14px; padding-inline: 14px; }
+  .explorer-compact .explorer-cell { padding-inline: 10px; }
+  .explorer-compact .explorer-head-cell { padding-inline: 10px; }
+  .explorer-compact .explorer-basis-field .ui-select { width: 15rem; }
+  .explorer-compact .explorer-sort .ui-select { width: 18rem; }
+}
+
+@media (max-width: 900px) {
+  .explorer.explorer-compact { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; gap: 0; }
+  .explorer-compact > .page-intro,
+  .explorer-compact .explorer-rail,
+  .explorer-compact .explorer-main-column { grid-column: 1; grid-row: auto; }
+  .explorer-compact .explorer-rail { margin-block-end: 20px; padding: 0; border-radius: 0; background: transparent; }
+  .explorer-compact .explorer-sidebar-toggle { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: max(36px, var(--control-min)); width: 100%; border: 0; border-radius: var(--ui-radius-sm); font-size: var(--fs-body); font-weight: 500; }
+  .explorer-sidebar-content { margin-top: 12px; padding: 16px; border-radius: var(--ui-radius-lg); background: var(--ui-rail); color: var(--ui-rail-ink); }
+  .explorer-sidebar-content[data-open="false"] { display: none; }
+  .explorer-compact .explorer-group-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .explorer-sidebar-actions { position: static; margin-inline: 0; padding-inline: 0; border-top-color: var(--ui-rail-border); background: transparent; }
+}
+
+/*
+ * The ruled table holds while the results column can keep six readable columns;
+ * a narrower column (phone, or a small window) stacks each result with its labels.
+ */
+/* Mid-sized windows keep the identity and numeric columns aligned, while the
+   context gets a full-width second line instead of a squeezed final column. */
+@container (min-width: 680px) and (max-width: 839px) {
+  .explorer-compact .explorer-table,
+  .explorer-compact .explorer-table-head,
+  .explorer-compact .explorer-table-body { display: block; width: 100%; }
+  .explorer-compact .explorer-table-head > tr,
+  .explorer-compact .explorer-row { display: grid; grid-template-columns: 2rem minmax(0, 1.35fr) minmax(0, 1fr) 7rem 7rem; }
+  .explorer-compact .explorer-head-cell { width: auto; }
+  .explorer-compact .explorer-head-setup { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .explorer-compact .explorer-row { border-bottom: 1px solid var(--ui-border); }
+  .explorer-compact .explorer-cell { border-bottom: 0; padding-bottom: 10px; }
+  .explorer-compact .explorer-cell-setup { display: flex; grid-column: 2 / -1; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; padding-block: 0 14px; }
+  .explorer-compact .explorer-cell-setup > .explorer-cell-label { display: inline; margin: 0; color: var(--ui-muted); font-size: var(--fs-support); }
+  .explorer-compact .explorer-cell-setup > .explorer-cell-value { display: flex; flex: 1 1 auto; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+  .explorer-compact .explorer-setup-facts { margin: 0; }
+  .explorer-compact .explorer-setup-facts .explorer-fact-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .explorer-compact .explorer-row-details { margin: 0; }
+  .explorer-compact .explorer-row-details[open] { flex-basis: 100%; }
+}
+
+@container (max-width: 679px) {
+  .explorer-compact .explorer-table, .explorer-compact .explorer-table-body { display: block; width: 100%; border-top: 0; }
+  .explorer-compact .explorer-table-head { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .explorer-compact .explorer-table .explorer-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto; gap: 14px 20px; margin: 0; padding: 20px 0; border: 0; border-bottom: 1px solid var(--ui-border); border-radius: 0; background: transparent; }
+  .explorer-compact .explorer-table .explorer-row:first-child { border-top: 1px solid var(--ui-border); }
+  .explorer-compact .explorer-table .explorer-cell { display: block; width: auto; min-width: 0; padding: 0; border: 0; text-align: start; }
+  .explorer-compact .explorer-cell-label { display: block; font-size: var(--fs-support); font-weight: 400; color: var(--ui-muted); margin-bottom: 4px; }
+  .explorer-compact .explorer-table .explorer-cell-identity { grid-column: 1 / 3; grid-row: 1; }
+  .explorer-compact .explorer-cell-identity > .explorer-cell-label,
+  .explorer-compact .explorer-cell-compare > .explorer-cell-label { display: none; }
+  .explorer-compact .explorer-table .explorer-cell-compare { grid-column: 3; grid-row: 1; justify-self: end; align-self: start; }
+  .explorer-compact .explorer-compare-input { width: 20px; height: 20px; margin: 4px; }
   .explorer-compact .explorer-table .explorer-cell-environment { grid-column: 1 / -1; grid-row: 2; }
-  .explorer-compact .explorer-table .explorer-cell-numeric { grid-row: 3; grid-template-columns: minmax(0, 1fr); }
+  .explorer-compact .explorer-table .explorer-cell-prefill { grid-column: 1; grid-row: 3; }
+  .explorer-compact .explorer-table .explorer-cell-decode { grid-column: 2 / -1; grid-row: 3; }
   .explorer-compact .explorer-table .explorer-cell-setup { grid-column: 1 / -1; grid-row: 4; }
-  .explorer-compact .explorer-status { margin: 0; }
-  .explorer-compact .explorer-cell-numeric .explorer-cell-value { font-size: 1rem; font-weight: 650; }
+  .explorer-compact .explorer-cell-numeric .explorer-metric-value { font-size: var(--fs-group); }
+  .explorer-compact .explorer-row-details > summary { min-height: 40px; }
+  .explorer-compact .explorer-detail-facts .explorer-fact { grid-template-columns: minmax(0, 1fr); }
+  .explorer-compact .explorer-result-actions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .explorer-compact .explorer-result-actions .explorer-field { display: grid; gap: 6px; }
+  .explorer-compact .explorer-basis { display: grid; }
+  .explorer-compact :is(.explorer-basis-field, .explorer-sort) .ui-select { width: 100%; }
+  .explorer-compact .explorer-sort { margin: 0; }
+  .explorer-basis-help { position: static; }
+  .explorer-basis-field { position: relative; }
 }
 
 @media (max-width: 700px) {
-  .explorer-compact .explorer-table .explorer-cell-compare { position: relative; z-index: 1; }
+  .explorer-compact > .page-intro { flex-direction: column; align-items: flex-start; margin-block-end: 20px; padding-block-end: 20px; }
+  .explorer-compact > .page-intro .page-title { font-size: var(--fs-page-title-phone); }
+  .explorer-compact .explorer-group-fields { grid-template-columns: minmax(0, 1fr); }
+  .explorer-compact :is(.explorer-field-input, .ui-select-trigger, .explorer-button, .explorer-refresh, .explorer-comparison-clear, .explorer-page-previous, .explorer-page-next) { min-height: 44px; }
 }
-
-/* Measurement counts qualify the workload rather than occupy a metric column. */
-.explorer-measurement-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 3px 6px; margin-block-start: 4px; color: var(--ui-muted); font-size: .74rem; }
-.explorer-measurement-meta .explorer-status { margin: 0; }
-
-/* Model identity and environment stay labeled when the row stacks; the pairs
-   simply get one line each instead of sharing one. */
-@media (max-width: 700px) {
-  .explorer-compact .explorer-facts { gap: 6px 8px; }
-  .explorer-compact .explorer-model-facts { font-size: .875rem; }
-}
-@media (max-width: 24rem) {
-  .explorer-compact .explorer-facts { flex-direction: column; }
-}
-
-/* The basis point sits with sorting: both decide how the results are read. */
-.explorer-basis { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px 10px; max-width: 26rem; }
-.explorer-compact .explorer-basis-field { min-width: 190px; }
-.explorer-compact .explorer-basis-field .explorer-field-label { font-size: .875rem; margin-bottom: 4px; }
-.explorer-compact .explorer-basis-field select { min-height: 40px; padding: 8px 10px; font-size: .9375rem; }
-.explorer-basis-only { display: flex; align-items: center; gap: 8px; font-size: .875rem; min-height: 40px; }
-.explorer-basis-hint { flex-basis: 100%; margin: 0; font-size: .8125rem; line-height: 1.6; color: var(--ui-muted); }
-/* The point a speed column is read at, under the column's own name. */
-.explorer-head-basis { display: block; font-weight: 450; font-size: .72rem; color: var(--ui-muted); white-space: nowrap; }
-.explorer-metric-value { display: block; font-variant-numeric: tabular-nums; }
-.explorer-metric-spread { display: block; font-size: .72rem; color: var(--ui-muted); font-variant-numeric: tabular-nums; }
-@media (max-width: 700px) {
-  .explorer-basis { max-width: none; width: 100%; }
-  .explorer-compact .explorer-basis-field { flex: 1; }
+@media (prefers-reduced-motion: reduce) {
+  :is(.explorer-row-details, .explorer-secondary-filters, .explorer-guide) > summary::after,
+  .explorer-secondary-filters > summary::before { transition: none; }
 }

@@ -1,0 +1,122 @@
+{
+  "light": {
+    "error": {
+      "stops": [
+        "#FDEFF0",
+        "#FCEEEF",
+        "#FAECEE"
+      ],
+      "ink": "#9B3B34",
+      "action": {
+        "stops": [
+          "#FBE4E6",
+          "#FAE2E4",
+          "#F8E0E2"
+        ],
+        "hoverStops": [
+          "#F9DADC",
+          "#F7D7DA",
+          "#F5D4D7"
+        ],
+        "ink": "#752622"
+      }
+    },
+    "info": {
+      "stops": [
+        "#F4F8FF",
+        "#F2F6FE",
+        "#F0F4FC"
+      ],
+      "ink": "#495989"
+    },
+    "success": {
+      "stops": [
+        "#F3FAF5",
+        "#F1F8F3",
+        "#EFF6F1"
+      ],
+      "ink": "#376459"
+    },
+    "warning": {
+      "stops": [
+        "#FFF6E0",
+        "#FFF4DC",
+        "#FDF2D9"
+      ],
+      "ink": "#76510C",
+      "action": {
+        "stops": [
+          "#FCE8BE",
+          "#FBE6BA",
+          "#F9E4B7"
+        ],
+        "hoverStops": [
+          "#F8E0AE",
+          "#F6DEAB",
+          "#F4DCA8"
+        ],
+        "ink": "#624207"
+      }
+    }
+  },
+  "dark": {
+    "error": {
+      "stops": [
+        "#664C4F",
+        "#644A4D",
+        "#62484B"
+      ],
+      "ink": "#FFC9C1",
+      "action": {
+        "stops": [
+          "#815D60",
+          "#7E5A5D",
+          "#7B575A"
+        ],
+        "hoverStops": [
+          "#856266",
+          "#825F63",
+          "#7F5C60"
+        ],
+        "ink": "#FFF8F3"
+      }
+    },
+    "info": {
+      "stops": [
+        "#465472",
+        "#445270",
+        "#42506E"
+      ],
+      "ink": "#CDD8FA"
+    },
+    "success": {
+      "stops": [
+        "#445A51",
+        "#42584F",
+        "#40564D"
+      ],
+      "ink": "#BEE2D8"
+    },
+    "warning": {
+      "stops": [
+        "#635239",
+        "#615037",
+        "#5F4E35"
+      ],
+      "ink": "#FFE2A3",
+      "action": {
+        "stops": [
+          "#796543",
+          "#766240",
+          "#735F3D"
+        ],
+        "hoverStops": [
+          "#7E6A46",
+          "#7B6743",
+          "#786440"
+        ],
+        "ink": "#FFFEF8"
+      }
+    }
+  }
+}

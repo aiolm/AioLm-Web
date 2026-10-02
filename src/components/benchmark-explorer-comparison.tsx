@@ -6,7 +6,7 @@ import type { Translator } from "@/i18n/types";
 import { useSearchParams } from "next/navigation";
 
 import Link from "next/link";
-import { BilingualHeader } from "./benchmark-i18n";
+import { ColumnHeading } from "./benchmark-i18n";
 import {
   EXPLORER_COMPARE_LIMIT,
   comparisonCompatibility,
@@ -120,7 +120,7 @@ export function BenchmarkExplorerComparison({
     <section className="explorer-comparison" aria-labelledby="explorer-comparison-title">
       <div className="explorer-comparison-header">
         <h3 id="explorer-comparison-title" className="explorer-comparison-title">{t("benchmark.Selected results")}</h3>
-        <button type="button" className="explorer-button explorer-comparison-clear" onClick={onClear}>{t("benchmark.Clear selection")}</button>
+        <button type="button" className="explorer-button explorer-comparison-clear" data-action-glyph="clear" onClick={onClear}>{t("benchmark.Clear selection")}</button>
       </div>
       <p className="explorer-comparison-note">
         {t("benchmark.{count} of {limit} results selected. These are the results you picked; the site publishes self-reported measurements and does not rank them. Only summary fields appear here, so open a result to check its full environment before drawing a conclusion.", { count: items.length, limit: EXPLORER_COMPARE_LIMIT })}
@@ -146,7 +146,7 @@ export function BenchmarkExplorerComparison({
           <thead className="explorer-comparison-head">
             <tr className="explorer-comparison-head-row">
               <th scope="col" className="explorer-comparison-field-head">
-                <BilingualHeader local={t("benchmark.Field")} en="Field" locale={locale} />
+                <ColumnHeading label={t("benchmark.Field")} />
               </th>
               {items.map((item) => (
                 <th scope="col" key={item.public_id} className="explorer-comparison-item-head">

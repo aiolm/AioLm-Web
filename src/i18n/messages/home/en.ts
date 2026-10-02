@@ -18,6 +18,7 @@ const messages = {
   "home.installCommandTitle": "Install AioLM",
   "home.copyCommand": "Copy",
   "home.copied": "Copied!",
+  "home.copyFailed": "Could not copy. Select the command and copy it manually.",
   "home.macosPlanned": "macOS support is planned. A curl installation command will be provided upon release.",
   "home.linuxPlanned": "Linux support is planned. A curl installation command will be provided upon release.",
   "home.workflow": "From model to measurement",
@@ -31,12 +32,6 @@ const messages = {
   "home.closing": "Understand the setup behind the numbers",
   "home.closingDetail": "Published benchmarks include the measurement method, workload and hardware so configurations can be compared.",
   "home.browse": "Browse benchmarks",
-  "home.models": "Models",
-  "home.runtimes": "Runtimes",
-  "home.chat": "Chat",
-  "home.benchmarks": "Benchmarks",
-  "home.library": "GGUF model library",
-  "home.libraryDetail": "Find and organize local models",
   "home.runtime": "Runtime management",
   "home.runtimeDetail": "Choose a llama.cpp backend",
   "home.conversation": "Local conversations",
@@ -44,7 +39,8 @@ const messages = {
   "home.performance": "Performance benchmarks",
   "home.performanceDetail": "Measure and review your setup",
   "home.overview": "Workspace overview",
-  "home.caption": "The AioLM desktop workspace groups a GGUF model library, llama.cpp runtime management, local conversations and performance benchmarks in one window."
+  "home.screenshotAlt": "The AioLM desktop app on its Run a model page, listing four public GGUF demonstration models with Qwen3-8B-Instruct loaded on a llama.cpp runtime.",
+  "home.caption": "Run a model in the AioLM desktop app: your local GGUF library, the loaded model and its llama.cpp runtime in one window. Shown with public demonstration models."
 };
 export type EnglishMessages = typeof messages;
 export default messages;

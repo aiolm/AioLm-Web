@@ -1,0 +1,58 @@
+{
+  "light": {
+    "action": {
+      "stops": [
+        "#E4ECFE",
+        "#E2E9FC",
+        "#E0E6FA"
+      ],
+      "hoverStops": [
+        "#DBE3FD",
+        "#D9E0FC",
+        "#D7DDFB"
+      ],
+      "ink": "#3E4D82",
+      "hoverInk": "#3E4D82"
+    },
+    "field": {
+      "stops": [
+        "#F7FAFF",
+        "#F5F8FE",
+        "#F3F6FD"
+      ],
+      "hoverStops": [
+        "#F2F7FF",
+        "#F0F5FE",
+        "#EEF3FD"
+      ]
+    }
+  },
+  "dark": {
+    "action": {
+      "stops": [
+        "#515C8D",
+        "#4F5A8B",
+        "#4D5889"
+      ],
+      "hoverStops": [
+        "#58608F",
+        "#565E8D",
+        "#545C8B"
+      ],
+      "ink": "#B5E7FF",
+      "hoverInk": "#D0F0FF"
+    },
+    "field": {
+      "stops": [
+        "#4A526B",
+        "#49516A",
+        "#485069"
+      ],
+      "hoverStops": [
+        "#4E576F",
+        "#4D566E",
+        "#4C556D"
+      ]
+    }
+  }
+}

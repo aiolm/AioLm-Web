@@ -20,8 +20,6 @@ import {
 export interface RowColumn {
   key: string;
   label: string;
-  enLabel: string;
-  localLabel?: string;
   /** Reported unit, rendered beside the label instead of inside every cell. */
   unit?: string;
   /** Numeric columns are aligned and tabulated as a column, not as prose. */
@@ -35,20 +33,20 @@ function throughput(value: unknown): string {
 
 function measurementColumns(t: Translator): readonly RowColumn[] {
   return [
-    { key: "prompt_tokens", label: t("benchmark.Prompt"), enLabel: "Prompt", localLabel: t("benchmark.Prompt"), unit: t("benchmark.tokens"), numeric: true, format: formatCount },
-    { key: "concurrency", label: t("benchmark.Concurrency"), enLabel: "Concurrency", localLabel: t("benchmark.Concurrency"), numeric: true, format: formatCount },
-    { key: "repetition", label: t("benchmark.Repetition"), enLabel: "Repetition", localLabel: t("benchmark.Repetition"), numeric: true, format: formatCount },
-    { key: "pp_tps", label: t("benchmark.Prefill"), enLabel: "Prefill", localLabel: t("benchmark.Prefill"), unit: t("benchmark.tok/s"), numeric: true, format: throughput },
-    { key: "tg_tps", label: t("benchmark.Decode"), enLabel: "Decode", localLabel: t("benchmark.Decode"), unit: t("benchmark.tok/s"), numeric: true, format: throughput },
-    { key: "ttft_ms", label: t("benchmark.TTFT"), enLabel: "TTFT", localLabel: t("benchmark.TTFT"), unit: t("benchmark.ms"), numeric: true, format: formatMilliseconds },
-    { key: "peak_memory_bytes", label: t("benchmark.Peak process memory"), enLabel: "Peak process memory", localLabel: t("benchmark.Peak process memory"), numeric: true, format: (value) => formatCompactBytes(value, t) },
-    { key: "generation_length", label: t("benchmark.Generation length"), enLabel: "Generation length", localLabel: t("benchmark.Generation length"), unit: t("benchmark.tokens"), numeric: true, format: formatCount },
-    { key: "completion_tokens", label: t("benchmark.Completion"), enLabel: "Completion", localLabel: t("benchmark.Completion"), unit: t("benchmark.tokens"), numeric: true, format: formatCount },
-    { key: "cached_tokens", label: t("benchmark.Cached"), enLabel: "Cached", localLabel: t("benchmark.Cached"), unit: t("benchmark.tokens"), numeric: true, format: formatCount },
-    { key: "tpot_ms", label: t("benchmark.Time per output token"), enLabel: "TPOT", localLabel: t("benchmark.Time per output token"), unit: t("benchmark.ms"), numeric: true, format: formatMilliseconds },
-    { key: "e2e_ms", label: t("benchmark.End-to-end duration"), enLabel: "Duration", localLabel: t("benchmark.End-to-end duration"), unit: t("benchmark.s"), numeric: true, format: formatSeconds },
-    { key: "total_tps", label: t("benchmark.Total throughput"), enLabel: "Total throughput", localLabel: t("benchmark.Total throughput"), unit: t("benchmark.tok/s"), numeric: true, format: throughput },
-    { key: "timing_source", label: t("benchmark.Timing source"), enLabel: "Timing source", localLabel: t("benchmark.Timing source"), numeric: false, format: (value: unknown) => formatCellValue(value, t) },
+    { key: "prompt_tokens", label: t("benchmark.Prompt"), unit: t("benchmark.tokens"), numeric: true, format: formatCount },
+    { key: "concurrency", label: t("benchmark.Concurrency"), numeric: true, format: formatCount },
+    { key: "repetition", label: t("benchmark.Repetition"), numeric: true, format: formatCount },
+    { key: "pp_tps", label: t("benchmark.Prefill"), unit: t("benchmark.tok/s"), numeric: true, format: throughput },
+    { key: "tg_tps", label: t("benchmark.Decode"), unit: t("benchmark.tok/s"), numeric: true, format: throughput },
+    { key: "ttft_ms", label: t("benchmark.TTFT"), unit: t("benchmark.ms"), numeric: true, format: formatMilliseconds },
+    { key: "peak_memory_bytes", label: t("benchmark.Peak process memory"), numeric: true, format: (value) => formatCompactBytes(value, t) },
+    { key: "generation_length", label: t("benchmark.Generation length"), unit: t("benchmark.tokens"), numeric: true, format: formatCount },
+    { key: "completion_tokens", label: t("benchmark.Completion"), unit: t("benchmark.tokens"), numeric: true, format: formatCount },
+    { key: "cached_tokens", label: t("benchmark.Cached"), unit: t("benchmark.tokens"), numeric: true, format: formatCount },
+    { key: "tpot_ms", label: t("benchmark.Time per output token"), unit: t("benchmark.ms"), numeric: true, format: formatMilliseconds },
+    { key: "e2e_ms", label: t("benchmark.End-to-end duration"), unit: t("benchmark.s"), numeric: true, format: formatSeconds },
+    { key: "total_tps", label: t("benchmark.Total throughput"), unit: t("benchmark.tok/s"), numeric: true, format: throughput },
+    { key: "timing_source", label: t("benchmark.Timing source"), numeric: false, format: (value: unknown) => formatCellValue(value, t) },
   ];
 }
 
@@ -103,7 +101,6 @@ export function buildRowColumns(
     ? extras.map((key) => ({
         key,
         label: key,
-        enLabel: key,
         numeric: false,
         format: (value: unknown) => formatCellValue(value, t),
       }))

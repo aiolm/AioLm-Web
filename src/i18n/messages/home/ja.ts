@@ -19,6 +19,7 @@ const messages = {
   "home.installCommandTitle": "AioLMのインストール",
   "home.copyCommand": "コピー",
   "home.copied": "コピー完了!",
+  "home.copyFailed": "コピーできませんでした。コマンドを選択して手動でコピーしてください。",
   "home.macosPlanned": "macOS対応を予定しています。リリース時にcurlインストールコマンドが提供されます。",
   "home.linuxPlanned": "Linux対応を予定しています。リリース時にcurlインストールコマンドが提供されます。",
   "home.workflow": "モデル選びから性能測定まで",
@@ -32,12 +33,6 @@ const messages = {
   "home.closing": "数値の背景にある実行環境を知る",
   "home.closingDetail": "公開ベンチマークには測定方法、ワークロード、ハードウェアが含まれ、構成を比較できます。",
   "home.browse": "ベンチマークを見る",
-  "home.models": "モデル",
-  "home.runtimes": "ランタイム",
-  "home.chat": "チャット",
-  "home.benchmarks": "ベンチマーク",
-  "home.library": "GGUFモデルライブラリ",
-  "home.libraryDetail": "ローカルモデルを探して整理",
   "home.runtime": "ランタイム管理",
   "home.runtimeDetail": "llama.cppバックエンドを選択",
   "home.conversation": "ローカルでの会話",
@@ -45,6 +40,7 @@ const messages = {
   "home.performance": "性能ベンチマーク",
   "home.performanceDetail": "実行環境を測定して確認",
   "home.overview": "ワークスペースの概要",
-  "home.caption": "AioLMのデスクトップワークスペースは、GGUFモデルライブラリ、llama.cppランタイム管理、ローカルでの会話、性能ベンチマークをひとつのウィンドウにまとめています。"
+  "home.screenshotAlt": "AioLMデスクトップアプリのモデル実行画面。公開されている4つのGGUFデモ用モデルが表示され、Qwen3-8B-Instructがllama.cppランタイムに読み込まれています。",
+  "home.caption": "AioLMデスクトップアプリのモデル実行画面：ローカルのGGUFライブラリ、読み込み中のモデル、llama.cppランタイムをひとつのウィンドウで確認できます。公開デモ用モデルで表示しています。"
 } satisfies Record<keyof EnglishMessages, string>;
 export default messages;
