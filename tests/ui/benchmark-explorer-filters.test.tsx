@@ -19,7 +19,7 @@ describe("sidebar filter disclosures", () => {
     const groups = html.split('<section class="explorer-filter-group"').slice(1);
     expect(groups).toHaveLength(3);
     const visible = groups.map(group => group.split('<details')[0]).join('');
-    expect([...visible.matchAll(/name="([^"]+)"/g)].map(match => match[1])).toEqual(["model_query", "quantization", "vendor", "gpu", "vram_min", "vram_max", "os"]);
+    expect([...visible.matchAll(/name="([^"]+)"/g)].map(match => match[1])).toEqual(["model_query", "weight_bits", "vendor", "gpu", "vram_min", "vram_max", "os"]);
     expect(html.match(/<details class="explorer-secondary-filters">/g)).toHaveLength(4);
     expect(html).toContain('<details class="explorer-secondary-filters"><summary><span>Measurement settings');
     expect(html.match(/type="submit"/g)).toHaveLength(1);

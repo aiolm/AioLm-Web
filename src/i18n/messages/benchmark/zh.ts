@@ -1,5 +1,11 @@
 import type { BenchmarkMessages } from "./en";
 const messages = {
+  "benchmark.Weight bits": "权重位数",
+  "benchmark.All weight bits": "所有位数",
+  "benchmark.Quantization format / method": "量化格式与方法",
+  "benchmark.Uses the declared weight format, not average file storage or KV cache precision. Unclassified results remain visible with no bit filter.": "依据记录的主要权重格式，不代表文件平均存储位数或KV缓存精度。不选择位数时仍显示未分类结果。",
+  "benchmark.Weight bit options unavailable. Clear the selection or retry.": "无法加载位数选项。请清除选择或重试。",
+  "benchmark.No confirmed weight bits match the other filters.": "其他筛选条件下没有已确认的位数信息。",
   "benchmark.All-fields keyword": "全字段关键词",
   "benchmark.Model label": "模型显示名称",
   "benchmark.Find a model": "查找模型",

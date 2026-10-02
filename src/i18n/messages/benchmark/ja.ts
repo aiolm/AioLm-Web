@@ -1,5 +1,11 @@
 import type { BenchmarkMessages } from "./en";
 const messages = {
+  "benchmark.Weight bits": "重みのビット数",
+  "benchmark.All weight bits": "すべてのビット数",
+  "benchmark.Quantization format / method": "量子化形式・方式",
+  "benchmark.Uses the declared weight format, not average file storage or KV cache precision. Unclassified results remain visible with no bit filter.": "記録された代表的な重み形式に基づきます。ファイルの平均保存ビット数やKVキャッシュ精度とは異なります。ビット数を選択しなければ未分類の結果も表示します。",
+  "benchmark.Weight bit options unavailable. Clear the selection or retry.": "ビット数の選択肢を取得できません。選択を解除するか再試行してください。",
+  "benchmark.No confirmed weight bits match the other filters.": "他のフィルター条件に合う確認済みのビット情報がありません。",
   "benchmark.All-fields keyword": "全項目のキーワード",
   "benchmark.Model label": "モデル表示名",
   "benchmark.Find a model": "モデルを探す",

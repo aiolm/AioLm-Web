@@ -26,6 +26,38 @@ function run(id: string, promptLength: number | null = 512): StoredRun {
 const gpu = (name: string, vendor: string, vram_mb: number | null) => ({ name, vendor, vram_mb, driver: null, integrated: false });
 
 describe("discovery setup", () => {
+  it.each([
+    [["R9700", "R9700"], "R9700 x 2"],
+    [["RTX 4090", "RTX 4090", "RTX 4090"], "RTX 4090 x 3"],
+    [["R9700", "RTX 4090", "R9700", "RTX 4090"], "R9700 x 2 + RTX 4090 x 2"],
+    [["R9700", "RTX 4090"], "R9700 + RTX 4090"],
+    [["R9700"], "R9700"],
+  ])("counts selected GPUs in the searchable hardware label: %s", (names, label) => {
+    const b = syntheticSubmission();
+    b.environment!.execution = { mode: "selected", selection_complete: true, selected_gpus: names.map(name => gpu(name, "Vendor", 4096)) };
+    const summary = summarizeBenchmark(b);
+    expect(summary.hardware_label).toBe(label);
+    expect(summary.setup!.gpus).toEqual([...new Set(names)]);
+    expect(matchesFilters(summary, { hardware: label })).toBe(true);
+    expect(matchesFilters(summary, { q: label })).toBe(true);
+  });
+  it("counts vendor and unknown fallbacks without using installed GPUs", () => {
+    const b = syntheticSubmission();
+    b.environment!.execution = { mode: "selected", selection_complete: false, selected_gpus: [
+      { ...gpu("unused", "AMD", null), name: null },
+      { ...gpu("unused", "AMD", null), name: null },
+      { ...gpu("unused", "unused", null), name: null, vendor: null },
+    ] };
+    expect(summarizeBenchmark(b).hardware_label).toBe("AMD x 2 + gpu");
+  });
+  it("offers counted hardware suggestions that filter the corresponding runs", async () => {
+    const r = run("dual-gpu");
+    r.benchmark.environment!.execution = { mode: "selected", selection_complete: true, selected_gpus: [gpu("R9700", "AMD", 32768), gpu("R9700", "AMD", 32768)] };
+    r.summary = summarizeBenchmark(r.benchmark);
+    store.runs.set(r.public_id, r);
+    expect(await store.listOptions("hardware", "R9700", {})).toEqual({ options: [{ value: "R9700 x 2", count: 1 }], has_more: false });
+    expect((await store.listRuns({ hardware: "R9700 x 2" }, 25, null)).items.map(item => item.public_id)).toEqual([r.public_id]);
+  });
   it("keeps runtime/settings without environment and never substitutes installed GPUs", () => {
     const b = syntheticSubmission({ environment: null });
     expect(normalizeSetup(b)).toMatchObject({ os: null, cores: null, runtime: "llama.cpp", context_size: 2048, prompt_length: 512, vram_mb: null });

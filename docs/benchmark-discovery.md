@@ -2,7 +2,7 @@
 
 The website extends the shared publication API with discovery queries. Publication,
 ownership, verification, deletion, and measurement-row protocols remain unchanged.
-Run the numbered SQL migrations before deploying code that requires migration 010.
+Run the numbered SQL migrations before deploying code that requires migration 014.
 The readiness probe checks that every required migration is present.
 
 ## List queries
@@ -17,6 +17,7 @@ benchmark metadata and measurement rows are not loaded by the explorer.
 | model, hardware, method, workload | Existing summary label filters |
 | model_query | Narrow model search: the model label, name, repository, artifact, and hash; never hardware, runtime, or status |
 | publisher, quantization, base_model | Model publisher, weight quantization, and upstream model IDs |
+| weight_bits | Exact nominal weight-bit family: 1, 2, 3, 4, 5, 6, 8, 16 or 32 |
 | vendor, gpu, cpu | Selected GPU vendor/model and CPU name |
 | os, arch, runtime, backend, mode | Environment and runtime filters |
 | flash_attention, cache_type_k, cache_type_v, split_mode | Recorded execution settings |
@@ -29,7 +30,21 @@ benchmark metadata and measurement rows are not loaded by the explorer.
 | threads_min, threads_max | Runtime thread setting |
 | gpu_layers_min, gpu_layers_max | Offloaded layer setting; -1 retains the runtime sentinel |
 
-Text filters accept any literal case-insensitive substring, up to 120 characters.
+`weight_bits` is an exact selection, not a substring or range. Its basic UI offers
+only confirmed families present under the other filters, numerically ordered;
+the original `quantization` text filter remains under advanced model options.
+Classification uses only declared GGUF encoding codes and known `llama_ftype`
+values (`general.file_type`, not tensor `ggml_type`). The shared mapping is in
+`src/lib/weight-encodings.json`; migration 014 adds an immutable SQL equivalent
+and an expression index, so old summaries and old app writers need no rewrite.
+Known but conflicting metadata, guessed file types, unknown codes, IQ1 and ternary TQ
+formats, and method-only AWQ/GPTQ labels remain unclassified. Names, filenames,
+repository identifiers, model sizes and KV-cache types never supply a bit value.
+Unclassified runs stay in unfiltered lists and are excluded only when a bit
+filter is selected. Bit families describe the representative declared encoding,
+not uniform tensor precision, average storage bits/weight or model quality.
+
+Other text filters accept any literal case-insensitive substring, up to 120 characters.
 Percent, underscore, and backslash are ordinary search characters. Empty fields are
 ignored. Conditions from different fields are ANDed. Ranges are inclusive, require safe whole numbers, and reject an inverted
 minimum/maximum with HTTP 400. Unknown metadata never passes a numeric range and is

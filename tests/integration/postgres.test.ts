@@ -6,6 +6,8 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { randomBase64Url32, sha256HexUtf8 } from "@/lib/crypto";
 import { syntheticSubmission } from "@/lib/fixtures";
 import { summarizeBenchmark } from "@/lib/summary";
+import { weightBits } from "@/lib/weight-bits";
+import weightEncodings from "@/lib/weight-encodings.json";
 import { normalizeModelInfo } from "@/lib/model-info";
 import { mintUploadPermit, ownerHashFor, permitExpiryForSession } from "@/lib/permits";
 import { applyMigrations } from "@/server/migrations";
@@ -282,7 +284,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       }
       await seed("discovery-model-described", "discovery-model", { model_info: modelInfo() });
       await seed("discovery-model-other", "discovery-model", { model_info: modelInfo({
-        repository: "Other-Org/example-8B-GGUF", publisher: "Other-Org", quantization: "Q8_0" }) });
+        repository: "Other-Org/example-8B-GGUF", publisher: "Other-Org", quantization: "Q8_0", file_type: 7 }) });
       await seed("discovery-model-undescribed", "discovery-model");
       for (const [id, label] of [["percent", "100%"], ["underscore", "a_b"], ["slash", "a\\b"],
         ["quote", "x' OR true --"], ["decoy", "1000 axb"]]) {
@@ -368,6 +370,16 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       expect((await options({ field: "base_model", model: "discovery-model", option_query: "upstream" })).options)
         .toEqual([{ value: "Upstream-Org/example-8B", count: 2 }]);
       expect((await options({ field: "publisher", model: "discovery-model", option_query: "%" })).options).toEqual([]);
+    });
+
+    it("filters exact weight-bit families and suggests only classified formats in numeric order", async () => {
+      for (const [id, quantization, file_type] of [["q4", "Q4_K_M", 15], ["q8", "Q8_0", 7], ["iq4", "IQ4_XS", 30], ["nvfp4", "NVFP4", 39], ["bf16", "BF16", 32], ["awq", "AWQ", null], ["conflict", "Q4_K_M", 7]] as const) {
+        await seed(`discovery-weight-${id}`, "discovery-weight", { model_info: modelInfo({ quantization, file_type }) });
+      }
+      expect((await page({ model: "discovery-weight", weight_bits: "4" })).items.map(item => item.public_id).sort()).toEqual(["discovery-weight-iq4", "discovery-weight-nvfp4", "discovery-weight-q4"]);
+      expect((await page({ model: "discovery-weight", weight_bits: "8" })).items.map(item => item.public_id)).toEqual(["discovery-weight-q8"]);
+      expect((await page({ model: "discovery-weight", weight_bits: "4", quantization: "nvfp4" })).items.map(item => item.public_id)).toEqual(["discovery-weight-nvfp4"]);
+      expect((await options({ field: "weight_bits", model: "discovery-weight", weight_bits: "8" })).options).toEqual([{ value: "4", count: 3 }, { value: "8", count: 1 }, { value: "16", count: 1 }]);
     });
 
     it("searches and suggests model_query over the label and model identifiers only, like the in-memory store", async () => {
@@ -539,12 +551,13 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", "008_benchmark_discovery.sql"), "utf8"));
       const rows = await scratch<Array<{ summary: ReturnType<typeof summarizeBenchmark> }>>`
         select summary from bench.benchmark_runs order by public_id`;
-      // 008 predates configured input length, RAM bytes, and physical core summaries.
+      // 008 predates configured input length, RAM bytes, physical cores and runtime build.
       expect(rows.map((row) => row.summary.setup)).toEqual(benchmarks.map((benchmark) => {
-        const { prompt_length, ram_bytes, physical_cores, ...setup } = summarizeBenchmark(benchmark).setup!;
+        const { prompt_length, ram_bytes, physical_cores, runtime_build, ...setup } = summarizeBenchmark(benchmark).setup!;
         void prompt_length;
         void ram_bytes;
         void physical_cores;
+        void runtime_build;
         return setup;
       }));
       expect(rows[0]!.summary.setup?.vram_mb).toBe(8193);
@@ -972,6 +985,68 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     }
   });
 
+  it("backfills counted GPU labels without changing submissions or other summary fields", async () => {
+    if (!db) throw new Error("integration database unavailable");
+    const migration = readFileSync(join(process.cwd(), "sql/migrations/013_gpu_hardware_labels.sql"), "utf8");
+    await db.begin(async tx => {
+      const ids: string[] = [];
+      for (const [names, mode, hidden] of [
+        [["R9700", "R9700"], "selected", false],
+        [["RTX 4090", "R9700", "RTX 4090", "R9700", "RTX 4090"], "selected", true],
+        [["R9700", "RTX 4090"], "selected", false],
+        [["R9700", "R9700"], "cpu", false],
+        [[], "automatic", false],
+      ] as const) {
+        const benchmark = syntheticSubmission();
+        benchmark.environment!.execution = { mode, selection_complete: true, selected_gpus: names.map(name => ({ name, vendor: "Vendor", vram_mb: 4096, driver: null, integrated: false })) };
+        const summary = summarizeBenchmark(benchmark);
+        const legacyLabel = mode === "cpu" ? "cpu" : names.length ? names.join(" + ") : mode;
+        const submissionId = randomUUID();
+        ids.push(submissionId);
+        await tx`insert into bench.benchmark_runs (submission_id, public_id, owner_hash, body_sha256, benchmark, summary, hidden)
+          values (${submissionId}, ${submissionId}, ${"0".repeat(64)}, ${"1".repeat(64)},
+            ${tx.json(JSON.parse(JSON.stringify(benchmark)))}, ${tx.json({ ...summary, hardware_label: legacyLabel } as unknown as postgres.JSONValue)}, ${hidden})`;
+      }
+      const tombstone = randomUUID();
+      ids.push(tombstone);
+      await tx`insert into bench.benchmark_runs (submission_id, public_id, owner_hash, body_sha256, deleted)
+        values (${tombstone}, ${tombstone}, ${"0".repeat(64)}, ${"1".repeat(64)}, true)`;
+      const before = await tx`select * from bench.benchmark_runs where submission_id in ${tx(ids)}`;
+      await tx.unsafe(migration);
+      const after = await tx`select * from bench.benchmark_runs where submission_id in ${tx(ids)}`;
+      for (const row of before) {
+        const expected = row.summary ? { ...row, summary: { ...row.summary, hardware_label: summarizeBenchmark(row.benchmark).hardware_label } } : row;
+        expect(after.find(item => item.submission_id === row.submission_id)).toEqual(expected);
+      }
+      // No second update: repeated migration runs are harmless.
+      expect((await tx.unsafe(migration)).count).toBe(0);
+    });
+  });
+
+  it("uses identical weight-bit rules in PostgreSQL and the app, including invalid metadata", async () => {
+    if (!db) throw new Error("integration database unavailable");
+    const cases: unknown[] = weightEncodings.flatMap(encoding => [
+      { format: "GGUF", file_type: encoding.file_type },
+      ...encoding.labels.map(quantization => ({ format: "GGUF", quantization: ` ${quantization.toLowerCase()} ` })),
+    ]);
+    cases.push(null, {}, [], { format: "other", quantization: "NVFP4" },
+      { format: "GGUF", quantization: "AWQ" }, { format: "GGUF", quantization: "GPTQ" },
+      { format: "GGUF", quantization: "Q4_K_M", file_type: 7 },
+      { format: "GGUF", quantization: "Q4_K_M", file_type: 1024 },
+      { format: "GGUF", file_type: "15" }, { format: "GGUF", file_type: "invalid" },
+      { format: "GGUF", file_type: true }, { format: "GGUF", file_type: 15.5 },
+      { format: "GGUF", quantization: "TQ1_0", file_type: 36 },
+      { format: "GGUF", quantization: "IQ1_S", file_type: 24 },
+      { format: "GGUF", quantization: "IQ1_M", file_type: 31 },
+      { format: "GGUF", quantization: "IQ1_M", file_type: 15 },
+      { format: "GGUF", quantization: "Q4_K_M", file_type: 36 },
+      { format: "GGUF", name: "Model-Q4_K_M", artifact: "model-Q4_K_M.gguf" });
+    for (const info of cases) {
+      const [row] = await db`select bench.model_weight_bits(${db.json(info as postgres.JSONValue)}) as bits`;
+      expect(row!.bits, JSON.stringify(info)).toBe(weightBits(info));
+    }
+  });
+
   it("applies migrations exactly once", async () => {
     if (!db) return;
     expect(await applyMigrations(db)).toEqual([]);
@@ -981,6 +1056,8 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       "004_filter_indexes.sql", "005_retention_grants.sql", "006_trgm_filter_indexes.sql",
       "007_readiness_grant.sql", "008_benchmark_discovery.sql", "009_input_context.sql",
       "010_model_metadata.sql", "011_system_memory.sql", "012_operating_points.sql",
+      "013_gpu_hardware_labels.sql",
+      "014_weight_bits.sql",
     ]);
   });
 

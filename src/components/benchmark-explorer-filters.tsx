@@ -2,6 +2,7 @@
 import { useState, type ReactNode } from "react";
 import { useI18n } from "@/i18n/client";
 import { EditableCombobox } from "./editable-combobox";
+import { BenchmarkWeightBitsFilter } from "./benchmark-weight-bits-filter";
 import "./ui-controls.css";
 import { EXPLORER_BASIS_KEYS, EXPLORER_FILTER_LABELS, EXPLORER_FILTER_PLACEHOLDERS, EXPLORER_RANGE_HINTS, EXPLORER_RANGE_LABELS, buildExplorerOptionsPath, invalidExplorerRanges, type ExplorerFilters, type ExplorerFilterKey, type EXPLORER_TEXT_KEYS, type EXPLORER_RANGES } from "./benchmark-explorer-state";
 type TextKey = typeof EXPLORER_TEXT_KEYS[number];
@@ -63,10 +64,11 @@ export function BenchmarkExplorerFilters({ draft, onChange, actions }: { draft: 
   </fieldset>;
   return <>
     <div className="explorer-sidebar-groups">
-      <FilterGroup label={t("benchmark.Model")} count={count("model_query", "quantization", "publisher", "base_model")}>
-        {textField("model_query")}{textField("quantization")}
-        <FilterSection label={t("benchmark.More options")} count={count("publisher", "base_model")}>
-          {(["base_model", "publisher"] as const).map(textField)}
+      <FilterGroup label={t("benchmark.Model")} count={count("model_query", "weight_bits", "quantization", "publisher", "base_model")}>
+        {textField("model_query")}
+        <BenchmarkWeightBitsFilter value={draft.weight_bits} optionsPath={buildExplorerOptionsPath("weight_bits", "", draft)} onChange={value => onChange("weight_bits", value)} />
+        <FilterSection label={t("benchmark.More options")} count={count("quantization", "publisher", "base_model")}>
+          {(["quantization", "base_model", "publisher"] as const).map(textField)}
         </FilterSection>
       </FilterGroup>
       <FilterGroup label={t("benchmark.Hardware")} count={count("vendor", "gpu", "vram", "cpu", "cores")}>

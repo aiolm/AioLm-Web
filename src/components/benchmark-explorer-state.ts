@@ -10,7 +10,7 @@ import type { BenchmarkSetup } from "@/lib/benchmark-discovery";
 import { parsePointId, type BenchmarkPoint } from "@/lib/benchmark-points";
 import type { BenchmarkModelInfo } from "./benchmark-model-identity";
 
-export const EXPLORER_TEXT_KEYS = ["q", "model", "model_query", "publisher", "quantization", "base_model", "hardware", "vendor", "gpu", "cpu", "os", "arch", "runtime", "backend", "mode", "method", "workload", "flash_attention", "cache_type_k", "cache_type_v", "split_mode"] as const;
+export const EXPLORER_TEXT_KEYS = ["q", "model", "model_query", "publisher", "weight_bits", "quantization", "base_model", "hardware", "vendor", "gpu", "cpu", "os", "arch", "runtime", "backend", "mode", "method", "workload", "flash_attention", "cache_type_k", "cache_type_v", "split_mode"] as const;
 export const EXPLORER_RANGES = ["context", "vram", "cores", "parallel", "threads", "gpu_layers"] as const;
 export const EXPLORER_NUMERIC_KEYS = ["context_min", "context_max", "vram_min", "vram_max", "cores_min", "cores_max", "parallel_min", "parallel_max", "threads_min", "threads_max", "gpu_layers_min", "gpu_layers_max"] as const;
 export const EXPLORER_SORTS = { newest: "Newest first", oldest: "Oldest first", context_asc: "Input length: low to high", context_desc: "Input length: high to low", vram_asc: "VRAM: low to high", vram_desc: "VRAM: high to low", throughput_desc: "Decode at the basis point: fastest first", duration_asc: "Duration at the basis point: shortest first" } as const;
@@ -31,7 +31,7 @@ export type ExplorerFilterKey = (typeof EXPLORER_FILTER_KEYS)[number];
 export type ExplorerFilters = Record<ExplorerFilterKey, string>;
 export const EXPLORER_RANGE_LABELS = { context: "Max input length (tokens)", vram: "Selected GPU VRAM (MiB)", cores: "Logical cores", parallel: "Parallel sequences", threads: "Threads", gpu_layers: "GPU layers (-1 = all)" } as const;
 export const EXPLORER_FILTER_LABELS: Record<ExplorerFilterKey, string> = {
-  q: "All-fields keyword", model: "Model label", model_query: "Model", publisher: "Publisher", quantization: "Weight quantization", base_model: "Base model", hardware: "Hardware", vendor: "GPU vendor", gpu: "GPU model", cpu: "CPU", os: "Operating system", arch: "Architecture", runtime: "Runtime", backend: "Backend", mode: "Execution mode", method: "Measurement method", workload: "Workload", flash_attention: "Flash attention", cache_type_k: "Key cache type", cache_type_v: "Value cache type", split_mode: "Split mode", sort: "Sort",
+  q: "All-fields keyword", model: "Model label", model_query: "Model", publisher: "Publisher", weight_bits: "Weight bits", quantization: "Quantization format / method", base_model: "Base model", hardware: "Hardware", vendor: "GPU vendor", gpu: "GPU model", cpu: "CPU", os: "Operating system", arch: "Architecture", runtime: "Runtime", backend: "Backend", mode: "Execution mode", method: "Measurement method", workload: "Workload", flash_attention: "Flash attention", cache_type_k: "Key cache type", cache_type_v: "Value cache type", split_mode: "Split mode", sort: "Sort",
   context_min: "Minimum input length", context_max: "Maximum input length", vram_min: "Minimum VRAM", vram_max: "Maximum VRAM", cores_min: "Minimum cores", cores_max: "Maximum cores", parallel_min: "Minimum parallel sequences", parallel_max: "Maximum parallel sequences", threads_min: "Minimum threads", threads_max: "Maximum threads", gpu_layers_min: "Minimum GPU layers", gpu_layers_max: "Maximum GPU layers",
   point_tokens: "Basis input length", point_concurrency: "Basis concurrency", point_only: "Only results measured at the basis point",
 };
@@ -141,7 +141,7 @@ export function activeExplorerFilters(filters: ExplorerFilters): ActiveExplorerF
   return narrowingKeys().filter((key) => filters[key] !== "").map((key) => ({
     key,
     label: EXPLORER_FILTER_LABELS[key],
-    value: filters[key],
+    value: key === "weight_bits" ? `${filters[key]} bit` : filters[key],
   }));
 }
 

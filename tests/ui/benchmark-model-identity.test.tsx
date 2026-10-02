@@ -196,7 +196,7 @@ describe("the result list", () => {
   it("names the publisher and the weight quantization beside the model, and its gaps", () => {
     const html = render(<BenchmarkExplorerTable items={[item("a", { model_info: info() })]} compare={[]} onToggleComparison={() => {}} />);
     expect(html).toContain('<span class="explorer-fact-label">Publisher</span><span class="explorer-fact-value">synthetic-org<');
-    expect(html).toContain('<span class="explorer-fact-label">Weight quantization</span><span class="explorer-fact-value">Q4_K_M<');
+    expect(html).toContain('<span class="explorer-fact-label">Weight quantization</span><span class="explorer-fact-value">4 bit · Q4_K_M<');
     // The quantizer is reported on the result page, never as the publisher here.
     expect(html).not.toContain("synthetic-quantizer");
 
@@ -267,7 +267,7 @@ describe("the result list", () => {
       expect(details).toContain("2.00 s (1.90–2.10)");
       // The device, backend, quantization and point being read stay outside the disclosure.
       const visible = row.replace(details, "");
-      for (const value of [">synthetic-gpu<", ">synthetic-backend<", ">Q4_K_M<", "512 / c1 · n=3", ">100.0<", ">90.0–110.0<"]) expect(visible).toContain(value);
+      for (const value of [">synthetic-gpu<", ">synthetic-backend<", ">4 bit · Q4_K_M<", "512 / c1 · n=3", ">100.0<", ">90.0–110.0<"]) expect(visible).toContain(value);
     }
   });
 
@@ -418,9 +418,10 @@ describe("the advanced filters", () => {
     for (const key of ["model_query", "publisher", "quantization", "base_model"]) expect(group, key).toContain('name="' + key + '"');
     // Typed text survives: suggestions are optional, the field is not a select.
     expect(group).toContain('value="synthetic-org"');
-    expect(group.match(/role="combobox"/g)?.length).toBe(4);
-    // Quantization is immediately visible; linked model details also open.
-    expect(group.split('class="explorer-secondary-filters"')[0]).toContain('name="quantization"');
+    expect(group.match(/role="combobox"/g)?.length).toBe(5);
+    // Weight bits stay visible; exact quantization stays in the linked advanced group.
+    expect(group.split('class="explorer-secondary-filters"')[0]).toContain('name="weight_bits"');
+    expect(group.split('class="explorer-secondary-filters"')[0]).not.toContain('name="quantization"');
     expect(group).toContain('class="explorer-secondary-filters" open=""');
   });
 });

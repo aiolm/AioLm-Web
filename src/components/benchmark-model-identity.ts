@@ -2,6 +2,7 @@ import { cleanModelName } from "@/lib/model-info";
 import type { Translator } from "@/i18n/types";
 import { benchmarkFallback } from "./benchmark-i18n";
 import { asRecord } from "./benchmark-detail-format";
+import { weightBits } from "@/lib/weight-bits";
 
 /**
  * Who published a set of weights, who quantized them, and which file was run.
@@ -125,6 +126,14 @@ export function formatWeightQuantization(info: BenchmarkModelInfo | null, t: Tra
   if (info?.quantization) return info.quantization;
   if (typeof info?.file_type === "number") return t("benchmark.Unknown (file type {value})", { value: info.file_type });
   return t("benchmark.Unknown");
+}
+
+/** Compact bit family plus the original encoding; an unclassified encoding keeps its name. */
+export function formatWeightPrecision(info: BenchmarkModelInfo | null, t: Translator = benchmarkFallback): string {
+  const bits = weightBits(info);
+  const encoding = info?.quantization;
+  if (bits !== null) return encoding ? `${bits} bit · ${encoding}` : `${bits} bit`;
+  return formatWeightQuantization(info, t);
 }
 
 /**

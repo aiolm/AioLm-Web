@@ -1,4 +1,17 @@
 import { describe, expect, it } from "vitest";
+import { extractGpuList } from "@/components/benchmark-explorer-format";
+
+describe("GPU labels across stored summary versions", () => {
+  it.each([
+    ["R9700 + R9700", ["R9700 x 2"]],
+    ["R9700 x 2", ["R9700 x 2"]],
+    ["R9700 + RTX 4090 + R9700", ["R9700 x 2", "RTX 4090"]],
+    ["R9700 x 2 + RTX 4090 x 3", ["R9700 x 2", "RTX 4090 x 3"]],
+    ["cpu", []],
+  ])("renders %s consistently", (hardware_label, expected) => {
+    expect(extractGpuList({ hardware_label })).toEqual(expected);
+  });
+});
 import { formatLatency, formatLatencySpread, formatVramGb, runtimeVersionLabel } from "@/components/benchmark-explorer-format";
 import { buildRowColumns } from "@/components/benchmark-detail-rows";
 

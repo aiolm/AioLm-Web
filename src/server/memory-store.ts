@@ -266,6 +266,7 @@ export class InMemoryBenchmarkStore implements BenchmarkStore {
     }
     // Points order by what they measure; every other field orders by its text.
     const options = [...counts].map(([value, count]) => ({ value, count })).sort((a, b) => {
+      if (field === "weight_bits") return Number(a.value) - Number(b.value);
       if (field !== POINT_OPTION_FIELD) return a.value < b.value ? -1 : a.value > b.value ? 1 : 0;
       const [at, ac] = order.get(a.value) ?? [0, 0];
       const [bt, bc] = order.get(b.value) ?? [0, 0];

@@ -5,6 +5,7 @@ export { type BenchmarkPoint } from "./benchmark-points";
 import { modelLabelFor, normalizeModelInfo, type BenchmarkModelInfo } from "./model-info";
 export { normalizeModelInfo, type BenchmarkModelInfo } from "./model-info";
 import type { PublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
+import { formatGpuLabels } from "./gpu-labels";
 
 /**
  * Public summary and execution metadata computed once at acceptance.
@@ -63,7 +64,7 @@ export function summarizeBenchmark(benchmark: PublicBenchmarkSubmission): Benchm
   const gpus = selectedExecutionGpus(benchmark);
   const hardwareLabel =
     gpus.length > 0
-      ? gpus.map((g) => g.name ?? g.vendor ?? "gpu").join(" + ")
+      ? formatGpuLabels(gpus.map((g) => g.name ?? g.vendor ?? "gpu")).join(" + ")
       : (benchmark.environment?.execution.mode ?? "unknown");
   return {
     setup: normalizeSetup(benchmark),

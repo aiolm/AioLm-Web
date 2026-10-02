@@ -1,4 +1,5 @@
 import type React from "react";
+import { formatGpuLabels } from "@/lib/gpu-labels";
 import { formatRuntimeVersionLabel } from "@aiolm/benchmark-contracts";
 import type { Translator } from "@/i18n/types";
 import type { BenchmarkSetup } from "@/lib/benchmark-discovery";
@@ -173,16 +174,7 @@ export function extractGpuList(summary: { hardware_label: string; setup?: { gpus
   } else if (summary.setup?.gpus && summary.setup.gpus.length > 0) {
     raw = summary.setup.gpus;
   }
-  if (raw.length === 0) return [];
-  const counts = new Map<string, number>();
-  for (const name of raw) {
-    counts.set(name, (counts.get(name) ?? 0) + 1);
-  }
-  const result: string[] = [];
-  for (const [name, count] of counts.entries()) {
-    result.push(count > 1 ? `${name} x ${count}` : name);
-  }
-  return result;
+  return formatGpuLabels(raw);
 }
 
 /**

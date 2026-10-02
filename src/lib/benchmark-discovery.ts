@@ -1,6 +1,7 @@
 import type { PublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
 import { findPoint, pointMedian, type PointMetric } from "./benchmark-points";
 import type { BenchmarkSummary } from "./summary";
+import { isWeightBitValue, weightBits } from "./weight-bits";
 
 export interface BenchmarkSetup {
   os: string | null; arch: string | null; cpu: string | null; cores: number | null;
@@ -36,15 +37,14 @@ export function normalizePromptLengths(values: readonly number[] | null | undefi
 export function largestPromptLength(values: readonly number[] | null | undefined): number | null {
   return normalizePromptLengths(values).at(-1) ?? null;
 }
-export const TEXT_FILTER_KEYS = ["q", "model", "model_query", "publisher", "quantization", "base_model", "hardware", "vendor", "gpu", "cpu", "os", "arch", "runtime", "backend", "mode", "method", "workload", "flash_attention", "cache_type_k", "cache_type_v", "split_mode"] as const;
+export const TEXT_FILTER_KEYS = ["q", "model", "model_query", "publisher", "weight_bits", "quantization", "base_model", "hardware", "vendor", "gpu", "cpu", "os", "arch", "runtime", "backend", "mode", "method", "workload", "flash_attention", "cache_type_k", "cache_type_v", "split_mode"] as const;
 export type TextFilterKey = typeof TEXT_FILTER_KEYS[number];
 export const TEXT_FILTER_MAX_LENGTH = 120;
 /**
- * The dedicated filters whose values q also searches. model_query is left out:
- * it is a narrower model search, not one more source for the global one, so
- * listing it in TEXT_FILTER_KEYS must not widen what q has always matched.
+ * The dedicated filters whose values q also searches. model_query and the
+ * derived weight_bits selection stay out so they do not widen global search.
  */
-export const GLOBAL_SEARCH_FILTER_KEYS = TEXT_FILTER_KEYS.filter(k => k !== "q" && k !== "model_query");
+export const GLOBAL_SEARCH_FILTER_KEYS = TEXT_FILTER_KEYS.filter(k => k !== "q" && k !== "model_query" && k !== "weight_bits");
 /**
  * Model metadata q searches beyond the dedicated publisher/quantization/base_model
  * filters: the precise identifiers a reader would paste in to find one exact
@@ -91,6 +91,7 @@ export function parseFilters(search: URLSearchParams): BenchmarkFilters {
   const out: BenchmarkFilters = {};
   for (const key of TEXT_FILTER_KEYS) {
     const value = search.get(key)?.trim();
+    if (key === "weight_bits" && value && (!isWeightBitValue(Number(value)) || String(Number(value)) !== value)) throw new DiscoveryQueryError("weight_bits must be a supported weight bit count.");
     if (value && value.length > TEXT_FILTER_MAX_LENGTH) throw new DiscoveryQueryError(`${key} must be at most ${TEXT_FILTER_MAX_LENGTH} characters.`);
     if (value) out[key] = value;
   }
@@ -189,6 +190,7 @@ export function withRuntimeBuild<T extends { summary: BenchmarkSummary }>(item: 
   return { ...item, summary: { ...item.summary, setup: { ...setup, runtime_build } } };
 }
 export function textValues(summary: BenchmarkSummary, field: TextFilterKey): string[] {
+  if (field === "weight_bits") { const bits = weightBits(summary.model_info); return bits === null ? [] : [String(bits)]; }
   // Stored summaries are written by the application helper, but a corrupted or
   // hand-edited row must never crash matching: only strings are searchable, so
   // a boolean, number, or nested object in model metadata reads as unknown.
@@ -214,7 +216,7 @@ export function selectedPoint(summary: BenchmarkSummary, filters: BenchmarkFilte
   return findPoint(summary.points, filters.point_tokens, filters.point_concurrency);
 }
 export function matchesFilters(summary: BenchmarkSummary, filters: BenchmarkFilters): boolean {
-  return TEXT_FILTER_KEYS.every(k => !filters[k] || textValues(summary, k).some(v => v.toLowerCase().includes(filters[k]!.toLowerCase()))) && RANGE_FILTER_KEYS.every(k => {
+  return TEXT_FILTER_KEYS.every(k => !filters[k] || textValues(summary, k).some(v => k === "weight_bits" ? v === filters[k] : v.toLowerCase().includes(filters[k]!.toLowerCase()))) && RANGE_FILTER_KEYS.every(k => {
     const value = numericValue(summary, k), min = filters[`${k}_min`], max = filters[`${k}_max`];
     return (min === undefined && max === undefined) || (value !== null && (min === undefined || value >= min) && (max === undefined || value <= max));
   }) && (!filters.point_only || selectedPoint(summary, filters) !== null);

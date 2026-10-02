@@ -27,7 +27,7 @@ import {
   type SummaryFact,
 } from "./benchmark-explorer-format";
 import { defaultPoint, findPoint, pointMedian, type BenchmarkPoint } from "@/lib/benchmark-points";
-import { formatWeightQuantization, modelPublisher, modelValue } from "./benchmark-model-identity";
+import { formatWeightPrecision, modelPublisher, modelValue } from "./benchmark-model-identity";
 
 /**
  * Published results as one native table. Model and Environment are separated
@@ -144,7 +144,7 @@ export function BenchmarkExplorerTable({
           const info = summary.model_info ?? null;
           // Weight quantization qualifies the model name itself, so it stays next to
           // it; both it and the publisher name their gaps instead of disappearing.
-          const quantizationFact: SummaryFact = { key: "quantization", label: t("benchmark.Weight quantization"), value: formatWeightQuantization(info, t) };
+          const quantizationFact: SummaryFact = { key: "quantization", label: t("benchmark.Weight quantization"), value: formatWeightPrecision(info, t) };
           const publisherFact: SummaryFact = { key: "publisher", label: t("benchmark.Publisher"), value: modelValue(modelPublisher(info), t) };
           const envRaw = environmentFacts(summary.setup, t).filter(fact => fact.key !== "gpu" && (summary.setup?.cpu ? fact.key !== "cores" : true));
           const gpuList = extractGpuList(summary);

@@ -1,5 +1,11 @@
 import type { BenchmarkMessages } from "./en";
 const messages = {
+  "benchmark.Weight bits": "가중치 비트 수",
+  "benchmark.All weight bits": "모든 비트 수",
+  "benchmark.Quantization format / method": "양자화 형식·방식",
+  "benchmark.Uses the declared weight format, not average file storage or KV cache precision. Unclassified results remain visible with no bit filter.": "기록된 대표 가중치 형식 기준입니다. 파일의 평균 저장 비트나 KV 캐시 정밀도와는 다릅니다. 비트를 선택하지 않으면 미분류 결과도 표시합니다.",
+  "benchmark.Weight bit options unavailable. Clear the selection or retry.": "비트 수 선택지를 불러오지 못했습니다. 선택을 해제하거나 다시 시도하세요.",
+  "benchmark.No confirmed weight bits match the other filters.": "다른 필터 조건에 맞는 확인된 비트 정보가 없습니다.",
   "benchmark.All-fields keyword": "전체 키워드",
   "benchmark.Model label": "모델 표시명",
   "benchmark.Find a model": "모델 찾기",

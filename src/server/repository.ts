@@ -207,6 +207,8 @@ export const REQUIRED_MIGRATIONS: readonly string[] = [
   "010_model_metadata.sql",
   "011_system_memory.sql",
   "012_operating_points.sql",
+  "013_gpu_hardware_labels.sql",
+  "014_weight_bits.sql",
 ];
 
 /**

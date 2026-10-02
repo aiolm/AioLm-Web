@@ -28,6 +28,7 @@ export const RUNTIME_BUILD_EXPRESSION = "case when summary->'setup' ? 'runtime_b
  */
 export const LIST_RUNTIME_BUILD_COLUMN = "case when jsonb_typeof(summary->'setup') = 'object' and summary->'setup' ? 'runtime_build' then null else benchmark#>>'{runtime,build}' end";
 export function textExpression(field: SingleTextField): string {
+  if (field === "weight_bits") return "bench.model_weight_bits(summary->'model_info')::text";
   if (["model", "hardware", "method", "workload"].includes(field)) return `summary->>'${field}_label'`;
   const arrayPath = ARRAY_TEXT_PATHS[field];
   if (arrayPath) return `bench.discovery_array_text(${arrayPath})`;
@@ -88,6 +89,7 @@ export function discoverySql(filters: BenchmarkFilters) {
   const clauses = ["deleted = false", "hidden = false"];
   for (const key of TEXT_FILTER_KEYS) {
     if (!filters[key]) continue;
+    if (key === "weight_bits") { clauses.push(`${textExpression(key)} = ${bind(filters[key]!)}`); continue; }
     const pattern = bind(literalPattern(filters[key]!));
     // Each condition is one AND-ed clause; q and model_query OR their own separate value lists inside it.
     if (key === "model_query") clauses.push(`(${MODEL_QUERY_EXPRESSIONS.map(expr => `${expr} ilike ${pattern}`).join(" or ")})`);
@@ -146,6 +148,9 @@ export function optionsSql(field: OptionField, query: string, filters: Benchmark
   // value longer than a filter may be is not offered: choosing it would be rejected.
   if (field === "model_query") {
     return { values, query: `select value, count(*)::int as count from (select distinct public_id, candidate.value as value from bench.benchmark_runs cross join lateral (values ${MODEL_QUERY_EXPRESSIONS.map(expr => `(${expr})`).join(", ")}) as candidate(value) where ${clauses.join(" and ")}) as candidates where value <> '' and char_length(value) <= ${TEXT_FILTER_MAX_LENGTH} and value ilike ${optionPattern} group by value order by value collate "C" limit 31` };
+  }
+  if (field === "weight_bits") {
+    return { values, query: `select bits::text as value, count(*)::int as count from (select bench.model_weight_bits(summary->'model_info') as bits from bench.benchmark_runs where ${clauses.join(" and ")}) as candidates where bits is not null and bits::text ilike ${optionPattern} group by bits order by bits limit 31` };
   }
   // Narrow candidates using the expression index before expanding array options.
   // The final per-value predicate still rejects matches spanning array entries.

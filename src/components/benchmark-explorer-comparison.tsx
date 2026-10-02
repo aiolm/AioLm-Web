@@ -15,7 +15,7 @@ import {
 } from "./benchmark-explorer-state";
 import { formatLatency, formatDuration, formatMeasuredPoints, formatPointLabel, formatPromptLengths, formatSampleCount, formatThroughput, formatComparisonCpu, formatComparisonExecution, formatComparisonOs, formatComparisonRuntime, formatComparisonVram } from "./benchmark-explorer-format";
 import { defaultPoint, findPoint, pointMedian, type BenchmarkPoint } from "@/lib/benchmark-points";
-import { formatBaseModels, formatWeightQuantization, modelIdentityComparison, modelPublisher, modelValue } from "./benchmark-model-identity";
+import { formatBaseModels, formatWeightPrecision, modelIdentityComparison, modelPublisher, modelValue } from "./benchmark-model-identity";
 
 /**
  * Side-by-side view of results the reader picked by hand. It transposes the
@@ -41,7 +41,7 @@ function shownPoint(item: ExplorerItem, basis: { prompt_tokens: number; concurre
 
 function comparisonFields(t: Translator, locale: Locale, search: string, basis: { prompt_tokens: number; concurrency: number } | null): ComparisonField[] { return [
   { key: "publisher", label: t("benchmark.Publisher"), render: (item) => modelValue(modelPublisher(item.summary.model_info ?? null), t) },
-  { key: "quantization", label: t("benchmark.Weight quantization"), render: (item) => formatWeightQuantization(item.summary.model_info ?? null, t) },
+  { key: "quantization", label: t("benchmark.Weight quantization"), render: (item) => formatWeightPrecision(item.summary.model_info ?? null, t) },
   { key: "base-model", label: t("benchmark.Base model"), render: (item) => formatBaseModels(item.summary.model_info ?? null, t) },
   { key: "artifact", label: t("benchmark.Artifact file"), render: (item) => modelValue(item.summary.model_info?.artifact ?? null, t) },
   { key: "hardware", label: t("benchmark.Hardware"), render: (item) => item.summary.hardware_label },

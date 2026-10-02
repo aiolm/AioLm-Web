@@ -1,4 +1,10 @@
 const messages = {
+  "benchmark.Weight bits": "Weight bits",
+  "benchmark.All weight bits": "All weight bits",
+  "benchmark.Quantization format / method": "Quantization format / method",
+  "benchmark.Uses the declared weight format, not average file storage or KV cache precision. Unclassified results remain visible with no bit filter.": "Uses the declared weight format, not average file storage or KV cache precision. Unclassified results remain visible with no bit filter.",
+  "benchmark.Weight bit options unavailable. Clear the selection or retry.": "Weight bit options unavailable. Clear the selection or retry.",
+  "benchmark.No confirmed weight bits match the other filters.": "No confirmed weight bits match the other filters.",
   "benchmark.All-fields keyword": "All-fields keyword",
   "benchmark.Model label": "Model label",
   "benchmark.Find a model": "Find a model",

@@ -37,6 +37,15 @@ one-argument API allows the HTTP debug loopback.
 
 ## Schema and API surface
 
+The website's `weight_bits` discovery filter derives a nominal family from
+existing declared GGUF metadata. It adds no field to a publication and does not
+guess AWQ/GPTQ precision. The current shared contract accepts GGUF metadata and
+llama.cpp runs only. Supporting other formats requires an upstream contract
+release plus desktop extraction of explicit weight bits from the loaded model's
+quantization configuration. Such a release should carry weight bits separately
+from method, activation bits and KV-cache precision; missing bits must remain
+absent. Never extend the website's validator independently of that package.
+
 The installed package ships the authoritative machine-readable surface; read it
 from `node_modules`, not from a transcribed copy:
 
