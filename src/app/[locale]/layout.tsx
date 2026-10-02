@@ -19,7 +19,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     metadataBase: new URL(getServiceOrigin()),
     title: { default: t('site.title'), template: '%s · AioLM' },
     description: t('site.description'),
-    icons: { icon: '/brand/themes/13.png' },
+    icons: {
+      icon: '/brand/themes/13.png',
+      shortcut: '/brand/themes/13.png',
+      apple: '/brand/themes/13.png',
+    },
   };
 }
 export default async function LocaleLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
