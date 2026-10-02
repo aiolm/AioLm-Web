@@ -103,6 +103,14 @@ and recorded cache/attention/split settings. CPU mode does not advertise stale s
 devices are excluded. Total VRAM is missing when selection is incomplete or any
 selected device has unknown memory. GPU source values may retain fractional MiB.
 
+summary.setup.runtime_build carries the raw runtime build. Summaries stored before
+it existed lack the key; list responses fill it read-only from the stored
+benchmark's runtime.build (null when the submission recorded none), and q searches
+it the same way, so no migration rewrites them. Pages show the runtime as
+version(build) through the contracts package's formatRuntimeVersionLabel, e.g.
+`0.3.0-dev(10638)`, with `?` for the missing half; only a runtime named llama.cpp
+gets llama.cpp banner and bNNNN parsing, and other engines keep their text as reported.
+
 Migration 008 backfills retained summaries from existing metadata without reading
 measurement chunks or restoring tombstones. Partial numeric/ordering indexes cover
 visible results, and trigram indexes support substring conditions where pg_trgm is

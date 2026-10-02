@@ -6,10 +6,6 @@ import { RECOVERY_FIXTURE } from "@aiolm/benchmark-contracts";
  * never derived from real user data. Guarded by SYNTHETIC_TEST_MODE=1 + NODE_ENV=test.
  */
 
-export function isSyntheticTestMode(): boolean {
-  return process.env["SYNTHETIC_TEST_MODE"] === "1" && process.env["NODE_ENV"] === "test";
-}
-
 export function syntheticSubmission(overrides: Partial<PublicBenchmarkSubmission> = {}): PublicBenchmarkSubmission {
   return {
     schema_version: 1,
@@ -60,11 +56,6 @@ export function syntheticSubmission(overrides: Partial<PublicBenchmarkSubmission
     },
     ...overrides,
   };
-}
-
-export function syntheticPublicationBody(submissionId = "00000000-0000-4000-8000-000000000001"): string {
-  const benchmark = syntheticSubmission({ submission_id: submissionId });
-  return JSON.stringify({ benchmark, description_md: "Synthetic description." });
 }
 
 export { RECOVERY_FIXTURE };

@@ -328,8 +328,41 @@ it("BenchmarkHardwareOverview aggregates identical GPUs, formats CPU topology, a
   const html = wrap("en", <BenchmarkHardwareOverview benchmark={benchmarkWithHardware as unknown as BenchmarkSetup} />);
   expect(html).toContain("RTX 4090 x 2");
   expect(html).toContain("16 Core / 32 Thread");
-  expect(html).toContain("llama.cpp (build 3560)");
+  expect(html).toContain("llama.cpp ?(3560)");
   expect(html).toContain("64.00 GiB");
+});
+
+it.each([
+  // A historical banner names the build that ran, so a stale fallback build never replaces it.
+  { name: "llama.cpp", version: "version: 0.3.0-dev (build 10638, commit abc1234)", build: "b10600", label: "0.3.0-dev(10638)" },
+  { name: "llama.cpp", version: "0.3.0-dev", build: "b10640", label: "0.3.0-dev(10640)" },
+  { name: "llama.cpp", version: null, build: "b10638", label: "?(10638)" },
+  { name: "vllm", version: "0.6.2", build: null, label: "0.6.2" },
+  { name: "MLX", version: "mlx-lm 0.21.0", build: "local-7", label: "mlx-lm 0.21.0(local-7)" },
+])("shows $name $version / $build as $label in the table, comparison, detail and environment overview", ({ name, version, build, label }) => {
+  const runtime = { name, version, build, backend: "cuda" };
+  const summary = { ...item.summary, setup: {
+    os: "synthetic-os", arch: null, cpu: null, cores: null, vendors: [], gpus: [], vram_mb: null,
+    runtime: name, runtime_version: version, runtime_build: build, backend: "cuda", mode: null,
+    context_size: null, parallel: null, threads: null, gpu_layers: null, flash_attention: null,
+    cache_type_k: null, cache_type_v: null, split_mode: null,
+  } };
+  const listed = { ...item, summary };
+  expect(wrap("en", <BenchmarkExplorerTable items={[listed]} compare={[]} onToggleComparison={() => {}} />)).toContain(escape(`${name} ${label}`));
+  expect(wrap("en", <BenchmarkExplorerComparison items={[listed, { ...listed, public_id: "other" }]} onRemove={() => {}} onClear={() => {}} />)).toContain(escape(`${name} ${label} · cuda`));
+  const detail = { ...benchmark, runtime } as unknown as BenchmarkSetup;
+  const fields = buildSetupGroups(detail).flatMap((group) => group.fields);
+  expect(fields.find((field) => field.label === "Runtime version")?.value).toBe(label);
+  expect(fields.map((field) => field.label)).not.toContain("Runtime build");
+  expect(wrap("en", <BenchmarkHardwareOverview benchmark={detail} />)).toContain(escape(`${name} ${label}`));
+});
+
+it("names an unrecorded runtime version as unknown on the detail page", () => {
+  const detail = { ...benchmark, runtime: { name: "llama.cpp", version: null, build: null, backend: null } } as unknown as BenchmarkSetup;
+  for (const locale of locales) {
+    const fields = buildSetupGroups(detail, createTranslator(catalogs[locale])).flatMap((group) => group.fields);
+    expect(fields.find((field) => field.label === createTranslator(catalogs[locale])("benchmark.Runtime version"))?.value).toBe(createTranslator(catalogs[locale])("benchmark.Unknown"));
+  }
 });
 
 it("BenchmarkDetail does not render Load measurements button and includes measurements section", () => {

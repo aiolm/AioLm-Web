@@ -1,4 +1,5 @@
 import type React from "react";
+import { formatRuntimeVersionLabel } from "@aiolm/benchmark-contracts";
 import type { Translator } from "@/i18n/types";
 import type { BenchmarkSetup } from "@/lib/benchmark-discovery";
 import type { BenchmarkPoint, MetricStat } from "@/lib/benchmark-points";
@@ -139,17 +140,20 @@ export function formatCpuCores(cpu: { logical_cores: number; physical_cores?: nu
     : threads;
 }
 
-/** Prefer the reported release; old build-only records keep an explicit build label. */
-export function runtimeVersionLabel(version: unknown, build?: unknown): string | null {
-  const text = typeof version === "string" ? version.trim() : "";
-  if (text) {
-    const release = text.match(/(?:^|\bversion:\s*)v?(\d+\.\d+\.\d+(?:-[\w.-]+)?(?:\+[\w.-]+)?)/i)?.[1];
-    if (release) return release;
-    if (/^b?\d+(?:-[\da-f]+)?$/i.test(text)) return "build " + text.replace(/^b/, "");
-    return text;
-  }
-  const fallback = typeof build === "string" || typeof build === "number" ? String(build).trim() : "";
-  return fallback ? "build " + fallback.replace(/^b(?=\d)/, "") : null;
+/**
+ * `version(build)` through the shared contracts formatter, e.g. `0.3.0-dev(10638)`.
+ * The runtime name is always passed so only llama.cpp records get llama.cpp
+ * parsing; null when neither a version nor a build was recorded. Inputs are
+ * unverified, so anything that is not text (or a numeric build) reads as absent.
+ */
+export function runtimeVersionLabel(runtime: { name?: unknown; version?: unknown; build?: unknown } | null | undefined): string | null {
+  const text = (value: unknown) => (typeof value === "string" ? value : null);
+  const build = runtime?.build;
+  return formatRuntimeVersionLabel({
+    name: text(runtime?.name),
+    version: text(runtime?.version),
+    build: typeof build === "number" || typeof build === "string" ? build : null,
+  });
 }
 
 /** One labeled fact. The label travels with the value so neither reads as the other. */
@@ -190,7 +194,7 @@ export function extractGpuList(summary: { hardware_label: string; setup?: { gpus
  */
 export function environmentFacts(setup: (BenchmarkSetup & { ram_bytes?: number | null; physical_cores?: number | null }) | undefined, t: Translator = benchmarkFallback): SummaryFact[] {
   if (!setup) return [];
-  const runtime = [setup.runtime, runtimeVersionLabel(setup.runtime_version)].filter(Boolean).join(" ");
+  const runtime = [setup.runtime, runtimeVersionLabel({ name: setup.runtime, version: setup.runtime_version, build: setup.runtime_build })].filter(Boolean).join(" ");
   const facts: SummaryFact[] = [];
   if (setup.gpus && setup.gpus.length > 0) {
     facts.push({ key: "gpu", label: t("benchmark.GPU"), value: setup.gpus.join(", ") });
@@ -237,7 +241,7 @@ export function formatComparisonCpu(setup: (BenchmarkSetup & { ram_bytes?: numbe
 
 /** Runtime name and version with its backend, or unknown when none was recorded. */
 export function formatComparisonRuntime(setup: BenchmarkSetup | undefined, t: Translator = benchmarkFallback): string {
-  const runtime = [setup?.runtime, runtimeVersionLabel(setup?.runtime_version)].filter((part): part is string => typeof part === "string" && part !== "").join(" ");
+  const runtime = [setup?.runtime, runtimeVersionLabel(setup && { name: setup.runtime, version: setup.runtime_version, build: setup.runtime_build })].filter((part): part is string => typeof part === "string" && part !== "").join(" ");
   const parts = [runtime, setup?.backend].filter((part): part is string => typeof part === "string" && part !== "");
   return parts.length > 0 ? parts.join(" · ") : t("benchmark.Unknown");
 }

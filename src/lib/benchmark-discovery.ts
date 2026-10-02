@@ -10,6 +10,8 @@ export interface BenchmarkSetup {
   ram_bytes?: number | null;
   vendors: string[]; gpus: string[]; vram_mb: number | null;
   runtime: string | null; runtime_version: string | null; backend: string | null; mode: string | null;
+  /** Runtime build exactly as submitted. Absent on summaries stored before it was carried; recovered at read time by withRuntimeBuild. */
+  runtime_build?: string | null;
   /** Raw runtime allocation exactly as submitted; a server-side total, not an input length. */
   context_size: number | null; parallel: number | null; threads: number | null; gpu_layers: number | null;
   flash_attention: string | null; cache_type_k: string | null; cache_type_v: string | null; split_mode: string | null;
@@ -169,18 +171,29 @@ export function normalizeSetup(b: PublicBenchmarkSubmission): BenchmarkSetup {
     ram_bytes: env?.system_memory_bytes ?? null,
     vendors: strings(devices.map(g => g.vendor)), gpus: strings(devices.map(g => g.name)),
     vram_mb: devices.length > 0 && env?.execution.selection_complete && devices.every(g => g.vram_mb !== null) ? devices.reduce((sum, g) => sum + g.vram_mb!, 0) : null,
-    runtime: b.runtime.name, runtime_version: b.runtime.version, backend: b.runtime.backend, mode: env?.execution.mode ?? null,
+    runtime: b.runtime.name, runtime_version: b.runtime.version, runtime_build: b.runtime.build, backend: b.runtime.backend, mode: env?.execution.mode ?? null,
     context_size: b.execution.context_size, parallel: b.execution.parallel, threads: settings?.threads ?? null, gpu_layers: settings?.gpu_layers ?? null,
     prompt_length: largestPromptLength(b.workload?.prompt_lengths),
     flash_attention: settings?.flash_attention ?? null, cache_type_k: settings?.cache_type_k ?? null, cache_type_v: settings?.cache_type_v ?? null, split_mode: settings?.split_mode ?? null,
   };
+}
+/**
+ * A stored summary with the runtime build its own submission recorded. Summaries
+ * stored before runtime_build was carried lack the key, so it is read from the
+ * stored benchmark instead of being rewritten; one that already has it is kept.
+ */
+export function withRuntimeBuild<T extends { summary: BenchmarkSummary }>(item: T, build: unknown): T {
+  const setup = item.summary?.setup;
+  if (!setup || typeof setup !== "object" || "runtime_build" in setup) return item;
+  const runtime_build = typeof build === "string" ? build : null;
+  return { ...item, summary: { ...item.summary, setup: { ...setup, runtime_build } } };
 }
 export function textValues(summary: BenchmarkSummary, field: TextFilterKey): string[] {
   // Stored summaries are written by the application helper, but a corrupted or
   // hand-edited row must never crash matching: only strings are searchable, so
   // a boolean, number, or nested object in model metadata reads as unknown.
   const infoString = (value: unknown): string | null => (typeof value === "string" && value ? value : null);
-  if (field === "q") return [...new Set(GLOBAL_SEARCH_FILTER_KEYS.flatMap(k => textValues(summary, k)).concat(summary.setup?.runtime_version ?? [], summary.status, MODEL_INFO_SEARCH_KEYS.map(k => infoString(summary.model_info?.[k])).filter((v): v is string => v !== null)))];
+  if (field === "q") return [...new Set(GLOBAL_SEARCH_FILTER_KEYS.flatMap(k => textValues(summary, k)).concat(summary.setup?.runtime_version ?? [], summary.setup?.runtime_build ?? [], summary.status, MODEL_INFO_SEARCH_KEYS.map(k => infoString(summary.model_info?.[k])).filter((v): v is string => v !== null)))];
   if (field === "model_query") return [...new Set([infoString(summary.model_label), ...MODEL_QUERY_INFO_KEYS.map(k => infoString(summary.model_info?.[k]))].filter((v): v is string => v !== null))];
   if (["model", "hardware", "method", "workload"].includes(field)) return [summary[`${field}_label` as "model_label"]];
   if (field === "base_model") {

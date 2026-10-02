@@ -12,7 +12,8 @@ import { countCodePoints } from "@aiolm/benchmark-contracts";
 import { decodeRecoveryCode } from "@/lib/recovery";
 import { readRecoveryFiles, type RecoveryFileEntry } from "@/lib/recovery-files";
 import { DESCRIPTION_MAX_CODEPOINTS } from "@/lib/validation";
-import { apiErrorKey, readApiErrorCode, SafeMarkdown } from "./ui";
+import { apiErrorKey, readApiErrorCode } from "./ui";
+import { SafeMarkdown } from "./safe-markdown";
 
 interface ManagedInfo {
   id: string;

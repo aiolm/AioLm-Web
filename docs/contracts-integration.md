@@ -1,6 +1,6 @@
 # Contracts integration
 
-`@aiolm/benchmark-contracts` 0.6.0 owns the shared data contract: DTOs,
+`@aiolm/benchmark-contracts` 0.6.1 owns the shared data contract: DTOs,
 validation, JSON Schema/OpenAPI, publication bounds, recovery encoding, receipt
 shape. The website consumes that package directly — it does not carry its own
 copy of the rules and never imports app sources at runtime.
@@ -10,7 +10,7 @@ copy of the rules and never imports app sources at runtime.
 The versioned tarball is committed to this repository and installed from there:
 
 ```json
-"@aiolm/benchmark-contracts": "file:vendor/aiolm-benchmark-contracts-0.6.0.tgz"
+"@aiolm/benchmark-contracts": "file:vendor/aiolm-benchmark-contracts-0.6.1.tgz"
 ```
 
 `package-lock.json` pins its `integrity` (`sha512-…`), so `npm ci` fails if the
@@ -24,6 +24,11 @@ the installed package:
 | `src/lib/validation.ts` | publication bounds, `validatePublicBenchmark`, `normalizePublicationInput`, `parsePublicationSnapshot`, `serializePublicationRequest` |
 | `src/lib/recovery.ts` | `RECOVERY_PREFIX`, `RECOVERY_FIXTURE`, `encodeRecoveryCode`, `decodeRecoveryCode`, `normalizeServiceOrigin` |
 | `src/lib/origin.ts` | `normalizeServiceOrigin`, `normalizeBaseUrl` |
+
+Runtime labels on every page come from `formatRuntimeVersionLabel`, called
+through `runtimeVersionLabel` in `src/components/benchmark-explorer-format.ts`
+with the runtime name, version and build, so the website and the desktop app
+print the same `version(build)` text.
 
 Website-side policy that the shared contract deliberately leaves open stays in
 this repository — for example `getServiceOrigin()` in `src/lib/env.ts` layers a
@@ -67,12 +72,13 @@ build when any of these does not hold:
 - the exports the website re-exports behave: publication bounds,
   `validatePublicBenchmark`, the publication snapshot round-trip,
   the recovery round-trip against `RECOVERY_FIXTURE`, origin normalization, and
-  the recoverable/terminal service-error classification;
+  the recoverable/terminal service-error classification, and the
+  `formatRuntimeVersionLabel` version(build) labels;
 - the shared JSON Schema and OpenAPI documents resolve and parse.
 
 Set `CONTRACTS_TARBALL_PATH` to additionally compare a candidate archive
 against the vendored one before adopting a new version:
 
 ```sh
-CONTRACTS_TARBALL_PATH=./aiolm-benchmark-contracts-0.6.0.tgz npm run contracts:check
+CONTRACTS_TARBALL_PATH=./aiolm-benchmark-contracts-0.6.1.tgz npm run contracts:check
 ```

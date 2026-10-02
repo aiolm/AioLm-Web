@@ -30,7 +30,3 @@ export function requireEnv(name: string): string {
   if (!value) throw new Error(`${name} is not configured.`);
   return value;
 }
-
-export function optionalEnv(name: string): string | null {
-  return process.env[name] ?? null;
-}

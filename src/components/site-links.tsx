@@ -17,13 +17,3 @@ export function GitHubMark(): React.JSX.Element {
     </svg>
   );
 }
-
-/** Marks a link that leaves the site, for sighted and screen reader users alike. */
-export function ExternalHint(): React.JSX.Element {
-  return (
-    <>
-      <span aria-hidden="true"> ↗</span>
-      <span className="sr-only"> (opens in a new tab)</span>
-    </>
-  );
-}

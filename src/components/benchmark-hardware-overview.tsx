@@ -49,7 +49,7 @@ export function BenchmarkHardwareOverview({ benchmark }: { benchmark: BenchmarkS
   const rawGpus = execution?.mode === "cpu" ? [] : Array.isArray(execution?.selected_gpus) ? execution.selected_gpus.map(asRecord).filter((gpu): gpu is Record<string, unknown> => gpu !== null) : [];
   const gpus = aggregateGpus(rawGpus);
   const osArch = [env?.os, env?.arch].filter(value => typeof value === "string").join(" · ");
-  const runtimeVersion = runtimeVersionLabel(runtime?.version, runtime?.build);
+  const runtimeVersion = runtimeVersionLabel(runtime);
 
   return (
     <section className="card detail-environment" aria-labelledby="hardware-overview-title">
@@ -113,7 +113,7 @@ export function BenchmarkHardwareOverview({ benchmark }: { benchmark: BenchmarkS
                 <span className="detail-fact-label">{t("benchmark.Runtime")}</span>
                 <span className="detail-fact-value">
                   {displayText(runtime.name, t)}
-                  {runtimeVersion ? ` (${runtimeVersion})` : ""}
+                  {runtimeVersion ? ` ${runtimeVersion}` : ""}
                 </span>
               </div>
             ) : null}

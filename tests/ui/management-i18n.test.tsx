@@ -19,7 +19,8 @@ import { ManagementPanel, managementErrorKey } from "@/components/management-pan
 import { VerifyPanel, friendlyVerifyError, verifyErrorKey } from "@/components/verify-panel";
 import { ReportForm, friendlyReportError, reportErrorKey } from "@/components/report-form";
 import { turnstileLanguage } from "@/components/turnstile";
-import { ErrorState, EmptyState, Loading, SafeMarkdown, apiErrorKey, parseApiErrorKey, friendlyApiError, readApiErrorCode } from "@/components/ui";
+import { ErrorState, EmptyState, Loading, apiErrorKey, parseApiErrorKey, friendlyApiError, readApiErrorCode } from "@/components/ui";
+import { SafeMarkdown } from "@/components/safe-markdown";
 
 const common: Record<Locale, MessageCatalog> = { en: commonEn, ko: commonKo, ja: commonJa, zh: commonZh };
 const management: Record<Locale, MessageCatalog> = { en: managementEn, ko: managementKo, ja: managementJa, zh: managementZh };

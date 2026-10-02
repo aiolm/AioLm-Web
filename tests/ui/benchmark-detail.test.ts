@@ -104,7 +104,6 @@ describe("setup groups", () => {
     for (const label of [
       "Runtime version",
       "Runtime backend",
-      "Runtime build",
       "Method version",
       "Corpus version",
       "Corpus checksum",

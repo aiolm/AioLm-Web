@@ -8,7 +8,8 @@ import { useSearchParams } from "next/navigation";
 
 import Link from "next/link";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
-import { ErrorState, SafeMarkdown, isAbortError, useJsonFetch } from "@/components/ui";
+import { ErrorState, isAbortError, useJsonFetch } from "@/components/ui";
+import { SafeMarkdown } from "@/components/safe-markdown";
 import { BenchmarkHardwareOverview } from "./benchmark-hardware-overview";
 import { ReportForm } from "@/components/report-form";
 import { asRecord } from "@/components/benchmark-detail-format";

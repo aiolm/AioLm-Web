@@ -135,7 +135,6 @@ const messages = {
   "benchmark.Runtime": "Runtime",
   "benchmark.Runtime version": "Runtime version",
   "benchmark.Runtime backend": "Runtime backend",
-  "benchmark.Runtime build": "Runtime build",
   "benchmark.Operating system": "Operating system",
   "benchmark.Architecture": "Architecture",
   "benchmark.CPU": "CPU",

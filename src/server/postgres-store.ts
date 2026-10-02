@@ -1,6 +1,6 @@
 import type postgres from "postgres";
 import { encodeDiscoveryCursor, type ListCursor } from "../lib/pagination";
-import { sortValue, type OptionField, type BenchmarkOptions } from "../lib/benchmark-discovery";
+import { sortValue, withRuntimeBuild, type OptionField, type BenchmarkOptions } from "../lib/benchmark-discovery";
 import { listSql, optionsSql } from "./benchmark-discovery-sql";
 import { permitExpiryForSession, verifyUploadPermit } from "../lib/permits";import { quotaKeyForIp, quotaWindowDay, quotaWindowHour } from "../lib/ip";
 import type { BenchmarkFilters } from "../lib/summary";
@@ -8,7 +8,7 @@ import { getDb } from "./db";
 import type {
   AcceptArgs, AcceptOutcome, BenchmarkStore, ListResult, ManagementSessionRow, PublicListItem, ReportRow, StoredRun, UploadSessionRow,
 } from "./repository";
-import { READINESS_PROBE_TIMEOUT_MS, REPORT_IP_RETENTION_MS, SESSION_RETENTION_MS, csrfTokenHash } from "./repository";
+import { READINESS_PROBE_TIMEOUT_MS, REPORT_IP_RETENTION_MS, SESSION_RETENTION_MS } from "./repository";
 
 /**
  * Postgres implementation. All SQL is parameterized and bounded.
@@ -209,7 +209,7 @@ export class PostgresBenchmarkStore implements BenchmarkStore {
     });
   }
 
-  private async footprintIn(tx: postgres.TransactionSql): Promise<{ bytes: number; rows: number }> {
+  private async footprintIn(tx: postgres.Sql | postgres.TransactionSql): Promise<{ bytes: number; rows: number }> {
     // Measured scope: every table in the private bench schema (runs, chunks,
     // sessions, reports, quota buckets, audit log), each counted with its
     // indexes and TOAST via pg_total_relation_size. PROVISIONED_BYTES must be
@@ -256,8 +256,8 @@ export class PostgresBenchmarkStore implements BenchmarkStore {
 
   async listRuns(filters: BenchmarkFilters, limit: number, cursor: ListCursor | null): Promise<ListResult> {
     const statement = listSql(filters, limit, cursor);
-    const rows = await this.sql.unsafe<PublicListItem[]>(statement.query, statement.values);
-    const page = rows.slice(0, limit), last = page.at(-1);
+    const rows = await this.sql.unsafe<Array<PublicListItem & { runtime_build: string | null }>>(statement.query, statement.values);
+    const page = rows.slice(0, limit).map(({ runtime_build, ...item }) => withRuntimeBuild(item, runtime_build)), last = page.at(-1);
     return { items: page, next_cursor: rows.length > limit && last ? encodeDiscoveryCursor(last.created_at, last.public_id, filters, sortValue(last.summary, filters)) : null };
   }
 
@@ -424,11 +424,7 @@ export class PostgresBenchmarkStore implements BenchmarkStore {
 
   /** Real footprint: whole private bench schema (tables + indexes + TOAST; tombstones included). */
   async storageFootprint(): Promise<{ bytes: number; rows: number }> {
-    const rows = await this.sql<Array<{ bytes: string; rows: string }>>`
-      select coalesce((select sum(pg_total_relation_size(oid)) from pg_class
-        where relnamespace = 'bench'::regnamespace and relkind = 'r'), 0)::text as bytes,
-              (select coalesce(sum(row_count), 0) from bench.benchmark_runs where deleted = false)::text as rows`;
-    return { bytes: Number(rows[0]!.bytes), rows: Number(rows[0]!.rows) };
+    return this.footprintIn(this.sql);
   }
 
   /**
@@ -474,8 +470,4 @@ export class PostgresBenchmarkStore implements BenchmarkStore {
       if (backstop !== undefined) clearTimeout(backstop);
     }
   }
-}
-
-export function hashCsrf(token: string): string {
-  return csrfTokenHash(token);
 }

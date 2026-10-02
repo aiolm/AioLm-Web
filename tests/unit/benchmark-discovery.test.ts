@@ -1,16 +1,16 @@
 import { createHash } from "node:crypto";
 import { beforeEach, describe, expect, it } from "vitest";
 import { syntheticSubmission } from "@/lib/fixtures";
-import { GLOBAL_SEARCH_FILTER_KEYS, matchesFilters, MODEL_INFO_SEARCH_KEYS, normalizeSetup, numericValue, parseFilters, parseOptionsQuery, sortValue, SORT_VALUES, TEXT_FILTER_MAX_LENGTH, textValues } from "@/lib/benchmark-discovery";
+import { GLOBAL_SEARCH_FILTER_KEYS, matchesFilters, MODEL_INFO_SEARCH_KEYS, normalizeSetup, withRuntimeBuild, numericValue, parseFilters, parseOptionsQuery, sortValue, SORT_VALUES, TEXT_FILTER_MAX_LENGTH, textValues } from "@/lib/benchmark-discovery";
 import { summarizeBenchmark } from "@/lib/summary";
 import { decodeDiscoveryCursor, encodeDiscoveryCursor } from "@/lib/pagination";
-import { listSql, literalPattern, optionsSql } from "@/server/benchmark-discovery-sql";
+import { LIST_RUNTIME_BUILD_COLUMN, listSql, literalPattern, optionsSql, RUNTIME_BUILD_EXPRESSION } from "@/server/benchmark-discovery-sql";
 import { InMemoryBenchmarkStore } from "@/server/memory-store";
 import { GET as list } from "@/app/v1/benchmark-runs/route";
 import { GET as options } from "@/app/v1/benchmark-runs/options/route";
 import { freshStore, setupTestEnv } from "./helpers";
 import type { StoredRun } from "@/server/repository";
-import type { BenchmarkFilters } from "@/lib/benchmark-discovery";
+import type { BenchmarkFilters, BenchmarkSetup } from "@/lib/benchmark-discovery";
 
 setupTestEnv();
 let store: InMemoryBenchmarkStore;
@@ -38,6 +38,62 @@ describe("discovery setup", () => {
     b.environment!.execution.selection_complete = false; expect(normalizeSetup(b).vram_mb).toBeNull();
     b.environment!.execution.selection_complete = true; b.environment!.execution.selected_gpus[0].vram_mb = null; expect(normalizeSetup(b).vram_mb).toBeNull();
     expect(matchesFilters(summarizeBenchmark(b), { vram_min: 0 })).toBe(false);
+  });
+});
+
+describe("runtime build", () => {
+  const built = (id: string, build: string | null) => {
+    const r = run(id); r.benchmark.runtime.version = "0.3.0-dev"; r.benchmark.runtime.build = build; r.summary = summarizeBenchmark(r.benchmark); return r;
+  };
+  /** A summary stored before runtime_build was carried: the key is absent, the stored benchmark keeps the build. */
+  const legacy = (id: string, build: string | null) => {
+    const r = built(id, build); delete r.summary.setup!.runtime_build; return r;
+  };
+  it("carries the submitted build in new summaries", () => {
+    expect(built("new", "b10638").summary.setup).toMatchObject({ runtime_version: "0.3.0-dev", runtime_build: "b10638" });
+    expect(built("none", null).summary.setup!.runtime_build).toBeNull();
+  });
+  it("recovers a legacy summary build from its own benchmark without touching one that has it", () => {
+    const old = legacy("old", "b10638");
+    expect(withRuntimeBuild(old, "b10638").summary.setup!.runtime_build).toBe("b10638");
+    expect(withRuntimeBuild(old, null).summary.setup!.runtime_build).toBeNull();
+    expect(withRuntimeBuild(old, 10638).summary.setup!.runtime_build).toBeNull();
+    expect(old.summary.setup).not.toHaveProperty("runtime_build");
+    const current = built("current", "b10640");
+    expect(withRuntimeBuild(current, "b1")).toBe(current);
+    const bare = { summary: { ...current.summary, setup: undefined } };
+    expect(withRuntimeBuild(bare, "b1")).toBe(bare);
+  });
+  it("lists legacy and current summaries with the build their submission recorded", async () => {
+    for (const r of [legacy("old", "b10638"), built("new", "b10640"), legacy("unrecorded", null)]) store.runs.set(r.public_id, r);
+    const listed = new Map((await store.listRuns({}, 10, null)).items.map((i) => [i.public_id, i.summary.setup?.runtime_build]));
+    expect(Object.fromEntries(listed)).toEqual({ old: "b10638", new: "b10640", unrecorded: null });
+    expect((await store.listRuns({ q: "10640" }, 10, null)).items.map((i) => i.public_id)).toEqual(["new"]);
+  });
+  it("searches a legacy summary by the build its benchmark recorded, as the SQL expression does", async () => {
+    // An explicit null is the summary's own answer; only a missing key falls back to the benchmark.
+    const explicit = built("explicit", null); explicit.benchmark.runtime.build = "b10638";
+    for (const r of [legacy("old", "b10638"), explicit, built("other", "b20000")]) store.runs.set(r.public_id, r);
+    expect((await store.listRuns({ q: "10638" }, 10, null)).items.map((i) => i.public_id)).toEqual(["old"]);
+    expect((await store.listOptions("os", "", { q: "10638" })).options).toEqual([{ value: "synthetic", count: 1 }]);
+    expect(RUNTIME_BUILD_EXPRESSION).toBe("case when summary->'setup' ? 'runtime_build' then summary->'setup'->>'runtime_build' when jsonb_typeof(summary->'setup') = 'object' then benchmark#>>'{runtime,build}' end");
+  });
+  it("leaves a corrupt setup alone instead of failing the list", () => {
+    const corrupt = { summary: { ...built("corrupt", "b1").summary, setup: "corrupt" as unknown as BenchmarkSetup } };
+    expect(withRuntimeBuild(corrupt, "b1")).toBe(corrupt);
+  });
+  it("reads the legacy build read-only in SQL and searches it with q", () => {
+    expect(listSql({}, 25, null).query).toContain(`${LIST_RUNTIME_BUILD_COLUMN} as runtime_build`);
+    expect(listSql({ q: "10638" }, 25, null).query).toContain(`${RUNTIME_BUILD_EXPRESSION} ilike $1`);
+  });
+  it("reads the stored build for a listed row only when withRuntimeBuild would use it", () => {
+    // The column is null only for an object setup that already has the key, explicit null included.
+    expect(LIST_RUNTIME_BUILD_COLUMN).toBe("case when jsonb_typeof(summary->'setup') = 'object' and summary->'setup' ? 'runtime_build' then null else benchmark#>>'{runtime,build}' end");
+    const explicit = built("explicit", null);
+    expect(withRuntimeBuild(explicit, "b1")).toBe(explicit);
+    expect(withRuntimeBuild(built("current", "b2"), "b1").summary.setup!.runtime_build).toBe("b2");
+    // Every other shape still receives the stored build, exactly as before.
+    expect(withRuntimeBuild(legacy("old", "b1"), "b1").summary.setup!.runtime_build).toBe("b1");
   });
 });
 

@@ -136,7 +136,6 @@ const messages = {
   "benchmark.Runtime": "运行时",
   "benchmark.Runtime version": "运行时版本",
   "benchmark.Runtime backend": "运行时后端",
-  "benchmark.Runtime build": "运行时构建",
   "benchmark.Operating system": "操作系统",
   "benchmark.Architecture": "架构",
   "benchmark.CPU": "CPU",

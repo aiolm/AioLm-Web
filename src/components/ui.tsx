@@ -5,45 +5,13 @@ import { localizedPath } from "@/i18n/config";
 import type { Translator } from "@/i18n/types";
 
 import { useCallback, useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeSanitize from "rehype-sanitize";
-import { ALLOWED_MARKDOWN_ELEMENTS, isAllowedMarkdownUrl, markdownUrlTransform } from "@/lib/markdown";
 import Link from "next/link";
-
-/** Unsafe link targets render as plain spans, never anchors. */
-function SafeLink({ href, children }: { href?: string; children?: React.ReactNode }): React.JSX.Element {
-  if (href && isAllowedMarkdownUrl(href)) {
-    return <a href={href}>{children}</a>;
-  }
-  return <span>{children}</span>;
-}
 
 /** Truncate to a maximum number of Unicode codepoints without regex parsing. */
 export function truncateToCodePoints(text: string, max: number): string {
   if (max < 0) return "";
   const points = Array.from(text);
   return points.length <= max ? text : points.slice(0, max).join("");
-}
-
-/** Safe Markdown: react-markdown allowlist + skipHtml + http(s)-only links. No hand-rolled parser. */
-export function SafeMarkdown({ text }: { text: string }): React.JSX.Element {
-  const limited = truncateToCodePoints(text, 4000);
-  return (
-    <div className="markdown-body">
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeSanitize]}
-        skipHtml
-        allowedElements={[...ALLOWED_MARKDOWN_ELEMENTS]}
-        unwrapDisallowed
-        urlTransform={markdownUrlTransform}
-        components={{ a: SafeLink }}
-      >
-        {limited}
-      </ReactMarkdown>
-    </div>
-  );
 }
 
 export function Loading({ label }: { label?: string }): React.JSX.Element {

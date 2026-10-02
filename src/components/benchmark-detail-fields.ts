@@ -170,9 +170,9 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
       title: t("benchmark.Runtime and backend"),
       fields: [
         { label: t("benchmark.Runtime"), value: displayText(runtime?.["name"], t) },
-        { label: t("benchmark.Runtime version"), value: displayText(runtimeVersionLabel(runtime?.["version"]), t) },
+        // The build is part of the version label, version(build), not a row of its own.
+        { label: t("benchmark.Runtime version"), value: displayText(runtimeVersionLabel(runtime), t) },
         { label: t("benchmark.Runtime backend"), value: displayText(runtime?.["backend"], t) },
-        { label: t("benchmark.Runtime build"), value: displayText(runtime?.["build"], t) },
         { label: t("benchmark.App version"), value: displayText(benchmark.app_version, t) },
       ],
     },

@@ -136,7 +136,6 @@ const messages = {
   "benchmark.Runtime": "런타임",
   "benchmark.Runtime version": "런타임 버전",
   "benchmark.Runtime backend": "런타임 백엔드",
-  "benchmark.Runtime build": "런타임 빌드",
   "benchmark.Operating system": "운영체제",
   "benchmark.Architecture": "아키텍처",
   "benchmark.CPU": "CPU",

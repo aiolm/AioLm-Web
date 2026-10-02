@@ -15,6 +15,18 @@ export const ARRAY_TEXT_PATHS: Partial<Record<SingleTextField, string>> = {
   gpu: "summary->'setup'->'gpus'",
   base_model: "summary->'model_info'->'base_models'",
 };
+/**
+ * The runtime build, as withRuntimeBuild reads it: the summary's own value when it
+ * carries the key (an explicit null included), otherwise, for a summary stored
+ * before the key existed, the stored benchmark's runtime.build. Read only.
+ */
+export const RUNTIME_BUILD_EXPRESSION = "case when summary->'setup' ? 'runtime_build' then summary->'setup'->>'runtime_build' when jsonb_typeof(summary->'setup') = 'object' then benchmark#>>'{runtime,build}' end";
+/**
+ * The stored build handed to withRuntimeBuild for a listed row. It is null exactly
+ * when the summary's setup is an object that already carries the key, the one
+ * case withRuntimeBuild returns unchanged; every other row reads it as before.
+ */
+export const LIST_RUNTIME_BUILD_COLUMN = "case when jsonb_typeof(summary->'setup') = 'object' and summary->'setup' ? 'runtime_build' then null else benchmark#>>'{runtime,build}' end";
 export function textExpression(field: SingleTextField): string {
   if (["model", "hardware", "method", "workload"].includes(field)) return `summary->>'${field}_label'`;
   const arrayPath = ARRAY_TEXT_PATHS[field];
@@ -79,7 +91,7 @@ export function discoverySql(filters: BenchmarkFilters) {
     const pattern = bind(literalPattern(filters[key]!));
     // Each condition is one AND-ed clause; q and model_query OR their own separate value lists inside it.
     if (key === "model_query") clauses.push(`(${MODEL_QUERY_EXPRESSIONS.map(expr => `${expr} ilike ${pattern}`).join(" or ")})`);
-    else clauses.push(key === "q" ? `(${GLOBAL_SEARCH_FILTER_KEYS.map(k => match(k, pattern)).concat([`summary->'setup'->>'runtime_version' ilike ${pattern}`, `summary->>'status' ilike ${pattern}`], MODEL_INFO_SEARCH_KEYS.map(k => `summary->'model_info'->>'${k}' ilike ${pattern}`)).join(" or ")})` : match(key, pattern));
+    else clauses.push(key === "q" ? `(${GLOBAL_SEARCH_FILTER_KEYS.map(k => match(k, pattern)).concat([`summary->'setup'->>'runtime_version' ilike ${pattern}`, `${RUNTIME_BUILD_EXPRESSION} ilike ${pattern}`, `summary->>'status' ilike ${pattern}`], MODEL_INFO_SEARCH_KEYS.map(k => `summary->'model_info'->>'${k}' ilike ${pattern}`)).join(" or ")})` : match(key, pattern));
   }
   for (const key of RANGE_FILTER_KEYS) for (const bound of ["min", "max"] as const) {
     const value = filters[`${key}_${bound}`];
@@ -105,7 +117,9 @@ export function listSql(filters: BenchmarkFilters, limit: number, cursor: ListCu
       clauses.push(`(${expr} is null or ${expr} ${sort.endsWith("desc") ? "<" : ">"} ${value} or (${expr} = ${value} and ${tie}))`);
     }
   }
-  return { values, query: `select public_id, summary, description_md, revision, created_at::text as created_at, updated_at::text as updated_at from bench.benchmark_runs where ${clauses.join(" and ")} order by ${expr ? `${expr} ${sort.endsWith("desc") ? "desc" : "asc"} nulls last, ` : ""}bench.benchmark_runs.created_at ${direction}, public_id ${direction} limit ${bind(limit + 1)}` };
+  // withRuntimeBuild ignores the stored build once the summary carries the key, so
+  // only a legacy summary reads (and detoasts) the benchmark document for it.
+  return { values, query: `select public_id, summary, ${LIST_RUNTIME_BUILD_COLUMN} as runtime_build, description_md, revision, created_at::text as created_at, updated_at::text as updated_at from bench.benchmark_runs where ${clauses.join(" and ")} order by ${expr ? `${expr} ${sort.endsWith("desc") ? "desc" : "asc"} nulls last, ` : ""}bench.benchmark_runs.created_at ${direction}, public_id ${direction} limit ${bind(limit + 1)}` };
 }
 export function optionsSql(field: OptionField, query: string, filters: BenchmarkFilters) {
   const remaining = { ...filters };

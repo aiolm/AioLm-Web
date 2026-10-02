@@ -6,19 +6,6 @@ import { decodeRecoveryCode } from "../lib/recovery";
 import { csrfTokenHash } from "./repository";
 import type { BenchmarkStore } from "./repository";
 
-/** Extract owner secret from Authorization header; throws ownership_missing. */
-export function requireOwnerSecret(headers: Headers): string {
-  return parseOwnerBearer(headers.get("authorization"));
-}
-
-export function ownerHashOf(secret: string): string {
-  return sha256HexUtf8(secret);
-}
-
-export function ownerMatches(secret: string, expectedHash: string): boolean {
-  return ownerHashMatches(secret, expectedHash);
-}
-
 /** Resolve recovery code to (submission_id, secret) with service-origin binding. */
 export function parseRecovery(body: { recovery_code?: unknown }, serviceOrigin: string): { submission_id: string; secret: string } {
   if (!body || typeof body.recovery_code !== "string") throw new Error("Invalid recovery code.");

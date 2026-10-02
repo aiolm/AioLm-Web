@@ -9,6 +9,7 @@ import {
   RECOVERY_PREFIX,
   decodeRecoveryCode,
   encodeRecoveryCode,
+  formatRuntimeVersionLabel,
   isRecoverableServiceCode,
   isTerminalServiceCode,
   normalizePublicationInput,
@@ -168,6 +169,13 @@ check("service error classification is the shared one", () => {
   assert(isRecoverableServiceCode("ownership_missing"), "ownership_missing is not recoverable");
   assert(isTerminalServiceCode("submission_deleted"), "submission_deleted is not terminal");
   assert(!isTerminalServiceCode("verification_required"), "verification_required is terminal");
+});
+
+check("runtime labels come from the package as version(build)", () => {
+  assert(formatRuntimeVersionLabel({ name: "llama.cpp", version: "version: 0.3.0-dev (build 10638, commit abc)", build: "b10600" }) === "0.3.0-dev(10638)", "llama.cpp banner build is not preferred");
+  assert(formatRuntimeVersionLabel({ name: "llama.cpp", version: null, build: "b10638" }) === "?(10638)", "llama.cpp build-only label changed");
+  assert(formatRuntimeVersionLabel({ name: "vllm", version: "0.6.2", build: null }) === "0.6.2", "other engines are not preserved");
+  assert(formatRuntimeVersionLabel({ name: "llama.cpp", version: null, build: null }) === null, "an unknown runtime is not null");
 });
 
 check("shared schema and OpenAPI documents resolve and parse", () => {

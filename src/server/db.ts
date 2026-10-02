@@ -94,10 +94,3 @@ export function getModerationDb(): postgres.Sql {
   }
   return postgres(url, clientOptions(url));
 }
-
-export async function closeDb(): Promise<void> {
-  if (client) {
-    await client.end({ timeout: 5 });
-    client = null;
-  }
-}

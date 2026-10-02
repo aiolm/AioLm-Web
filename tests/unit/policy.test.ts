@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
 import { decodeCursor, decodeRowsCursor, encodeCursor, encodeRowsCursor } from "@/lib/pagination";
 import { isAllowedMarkdownUrl, markdownUrlTransform } from "@/lib/markdown";
-import { SafeMarkdown } from "@/components/ui";
+import { SafeMarkdown } from "@/components/safe-markdown";
 
 describe("pagination cursors", () => {
   it("round-trips list cursors and rejects garbage", () => {

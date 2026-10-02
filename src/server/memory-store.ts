@@ -1,5 +1,5 @@
 import { encodeDiscoveryCursor, comparePosition, type ListCursor } from "../lib/pagination";
-import { POINT_OPTION_FIELD, TEXT_FILTER_MAX_LENGTH, matchesFilters, textValues, sortValue, type BenchmarkOptions, type OptionField } from "../lib/benchmark-discovery";
+import { POINT_OPTION_FIELD, TEXT_FILTER_MAX_LENGTH, matchesFilters, textValues, sortValue, withRuntimeBuild, type BenchmarkOptions, type OptionField } from "../lib/benchmark-discovery";
 import { pointId, readPoints } from "../lib/benchmark-points";
 import { UPLOAD_PERMIT_TTL_MS, permitExpiryForSession, verifyUploadPermit } from "../lib/permits";
 import { quotaKeyForIp, quotaWindowDay, quotaWindowHour } from "../lib/ip";
@@ -7,7 +7,7 @@ import type { BenchmarkFilters } from "../lib/summary";
 import type {
   AcceptArgs, AcceptOutcome, BenchmarkStore, ListResult, ManagementSessionRow, ReportRow, StoredRun, UploadSessionRow,
 } from "./repository";
-import { REPORT_IP_RETENTION_MS, REQUIRED_MIGRATIONS, SESSION_RETENTION_MS, csrfTokenHash } from "./repository";
+import { REPORT_IP_RETENTION_MS, REQUIRED_MIGRATIONS, SESSION_RETENTION_MS } from "./repository";
 
 /**
  * In-memory BenchmarkStore for unit tests ONLY. Never used in production.
@@ -230,7 +230,9 @@ export class InMemoryBenchmarkStore implements BenchmarkStore {
   async listRuns(filters: BenchmarkFilters, limit: number, cursor: ListCursor | null): Promise<ListResult> {
     const sort = filters.sort ?? "newest";
     const position = (r: StoredRun): ListCursor => ({ createdAt: r.created_at, publicId: r.public_id, value: sortValue(r.summary, filters) });
-    const rows = [...this.runs.values()].filter(r => !r.deleted && !r.hidden && matchesFilters(r.summary, filters))
+    // A legacy summary gets its build before filtering, so q finds it exactly as the SQL store does.
+    const rows = [...this.runs.values()].filter(r => !r.deleted && !r.hidden).map(r => withRuntimeBuild(r, r.benchmark.runtime.build))
+      .filter(r => matchesFilters(r.summary, filters))
       .filter(r => !cursor || comparePosition(position(r), cursor, sort) > 0)
       .sort((a, b) => comparePosition(position(a), position(b), sort));
     const page = rows.slice(0, limit), last = page.at(-1);
@@ -245,7 +247,7 @@ export class InMemoryBenchmarkStore implements BenchmarkStore {
     const counts = new Map<string, number>();
     const order = new Map<string, [number, number]>();
     for (const r of this.runs.values()) {
-      if (r.deleted || r.hidden || !matchesFilters(r.summary, remaining)) continue;
+      if (r.deleted || r.hidden || !matchesFilters(withRuntimeBuild(r, r.benchmark.runtime.build).summary, remaining)) continue;
       let candidates: string[];
       if (field === POINT_OPTION_FIELD) {
         const points = readPoints(r.summary.points);
@@ -437,10 +439,6 @@ export class InMemoryBenchmarkStore implements BenchmarkStore {
   async appliedMigrations(): Promise<string[]> {
     return [...this.migrationLedger];
   }
-}
-
-export function hashCsrfForTest(token: string): string {
-  return csrfTokenHash(token);
 }
 
 export { UPLOAD_PERMIT_TTL_MS };
