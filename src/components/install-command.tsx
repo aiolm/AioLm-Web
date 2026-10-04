@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 const WINDOWS_INSTALL_CMD =
   'powershell -ExecutionPolicy Bypass -Command "irm https://github.com/aiolm/AioLM/releases/latest/download/install.ps1 | iex"';
 
+const LINUX_INSTALL_CMD = "sudo apt install ./AioLM_*_amd64.deb";
+
 type InstallOs = "windows" | "macos" | "linux";
 
 const OS_ORDER: readonly InstallOs[] = ["windows", "macos", "linux"];
@@ -30,10 +32,13 @@ export interface InstallMessages {
   copied: string;
   copyFailed: string;
   macosPlanned: string;
-  linuxPlanned: string;
+  linuxRequirements: string;
+  linuxInstructions: string;
+  linuxDownload: string;
+  linuxGuide: string;
 }
 
-export function InstallCommand({ messages }: { messages: InstallMessages }): React.JSX.Element {
+export function InstallCommand({ messages, linuxGuideUrl }: { messages: InstallMessages; linuxGuideUrl: string }): React.JSX.Element {
   const [selectedOs, setSelectedOs] = useState<InstallOs>("windows");
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
@@ -44,7 +49,7 @@ export function InstallCommand({ messages }: { messages: InstallMessages }): Rea
     if (copyTimer.current) clearTimeout(copyTimer.current);
     setCopyFailed(false);
     try {
-      await navigator.clipboard.writeText(WINDOWS_INSTALL_CMD);
+      await navigator.clipboard.writeText(selectedOs === "linux" ? LINUX_INSTALL_CMD : WINDOWS_INSTALL_CMD);
       setCopied(true);
       copyTimer.current = setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -53,11 +58,18 @@ export function InstallCommand({ messages }: { messages: InstallMessages }): Rea
     }
   };
 
+  const selectOs = (os: InstallOs): void => {
+    if (copyTimer.current) clearTimeout(copyTimer.current);
+    setCopied(false);
+    setCopyFailed(false);
+    setSelectedOs(os);
+  };
+
   const handleTabKey = (event: React.KeyboardEvent<HTMLDivElement>): void => {
     const next = installTabForKey(event.key, selectedOs);
     if (!next) return;
     event.preventDefault();
-    setSelectedOs(next);
+    selectOs(next);
     document.getElementById(`tab-${next}`)?.focus();
   };
 
@@ -72,7 +84,7 @@ export function InstallCommand({ messages }: { messages: InstallMessages }): Rea
           tabIndex={selectedOs === "windows" ? 0 : -1}
           aria-controls="panel-windows"
           className={`install-tab ${selectedOs === "windows" ? "active" : ""}`}
-          onClick={() => setSelectedOs("windows")}
+          onClick={() => selectOs("windows")}
         >
           <span className="install-tab-label">
             <WindowsIcon />
@@ -87,7 +99,7 @@ export function InstallCommand({ messages }: { messages: InstallMessages }): Rea
           tabIndex={selectedOs === "macos" ? 0 : -1}
           aria-controls="panel-macos"
           className={`install-tab ${selectedOs === "macos" ? "active" : ""}`}
-          onClick={() => setSelectedOs("macos")}
+          onClick={() => selectOs("macos")}
         >
           <span className="install-tab-label">
             <AppleIcon />
@@ -102,7 +114,7 @@ export function InstallCommand({ messages }: { messages: InstallMessages }): Rea
           tabIndex={selectedOs === "linux" ? 0 : -1}
           aria-controls="panel-linux"
           className={`install-tab ${selectedOs === "linux" ? "active" : ""}`}
-          onClick={() => setSelectedOs("linux")}
+          onClick={() => selectOs("linux")}
         >
           <span className="install-tab-label">
             <LinuxIcon />
@@ -133,11 +145,22 @@ export function InstallCommand({ messages }: { messages: InstallMessages }): Rea
               <span>{messages.macosPlanned}</span>
             </p>
           </div>
-          <div id="panel-linux" role="tabpanel" aria-labelledby="tab-linux" hidden={selectedOs !== "linux"} tabIndex={0} className="install-panel install-panel-planned">
-            <p className="install-planned-note">
-              <LinuxIcon />
-              <span>{messages.linuxPlanned}</span>
-            </p>
+          <div id="panel-linux" role="tabpanel" aria-labelledby="tab-linux" hidden={selectedOs !== "linux"} tabIndex={0} className="install-panel install-panel-linux">
+            <p className="install-linux-requirements">{messages.linuxRequirements}</p>
+            <p className="install-linux-instructions">{messages.linuxInstructions}</p>
+            <div className="install-cmd-row">
+              <code className="install-cmd-code" title={LINUX_INSTALL_CMD}>
+                <span className="install-cmd-prompt">$</span> {LINUX_INSTALL_CMD}
+              </code>
+              <button type="button" className={`install-copy-button ${copied ? "copied" : ""}`} onClick={handleCopy}>
+                {copied ? <CheckIcon /> : <CopyIcon />}
+                <span>{copied ? messages.copied : messages.copy}</span>
+              </button>
+            </div>
+            <div className="install-linux-links">
+              <a href="https://github.com/aiolm/AioLM/releases/latest">{messages.linuxDownload}</a>
+              <a href={linuxGuideUrl}>{messages.linuxGuide}</a>
+            </div>
           </div>
       </div>
       {/* The button's own text change is not announced while it keeps focus. */}

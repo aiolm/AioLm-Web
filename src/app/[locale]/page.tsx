@@ -17,7 +17,7 @@ import "@/components/home-redesign.css";
  * nothing here is interactive beyond native links, so the page ships no client
  * JavaScript of its own.
  *
- * Direct installation command for Windows and planned support for macOS and Linux.
+ * Installation instructions for Windows and Linux; macOS support is planned.
  */
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -60,7 +60,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
     <>
       <JsonLd data={{ '@context': 'https://schema.org', '@graph': [
         { '@type': 'WebSite', '@id': `${getServiceOrigin()}/#website`, name: 'AioLM', alternateName: PRODUCT_NAME_EXPANDED, url: getServiceOrigin(), inLanguage: ['en', 'ko', 'ja', 'zh'] },
-        { '@type': 'SoftwareApplication', '@id': `${getServiceOrigin()}/#application`, name: 'AioLM', alternateName: PRODUCT_NAME_EXPANDED, url, description: t('home.faqWhatAnswer'), applicationCategory: 'DeveloperApplication', operatingSystem: 'Windows', sameAs: GITHUB_REPOSITORY_URL },
+        { '@type': 'SoftwareApplication', '@id': `${getServiceOrigin()}/#application`, name: 'AioLM', alternateName: PRODUCT_NAME_EXPANDED, url, description: t('home.faqWhatAnswer'), applicationCategory: 'DeveloperApplication', operatingSystem: ['Windows', 'Linux'], sameAs: GITHUB_REPOSITORY_URL },
         { '@type': 'FAQPage', '@id': `${url}#faq`, inLanguage: locale, mainEntity: faq.map(item => ({ '@type': 'Question', name: item.question, acceptedAnswer: { '@type': 'Answer', text: item.answer } })) },
       ] }} />
       <section className="home-hero" aria-labelledby="hero-title">
@@ -89,6 +89,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             <div className="home-install">
               <p className="home-install-label" aria-hidden="true">{t('home.installCommandTitle')}</p>
               <InstallCommand
+                linuxGuideUrl={`${GITHUB_REPOSITORY_URL}/blob/main/docs/guides/install${locale === 'en' ? '' : `.${locale}`}.md#linux`}
                 messages={{
                   windows: t('home.windows'),
                   macos: t('home.macos'),
@@ -98,7 +99,10 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
                   copied: t('home.copied'),
                   copyFailed: t('home.copyFailed'),
                   macosPlanned: t('home.macosPlanned'),
-                  linuxPlanned: t('home.linuxPlanned'),
+                  linuxRequirements: t('home.linuxRequirements'),
+                  linuxInstructions: t('home.linuxInstructions'),
+                  linuxDownload: t('home.linuxDownload'),
+                  linuxGuide: t('home.linuxGuide'),
                 }}
               />
             </div>

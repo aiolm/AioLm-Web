@@ -33,6 +33,16 @@ accounts in v1.
 Runs on **Node 22** (`engines.node`, `.nvmrc`, CI, and the Vercel project all
 pin the same major).
 
+## Desktop installation
+
+The homepage has Windows and Linux installation tabs in English, Korean,
+Japanese and Chinese. Linux targets Ubuntu 24.04+ x86_64 with DEB/AppImage;
+its tab includes the DEB command, release downloads and a localized
+[installation guide](https://github.com/aiolm/AioLM/blob/main/docs/guides/install.md#linux).
+Linux release assets are available starting with desktop v0.3.0; the guide
+also covers pre-release validation builds. macOS remains planned. Keep these tabs, the OS FAQ and SoftwareApplication
+metadata consistent when the supported platforms change.
+
 ## Public pages
 
 All page routes below use a language prefix: `/en`, `/ko`, `/ja`, or `/zh`
