@@ -421,3 +421,10 @@
 
   .home-secondary-button { flex: 1 1 100%; white-space: normal; }
 }
+
+/* Linux instructions stay readable beside the platform command. */
+.home-install .install-panel-linux { padding: 12px; }
+.install-linux-requirements { margin: 0 0 8px; font-weight: 600; font-size: var(--fs-support); }
+.install-linux-instructions { margin: 0 0 12px; color: var(--ui-muted); font-size: var(--fs-support); line-height: 1.5; }
+.install-linux-links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 12px; font-size: var(--fs-support); }
+.install-linux-links a { text-decoration: underline; text-underline-offset: 3px; }
