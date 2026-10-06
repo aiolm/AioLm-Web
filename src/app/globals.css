@@ -495,19 +495,6 @@ main > .grid {
   background: var(--tone-success-bg);
 }
 
-.install-panel-planned {
-  padding: 10px 12px;
-}
-
-.install-planned-note {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  font-size: var(--fs-body);
-  color: var(--ui-muted);
-}
-
 /* ==================================================== page intro block === */
 
 .page-intro {

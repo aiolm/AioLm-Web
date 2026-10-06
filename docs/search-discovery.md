@@ -6,9 +6,10 @@ The four homepages render visible product FAQs and matching JSON-LD, plus
 WebSite and SoftwareApplication entities. Both entities carry the name the
 product is short for, All-in-One LM, as their schema.org alternateName, and the
 first FAQ answer spells it out in prose, so the two names are tied together for
-a reader and for an answer engine. Windows and Linux are listed in the installation tabs, OS FAQ and SoftwareApplication
-metadata. The Linux panel links to the localized desktop installation guide and
-covers release assets and validation builds; macOS stays planned.
+a reader and for an answer engine. Windows, macOS and Linux are listed in the
+installation tabs, OS FAQ and SoftwareApplication metadata. The macOS and Linux
+panels link to the release downloads and their sections of the localized desktop
+installation guide.
 No ratings, rankings or performance claims are invented.
 
 Public benchmark detail pages render their initial data on the server and

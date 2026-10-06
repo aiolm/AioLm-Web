@@ -35,13 +35,16 @@ pin the same major).
 
 ## Desktop installation
 
-The homepage has Windows and Linux installation tabs in English, Korean,
-Japanese and Chinese. Linux targets Ubuntu 24.04+ x86_64 with DEB/AppImage;
-its tab includes the DEB command, release downloads and a localized
-[installation guide](https://github.com/aiolm/AioLM/blob/main/docs/guides/install.md#linux).
-Linux release assets are available starting with desktop v0.2.1; the guide
-also covers pre-release validation builds. macOS remains planned. Keep these tabs, the OS FAQ and SoftwareApplication
-metadata consistent when the supported platforms change.
+The homepage has Windows, macOS and Linux installation tabs in English, Korean,
+Japanese and Chinese. macOS targets 13.3+ on Apple silicon and Intel with
+DMGs (desktop v0.3.0+); its tab shows the `install.sh` command, which verifies
+the DMG's SHA-256 and installs into Applications, plus release downloads and a
+localized [macOS guide](https://github.com/aiolm/AioLM/blob/main/docs/guides/install.md#macos).
+Linux targets Ubuntu 24.04+ x86_64 with DEB/AppImage (desktop v0.2.1+); its tab
+includes the DEB command, release downloads and a localized
+[Linux guide](https://github.com/aiolm/AioLM/blob/main/docs/guides/install.md#linux).
+Keep these tabs, the OS FAQ and SoftwareApplication metadata consistent when the
+supported platforms change.
 
 ## Public pages
 

@@ -179,11 +179,6 @@
   color: var(--tone-success-ink);
 }
 
-.home-install .install-panel-planned { padding: 12px; }
-
-.home-install .install-planned-note { align-items: baseline; font-size: var(--fs-support); line-height: 1.45; }
-
-.home-install .install-planned-note > svg { flex-shrink: 0; transform: translateY(2px); }
 
 /* --------------------------------------------------------- screenshot ---- */
 
@@ -423,8 +418,8 @@
 }
 
 /* Linux instructions stay readable beside the platform command. */
-.home-install .install-panel-linux { padding: 12px; }
-.install-linux-requirements { margin: 0 0 8px; font-weight: 600; font-size: var(--fs-support); }
-.install-linux-instructions { margin: 0 0 12px; color: var(--ui-muted); font-size: var(--fs-support); line-height: 1.5; }
-.install-linux-links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 12px; font-size: var(--fs-support); }
-.install-linux-links a { text-decoration: underline; text-underline-offset: 3px; }
+.home-install .install-panel-detail { padding: 12px; }
+.install-requirements { margin: 0 0 8px; font-weight: 600; font-size: var(--fs-support); }
+.install-instructions { margin: 0 0 12px; color: var(--ui-muted); font-size: var(--fs-support); line-height: 1.5; }
+.install-links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 12px; font-size: var(--fs-support); }
+.install-links a { text-decoration: underline; text-underline-offset: 3px; }
