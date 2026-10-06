@@ -5,7 +5,11 @@ import { useEffect, useRef, useState } from "react";
 const WINDOWS_INSTALL_CMD =
   'powershell -ExecutionPolicy Bypass -Command "irm https://github.com/aiolm/AioLM/releases/latest/download/install.ps1 | iex"';
 
+const MACOS_INSTALL_CMD = "curl -fsSL https://github.com/aiolm/AioLM/releases/latest/download/install.sh | bash";
+
 const LINUX_INSTALL_CMD = "sudo apt install ./AioLM_*_amd64.deb";
+
+const INSTALL_CMD: Record<InstallOs, string> = { windows: WINDOWS_INSTALL_CMD, macos: MACOS_INSTALL_CMD, linux: LINUX_INSTALL_CMD };
 
 type InstallOs = "windows" | "macos" | "linux";
 
@@ -31,14 +35,16 @@ export interface InstallMessages {
   copy: string;
   copied: string;
   copyFailed: string;
-  macosPlanned: string;
+  download: string;
+  macosRequirements: string;
+  macosInstructions: string;
+  macosGuide: string;
   linuxRequirements: string;
   linuxInstructions: string;
-  linuxDownload: string;
   linuxGuide: string;
 }
 
-export function InstallCommand({ messages, linuxGuideUrl }: { messages: InstallMessages; linuxGuideUrl: string }): React.JSX.Element {
+export function InstallCommand({ messages, macosGuideUrl, linuxGuideUrl }: { messages: InstallMessages; macosGuideUrl: string; linuxGuideUrl: string }): React.JSX.Element {
   const [selectedOs, setSelectedOs] = useState<InstallOs>("windows");
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
@@ -49,7 +55,7 @@ export function InstallCommand({ messages, linuxGuideUrl }: { messages: InstallM
     if (copyTimer.current) clearTimeout(copyTimer.current);
     setCopyFailed(false);
     try {
-      await navigator.clipboard.writeText(selectedOs === "linux" ? LINUX_INSTALL_CMD : WINDOWS_INSTALL_CMD);
+      await navigator.clipboard.writeText(INSTALL_CMD[selectedOs]);
       setCopied(true);
       copyTimer.current = setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -139,15 +145,26 @@ export function InstallCommand({ messages, linuxGuideUrl }: { messages: InstallM
               </button>
             </div>
           </div>
-          <div id="panel-macos" role="tabpanel" aria-labelledby="tab-macos" hidden={selectedOs !== "macos"} tabIndex={0} className="install-panel install-panel-planned">
-            <p className="install-planned-note">
-              <AppleIcon />
-              <span>{messages.macosPlanned}</span>
-            </p>
+          <div id="panel-macos" role="tabpanel" aria-labelledby="tab-macos" hidden={selectedOs !== "macos"} tabIndex={0} className="install-panel install-panel-detail">
+            <p className="install-requirements">{messages.macosRequirements}</p>
+            <p className="install-instructions">{messages.macosInstructions}</p>
+            <div className="install-cmd-row">
+              <code className="install-cmd-code" title={MACOS_INSTALL_CMD}>
+                <span className="install-cmd-prompt">$</span> {MACOS_INSTALL_CMD}
+              </code>
+              <button type="button" className={`install-copy-button ${copied ? "copied" : ""}`} onClick={handleCopy}>
+                {copied ? <CheckIcon /> : <CopyIcon />}
+                <span>{copied ? messages.copied : messages.copy}</span>
+              </button>
+            </div>
+            <div className="install-links">
+              <a href="https://github.com/aiolm/AioLM/releases/latest">{messages.download}</a>
+              <a href={macosGuideUrl}>{messages.macosGuide}</a>
+            </div>
           </div>
-          <div id="panel-linux" role="tabpanel" aria-labelledby="tab-linux" hidden={selectedOs !== "linux"} tabIndex={0} className="install-panel install-panel-linux">
-            <p className="install-linux-requirements">{messages.linuxRequirements}</p>
-            <p className="install-linux-instructions">{messages.linuxInstructions}</p>
+          <div id="panel-linux" role="tabpanel" aria-labelledby="tab-linux" hidden={selectedOs !== "linux"} tabIndex={0} className="install-panel install-panel-detail">
+            <p className="install-requirements">{messages.linuxRequirements}</p>
+            <p className="install-instructions">{messages.linuxInstructions}</p>
             <div className="install-cmd-row">
               <code className="install-cmd-code" title={LINUX_INSTALL_CMD}>
                 <span className="install-cmd-prompt">$</span> {LINUX_INSTALL_CMD}
@@ -157,8 +174,8 @@ export function InstallCommand({ messages, linuxGuideUrl }: { messages: InstallM
                 <span>{copied ? messages.copied : messages.copy}</span>
               </button>
             </div>
-            <div className="install-linux-links">
-              <a href="https://github.com/aiolm/AioLM/releases/latest">{messages.linuxDownload}</a>
+            <div className="install-links">
+              <a href="https://github.com/aiolm/AioLM/releases/latest">{messages.download}</a>
               <a href={linuxGuideUrl}>{messages.linuxGuide}</a>
             </div>
           </div>

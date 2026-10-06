@@ -35,7 +35,10 @@ describe('localized static homepage', () => {
     expect(html).toContain(messages['home.heroFirst']);
     expect(html).toContain(messages['home.windows']);
     expect(html).toContain(messages['home.linuxRequirements']);
-    expect(html).toContain('"operatingSystem":["Windows","Linux"]');
+    expect(html).toContain(messages['home.macosRequirements']);
+    expect(html).toContain('"operatingSystem":["Windows","macOS","Linux"]');
+    expect(html).toContain('releases/latest/download/install.sh | bash');
+    expect(html).toContain(`href="https://github.com/aiolm/AioLM/blob/main/docs/guides/install${locale === 'en' ? '' : `.${locale}`}.md#macos"`);
     expect(html).toContain(`href="https://github.com/aiolm/AioLM/blob/main/docs/guides/install${locale === 'en' ? '' : `.${locale}`}.md#linux"`);
     expect(html).toContain(messages['home.choose']);
     expect(html).toContain(messages['home.caption']);
