@@ -13,7 +13,10 @@ export interface BenchmarkSetup {
   runtime: string | null; runtime_version: string | null; backend: string | null; mode: string | null;
   /** Runtime build exactly as submitted. Absent on summaries stored before it was carried; recovered at read time by withRuntimeBuild. */
   runtime_build?: string | null;
-  /** Raw runtime allocation exactly as submitted; a server-side total, not an input length. */
+  /** Optional vLLM plugin identity, preserved separately from the core version. */
+  runtime_variant?: string;
+  runtime_plugin_version?: string;
+  /** Raw allocation as submitted: llama.cpp server total or Python per-sequence allocation, never an input length. */
   context_size: number | null; parallel: number | null; threads: number | null; gpu_layers: number | null;
   flash_attention: string | null; cache_type_k: string | null; cache_type_v: string | null; split_mode: string | null;
   /** Largest configured input length. Absent on summaries stored before migration 009; null when unrecorded. */
@@ -173,6 +176,7 @@ export function normalizeSetup(b: PublicBenchmarkSubmission): BenchmarkSetup {
     vendors: strings(devices.map(g => g.vendor)), gpus: strings(devices.map(g => g.name)),
     vram_mb: devices.length > 0 && env?.execution.selection_complete && devices.every(g => g.vram_mb !== null) ? devices.reduce((sum, g) => sum + g.vram_mb!, 0) : null,
     runtime: b.runtime.name, runtime_version: b.runtime.version, runtime_build: b.runtime.build, backend: b.runtime.backend, mode: env?.execution.mode ?? null,
+    ...(b.runtime.variant ? { runtime_variant: b.runtime.variant, runtime_plugin_version: b.runtime.plugin_version } : {}),
     context_size: b.execution.context_size, parallel: b.execution.parallel, threads: settings?.threads ?? null, gpu_layers: settings?.gpu_layers ?? null,
     prompt_length: largestPromptLength(b.workload?.prompt_lengths),
     flash_attention: settings?.flash_attention ?? null, cache_type_k: settings?.cache_type_k ?? null, cache_type_v: settings?.cache_type_v ?? null, split_mode: settings?.split_mode ?? null,

@@ -16,16 +16,16 @@ import { formatLatency, formatLatencySpread, formatVramGb, runtimeVersionLabel }
 import { buildRowColumns } from "@/components/benchmark-detail-rows";
 
 describe("shared display conventions", () => {
-  it("labels a llama.cpp runtime as version(build), with ? for the missing half", () => {
+  it("uses the shared version(build) label and leaves an unknown half absent", () => {
     const llama = (version: unknown, build?: unknown) => runtimeVersionLabel({ name: "llama.cpp", version, build });
     expect(llama("0.3.0-dev", "b10638")).toBe("0.3.0-dev(10638)");
     expect(llama("0.3.0-dev", 10638)).toBe("0.3.0-dev(10638)");
     // The build the reported banner names is the one that ran; a stale fallback never replaces it.
     expect(llama("version: 0.3.0-dev (build 10638, commit abc1234)", "b10600")).toBe("0.3.0-dev(10638)");
     expect(llama("version: 0.4.1 (build 123)\ncompiler: test")).toBe("0.4.1(123)");
-    expect(llama("0.3.0-dev")).toBe("0.3.0-dev(?)");
-    expect(llama(null, "b10638")).toBe("?(10638)");
-    expect(llama("b4589-abcdef")).toBe("?(4589)");
+    expect(llama("0.3.0-dev")).toBe("0.3.0-dev");
+    expect(llama(null, "b10638")).toBe("b10638");
+    expect(llama("b4589-abcdef")).toBe("b4589");
     // Build 0 is llama.cpp's no-git sentinel, so a local or PR build keeps its own id.
     expect(llama("0.0.0-dev (build 0, commit unknown)", "pr12345")).toBe("0.0.0-dev(pr12345)");
     expect(llama(null, null)).toBeNull();

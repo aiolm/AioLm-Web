@@ -1,6 +1,6 @@
 # Contracts integration
 
-`@aiolm/benchmark-contracts` 0.6.1 owns the shared data contract: DTOs,
+`@aiolm/benchmark-contracts` 0.8.0 owns the shared data contract: DTOs,
 validation, JSON Schema/OpenAPI, publication bounds, recovery encoding, receipt
 shape. The website consumes that package directly — it does not carry its own
 copy of the rules and never imports app sources at runtime.
@@ -10,7 +10,7 @@ copy of the rules and never imports app sources at runtime.
 The versioned tarball is committed to this repository and installed from there:
 
 ```json
-"@aiolm/benchmark-contracts": "file:vendor/aiolm-benchmark-contracts-0.6.1.tgz"
+"@aiolm/benchmark-contracts": "file:vendor/aiolm-benchmark-contracts-0.8.0.tgz"
 ```
 
 `package-lock.json` pins its `integrity` (`sha512-…`), so `npm ci` fails if the
@@ -27,8 +27,8 @@ the installed package:
 
 Runtime labels on every page come from `formatRuntimeVersionLabel`, called
 through `runtimeVersionLabel` in `src/components/benchmark-explorer-format.ts`
-with the runtime name, version and build, so the website and the desktop app
-print the same `version(build)` text.
+with the runtime name, version, build and optional plugin identity. llama.cpp
+keeps its `version(build)` label; vllm-metal shows both plugin and core versions.
 
 Website-side policy that the shared contract deliberately leaves open stays in
 this repository — for example `getServiceOrigin()` in `src/lib/env.ts` layers a
@@ -39,12 +39,24 @@ one-argument API allows the HTTP debug loopback.
 
 The website's `weight_bits` discovery filter derives a nominal family from
 existing declared GGUF metadata. It adds no field to a publication and does not
-guess AWQ/GPTQ precision. The current shared contract accepts GGUF metadata and
-llama.cpp runs only. Supporting other formats requires an upstream contract
-release plus desktop extraction of explicit weight bits from the loaded model's
-quantization configuration. Such a release should carry weight bits separately
-from method, activation bits and KV-cache precision; missing bits must remain
-absent. Never extend the website's validator independently of that package.
+guess AWQ/GPTQ precision. Contract 0.8.0 accepts legacy schema-1 llama.cpp runs
+and schema-2 llama.cpp, vLLM and MLX runs. Standard vLLM uses HF safetensors;
+MLX uses HF/MLX snapshots; the explicit vllm-metal variant also permits the
+model formats declared by that contract, including GGUF. Python records retain
+null llama.cpp settings, method version 2 and their per-sequence context
+allocation. The website shows the recorded model format without fabricating
+GGUF metadata or weight bits. Plugin/core identity survives storage and display.
+
+The archive is built from desktop v0.3.2, commit
+`e439b52038142439c8c85b112d2949687fa273f2`, using the package's build and pack
+scripts, including its LICENSE. The lockfile pins the exact packed bytes.
+Existing accepted snapshots and receipts are not rewritten. No database
+migration is required: benchmark and summary JSON carry the additional fields.
+
+External `custom.*` engines remain outside this publication schema. Never
+rename them to a built-in engine to bypass validation, and never extend the
+website validator independently of the shared package. Weight bits remain
+separate from activation/KV precision and unknown when not declared.
 
 The installed package ships the authoritative machine-readable surface; read it
 from `node_modules`, not from a transcribed copy:
@@ -89,5 +101,5 @@ Set `CONTRACTS_TARBALL_PATH` to additionally compare a candidate archive
 against the vendored one before adopting a new version:
 
 ```sh
-CONTRACTS_TARBALL_PATH=./aiolm-benchmark-contracts-0.6.1.tgz npm run contracts:check
+CONTRACTS_TARBALL_PATH=./aiolm-benchmark-contracts-0.8.0.tgz npm run contracts:check
 ```

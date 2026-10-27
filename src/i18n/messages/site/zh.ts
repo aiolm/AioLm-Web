@@ -1,14 +1,14 @@
 import type { EnglishMessages } from './en';
 const messages = {
-  "site.title": "AioLM — 本地模型，一个工作空间。",
-  "site.description": "AioLM（All-in-One LM）是用于 llama.cpp 的桌面工作空间：探索 GGUF 模型、管理运行时、本地聊天并测量性能。查看用户自行提交的公开基准测试及其完整配置。",
+  "site.title": "AioLM — 多种推理引擎，一个工作空间",
+  "site.description": "AioLM（All-in-One LM）是不依赖特定引擎的 GUI 适配器，可连接 llama.cpp、vLLM、MLX 及 Strata、TensorFold 等外部推理引擎。在一个工作空间中管理模型、设置与本地聊天。",
   "site.skip": "跳转到主要内容",
   "site.primary": "主导航",
   "site.home": "首页",
   "site.benchmarks": "基准测试",
   "site.manage": "管理",
   "site.github": "在 GitHub 上查看",
-  "site.tagline": "用于 llama.cpp 本地语言模型的桌面工作空间。",
+  "site.tagline": "在一个 GUI 中使用内置及外部本地推理引擎。",
   "site.project": "项目",
   "site.docs": "文档",
   "site.license": "MIT 许可证",

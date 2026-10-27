@@ -18,6 +18,20 @@ import Layout, { generateMetadata as layoutMetadata, generateStaticParams } from
 import { getMessages } from '@/i18n/server';
 
 describe('localized static homepage', () => {
+  it.each(locales)('explains built-in and external engine adapters in %s with setup and compatibility guidance', async locale => {
+    const html = renderToStaticMarkup(await Home({ params: Promise.resolve({ locale }) }));
+    const home = await getMessages(locale, 'home');
+    const site = await getMessages(locale, 'site');
+    for (const name of ['llama.cpp', 'vLLM', 'MLX', 'Strata', 'TensorFold']) {
+      expect(home['home.subtitle']).toContain(name);
+      expect(site['site.description']).toContain(name);
+      expect(html).toContain(name);
+    }
+    expect(html).toContain(home['home.enginesExternal']);
+    expect(html).toContain(home['home.faqEnginesAnswer']);
+    expect(html).toContain('/blob/v0.3.2/docs/reference/runtime-adapter-handoff.ko.md');
+    expect(html).toContain('/blob/v0.3.2/docs/reference/inference-runtimes.md');
+  });
   it('advertises the canonical sitemap and excludes API and private pages from crawling', () => {
     expect(robots()).toEqual({ rules: { userAgent: '*', allow: '/', disallow: ['/v1/', '/manage', '/verify/', ...locales.flatMap(locale => ['/' + locale + '/manage', '/' + locale + '/verify/'])] }, sitemap: ['https://example.invalid/sitemap.xml', 'https://example.invalid/benchmarks/sitemap.xml'] });
     expect(sitemap()).toHaveLength(8);

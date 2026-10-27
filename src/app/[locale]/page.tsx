@@ -55,7 +55,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   const [home, site] = await Promise.all([getMessages(locale, 'home'), getMessages(locale, 'site')]);
   const t = createTranslator({ ...site, ...home });
   const url = new URL(localizedPath(locale, '/'), getServiceOrigin()).href;
-  const faq = ['What', 'Os', 'Benchmark', 'Account'].map(key => ({ question: t(`home.faq${key}Question`), answer: t(`home.faq${key}Answer`) }));
+  const faq = ['What', 'Os', 'Engines', 'Benchmark', 'Account'].map(key => ({ question: t(`home.faq${key}Question`), answer: t(`home.faq${key}Answer`) }));
   return (
     <>
       <JsonLd data={{ '@context': 'https://schema.org', '@graph': [
@@ -116,6 +116,19 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       <div className="site-shell home-showcase">
         <ProductScreenshot t={t} />
       </div>
+
+      <section className="site-shell home-section" aria-labelledby="engines-title">
+        <header className="home-section-head">
+          <h2 className="home-section-title" id="engines-title">{t('home.enginesTitle')}</h2>
+          <p className="home-section-detail">{t('home.enginesBuiltin')}</p>
+          <p className="home-section-detail">{t('home.enginesExternal')}</p>
+          <p className="home-section-detail">{t('home.enginesHelp')}</p>
+        </header>
+        <div className="home-hero-actions">
+          <a className="home-text-link" href={`${GITHUB_REPOSITORY_URL}/blob/v0.3.2/docs/reference/inference-runtimes.md`}>{t('home.enginesGuide')}<ArrowIcon /></a>
+          <a className="home-text-link" href={`${GITHUB_REPOSITORY_URL}/blob/v0.3.2/docs/reference/runtime-adapter-handoff.ko.md`}>{t('home.adaptersGuide')}<ArrowIcon /></a>
+        </div>
+      </section>
 
       <section className="site-shell home-section home-workflow" aria-labelledby="workflow-title">
         <header className="home-section-head">
