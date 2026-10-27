@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { syntheticSubmission } from "@/lib/fixtures";
+import { pythonBenchmark } from "../inference-benchmarks";
 import {
   describeGpu,
   describeGpuList,
@@ -47,6 +48,15 @@ function valueOf(groups: SetupGroup[], label: string, unit?: string): string | s
 }
 
 describe("setup groups", () => {
+  it.each(["vllm", "mlx-vlm", "vllm-metal"] as const)("labels %s model format, context and launch options without llama.cpp assumptions", engine => {
+    const benchmark = pythonBenchmark(engine);
+    const groups = buildSetupGroups(publicSetup(benchmark));
+    expect(valueOf(groups, "Weights format")).toBe(engine === "mlx-vlm" ? "MLX" : "safetensors");
+    expect(valueOf(groups, "Per-sequence context allocation", "tokens")).toBe("4096");
+    expect(labelsOf(groups)).toContain("Engine launch options");
+    expect(labelsOf(groups)).not.toContain("llama-server options");
+    if (engine === "vllm-metal") expect(valueOf(groups, "Runtime version")).toBe("vllm-metal 0.30.0 · vLLM 0.30.0");
+  });
   it("reads as titled groups instead of one long list, with the machine split from the software", () => {
     const groups = buildSetupGroups(publicSetup());
     expect(groups.map((g) => g.title)).toEqual([

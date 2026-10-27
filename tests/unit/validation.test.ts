@@ -4,8 +4,24 @@ import {
   validateDescriptionMd, validatePublicationRequest,
 } from "@/lib/validation";
 import { syntheticSubmission } from "@/lib/fixtures";
+import { pythonBenchmark } from "../inference-benchmarks";
 
 describe("publication validation", () => {
+  it("does not accept an external adapter as a built-in public benchmark engine", () => {
+    const benchmark = pythonBenchmark("vllm");
+    expect(() => normalizePublicationInput({ ...benchmark, runtime: { ...benchmark.runtime, name: "custom.tensorfold" } })).toThrow();
+  });
+
+  it("rejects mixed engine settings and incomplete Metal plugin identity", () => {
+    const benchmark = pythonBenchmark("vllm-metal");
+    const { plugin_version, ...runtime } = benchmark.runtime;
+    void plugin_version;
+    expect(() => normalizePublicationInput({ ...benchmark, runtime })).toThrow();
+    expect(() => normalizePublicationInput({ ...benchmark, execution: { ...benchmark.execution, settings: {
+      gpu_layers: 1, threads: null, threads_batch: null, flash_attention: null,
+      cache_type_k: null, cache_type_v: null, split_mode: null, tensor_split: null,
+    } } })).toThrow();
+  });
   it("accepts wrapper and legacy bare bodies (legacy keeps empty description)", () => {
     const benchmark = syntheticSubmission();
     expect(normalizePublicationInput({ benchmark, description_md: "hi" }).description_md).toBe("hi");

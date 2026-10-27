@@ -13,6 +13,7 @@ import { PATCH as editDescription } from "@/app/v1/benchmark-runs/[id]/descripti
 import { POST as createReport } from "@/app/v1/benchmark-runs/[id]/reports/route";
 import { POST as openMgmt, GET as readMgmt, DELETE as closeMgmt } from "@/app/v1/management-sessions/route";
 import { freshStore, setupTestEnv, testHeaders } from "./helpers";
+import { pythonBenchmark } from "../inference-benchmarks";
 
 setupTestEnv();
 
@@ -73,6 +74,30 @@ describe("benchmark publish flow", () => {
   beforeEach(() => {
     store = freshStore();
     ownerSecret = randomBase64Url32();
+  });
+
+  it.each(["vllm", "mlx-vlm", "vllm-metal"] as const)("publishes and reads %s without changing engine or model identity", async engine => {
+    const benchmark = pythonBenchmark(engine);
+    const body = JSON.stringify({ benchmark, description_md: "Synthetic multi-engine result." });
+    const { permit } = await verifiedPermit(ownerSecret, SUBMISSION, sha256HexUtf8(body));
+    const response = await submitRun(new Request(`${ORIGIN}/v1/benchmark-runs`, {
+      method: "POST",
+      headers: testHeaders({ authorization: `Bearer ${ownerSecret}`, "content-type": "application/json", "x-upload-permit": permit, "idempotency-key": SUBMISSION }),
+      body,
+    }));
+    expect(response.status).toBe(201);
+    const { id } = await response.json();
+    const detail = await getDetail(new Request(`${ORIGIN}/v1/benchmark-runs/${id}`), { params: Promise.resolve({ id }) });
+    const saved = await detail.json();
+    expect(saved.benchmark.runtime).toEqual(benchmark.runtime);
+    expect(saved.benchmark.model).toEqual(benchmark.model);
+    expect(saved.benchmark.execution).toEqual(benchmark.execution);
+    expect(saved.summary.model_info).toBeNull();
+    expect(saved.summary.points[0].pp_tps).toBeNull();
+    const listed = await (await listRuns(new Request(`${ORIGIN}/v1/benchmark-runs?runtime=${benchmark.runtime.name}`, { headers: testHeaders() }))).json();
+    expect(listed.items).toHaveLength(1);
+    expect(listed.items[0].summary.setup.runtime).toBe(benchmark.runtime.name);
+    if (engine === "vllm-metal") expect(listed.items[0].summary.setup).toMatchObject({ runtime_variant: "vllm-metal", runtime_plugin_version: "0.30.0" });
   });
 
   it("publishes, replays idempotently, and enforces owner/body/deleted rules", async () => {

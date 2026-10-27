@@ -173,9 +173,10 @@ check("service error classification is the shared one", () => {
 
 check("runtime labels come from the package as version(build)", () => {
   assert(formatRuntimeVersionLabel({ name: "llama.cpp", version: "version: 0.3.0-dev (build 10638, commit abc)", build: "b10600" }) === "0.3.0-dev(10638)", "llama.cpp banner build is not preferred");
-  assert(formatRuntimeVersionLabel({ name: "llama.cpp", version: null, build: "b10638" }) === "?(10638)", "llama.cpp build-only label changed");
+  assert(formatRuntimeVersionLabel({ name: "llama.cpp", version: null, build: "b10638" }) === "b10638", "llama.cpp build-only label differs from the desktop contract");
   assert(formatRuntimeVersionLabel({ name: "vllm", version: "0.6.2", build: null }) === "0.6.2", "other engines are not preserved");
   assert(formatRuntimeVersionLabel({ name: "llama.cpp", version: null, build: null }) === null, "an unknown runtime is not null");
+  assert(formatRuntimeVersionLabel({ name: "vllm", version: "0.30.0", variant: "vllm-metal", plugin_version: "0.30.0" }) === "vllm-metal 0.30.0 · vLLM 0.30.0", "Metal plugin and core identity were not preserved");
 });
 
 check("shared schema and OpenAPI documents resolve and parse", () => {

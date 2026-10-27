@@ -147,13 +147,15 @@ export function formatCpuCores(cpu: { logical_cores: number; physical_cores?: nu
  * parsing; null when neither a version nor a build was recorded. Inputs are
  * unverified, so anything that is not text (or a numeric build) reads as absent.
  */
-export function runtimeVersionLabel(runtime: { name?: unknown; version?: unknown; build?: unknown } | null | undefined): string | null {
+export function runtimeVersionLabel(runtime: { name?: unknown; version?: unknown; build?: unknown; variant?: unknown; plugin_version?: unknown } | null | undefined): string | null {
   const text = (value: unknown) => (typeof value === "string" ? value : null);
   const build = runtime?.build;
   return formatRuntimeVersionLabel({
     name: text(runtime?.name),
     version: text(runtime?.version),
     build: typeof build === "number" || typeof build === "string" ? build : null,
+    variant: text(runtime?.variant),
+    plugin_version: text(runtime?.plugin_version),
   });
 }
 
@@ -186,7 +188,7 @@ export function extractGpuList(summary: { hardware_label: string; setup?: { gpus
  */
 export function environmentFacts(setup: (BenchmarkSetup & { ram_bytes?: number | null; physical_cores?: number | null }) | undefined, t: Translator = benchmarkFallback): SummaryFact[] {
   if (!setup) return [];
-  const runtime = [setup.runtime, runtimeVersionLabel({ name: setup.runtime, version: setup.runtime_version, build: setup.runtime_build })].filter(Boolean).join(" ");
+  const runtime = [setup.runtime, runtimeVersionLabel({ name: setup.runtime, version: setup.runtime_version, build: setup.runtime_build, variant: setup.runtime_variant, plugin_version: setup.runtime_plugin_version })].filter(Boolean).join(" ");
   const facts: SummaryFact[] = [];
   if (setup.gpus && setup.gpus.length > 0) {
     facts.push({ key: "gpu", label: t("benchmark.GPU"), value: setup.gpus.join(", ") });
@@ -233,7 +235,7 @@ export function formatComparisonCpu(setup: (BenchmarkSetup & { ram_bytes?: numbe
 
 /** Runtime name and version with its backend, or unknown when none was recorded. */
 export function formatComparisonRuntime(setup: BenchmarkSetup | undefined, t: Translator = benchmarkFallback): string {
-  const runtime = [setup?.runtime, runtimeVersionLabel(setup && { name: setup.runtime, version: setup.runtime_version, build: setup.runtime_build })].filter((part): part is string => typeof part === "string" && part !== "").join(" ");
+  const runtime = [setup?.runtime, runtimeVersionLabel(setup && { name: setup.runtime, version: setup.runtime_version, build: setup.runtime_build, variant: setup.runtime_variant, plugin_version: setup.runtime_plugin_version })].filter((part): part is string => typeof part === "string" && part !== "").join(" ");
   const parts = [runtime, setup?.backend].filter((part): part is string => typeof part === "string" && part !== "");
   return parts.length > 0 ? parts.join(" · ") : t("benchmark.Unknown");
 }

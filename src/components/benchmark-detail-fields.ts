@@ -76,6 +76,9 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
   const cpu = asRecord(environment?.["cpu"]);
   const settings = asRecord(execution?.["settings"]);
   const info = readModelInfo(model?.["metadata"]);
+  const pythonEngine = runtime?.name === "vllm" || runtime?.name === "mlx-vlm";
+  const formats: Record<string, string> = { gguf: "GGUF", "hf-safetensors": "safetensors", mlx: "MLX", unknown: t("benchmark.Unknown") };
+  const modelFormat = info?.format ?? (typeof model?.format === "string" ? formats[model.format] : undefined);
   const repositoryUrl = huggingFaceUrl(info?.repository);
 
   // Model group: key fields shown once; empty optional metadata fields omitted.
@@ -110,8 +113,8 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
   if (info?.size_label) {
     modelFields.push({ label: t("benchmark.Parameter size"), value: info.size_label });
   }
-  if (info?.format) {
-    modelFields.push({ label: t("benchmark.Weights format"), value: info.format });
+  if (modelFormat) {
+    modelFields.push({ label: t("benchmark.Weights format"), value: modelFormat });
   }
   if (info?.file_type != null) {
     modelFields.push({ label: t("benchmark.Quantization file type"), value: String(info.file_type) });
@@ -196,7 +199,7 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
       id: "detail-setup-execution",
       title: t("benchmark.Execution settings"),
       fields: [
-        { label: t("benchmark.Allocated context size"), unit: t("benchmark.tokens"), value: displayText(execution?.["context_size"], t) },
+        { label: t(pythonEngine ? "benchmark.Per-sequence context allocation" : "benchmark.Allocated context size"), unit: t("benchmark.tokens"), value: displayText(execution?.["context_size"], t) },
         { label: t("benchmark.Parallel requests"), value: displayText(execution?.["parallel"], t) },
         { label: t("benchmark.Threads"), value: displayText(settings?.["threads"], t) },
         { label: t("benchmark.Batch threads"), value: displayText(settings?.["threads_batch"], t) },
@@ -209,7 +212,7 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
         // The same launch the fields above summarize, kept whole so a reader can
         // reproduce it. Published without the options that name the publisher's
         // machine, so a model path is absent by contract, not by omission here.
-        { label: t("benchmark.llama-server options"), value: describeArguments(execution?.["effective_args"], t), command: true },
+        { label: t(pythonEngine ? "benchmark.Engine launch options" : "benchmark.llama-server options"), value: describeArguments(execution?.["effective_args"], t), command: true },
       ],
     },
   ];

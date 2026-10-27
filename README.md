@@ -1,7 +1,9 @@
 # AioLM Website
 
 Website for AioLM — All-in-One LM — the desktop workspace for local language
-models. Product introduction and anonymous public benchmark explorer. Next.js
+inference engines. The desktop app is an engine-neutral GUI adapter for
+llama.cpp, vLLM, MLX and compatible external engines such as Strata, TensorFold
+and user builds. Product introduction and anonymous public benchmark explorer. Next.js
 App Router + PostgreSQL (Supabase-compatible) + Cloudflare Turnstile. No
 accounts in v1.
 
@@ -18,7 +20,7 @@ accounts in v1.
   desktop app can open the page with a single-use handoff
   ([management handoff](docs/management-handoff.md)).
 - API: the wire contract is the OpenAPI document shipped by
-  `@aiolm/benchmark-contracts` 0.6.1
+  `@aiolm/benchmark-contracts` 0.8.0
   (`node_modules/@aiolm/benchmark-contracts/schema/openapi.json`). Routes:
   `POST /v1/upload-sessions`, `POST .../verify`, `GET ...`, `POST /v1/benchmark-runs`,
   `GET /v1/benchmark-runs`, `GET /v1/benchmark-runs/<id>`, `GET .../measurements`,
@@ -45,6 +47,14 @@ includes the DEB command, release downloads and a localized
 [Linux guide](https://github.com/aiolm/AioLM/blob/main/docs/guides/install.md#linux).
 Keep these tabs, the OS FAQ and SoftwareApplication metadata consistent when the
 supported platforms change.
+
+The homepage, FAQ and search descriptions describe the adapter architecture in
+all four languages. The shared social card names the built-in engines and
+external adapters. Built-in vLLM targets supported Linux or
+Apple silicon macOS 15+ through vllm-metal; MLX targets Apple silicon. External
+engines require a compatible reviewed executable/bridge, model and platform.
+Registration uses the local OpenAI-compatible API and does not grant every
+benchmark, modality, deep-verification or portable-bundle capability.
 
 ## Public pages
 
@@ -129,11 +139,18 @@ See `docs/deployment.md` and `docs/operations.md`.
 ## Contracts
 
 Validation, recovery encoding, and the schema/OpenAPI surface come from
-`@aiolm/benchmark-contracts` 0.6.1, installed from the vendored archive
-`vendor/aiolm-benchmark-contracts-0.6.1.tgz` and integrity-pinned in
+`@aiolm/benchmark-contracts` 0.8.0, installed from the vendored archive
+`vendor/aiolm-benchmark-contracts-0.8.0.tgz` and integrity-pinned in
 `package-lock.json`. The website re-exports that package rather than keeping a
 second copy of the rules, and never imports app sources at runtime. Details and
 the upgrade procedure in `docs/contracts-integration.md`.
+
+Contract 0.8.0, built from desktop v0.3.2 (`e439b52038142439c8c85b112d2949687fa273f2`),
+retains schema-1 llama.cpp results and accepts schema-2 vLLM/MLX records. It
+preserves vllm-metal plugin and core versions, explicit model formats and
+per-sequence Python context allocation. External `custom.*` engine publication
+is not part of this shared contract; registration support in the desktop app
+must not be confused with public benchmark upload support.
 
 ## Moderation
 

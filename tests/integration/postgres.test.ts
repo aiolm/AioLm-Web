@@ -5,6 +5,7 @@ import postgres from "postgres";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { randomBase64Url32, sha256HexUtf8 } from "@/lib/crypto";
 import { syntheticSubmission } from "@/lib/fixtures";
+import { pythonBenchmark } from "../inference-benchmarks";
 import { summarizeBenchmark } from "@/lib/summary";
 import { weightBits } from "@/lib/weight-bits";
 import weightEncodings from "@/lib/weight-encodings.json";
@@ -1624,7 +1625,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     expect(footprint.rows).toBeGreaterThan(0);
   });
 
-  it("serves the authenticated HTTP publish flow against the real database", async () => {
+  it.each(["llama.cpp", "vllm", "mlx-vlm", "vllm-metal"] as const)("serves the authenticated %s HTTP publish flow against the real database", async engine => {
     const s = need();
     if (!s || !db) return;
     // Route handlers read deployment config from the environment; point them
@@ -1645,7 +1646,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     try {
       const submissionId = randomUUID();
       const ownerSecret = randomBase64Url32();
-      const benchmark = syntheticSubmission({ submission_id: submissionId });
+      const benchmark = engine === "llama.cpp" ? syntheticSubmission({ submission_id: submissionId }) : pythonBenchmark(engine, submissionId);
       const body = JSON.stringify({ benchmark, description_md: "http-flow" });
       const bodySha = sha256HexUtf8(body);
       const headers = (extra: Record<string, string> = {}): Headers =>
@@ -1697,6 +1698,10 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       const first = await submit(ownerSecret, true);
       expect(first.status).toBe(201);
       const receipt = (await first.json()) as { id: string };
+      const stored = await s.getRunByPublicId(receipt.id);
+      expect(stored?.benchmark).toMatchObject({ runtime: benchmark.runtime, model: benchmark.model, execution: benchmark.execution });
+      expect(stored?.summary.setup?.runtime).toBe(benchmark.runtime.name);
+      if (engine === "vllm-metal") expect(stored?.summary.setup).toMatchObject({ runtime_variant: "vllm-metal", runtime_plugin_version: "0.30.0" });
       // Accepted replay without a fresh permit returns the same receipt.
       const replay = await submit(ownerSecret, false);
       expect(replay.status).toBe(200);
