@@ -28,6 +28,7 @@ export default async function GuidePage({ params }: { params: Params }) {
     slug === 'install' ? getMessages(locale, 'home') : Promise.resolve(null),
   ]);
   const guide = content.guides[slug];
+  const hasScreenshots = guide.sections.some(section => section.image || section.more?.some(detail => detail.image));
   return <GuideLayout locale={locale} content={content} active={slug}>
     <article className="guide-article">
       <header className="guide-header">
@@ -35,7 +36,7 @@ export default async function GuidePage({ params }: { params: Params }) {
       </header>
       <GuideTableOfContents label={content.onPage} sections={guide.sections.map(({ id, title }) => ({ id, title }))} />
       <div className="guide-body">
-      {guide.sections.some(section => section.image) && <p className="guide-screen-notice">{content.screenshotNotice}</p>}
+      {hasScreenshots && <p className="guide-screen-notice">{content.screenshotNotice}</p>}
       {guide.sections.map(section => <section className="guide-section" key={section.id} id={section.id} aria-labelledby={`title-${section.id}`}>
         <h2 id={`title-${section.id}`} tabIndex={-1}>{section.title}</h2>
         {slug === 'install' && ['windows', 'macos'].includes(section.id) && section.note && <InstallSecurityWarning locale={locale}>{section.note}</InstallSecurityWarning>}
@@ -53,7 +54,9 @@ export default async function GuidePage({ params }: { params: Params }) {
         {section.image && <GuideScreenshot locale={locale} id={section.image} caption={section.caption ?? section.title} content={content} />}
         {section.more?.map(detail => <details className="guide-more" key={detail.title}><summary>{detail.title}</summary>
           {detail.body.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
+          {detail.steps && <ol>{detail.steps.map(step => <li key={step}>{step}</li>)}</ol>}
           {detail.code && <pre tabIndex={0}><code>{detail.code}</code></pre>}
+          {detail.image && <GuideScreenshot locale={locale} id={detail.image} caption={detail.caption ?? detail.title} content={content} />}
           {detail.report && <a href={detail.report.href}>{detail.report.label} ↗</a>}
           {detail.links?.map(link => <p key={link.href}><a href={link.href}>{link.label} ↗</a></p>)}
           {section.id === 'verify' && <a href={`${GITHUB_REPOSITORY_URL}/releases/download/v0.3.2/checksums.txt`}>checksums.txt ↓</a>}

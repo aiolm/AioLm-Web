@@ -6,6 +6,13 @@ const nextConfig: NextConfig = {
   images: {
     localPatterns: [{ pathname: "/screenshots/**" }],
   },
+  async redirects() {
+    return [{
+      source: "/:locale(en|ko|ja|zh)/guides/external-engines",
+      destination: "/:locale/guides/adapters#files",
+      permanent: true,
+    }];
+  },
   async headers() {
     return [
       {

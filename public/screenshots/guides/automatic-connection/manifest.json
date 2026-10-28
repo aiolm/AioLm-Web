@@ -1,0 +1,213 @@
+{
+  "source": "aiolm/AioLM",
+  "released": false,
+  "synthetic": true,
+  "native_validation": false,
+  "engine_inference": false,
+  "source_commit": "288fcf34b3cc169557c9d1e9b39f5b805a1f5764",
+  "source_base_commit": "41d15f92c0a4b6e855b766a70c305977bf298802",
+  "source_dirty": false,
+  "source_diff_sha256": "786afe772d8d773fe967667e7ce196f6bbb2d35d511a485d0d8d14142e0018ca",
+  "source_files": [
+    {
+      "file": "src/features/runtimes/AutomaticRuntimeConnection.tsx",
+      "sha256": "c821ef68d9861d02bf867e913e2813123be84c00dfd1755e39d3b275fb313eb2"
+    },
+    {
+      "file": "src/features/runtimes/Runtimes.tsx",
+      "sha256": "893343bd2e8586fcfb7a9fa27435964629c5233beb2babe2f522d325ac222808"
+    },
+    {
+      "file": "src/shared/api/runtimeAuto.ts",
+      "sha256": "74c7936bc2cc956e218fd3a320549f48a74051d6867993cdc8eeae9c73305599"
+    },
+    {
+      "file": "src/shared/i18n/runtimeAutoCopy.ts",
+      "sha256": "35cd71813b36c8848d48820bff8e8c7196fa7ebb5c70fe9b1d1d0040fbd0a3f7"
+    },
+    {
+      "file": "src/shared/i18n/adapterCatalogCopy.ts",
+      "sha256": "9d86374674db66abcdc29043dc01af2207ea739a3842fb35fcad053536a185e4"
+    },
+    {
+      "file": "src/shared/i18n/uiI18n.ts",
+      "sha256": "c47a0437599312bd632eb8c7d66e20366369834c14d73dd6c66923877744c138"
+    },
+    {
+      "file": "src/styles/app-workspaces.css",
+      "sha256": "eb1a127df76e5008f86e0629de69e1ffb17f5e8238e9cfefda5229dad4661b46"
+    }
+  ],
+  "method": "Actual unreleased AutomaticRuntimeConnection React UI rendered in an isolated browser with synthetic IPC, candidate/model metadata and example results. No engine process, connection probe or model inference was executed. These captures explain controls, not verified connection support.",
+  "captures": [
+    {
+      "locale": "ko",
+      "id": "auto-find",
+      "file": "ko/auto-find.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "142ea9904c9d0e7354dd95256229f59c7b0bccbb300a681b07ad38c6a46368b4",
+      "focus": {
+        "x": 20,
+        "y": 36.10110294117647,
+        "width": 6.018229166666667,
+        "height": 3.764705882352941
+      }
+    },
+    {
+      "locale": "ko",
+      "id": "auto-model",
+      "file": "ko/auto-model.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "05ec0aec620e30129d4f68a8d4f9f331110b1b1971ba7c593ccfb80ea9c9af57",
+      "focus": {
+        "x": 20,
+        "y": 58.42830882352941,
+        "width": 76.5,
+        "height": 3.764705882352941
+      }
+    },
+    {
+      "locale": "ko",
+      "id": "auto-connect",
+      "file": "ko/auto-connect.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "e4df711e80cf71add85c00444cabeefef3b6c3f30c8bd3c7d3665a673e5d9f63",
+      "focus": {
+        "x": 22.333333333333332,
+        "y": 79.0625,
+        "width": 74.16666666666667,
+        "height": 10.446691176470589
+      }
+    },
+    {
+      "locale": "en",
+      "id": "auto-find",
+      "file": "en/auto-find.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "a7be34b757daac7277f679b62dde5921bacee4ffb34afb5c71f1dc79280b82f8",
+      "focus": {
+        "x": 20,
+        "y": 36.10110294117647,
+        "width": 10.795572916666666,
+        "height": 3.764705882352941
+      }
+    },
+    {
+      "locale": "en",
+      "id": "auto-model",
+      "file": "en/auto-model.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "88e5d94a89dd9b179de6ae2dc6df38253fab657d2d88b5e6ad6673811524706c",
+      "focus": {
+        "x": 20,
+        "y": 58.42830882352941,
+        "width": 76.5,
+        "height": 3.764705882352941
+      }
+    },
+    {
+      "locale": "en",
+      "id": "auto-connect",
+      "file": "en/auto-connect.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "c54052be6c23578c7a1e12122a6b06cf6cb07d9bed05e056d9df6f0ad29b82d1",
+      "focus": {
+        "x": 22.333333333333332,
+        "y": 79.0625,
+        "width": 74.16666666666667,
+        "height": 10.446691176470589
+      }
+    },
+    {
+      "locale": "ja",
+      "id": "auto-find",
+      "file": "ja/auto-find.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "aec929c7e0ab31643cb8c61bcfc9db68f9a7608aa9a212ad34be92f3627e15e6",
+      "focus": {
+        "x": 20,
+        "y": 36.10110294117647,
+        "width": 7.282552083333333,
+        "height": 3.764705882352941
+      }
+    },
+    {
+      "locale": "ja",
+      "id": "auto-model",
+      "file": "ja/auto-model.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "81cad69feba3d8853e1132e04069a71eeb494850fce4a0cca870ac04438bad42",
+      "focus": {
+        "x": 20,
+        "y": 58.42830882352941,
+        "width": 76.5,
+        "height": 3.764705882352941
+      }
+    },
+    {
+      "locale": "ja",
+      "id": "auto-connect",
+      "file": "ja/auto-connect.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "b208c97455460b213dcea98c270999563072bb0e55d5a58ee887d5b3d2ad000e",
+      "focus": {
+        "x": 22.333333333333332,
+        "y": 79.0625,
+        "width": 74.16666666666667,
+        "height": 10.446691176470589
+      }
+    },
+    {
+      "locale": "zh",
+      "id": "auto-find",
+      "file": "zh/auto-find.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "ffa48f82e55d3a7bdc197ae107fa306bfab82927ce16dfa208d1db5891c2c839",
+      "focus": {
+        "x": 20,
+        "y": 33.91360294117647,
+        "width": 6.334635416666667,
+        "height": 3.764705882352941
+      }
+    },
+    {
+      "locale": "zh",
+      "id": "auto-model",
+      "file": "zh/auto-model.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "54972e22a65d90f9c981b809a98f1b3cd8b7804bbca9420fea864e33024d7bb5",
+      "focus": {
+        "x": 20,
+        "y": 56.24080882352941,
+        "width": 76.5,
+        "height": 3.764705882352941
+      }
+    },
+    {
+      "locale": "zh",
+      "id": "auto-connect",
+      "file": "zh/auto-connect.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "7add018f955a56419c693819c77a84cc0c9000a800bfd81e51a620514f86fe5b",
+      "focus": {
+        "x": 22.333333333333332,
+        "y": 76.875,
+        "width": 74.16666666666667,
+        "height": 10.446691176470589
+      }
+    }
+  ],
+  "capture_worktree_diff_sha256": "39b3ee81ec4fbc6774121a41e759b986e16d68357b11e79c0a93d5474fe5f48b"
+}

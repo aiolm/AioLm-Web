@@ -52,7 +52,7 @@ const messages = {
   "home.caption": "Run a model in the AioLM desktop app: your local GGUF library, the loaded model and its llama.cpp runtime in one window. Shown with public demonstration models.",
   "home.enginesTitle": "Built-in and external inference engines",
   "home.enginesBuiltin": "Use llama.cpp across Windows, macOS and Linux; vLLM on supported Linux systems or Apple silicon Macs through vllm-metal; and MLX on Apple silicon Macs.",
-  "home.enginesExternal": "External inference engines are engines you install separately on your computer and connect alongside the built-in engines. For example, connect Strata, TensorFold or an engine you developed through a compatible adapter. The executable or bridge must provide local OpenAI-compatible HTTP/SSE and an AioLM model probe; selecting a binary does not make it compatible. The same conditions apply to every external engine.",
+  "home.enginesExternal": "External inference engines connect through verified launch methods and communication protocols, regardless of implementation language. The published v0.3.2 uses manual registration; the next update is developing Find automatically → Choose a model → Connect. Unverified items are not marked as connected.",
   "home.enginesHelp": "The selected engine’s command help and adapter metadata drive the shared option editor. Chat, projects, sessions and the API gateway use the capabilities verified for that engine and model.",
   "home.enginesGuide": "Built-in engine compatibility",
   "home.adaptersGuide": "Connect an external inference engine",

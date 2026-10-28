@@ -18,7 +18,7 @@ import Layout, { generateMetadata as layoutMetadata, generateStaticParams } from
 import { getMessages } from '@/i18n/server';
 
 describe('localized static homepage', () => {
-  it.each(locales)('explains built-in and external inference engines with clear examples in %s with setup and compatibility guidance', async locale => {
+  it.each(locales)('explains built-in support and engine-neutral external connections in %s', async locale => {
     const html = renderToStaticMarkup(await Home({ params: Promise.resolve({ locale }) }));
     const home = await getMessages(locale, 'home');
     const site = await getMessages(locale, 'site');
@@ -30,8 +30,8 @@ describe('localized static homepage', () => {
     for (const example of ['Strata', 'TensorFold']) {
       expect(home['home.subtitle']).not.toContain(example);
       expect(site['site.description']).not.toContain(example);
-      expect(home['home.enginesExternal']).toContain(example);
-      expect(html).toContain(example);
+      expect(home['home.enginesExternal']).not.toContain(example);
+      expect(html).not.toContain(example);
     }
     expect(html).toContain(home['home.enginesExternal']);
     expect(html).toContain(home['home.faqEnginesAnswer']);
@@ -40,8 +40,9 @@ describe('localized static homepage', () => {
   });
   it('advertises the canonical sitemap and excludes API and private pages from crawling', () => {
     expect(robots()).toEqual({ rules: { userAgent: '*', allow: '/', disallow: ['/v1/', '/manage', '/verify/', ...locales.flatMap(locale => ['/' + locale + '/manage', '/' + locale + '/verify/'])] }, sitemap: ['https://example.invalid/sitemap.xml', 'https://example.invalid/benchmarks/sitemap.xml'] });
-    expect(sitemap()).toHaveLength(32);
-    expect(sitemap().map(entry => entry.url)).toContain('https://example.invalid/ko/guides/external-engines');
+    expect(sitemap()).toHaveLength(28);
+    expect(sitemap().map(entry => entry.url)).not.toContain('https://example.invalid/ko/guides/external-engines');
+    expect(sitemap().map(entry => entry.url)).toContain('https://example.invalid/ko/guides/adapters');
     expect(sitemap().map(entry => entry.url)).toContain('https://example.invalid/zh/benchmarks');
     expect(sitemap().every(entry => Object.keys(entry.alternates?.languages ?? {}).length === 4)).toBe(true);
   });

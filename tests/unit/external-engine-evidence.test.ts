@@ -59,6 +59,7 @@ describe('published external CPU verification evidence', () => {
     expect(files?.table?.rows[4]?.[1]).toContain('deployment.json');
     expect(files?.note).toContain('.engine.json');
     const automaticSave = { en: 'automatically saves', ko: '자동 저장', ja: '自動保存', zh: '自动保存' };
-    expect(sections.find(section => section.id === 'review')?.steps?.[0]).toContain(automaticSave[locale]);
+    const advancedSteps = sections.find(section => section.id === 'advanced')?.more?.flatMap(detail => detail.steps ?? []).join(' ');
+    expect(advancedSteps).toContain(automaticSave[locale]);
   });
 });

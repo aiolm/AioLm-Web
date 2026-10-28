@@ -1,17 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
-import targets from '../../public/verification/external-engine-targets-2026-10-28.json';
-import { getGuides } from '@/content/guides';
-import { locales } from '@/i18n/config';
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import targets from '../fixtures/external-engine-targets-2026-10-28.json';
 
-describe('required external engine targets', () => {
-  it('keeps the requested engines distinct from installed or fully verified support', () => {
+describe('internal external-engine validation cases', () => {
+  it('preserves the original review snapshot and its limited validation results', () => {
+    const snapshot = readFileSync('tests/fixtures/external-engine-targets-2026-10-28.json');
+    expect(createHash('sha256').update(snapshot).digest('hex')).toBe('1c9ce295214aa7353cd625ba5095b6e38ad5e06640ddbacbb2fc0cd3bfdfbf4b');
     expect(targets.targets.map(target => target.name)).toEqual([
       'Halogen', 'Strixite', 'MLX (mlx-lm / MLX-VLM)', 'ExLlamaV3 (ExLlamaV2)',
       'Rulith Inference', 'SGLang', 'vLLM', 'Strata', 'TensorFold', 'vllm.cpp',
       'Mistral.rs', 'KTransformers', 'ik_llama.cpp', 'Mullama', 'llama.cpp', 'Gufo',
     ]);
     expect(targets.targets.every(target => target.builtin_external_adapter === false)).toBe(true);
+    expect(targets.targets.filter(target => target.validation === 'cli_limited_pass')).toHaveLength(3);
+    expect(targets.targets.filter(target => target.validation === 'unrun')).toHaveLength(13);
     for (const target of targets.targets) {
       expect(target.sources.length).toBeGreaterThan(0);
       for (const source of target.sources) expect(source.commit).toMatch(/^[0-9a-f]{40}$/);
@@ -23,25 +27,23 @@ describe('required external engine targets', () => {
       }
     }
   });
-  it.each(locales)('offers one equally presented file guide per engine in %s', async locale => {
-    const content = await getGuides(locale);
-    const sections = content.guides['external-engines'].sections;
-    const entries = sections[0].more;
-    expect(entries).toHaveLength(16);
-    expect(entries?.map(entry => entry.title)).toEqual(targets.targets.map((target, index) => `${index + 1}. ${target.name}`));
+  it('retains the reviewed executable and argument alternatives as test data', () => {
     for (const id of ['mlx', 'vllm']) {
       const target = targets.targets.find(target => target.id === id)!;
       const alternatives = 'launch_alternatives' in target ? target.launch_alternatives : [];
       expect(alternatives).toHaveLength(2);
-      const displayed = entries?.[targets.targets.indexOf(target)].code ?? '';
       for (const alternative of alternatives ?? []) {
-        expect(displayed).toContain(alternative.args.join('\n'));
         if (alternative.program.startsWith('Python')) expect(alternative.args[0]).toBe('-m');
       }
     }
-    for (const entry of entries ?? []) {
-      expect(entry.body.length).toBeGreaterThanOrEqual(5);
-      expect(entry.links?.every(link => !link.href.endsWith('.md'))).toBe(true);
+  });
+  it('keeps the validation catalog outside public assets and product source', () => {
+    expect(existsSync('public/verification/external-engine-targets-2026-10-28.json')).toBe(false);
+    for (const file of readdirSync('src', { recursive: true, encoding: 'utf8' })) {
+      if (!/\.(?:ts|tsx|json)$/.test(file)) continue;
+      const source = readFileSync(join('src', file), 'utf8');
+      expect(source, file).not.toContain('external-engine-targets-2026-10-28');
+      expect(source, file).not.toMatch(/(?:from\s*|import\s*\()\s*['"][^'"]*tests\/fixtures\//);
     }
   });
 });

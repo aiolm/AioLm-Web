@@ -1,9 +1,20 @@
-export const guideSlugs = ['install', 'getting-started', 'compatibility', 'adapters', 'external-engines'] as const;
+export const guideSlugs = ['install', 'getting-started', 'compatibility', 'adapters'] as const;
 export type GuideSlug = typeof guideSlugs[number];
-export const guideImageIds = ['language', 'theme', 'folder', 'engines', 'llama-install', 'discover', 'model-files', 'model-library', 'model-settings', 'chat', 'updates', 'adapter-add', 'adapter-setup', 'adapter-help', 'adapter-check', 'adapter-review'] as const;
+export const releasedGuideImageIds = ['language', 'theme', 'folder', 'engines', 'llama-install', 'discover', 'model-files', 'model-library', 'model-settings', 'chat', 'updates', 'adapter-add', 'adapter-setup', 'adapter-help', 'adapter-check', 'adapter-review'] as const;
+export const automaticGuideImageIds = ['auto-find', 'auto-model', 'auto-connect'] as const;
+export const guideImageIds = [...releasedGuideImageIds, ...automaticGuideImageIds] as const;
 export type GuideImageId = typeof guideImageIds[number];
 export type GuideTable = { headers: string[]; rows: string[][] };
-export type GuideMore = { title: string; body: string[]; code?: string; report?: { href: string; label: string }; links?: Array<{ href: string; label: string }> };
+export type GuideMore = {
+  title: string;
+  body: string[];
+  steps?: string[];
+  code?: string;
+  image?: GuideImageId;
+  caption?: string;
+  report?: { href: string; label: string };
+  links?: Array<{ href: string; label: string }>;
+};
 export type GuideSection = {
   id: string;
   title: string;
