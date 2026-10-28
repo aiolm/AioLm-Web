@@ -51,6 +51,14 @@ describe('published external CPU verification evidence', () => {
     const details = content.guides.adapters.sections.find(section => section.id === 'verified')?.more;
     expect(details?.[0]?.report?.href).toBe('/verification/external-cpu-2026-10-28.json');
     expect(details?.[0]?.report?.label.trim()).toBeTruthy();
-    expect(content.guides.adapters.sections.find(section => section.id === 'files')?.table?.rows).toHaveLength(4);
+    const sections = content.guides.adapters.sections;
+    const files = sections.find(section => section.id === 'files');
+    expect(files?.table?.rows).toHaveLength(5);
+    expect(files?.table?.rows[0]?.[1]).toContain('*.setup.json');
+    expect(files?.table?.rows[1]?.[1]).toContain('*.engine.json');
+    expect(files?.table?.rows[4]?.[1]).toContain('deployment.json');
+    expect(files?.note).toContain('.engine.json');
+    const automaticSave = { en: 'automatically saves', ko: '자동 저장', ja: '自動保存', zh: '自动保存' };
+    expect(sections.find(section => section.id === 'review')?.steps?.[0]).toContain(automaticSave[locale]);
   });
 });

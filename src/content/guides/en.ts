@@ -2,7 +2,7 @@ import type { GuideContent } from './types';
 const content: GuideContent = {
   title: 'AioLM guides', description: 'New here? Install the app first, then follow the pictures and buttons to start a conversation on your own computer.',
   navigation: 'Guides', onPage: 'Jump to', related: 'Next steps', download: 'See all download files',
-  screenshotNotice: 'These pictures use the actual v0.3.2 interface with example data. Names, paths and installation states are illustrative; they are not records of a real installation or model run.',
+  screenshotNotice: 'Most pictures show the released v0.3.2 interface. The first manual-registration screen previews an unreleased source update. All use example data; none records a real installation or model run.',
   enlarge: 'View larger', close: 'Close',
   panHint: 'Swipe sideways to see the rest of the image.',
   guides: {
@@ -54,7 +54,11 @@ const content: GuideContent = {
             "rows": [
               [
                 "AioLM setup package",
-                "Unpack the entire folder. Import its *.setup.json file and keep its companion files together."
+                "The provider prepares this input form, for example *.setup.json. Unpack the entire folder, import the setup and keep its companion programs together."
+              ],
+              [
+                "Completed registration JSON",
+                "Only use a provider/developer-prepared file in Advanced: import registration file (manifest). *.engine.json is an example filename. You do not need this file for manual registration."
               ],
               [
                 "Server executable",
@@ -66,11 +70,11 @@ const content: GuideContent = {
               ],
               [
                 "Model or ordinary configuration",
-                "Select .gguf/.safetensors models after registration. Select deployment.json or another engine configuration only when the adapter specifically asks for it. It is not an AioLM setup recipe."
+                "Select .gguf/.safetensors models after registration. Select deployment.json or another engine configuration only when the adapter asks for it. These are different from both AioLM setup and registration JSON."
               ]
             ]
           },
-          "note": "*.setup.json is a naming example. The contents must use the AioLM setup v1 format. Renaming an ordinary JSON file does not convert it."
+          "note": "You do not need to create *.engine.json for manual registration. AioLM builds the registration from the completed form and saves it internally after Register succeeds; it does not export a separate .engine.json. Selecting an executable alone generates neither input JSON. Changing a JSON filename does not change its contents."
         },
         {
           "id": "add",
@@ -85,11 +89,10 @@ const content: GuideContent = {
           "id": "setup",
           "title": "2. Import a connection setup, if available",
           "steps": [
-            "Select Import adapter setup and choose the AioLM *.setup.json from the unpacked folder.",
+            "Select Import AioLM connection setup (.json) and choose the AioLM *.setup.json from the unpacked folder.",
             "Fill in the requested executable, folders and files as the provider instructs. Review the command and select Check installation and continue. Continue to step 4."
           ],
           "code": "Unpacked adapter folder/\n  engine.setup.json  ← select when importing\n  prepare.py        ← keep together\n  probe.py          ← keep together",
-          "note": "In v0.3.2, “Browse provided adapters” opens one older Strata example recipe. It does not discover installed engines or install an engine, and is not required for a connection.",
           "more": [
             {
               "title": "What if I did not receive a setup file?",
@@ -107,7 +110,7 @@ const content: GuideContent = {
             "Choose a display name, an engine ID in custom.* format, such as custom.my-engine and a runtime ID such as local-1, then select Next. Ask the provider first if you do not know the model/port options or probe command."
           ],
           "image": "adapter-setup",
-          "caption": "The common manual registration form in released v0.3.2. Example Engine and its paths are illustrative; select your actual files.",
+          "caption": "Preview of the manual-registration form in an unreleased source update. Example Engine and its paths are illustrative; select your actual files. This is not an inference result.",
           "more": [
             {
               "title": "Direct server or bridge?",
@@ -155,7 +158,7 @@ const content: GuideContent = {
           "id": "review",
           "title": "6. Register and run a real model",
           "steps": [
-            "Select Review registration details → Register. In model selection, choose the new engine/runtime and a supported model file or complete model folder.",
+            "Select Review registration details → Register. After it succeeds, AioLM automatically saves the connection details in the app. In model selection, choose the new engine/runtime and a supported model file or complete model folder.",
             "Run it after model compatibility checks pass. Check a short answer, cancellation followed by another question, stopping and restarting."
           ],
           "image": "adapter-review",

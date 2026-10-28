@@ -2,7 +2,7 @@
   "source": "aiolm/AioLM",
   "commit": "e439b52038142439c8c85b112d2949687fa273f2",
   "version": "0.3.2",
-  "method": "Released React UI rendered in an isolated browser with synthetic IPC/data. No installer, model inference or engine probe was executed. Captures demonstrate controls, not native validation.",
+  "method": "Released desktop React UI base rendered with synthetic IPC/data. Per-capture source_commit overrides identify unreleased update previews. No installer, model inference or engine probe was executed. Captures demonstrate controls, not native validation.",
   "captures": [
     {
       "locale": "ko",
@@ -178,13 +178,16 @@
       "file": "ko/adapter-setup.png",
       "width": 1200,
       "height": 850,
-      "sha256": "ac8d89250981aaeec95fbc56351813c6abaef4559c24df7ef4a5e102f4841b99",
+      "sha256": "8a4c0fc9ee1728e7ab1155d9a632b01d08a9ed1faad5c1411c813c1c06841d3d",
       "focus": {
-        "x": 31.7826,
-        "y": 54.3346,
-        "width": 58.3047,
-        "height": 3.7647
-      }
+        "x": 31.782552083333332,
+        "y": 69.31801470588235,
+        "width": 58.3046875,
+        "height": 3.764705882352941
+      },
+      "source_commit": "41d15f92c0a4b6e855b766a70c305977bf298802",
+      "released": false,
+      "method": "Unreleased registration UI preview rendered with synthetic IPC/data; obsolete provided-adapter menu removed and automatic-save guidance shown."
     },
     {
       "locale": "ko",
@@ -402,13 +405,16 @@
       "file": "en/adapter-setup.png",
       "width": 1200,
       "height": 850,
-      "sha256": "a047b3bcafd89aca4f4ff4653e577839678778c4f9d7f028d725a2635361689d",
+      "sha256": "2bc551749337ed514ddcb8c8ad12d6d1b92d245a9bc68342656b4f22bba1b160",
       "focus": {
-        "x": 32.6497,
-        "y": 56.5221,
-        "width": 57.5781,
-        "height": 3.7647
-      }
+        "x": 32.649739583333336,
+        "y": 73.69301470588235,
+        "width": 57.578125,
+        "height": 3.764705882352941
+      },
+      "source_commit": "41d15f92c0a4b6e855b766a70c305977bf298802",
+      "released": false,
+      "method": "Unreleased registration UI preview rendered with synthetic IPC/data; obsolete provided-adapter menu removed and automatic-save guidance shown."
     },
     {
       "locale": "en",
@@ -626,13 +632,16 @@
       "file": "ja/adapter-setup.png",
       "width": 1200,
       "height": 850,
-      "sha256": "68724f258ef4bf3ef2cca77c86389116bef8d22a4a0ede5493ca3ff92e4e3144",
+      "sha256": "39fa3d5dbf3a7c73d1a3eb3d95681a699a64b28d5353de1f27ad3c69a7cd53f5",
       "focus": {
-        "x": 38.069,
-        "y": 54.3346,
-        "width": 53.5964,
-        "height": 3.7647
-      }
+        "x": 38.069010416666664,
+        "y": 73.69301470588235,
+        "width": 53.596354166666664,
+        "height": 3.764705882352941
+      },
+      "source_commit": "41d15f92c0a4b6e855b766a70c305977bf298802",
+      "released": false,
+      "method": "Unreleased registration UI preview rendered with synthetic IPC/data; obsolete provided-adapter menu removed and automatic-save guidance shown."
     },
     {
       "locale": "ja",
@@ -850,13 +859,16 @@
       "file": "zh/adapter-setup.png",
       "width": 1200,
       "height": 850,
-      "sha256": "d57cdd7557c8b2603b7832a24b216e1a87b0872f822f4709802a8172202aeec5",
+      "sha256": "f41b65b7d71fe2785b06fea64985db6a5cd92718e226a77f6cb285f5acea775d",
       "focus": {
-        "x": 30.418,
-        "y": 54.3346,
-        "width": 61.2474,
-        "height": 3.7647
-      }
+        "x": 30.41796875,
+        "y": 69.31801470588235,
+        "width": 61.247395833333336,
+        "height": 3.764705882352941
+      },
+      "source_commit": "41d15f92c0a4b6e855b766a70c305977bf298802",
+      "released": false,
+      "method": "Unreleased registration UI preview rendered with synthetic IPC/data; obsolete provided-adapter menu removed and automatic-save guidance shown."
     },
     {
       "locale": "zh",

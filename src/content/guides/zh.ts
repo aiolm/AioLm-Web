@@ -2,7 +2,7 @@ import type { GuideContent } from './types';
 const content: GuideContent = {
   title: 'AioLM 使用指南', description: '第一次使用？先安装应用，再对照图片逐个点击按钮，在自己的电脑上开始 AI 对话。',
   navigation: '使用指南', onPage: '跳转到', related: '接着看', download: '查看全部下载文件',
-  screenshotNotice: '图片使用 v0.3.2 的真实界面和示例数据。名称、路径和安装状态仅供说明，不是实际安装或模型运行的验证记录。',
+  screenshotNotice: '大多数图片展示已发布的v0.3.2界面，手动注册的首张界面是尚未发布的源码更新预览。所有图片均使用示例数据，不是实际安装或模型运行的验证记录。',
   enlarge: '放大查看', close: '关闭',
   panHint: '左右滑动可查看图片其他部分。',
   guides: {
@@ -54,7 +54,11 @@ const content: GuideContent = {
             "rows": [
               [
                 "AioLM连接设置包",
-                "先解压整个文件夹，在导入设置中选择*.setup.json，并保留所有配套文件。"
+                "由提供方预先编写的输入表单，例如*.setup.json。解压整个文件夹后导入设置，并保留配套的启动和检查程序。"
+              ],
+              [
+                "完整的注册JSON",
+                "仅在有提供方或开发者准备好的文件时，使用高级：导入注册文件（manifest）。*.engine.json只是文件名示例，手动注册不需要此文件。"
               ],
               [
                 "服务器可执行程序",
@@ -66,11 +70,11 @@ const content: GuideContent = {
               ],
               [
                 "模型或普通配置",
-                ".gguf、.safetensors模型在注册后的模型选择中指定。deployment.json等普通配置仅在适配器单独要求时选择；它不是AioLM连接设置。"
+                ".gguf、.safetensors模型在注册后的模型选择中指定。deployment.json等配置仅在适配器要求时选择；它们与AioLM的连接设置和注册JSON不同。"
               ]
             ]
           },
-          "note": "*.setup.json只是文件命名示例，内容必须符合AioLM setup v1格式。给普通JSON改名无法完成转换。"
+          "note": "手动注册无需自行创建*.engine.json。填写表单并注册成功后，AioLM会在内部保存注册信息，不会另行导出.engine.json。仅选择可执行文件不会生成这两种输入JSON，修改JSON文件名也不会改变其内容。"
         },
         {
           "id": "add",
@@ -85,11 +89,10 @@ const content: GuideContent = {
           "id": "setup",
           "title": "2. 有连接设置时导入",
           "steps": [
-            "点击导入适配器设置，选择解压文件夹中的AioLM专用*.setup.json。",
+            "点击导入AioLM连接设置 (.json)，选择解压文件夹中的AioLM专用*.setup.json。",
             "按提供方说明指定程序、文件夹和文件，检查命令后点击检查安装并继续，然后进入第4步。"
           ],
           "code": "解压后的适配器文件夹/\n  engine.setup.json  ← 导入时选择\n  prepare.py        ← 一起保留\n  probe.py          ← 一起保留",
-          "note": "v0.3.2的“查看随附适配器”只打开旧的Strata设置示例，不会搜索已安装引擎或安装引擎，也不是连接所必需的按钮。",
           "more": [
             {
               "title": "没有收到设置文件怎么办？",
@@ -107,7 +110,7 @@ const content: GuideContent = {
             "填写显示名称、引擎ID（custom.*格式，如custom.my-engine）和运行时ID（如local-1），然后点击下一步。不清楚模型/端口选项或probe时，请先向提供方确认。"
           ],
           "image": "adapter-setup",
-          "caption": "已发布v0.3.2的通用手动注册界面。Example Engine和路径仅作示例，请选择实际文件。",
+          "caption": "尚未发布的源码更新中的手动注册界面预览。Example Engine和路径仅作示例，请选择实际文件。这不是推理成功的证据。",
           "more": [
             {
               "title": "选择直接服务器还是bridge？",
@@ -155,7 +158,7 @@ const content: GuideContent = {
           "id": "review",
           "title": "6. 注册后运行实际模型",
           "steps": [
-            "点击检查注册内容 → 注册，在模型选择中指定新引擎/运行时及支持的模型文件或完整模型文件夹。",
+            "点击检查注册内容 → 注册。成功后，连接信息会自动保存在应用中。在模型选择中指定新引擎/运行时及支持的模型文件或完整模型文件夹。",
             "通过模型兼容性检查后运行，确认能回答简短问题、取消生成后再次提问、停止及重启。"
           ],
           "image": "adapter-review",
