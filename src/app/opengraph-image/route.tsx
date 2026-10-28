@@ -11,7 +11,7 @@ export function GET() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 36, marginBottom: 32 }}><img src={mark} alt="" width={48} height={48} />AioLM</div>
       <div style={{ fontSize: 76, fontWeight: 700 }}>Many engines.</div>
       <div style={{ fontSize: 76, fontWeight: 700 }}>One workspace.</div>
-      <div style={{ fontSize: 28, marginTop: 40, color: '#5E5E5E' }}>llama.cpp · vLLM · MLX · Custom engines</div>
+      <div style={{ fontSize: 28, marginTop: 40, color: '#5E5E5E' }}>llama.cpp · vLLM · MLX · External inference engines</div>
     </div>, { width: 1200, height: 630 },
   );
 }

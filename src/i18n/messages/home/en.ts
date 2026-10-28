@@ -1,7 +1,7 @@
 const messages = {
   "home.faqTitle": "Frequently asked questions",
   "home.faqWhatQuestion": "What is AioLM?",
-  "home.faqWhatAnswer": "AioLM is short for All-in-One LM: an engine-neutral desktop GUI adapter for local inference. Use llama.cpp, vLLM and MLX, or register custom inference engines, with shared model management, settings, chat, projects and a local API gateway.",
+  "home.faqWhatAnswer": "AioLM is short for All-in-One LM: an engine-neutral desktop GUI adapter for local inference. Use llama.cpp, vLLM and MLX, or register external inference engines, with shared model management, settings, chat, projects and a local API gateway.",
   "home.faqOsQuestion": "Which operating systems does AioLM support?",
   "home.faqOsAnswer": "Windows x64, macOS 13.3 or newer (Apple silicon and Intel) and Linux x86_64 (Ubuntu 24.04 or newer) builds are available. Apple silicon Macs can use Metal GPU acceleration; Intel Macs run models on the CPU. Each platform's installation guide covers the release assets.",
   "home.faqBenchmarkQuestion": "What do the public benchmarks measure?",
@@ -10,7 +10,7 @@ const messages = {
   "home.faqAccountAnswer": "No account is required to browse public benchmark results. Publishing uses a verification step, and published results are managed with a recovery code.",
   "home.heroFirst": "Many engines.",
   "home.heroSecond": "One workspace.",
-  "home.subtitle": "Run llama.cpp, vLLM and MLX in one GUI. Connect your own engines through adapters.",
+  "home.subtitle": "Run llama.cpp, vLLM and MLX in one GUI. Connect separately installed external inference engines through adapters.",
   "home.explore": "Explore benchmarks",
   "home.windows": "Windows app",
   "home.macos": "macOS app",
@@ -46,14 +46,14 @@ const messages = {
   "home.overview": "Workspace overview",
   "home.screenshotAlt": "The AioLM desktop app on its Run a model page, listing four public GGUF demonstration models with Qwen3-8B-Instruct loaded on a llama.cpp runtime.",
   "home.caption": "Run a model in the AioLM desktop app: your local GGUF library, the loaded model and its llama.cpp runtime in one window. Shown with public demonstration models.",
-  "home.enginesTitle": "Built-in engines. Custom engines.",
+  "home.enginesTitle": "Built-in and external inference engines",
   "home.enginesBuiltin": "Use llama.cpp across Windows, macOS and Linux; vLLM on supported Linux systems or Apple silicon Macs through vllm-metal; and MLX on Apple silicon Macs.",
-  "home.enginesExternal": "Add custom engines through compatible adapters without rebuilding AioLM. Register a reviewed executable or bridge that provides a local OpenAI-compatible API.",
+  "home.enginesExternal": "External inference engines are engines you install separately on your computer and connect alongside the built-in engines. For example, connect Strata, TensorFold or an engine you developed through a compatible adapter. An executable or bridge must provide a local OpenAI-compatible API.",
   "home.enginesHelp": "The selected engine’s command help and adapter metadata drive the shared option editor. Chat, projects, sessions and the API gateway use the capabilities verified for that engine and model.",
   "home.enginesGuide": "Built-in engine compatibility",
-  "home.adaptersGuide": "Connect a custom engine",
+  "home.adaptersGuide": "Connect an external inference engine",
   "home.faqEnginesQuestion": "Can every engine run on every computer?",
-  "home.faqEnginesAnswer": "Each engine needs compatible hardware, an operating system and model weights. Standard vLLM targets supported Linux environments; vllm-metal requires Apple silicon macOS 15+; MLX requires Apple silicon. Custom engines need a compatible adapter and their own runtime setup. Registration does not automatically enable every modality, benchmark, deep verification or portable bundle.",
+  "home.faqEnginesAnswer": "Each engine needs compatible hardware, an operating system and model weights. Standard vLLM targets supported Linux environments; vllm-metal requires Apple silicon macOS 15+; MLX requires Apple silicon. External inference engines need a compatible adapter and their own runtime setup. Registration does not automatically enable every modality, benchmark, deep verification or portable bundle.",
 };
 export type EnglishMessages = typeof messages;
 export default messages;

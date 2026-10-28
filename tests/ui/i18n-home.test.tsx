@@ -18,7 +18,7 @@ import Layout, { generateMetadata as layoutMetadata, generateStaticParams } from
 import { getMessages } from '@/i18n/server';
 
 describe('localized static homepage', () => {
-  it.each(locales)('explains built-in and custom engine adapters in %s with setup and compatibility guidance', async locale => {
+  it.each(locales)('explains built-in and external inference engines with clear examples in %s with setup and compatibility guidance', async locale => {
     const html = renderToStaticMarkup(await Home({ params: Promise.resolve({ locale }) }));
     const home = await getMessages(locale, 'home');
     const site = await getMessages(locale, 'site');
@@ -30,7 +30,8 @@ describe('localized static homepage', () => {
     for (const example of ['Strata', 'TensorFold']) {
       expect(home['home.subtitle']).not.toContain(example);
       expect(site['site.description']).not.toContain(example);
-      expect(html).not.toContain(example);
+      expect(home['home.enginesExternal']).toContain(example);
+      expect(html).toContain(example);
     }
     expect(html).toContain(home['home.enginesExternal']);
     expect(html).toContain(home['home.faqEnginesAnswer']);

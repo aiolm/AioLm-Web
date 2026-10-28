@@ -12,11 +12,15 @@ describe('public product guides', () => {
   it.each(locales)('provides complete internal navigation, working anchors and essential guidance in %s', async locale => {
     const content = await getGuides(locale);
     for (const guide of Object.values(content.guides)) {
-      expect(guide.title + guide.description).not.toMatch(/Strata|TensorFold/);
+      expect(guide.title).not.toMatch(/Strata|TensorFold/);
       for (const section of guide.sections) {
         expect(section.title).not.toMatch(/Strata|TensorFold/);
         for (const row of section.table?.rows ?? []) expect(row[0]).not.toMatch(/Strata|TensorFold/);
       }
+    }
+    for (const example of ['Strata', 'TensorFold']) {
+      expect(content.guides.adapters.description).toContain(example);
+      expect(content.guides.compatibility.sections.find(section => section.table)?.table?.rows.at(-1)?.[1]).toContain(example);
     }
     const index = renderToStaticMarkup(await Guides({ params: Promise.resolve({ locale }) }));
     for (const slug of guideSlugs) {

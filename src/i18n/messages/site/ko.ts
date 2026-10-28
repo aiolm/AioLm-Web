@@ -1,14 +1,14 @@
 import type { EnglishMessages } from './en';
 const messages = {
   "site.title": "AioLM — 다양한 추론 엔진을 하나의 작업 공간에서",
-  "site.description": "AioLM(All-in-One LM)은 llama.cpp·vLLM·MLX와 자체 엔진을 하나의 작업 공간에서 사용하는 GUI 어댑터입니다. 모델·설정·로컬 채팅을 함께 관리하세요.",
+  "site.description": "AioLM(All-in-One LM)은 llama.cpp·vLLM·MLX와 외부 추론 엔진을 하나의 작업 공간에서 사용하는 GUI 어댑터입니다. 모델·설정·로컬 채팅을 함께 관리하세요.",
   "site.skip": "본문으로 건너뛰기",
   "site.primary": "주 탐색",
   "site.home": "홈",
   "site.benchmarks": "벤치마크",
   "site.manage": "관리",
   "site.github": "GitHub에서 보기",
-  "site.tagline": "기본 제공 엔진과 자체 엔진을 하나의 GUI에서.",
+  "site.tagline": "기본 제공 엔진과 외부 추론 엔진을 하나의 GUI에서.",
   "site.project": "프로젝트",
   "site.docs": "사용 안내",
   "site.license": "MIT 라이선스",
