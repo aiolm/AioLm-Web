@@ -1,0 +1,30 @@
+{
+  "locale": "ja",
+  "id": "adapter-setup",
+  "file": "ja/adapter-setup.png",
+  "width": 1280,
+  "height": 900,
+  "sha256": "61e4733f3e34054c3611f1e5b8da842fd0ebb6fdd17199a7c76e1b2ef2922c18",
+  "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+  "app_version": "0.3.2",
+  "released": false,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+  "process_id": 7979,
+  "capture_session": "native-current-713789d-20261028",
+  "captured_at": "2026-10-28T09:33:04.959322+00:00",
+  "evidence_file": "evidence/ja-adapter-setup.json",
+  "image_sha256": "61e4733f3e34054c3611f1e5b8da842fd0ebb6fdd17199a7c76e1b2ef2922c18",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "The actual native file chooser imported engine.setup.json from the neutral local adapter example.",
+    "Existing executable and real GGUF model paths were entered using normal native WebDriver keyboard input.",
+    "The setup preparation button will execute actual --help and source-based model checks; no prefilled success data."
+  ],
+  "visible_text": "AioLM\nワークスペースへ移動\nAioLM\nワークスペース\nチャット\nプロジェクト\nモデル管理\nモデル実行\n検索\n実行・最適化\nLoaded sessions\n推論エンジン\nベンチマーク\n外部連携\nAPIサーバー\nMCPサーバー\nツール\n診断\n設定\nローカル AI ワークスペース\nv0.3.2\n推論エンジン\nモデルを選択\nllama.cpp · PATH\nモデルなし\n推論エンジン\n\n自動で検索するかインストール先フォルダーを選び、モデルを選択して接続してください。接続を保存する前に、実際のモデル応答を確認します。\n\n一覧を更新\nすべての推論エンジン\n外部推論エンジンに接続\n\nこのパソコンで実行中のサーバーを探すか、インストール先の起動方法を確認します。エンジンの開発言語を知る必要はありません。\n\n自動で探す\nモデルを選択\n接続\n自動で探す\nインストール先を選択\n\n見つからない場合は、エンジンをインストールしたフォルダーを選んでください。実行ファイルや設定ファイルを選ぶ必要はありません。\n\n詳細：起動方法を手動で設定\n実行ファイル・エントリーポイントの登録\n\nエンジンの起動方法を選び、ヘルプを読んでからモデル・接続・互換性の確認方法を設定してください。最後の「登録」が成功すると、AioLMが接続情報を自動保存します。.engine.jsonを自分で作る必要はありません。\n\n接続設定ファイルはありますか？\n\nエンジンやアダプターの提供者が用意したAioLM用設定を読み込みます。実行ファイルを選んでも、この設定ファイルは自動生成されません。\n\nAioLM接続設定を読み込む (.json)\n\nアダプターのフォルダーを展開し、接続設定JSON（例：*.setup.json）を選択します。通常のエンジン設定JSONやモデルは使えません。設定がなければ下で手動登録してください。\n\nLocal inference server\n\nConnect the selected installed server and model. The app reads the executable's real help, and the model check sends actual JSON and streaming requests to the running local service. This temporary guide example is not a bundled engine.\n\nこのアダプターのインストール先を入力してください。\nInstalled server executable (必須)\n参照\nModel file (必須)\n参照\nDisplay name (必須)\n\n選択したプログラムを実行して接続情報を確認します。実行ファイルと引数を確認してください。\n\n設定確認コマンド\nインストールを確認して続行\n1. 実行ファイルとエントリーポイント\n2. ヘルプの確認\n3. 接続とモデルの確認\n4. 確認と登録\n設定ファイルなしで手動登録\n\nサーバー実行ファイル（例：llama-server.exe、llama-server）を選びます。Pythonエンジンはインストールに使ったpython.exeまたはbin/pythonを選び、スクリプトのパスか-mとモジュール名を下の引数に1つずつ追加します。モデル、インストーラー、通常の設定JSONは実行ファイルではありません。\n\nOpenAI互換HTTP/SSEをエンジンまたは別のbridgeが提供し、モデル互換性検査（probe）にも対応する必要があります。実行ファイルだけでは接続できません。モデル・ポートのオプションとAioLM用probeを提供者に確認してください。\n\n実行ファイルまたはインタープリター\n参照\nエントリーポイントの引数（スクリプト、-mモジュール、サブコマンド、固定オプション — 順序どおり）\n引数を追加\nファイル引数を追加\n表示名\nエンジンID (custom.*)\nランタイムID\n作業ディレクトリ（任意）\n参照\nハッシュを確認するファイル（スクリプト・アダプターコード）\n引数を追加\nファイル引数を追加\n固定の環境変数（秘密値を除く）\n変数を追加\n提供方式\nエンジンがOpenAI互換HTTPを直接提供\n別のbridgeプログラムがHTTPを提供\n起動引数の役割（任意）\n固定オプションとサブコマンドを明示\n\n起動引数が固定オプション、その値、サブコマンドのどれかを指定してください。同じ単語でもオプションの値をサブコマンドとして扱いません。インタープリターとスクリプトの引数は維持されます。\n\n追加のオプション情報（JSON、任意）\n\nエンジンまたはアダプターが提供する、バージョン情報付きのオプション説明を貼り付けてください。ヘルプだけでは分からない値の型・単位・秘密情報・再起動条件・制約を確認するために使います。\n\n次へ\n詳細：登録ファイル（manifest）を読み込む",
+  "capture_method": "Unmodified native Tauri WebView screenshot through WebKitGTK WebDriver; real Rust IPC backend. No route, IPC or response mock.",
+  "build_test_fixtures": false,
+  "build_embedded_assets": true
+}

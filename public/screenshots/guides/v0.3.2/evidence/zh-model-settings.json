@@ -1,0 +1,188 @@
+{
+  "locale": "zh",
+  "id": "model-settings",
+  "file": "zh/model-settings.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "20634fbdc2426fd7334cddd3a93ede172dbe98736ae23ce483732577d8996227",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 9195,
+  "capture_session": "native-linux-4934f4309a85410ab36622c188656bd0",
+  "captured_at": "2026-10-28T10:04:28.609476+00:00",
+  "image_sha256": "20634fbdc2426fd7334cddd3a93ede172dbe98736ae23ce483732577d8996227",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual model settings before launching: the app-managed model has been unloaded through its normal UI",
+    "Step 1 Choose runtime is active, showing the actual Local inference server and registered local-cpu runtime",
+    "Continue to profile is enabled; no model has been launched for this settings screenshot"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\n跳转到工作区\nAioLM\n工作空间\n聊天\n项目\n模型管理\n运行模型\n发现\n运行与优化\nLoaded sessions\n推理引擎\n基准测试\n外部集成\nAPI 服务器\nMCP 服务器\n工具\n诊断\n设置\n本地 AI 工作空间\nv0.3.2\n运行模型\n选择模型\nLocal inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 已注册的安装\n未加载模型\n运行模型\n\n选择模型，检查配置，然后在此运行。\n\n模型目录\n浏览\n模型\n1\n所有引擎\n显示模型辅助文件\n重新扫描\nQwen2.5-0.5B-Instruct-Q4_K_M.gguf\n架构:\nqwen2\n参数规模:\n630M\n量化:\nQ4_K_M\n上下文长度:\n32K\n标签:\ngguf\n+3项\n468.6 MiB\n/opt/aiolm-demo/models/Qwen2.5-0.5B-Instruct-Q4_K_M.gguf\nCopy path\n删除\n默认运行 · 已停止\n模型选择与设置\n1\n选择运行时\nLocal inference server · local-cpu\n2\n选择预设\n未选择\n3\n调整选项\n选择运行时\n\n首先选择推理引擎及其已安装的运行时。\n\n推理引擎\nllama.cpp\nvLLM\nMLX\nMLX runtimes (mlx-vlm) are supported on Apple Silicon macOS only; this host is linux/x86_64.\nLocal inference server\n运行时\nversion: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 已注册的安装\nopenai-v1\n清除值\n管理运行时\n继续选择预设",
+    "theme": "light",
+    "locale": "zh",
+    "buttons": [
+      {
+        "aria": "最小化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "最大化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "关闭",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "收起侧边栏",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "聊天",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "项目",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "运行模型",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "发现",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Loaded sessions",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "推理引擎",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "基准测试",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "API 服务器",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MCP 服务器",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "诊断",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "设置",
+        "id": ""
+      },
+      {
+        "aria": "选择模型",
+        "text": "选择模型",
+        "id": ""
+      },
+      {
+        "aria": "模型设置",
+        "text": "Local inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 已注册的安装",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "浏览",
+        "id": ""
+      },
+      {
+        "aria": "推理引擎",
+        "text": "所有引擎",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "重新扫描",
+        "id": ""
+      },
+      {
+        "aria": "配置并运行: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Qwen2.5-0.5B-Instruct-Q4_K_M.gguf\n架构:\nqwen2\n参数规模:\n630M\n量化:\nQ4_K_M\n上下文长度:\n32K\n标签:\ngguf\n+3项",
+        "id": ""
+      },
+      {
+        "aria": "Copy path: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Copy path",
+        "id": ""
+      },
+      {
+        "aria": "删除: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "删除",
+        "id": ""
+      },
+      {
+        "aria": "关闭",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "1\n选择运行时\nLocal inference server · local-cpu",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "2\n选择预设\n未选择",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "3\n调整选项",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "清除值",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "管理运行时",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "继续选择预设",
+        "id": ""
+      }
+    ]
+  }
+}

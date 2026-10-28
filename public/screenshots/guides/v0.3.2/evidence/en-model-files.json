@@ -1,0 +1,342 @@
+{
+  "locale": "en",
+  "id": "model-files",
+  "file": "en/model-files.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "7a909b05256d5e0daa9866f67ed421aede851b1b3d6cb5b3c940b8cc7363c28f",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 9195,
+  "capture_session": "native-linux-92a40ee66c9f42b3b5a89f6c5b13abee",
+  "captured_at": "2026-10-28T09:54:53.207381+00:00",
+  "image_sha256": "7a909b05256d5e0daa9866f67ed421aede851b1b3d6cb5b3c940b8cc7363c28f",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual repository file metadata fetched by the native desktop app",
+    "Available quantization files are shown without starting a download"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\nSkip to workspace\nAioLM\nWorkspace\nChat\nProjects\nModels\nRun a model\nDiscover\nRun & optimize\nLoaded sessions\nInference engines\nBenchmark\nIntegrations\nAPI server\nMCP servers\nTools\nDiagnostics\nSettings\nYour local AI workspace\nv0.3.2\nDiscover\nQwen2.5-0.5B-Instruct-Q4_K_M.gguf\nLocal inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · Registered installation\nmodel loaded\nUnload\nFind models on Hugging Face\n\nBrowse and download model files; runtime compatibility is checked during setup.\n\nDestination\n/opt/aiolm-demo/models\nInference engine\nLocal inference server\nModel format\nGGUF\nSearch\nSort\nMost downloads\nSearch models\nRepositories (30)\nQwen/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nQwen\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+8 more\n358.1K downloads\n♥ likes160\nbartowski/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nbartowski\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+7 more\n108.6K downloads\n♥ likes19\nQwen/Qwen2.5-Coder-0.5B-Instruct-GGUF\nPublisher\nQwen\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\ncode\n+14 more\n32.3K downloads\n♥ likes40\nlmstudio-community/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nlmstudio-community\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+7 more\n13.2K downloads\n♥ likes8\nbartowski/Qwen2.5-Coder-0.5B-Instruct-GGUF\nPublisher\nbartowski\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\ncode\n+11 more\n6.3K downloads\n♥ likes4\nThomasBaruzier/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nThomasBaruzier\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+20 more\n5.1K downloads\n♥ likes0\nbartowski/Qwen2.5-Coder-0.5B-Instruct-abliterated-GGUF\nPublisher\nbartowski\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\ncode\n+13 more\n3.6K downloads\n♥ likes13\nmradermacher/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\nchat\nTag:\nen\n+7 more\n2.5K downloads\n♥ likes0\nlegraphista/Qwen2.5-0.5B-Instruct-IMat-GGUF\nPublisher\nlegraphista\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+19 more\n2.3K downloads\n♥ likes0\nunsloth/Qwen2.5-Coder-0.5B-Instruct-GGUF\nPublisher\nunsloth\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ncode\nTag:\nqwen-coder\n+13 more\n2.2K downloads\n♥ likes12\nlmstudio-community/Qwen2.5-Coder-0.5B-Instruct-GGUF\nPublisher\nlmstudio-community\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\ncode\n+11 more\n2.2K downloads\n♥ likes6\nmradermacher/Qwen2.5-0.5B-Instruct-3MPER0RR-abliterated-i1-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\nconversational\nTag:\nen\n+8 more\n2K downloads\n♥ likes0\nmradermacher/Qwen2.5-0.5B-Instruct-i1-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\nchat\nTag:\nen\n+8 more\n1.9K downloads\n♥ likes2\nmradermacher/Qwen2.5-0.5B-Instruct-abliterated-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\nchat\nTag:\nabliterated\n+21 more\n1.8K downloads\n♥ likes1\nsecond-state/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nsecond-state\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+8 more\n1.7K downloads\n♥ likes2\nunsloth/Qwen2.5-Coder-0.5B-Instruct-128K-GGUF\nPublisher\nunsloth\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ncode\nTag:\nqwen-coder\n+14 more\n1.6K downloads\n♥ likes7\nQuantFactory/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nQuantFactory\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+8 more\n1.6K downloads\n♥ likes3\nMaziyarPanahi/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nMaziyarPanahi\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nmistral\n+11 more\n1.4K downloads\n♥ likes2\nmradermacher/Qwen2.5-0.5B-Instruct-uncensored-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\nen\nTag:\nconversational\n+5 more\n1.3K downloads\n♥ likes2\nMungert/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nMungert\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+10 more\n1.2K downloads\n♥ likes5\nmradermacher/Qwen2.5-0.5B-Instruct-abliterated-SFT-i1-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation-inference\nTag:\nunsloth\n+12 more\n1K downloads\n♥ likes1\nmradermacher/BitCache-Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\nbitcache\nTag:\nspectral-compression\n+13 more\n1K downloads\n♥ likes2\nmradermacher/Qwen2.5-0.5B-Instruct-abliterated-i1-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\nchat\nTag:\nabliterated\n+22 more\n982 downloads\n♥ likes0\ntensorblock/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\ntensorblock\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+9 more\n978 downloads\n♥ likes0\ngaianet/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\ngaianet\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+20 more\n935 downloads\n♥ likes0\nThomasBaruzier/Qwen2.5-Coder-0.5B-Instruct-GGUF\nPublisher\nThomasBaruzier\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\ncode\n+14 more\n836 downloads\n♥ likes1\nmradermacher/Qwen2.5-Coder-0.5B-Instruct-i1-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ncode\nTag:\ncodeqwen\n+12 more\n761 downloads\n♥ likes1\nFelladrin/gguf-Q5_K_M-Qwen2.5-0.5B-Instruct\nPublisher\nFelladrin\nFamily:\nQwen2.5\nParameters:\n0.5B\nQuantization:\nQ5_K_M\nTag:\ngguf\nTag:\ntext-generation\n+23 more\n672 downloads\n♥ likes0\nsecond-state/Qwen2.5-Coder-0.5B-Instruct-GGUF\nPublisher\nsecond-state\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\ncode\n+13 more\n672 downloads\n♥ likes1\nmradermacher/Qwen2.5-Coder-0.5B-Instruct-abliterated-i1-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ncode\nTag:\ncodeqwen\n+14 more\n636 downloads\n♥ likes0\nQwen/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nQwen\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+8 more\nAll model information (14)\nModel card on Hugging Face\n↗\nModel format · text-generation\nqwen2.5-0.5b-instruct-fp16.gguf\n1.18 GiB\nunknown\nFile verification information\nDownload\nqwen2.5-0.5b-instruct-q2_k.gguf\n395.9 MiB\nQ2_K\nFile verification information\nDownload\nqwen2.5-0.5b-instruct-q3_k_m.gguf\n412.0 MiB\nQ3_K_M\nFile verification information\nDownload\nqwen2.5-0.5b-instruct-q4_0.gguf\n408.9 MiB\nQ4_0\nFile verification information\nDownload\nqwen2.5-0.5b-instruct-q4_k_m.gguf\n468.6 MiB\nQ4_K_M\nFile verification information\nDownload\nqwen2.5-0.5b-instruct-q5_0.gguf\n467.8 MiB\nQ5_0\nFile verification information\nDownload\nqwen2.5-0.5b-instruct-q5_k_m.gguf\n498.0 MiB\nQ5_K_M\nFile verification information\nDownload\nqwen2.5-0.5b-instruct-q6_k.gguf\n620.2 MiB\nQ6_K\nFile verification information\nDownload\nqwen2.5-0.5b-instruct-q8_0.gguf\n644.4 MiB\nQ8_0\nFile verification information\nDownload",
+    "theme": "light",
+    "locale": "en",
+    "buttons": [
+      {
+        "aria": "Minimize",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "Maximize",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "Close",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "Collapse sidebar",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Chat",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Projects",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Run a model",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Discover",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Loaded sessions",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Inference engines",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Benchmark",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "API server",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MCP servers",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Diagnostics",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Settings",
+        "id": ""
+      },
+      {
+        "aria": "Choose model: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "id": ""
+      },
+      {
+        "aria": "Model settings",
+        "text": "Local inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · Registered installation",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Unload",
+        "id": ""
+      },
+      {
+        "aria": "Inference engine",
+        "text": "Local inference server",
+        "id": ""
+      },
+      {
+        "aria": "Model format",
+        "text": "GGUF",
+        "id": ""
+      },
+      {
+        "aria": "Sort",
+        "text": "Most downloads",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Search models",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Qwen/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nQwen\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+8 more\n358.1K downloads\n♥ likes160",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "bartowski/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nbartowski\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+7 more\n108.6K downloads\n♥ likes19",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF\nPublisher\nQwen\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\ncode\n+14 more\n32.3K downloads\n♥ likes40",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "lmstudio-community/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nlmstudio-community\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+7 more\n13.2K downloads\n♥ likes8",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "bartowski/Qwen2.5-Coder-0.5B-Instruct-GGUF\nPublisher\nbartowski\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\ncode\n+11 more\n6.3K downloads\n♥ likes4",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "ThomasBaruzier/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nThomasBaruzier\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+20 more\n5.1K downloads\n♥ likes0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "bartowski/Qwen2.5-Coder-0.5B-Instruct-abliterated-GGUF\nPublisher\nbartowski\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\ncode\n+13 more\n3.6K downloads\n♥ likes13",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\nchat\nTag:\nen\n+7 more\n2.5K downloads\n♥ likes0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "legraphista/Qwen2.5-0.5B-Instruct-IMat-GGUF\nPublisher\nlegraphista\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+19 more\n2.3K downloads\n♥ likes0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "unsloth/Qwen2.5-Coder-0.5B-Instruct-GGUF\nPublisher\nunsloth\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ncode\nTag:\nqwen-coder\n+13 more\n2.2K downloads\n♥ likes12",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "lmstudio-community/Qwen2.5-Coder-0.5B-Instruct-GGUF\nPublisher\nlmstudio-community\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\ncode\n+11 more\n2.2K downloads\n♥ likes6",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-3MPER0RR-abliterated-i1-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\nconversational\nTag:\nen\n+8 more\n2K downloads\n♥ likes0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-i1-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\nchat\nTag:\nen\n+8 more\n1.9K downloads\n♥ likes2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-abliterated-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\nchat\nTag:\nabliterated\n+21 more\n1.8K downloads\n♥ likes1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "second-state/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nsecond-state\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+8 more\n1.7K downloads\n♥ likes2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "unsloth/Qwen2.5-Coder-0.5B-Instruct-128K-GGUF\nPublisher\nunsloth\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ncode\nTag:\nqwen-coder\n+14 more\n1.6K downloads\n♥ likes7",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "QuantFactory/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nQuantFactory\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+8 more\n1.6K downloads\n♥ likes3",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MaziyarPanahi/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nMaziyarPanahi\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nmistral\n+11 more\n1.4K downloads\n♥ likes2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-uncensored-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\nen\nTag:\nconversational\n+5 more\n1.3K downloads\n♥ likes2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Mungert/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nMungert\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+10 more\n1.2K downloads\n♥ likes5",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-abliterated-SFT-i1-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation-inference\nTag:\nunsloth\n+12 more\n1K downloads\n♥ likes1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/BitCache-Qwen2.5-0.5B-Instruct-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\nbitcache\nTag:\nspectral-compression\n+13 more\n1K downloads\n♥ likes2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-abliterated-i1-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\nchat\nTag:\nabliterated\n+22 more\n982 downloads\n♥ likes0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "tensorblock/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\ntensorblock\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+9 more\n978 downloads\n♥ likes0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "gaianet/Qwen2.5-0.5B-Instruct-GGUF\nPublisher\ngaianet\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\nchat\n+20 more\n935 downloads\n♥ likes0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "ThomasBaruzier/Qwen2.5-Coder-0.5B-Instruct-GGUF\nPublisher\nThomasBaruzier\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\ncode\n+14 more\n836 downloads\n♥ likes1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-Coder-0.5B-Instruct-i1-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ncode\nTag:\ncodeqwen\n+12 more\n761 downloads\n♥ likes1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Felladrin/gguf-Q5_K_M-Qwen2.5-0.5B-Instruct\nPublisher\nFelladrin\nFamily:\nQwen2.5\nParameters:\n0.5B\nQuantization:\nQ5_K_M\nTag:\ngguf\nTag:\ntext-generation\n+23 more\n672 downloads\n♥ likes0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "second-state/Qwen2.5-Coder-0.5B-Instruct-GGUF\nPublisher\nsecond-state\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ntext-generation\nTag:\ncode\n+13 more\n672 downloads\n♥ likes1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-Coder-0.5B-Instruct-abliterated-i1-GGUF\nPublisher\nmradermacher\nFamily:\nQwen2.5\nParameters:\n0.5B\nTag:\ngguf\nTag:\ncode\nTag:\ncodeqwen\n+14 more\n636 downloads\n♥ likes0",
+        "id": ""
+      },
+      {
+        "aria": "Download: qwen2.5-0.5b-instruct-fp16.gguf",
+        "text": "Download",
+        "id": ""
+      },
+      {
+        "aria": "Download: qwen2.5-0.5b-instruct-q2_k.gguf",
+        "text": "Download",
+        "id": ""
+      },
+      {
+        "aria": "Download: qwen2.5-0.5b-instruct-q3_k_m.gguf",
+        "text": "Download",
+        "id": ""
+      },
+      {
+        "aria": "Download: qwen2.5-0.5b-instruct-q4_0.gguf",
+        "text": "Download",
+        "id": ""
+      },
+      {
+        "aria": "Download: qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "text": "Download",
+        "id": ""
+      },
+      {
+        "aria": "Download: qwen2.5-0.5b-instruct-q5_0.gguf",
+        "text": "Download",
+        "id": ""
+      },
+      {
+        "aria": "Download: qwen2.5-0.5b-instruct-q5_k_m.gguf",
+        "text": "Download",
+        "id": ""
+      },
+      {
+        "aria": "Download: qwen2.5-0.5b-instruct-q6_k.gguf",
+        "text": "Download",
+        "id": ""
+      },
+      {
+        "aria": "Download: qwen2.5-0.5b-instruct-q8_0.gguf",
+        "text": "Download",
+        "id": ""
+      }
+    ]
+  }
+}

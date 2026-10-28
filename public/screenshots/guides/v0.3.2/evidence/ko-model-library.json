@@ -1,0 +1,157 @@
+{
+  "locale": "ko",
+  "id": "model-library",
+  "file": "ko/model-library.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "b3d81e05804c69c0e43974a86b8ed0ec7a02682d2bad634e8e62feb8fb4decda",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 9195,
+  "capture_session": "native-linux-d5765405162a493db8ef23ca7783a180",
+  "captured_at": "2026-10-28T09:50:44.299923+00:00",
+  "image_sha256": "b3d81e05804c69c0e43974a86b8ed0ec7a02682d2bad634e8e62feb8fb4decda",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual model library scans the pinned local GGUF file",
+    "A real registered CPU engine is loaded; file metadata and status are from the native backend"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\n작업 공간으로 건너뛰기\nAioLM\n작업 공간\n채팅\n프로젝트\n모델 관리\n모델 실행\n찾아보기\n실행·성능\n로드된 세션\n추론 엔진\n벤치마크\n외부 연동\nAPI 서버\nMCP 서버\n공통 도구\n진단\n설정\n나의 로컬 AI 작업 공간\nv0.3.2\n모델 실행\nQwen2.5-0.5B-Instruct-Q4_K_M.gguf\nLocal inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 직접 등록한 설치본\n모델 로드됨\n언로드\n모델 실행\n\n모델을 선택하고 설정을 확인한 뒤 여기서 실행하세요.\n\n모델 디렉터리\n찾아보기\n모델\n1\n모든 엔진\n모델 보조 파일 표시\n다시 검색\nQwen2.5-0.5B-Instruct-Q4_K_M.gguf\n아키텍처:\nqwen2\n파라미터 규모:\n630M\n양자화:\nQ4_K_M\n컨텍스트 길이:\n32K\n태그:\ngguf\n+3개\n468.6 MiB\n실행 중\n/opt/aiolm-demo/models/Qwen2.5-0.5B-Instruct-Q4_K_M.gguf\n경로 복사\n삭제",
+    "theme": "light",
+    "locale": "ko",
+    "buttons": [
+      {
+        "aria": "최소화",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "최대화",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "닫기",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "사이드바 접기",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "채팅",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "프로젝트",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "모델 실행",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "찾아보기",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "로드된 세션",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "추론 엔진",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "벤치마크",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "API 서버",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MCP 서버",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "진단",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "설정",
+        "id": ""
+      },
+      {
+        "aria": "모델 선택: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "id": ""
+      },
+      {
+        "aria": "모델 설정",
+        "text": "Local inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 직접 등록한 설치본",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "언로드",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "찾아보기",
+        "id": ""
+      },
+      {
+        "aria": "추론 엔진",
+        "text": "모든 엔진",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "다시 검색",
+        "id": ""
+      },
+      {
+        "aria": "설정 및 실행: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Qwen2.5-0.5B-Instruct-Q4_K_M.gguf\n아키텍처:\nqwen2\n파라미터 규모:\n630M\n양자화:\nQ4_K_M\n컨텍스트 길이:\n32K\n태그:\ngguf\n+3개",
+        "id": ""
+      },
+      {
+        "aria": "경로 복사: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "경로 복사",
+        "id": ""
+      },
+      {
+        "aria": "삭제: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "삭제",
+        "id": ""
+      }
+    ]
+  }
+}

@@ -3,6 +3,16 @@ import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  images: {
+    localPatterns: [{ pathname: "/screenshots/**" }],
+  },
+  async redirects() {
+    return [{
+      source: "/:locale(en|ko|ja|zh)/guides/external-engines",
+      destination: "/:locale/guides/adapters#files",
+      permanent: true,
+    }];
+  },
   async headers() {
     return [
       {

@@ -1,0 +1,188 @@
+{
+  "locale": "ko",
+  "id": "model-settings",
+  "file": "ko/model-settings.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "4d21d0ea03606e3c5e1640d4d7aa0f14915f9be730ef8f31c5ed8a360a7613f6",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 9195,
+  "capture_session": "native-linux-4934f4309a85410ab36622c188656bd0",
+  "captured_at": "2026-10-28T10:04:25.722612+00:00",
+  "image_sha256": "4d21d0ea03606e3c5e1640d4d7aa0f14915f9be730ef8f31c5ed8a360a7613f6",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual model settings before launching: the app-managed model has been unloaded through its normal UI",
+    "Step 1 Choose runtime is active, showing the actual Local inference server and registered local-cpu runtime",
+    "Continue to profile is enabled; no model has been launched for this settings screenshot"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\n작업 공간으로 건너뛰기\nAioLM\n작업 공간\n채팅\n프로젝트\n모델 관리\n모델 실행\n찾아보기\n실행·성능\n로드된 세션\n추론 엔진\n벤치마크\n외부 연동\nAPI 서버\nMCP 서버\n공통 도구\n진단\n설정\n나의 로컬 AI 작업 공간\nv0.3.2\n모델 실행\n모델 선택\nLocal inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 직접 등록한 설치본\n모델 없음\n모델 실행\n\n모델을 선택하고 설정을 확인한 뒤 여기서 실행하세요.\n\n모델 디렉터리\n찾아보기\n모델\n1\n모든 엔진\n모델 보조 파일 표시\n다시 검색\nQwen2.5-0.5B-Instruct-Q4_K_M.gguf\n아키텍처:\nqwen2\n파라미터 규모:\n630M\n양자화:\nQ4_K_M\n컨텍스트 길이:\n32K\n태그:\ngguf\n+3개\n468.6 MiB\n/opt/aiolm-demo/models/Qwen2.5-0.5B-Instruct-Q4_K_M.gguf\n경로 복사\n삭제\n기본 실행 · 중지됨\n모델 선택·설정\n1\n런타임 선택\nLocal inference server · local-cpu\n2\n프로필 선택\n선택하지 않음\n3\n옵션 조정\n런타임 선택\n\n먼저 추론 엔진과 설치된 런타임을 선택하세요.\n\n추론 엔진\nllama.cpp\nvLLM\nMLX\nMLX runtimes (mlx-vlm) are supported on Apple Silicon macOS only; this host is linux/x86_64.\nLocal inference server\n런타임\nversion: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 직접 등록한 설치본\nopenai-v1\n값 지우기\n런타임 관리\n\n런타임 옵션 확인 중…\n\n프로필 선택으로",
+    "theme": "light",
+    "locale": "ko",
+    "buttons": [
+      {
+        "aria": "최소화",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "최대화",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "닫기",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "사이드바 접기",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "채팅",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "프로젝트",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "모델 실행",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "찾아보기",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "로드된 세션",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "추론 엔진",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "벤치마크",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "API 서버",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MCP 서버",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "진단",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "설정",
+        "id": ""
+      },
+      {
+        "aria": "모델 선택",
+        "text": "모델 선택",
+        "id": ""
+      },
+      {
+        "aria": "모델 설정",
+        "text": "Local inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 직접 등록한 설치본",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "찾아보기",
+        "id": ""
+      },
+      {
+        "aria": "추론 엔진",
+        "text": "모든 엔진",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "다시 검색",
+        "id": ""
+      },
+      {
+        "aria": "설정 및 실행: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Qwen2.5-0.5B-Instruct-Q4_K_M.gguf\n아키텍처:\nqwen2\n파라미터 규모:\n630M\n양자화:\nQ4_K_M\n컨텍스트 길이:\n32K\n태그:\ngguf\n+3개",
+        "id": ""
+      },
+      {
+        "aria": "경로 복사: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "경로 복사",
+        "id": ""
+      },
+      {
+        "aria": "삭제: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "삭제",
+        "id": ""
+      },
+      {
+        "aria": "닫기",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "1\n런타임 선택\nLocal inference server · local-cpu",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "2\n프로필 선택\n선택하지 않음",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "3\n옵션 조정",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "값 지우기",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "런타임 관리",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "프로필 선택으로",
+        "id": ""
+      }
+    ]
+  }
+}

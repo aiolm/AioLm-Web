@@ -1,0 +1,61 @@
+{
+  "locale": "en",
+  "id": "theme",
+  "file": "en/theme.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "a9692b35d51e472496da218d20efd87fafc67789a6ee9193c80d73f4cf16c68f",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 2688,
+  "capture_session": "native-linux-bba01fd05a19466c9b8cbe90468f2d33",
+  "captured_at": "2026-10-28T09:14:20.297073+00:00",
+  "image_sha256": "a9692b35d51e472496da218d20efd87fafc67789a6ee9193c80d73f4cf16c68f",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual onboarding appearance step with light theme selected"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\nAioLM\nWelcome to AioLM\n\nA few choices to make this space yours.\n\n✓\nLanguage\n2\nAppearance\n3\nModel folder\n\nYou can change these choices later in Settings and the model library.\n\n02 / 03\nMake yourself at home\n\nPick a theme. You can see the change right away.\n\nAppearance\nLight\nBright and clear\nDark\nEasy on the eyes\nSystem\nFollow your device\nBack\nContinue\n→",
+    "theme": "light",
+    "locale": "en",
+    "buttons": [
+      {
+        "aria": "Minimize",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "Maximize",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "Close",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Back",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Continue\n→",
+        "id": ""
+      }
+    ]
+  }
+}

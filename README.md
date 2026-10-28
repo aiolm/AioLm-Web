@@ -2,8 +2,7 @@
 
 Website for AioLM — All-in-One LM — the desktop workspace for local language
 inference engines. The desktop app is an engine-neutral GUI adapter for
-llama.cpp, vLLM, MLX and compatible external engines such as Strata, TensorFold
-and user builds. Product introduction and anonymous public benchmark explorer. Next.js
+llama.cpp, vLLM, MLX and compatible external inference engines. Product introduction and anonymous public benchmark explorer. Next.js
 App Router + PostgreSQL (Supabase-compatible) + Cloudflare Turnstile. No
 accounts in v1.
 
@@ -41,16 +40,16 @@ The homepage has Windows, macOS and Linux installation tabs in English, Korean,
 Japanese and Chinese. macOS targets 13.3+ on Apple silicon and Intel with
 DMGs (desktop v0.3.0+); its tab shows the `install.sh` command, which verifies
 the DMG's SHA-256 and installs into Applications, plus release downloads and a
-localized [macOS guide](https://github.com/aiolm/AioLM/blob/main/docs/guides/install.md#macos).
+[macOS guide](https://aiolm.vercel.app/en/guides/install#macos).
 Linux targets Ubuntu 24.04+ x86_64 with DEB/AppImage (desktop v0.2.1+); its tab
 includes the DEB command, release downloads and a localized
-[Linux guide](https://github.com/aiolm/AioLM/blob/main/docs/guides/install.md#linux).
+[Linux guide](https://aiolm.vercel.app/en/guides/install#linux).
 Keep these tabs, the OS FAQ and SoftwareApplication metadata consistent when the
 supported platforms change.
 
 The homepage, FAQ and search descriptions describe the adapter architecture in
 all four languages. The shared social card names the built-in engines and
-external adapters. Built-in vLLM targets supported Linux or
+adapters for external inference engines. Built-in vLLM targets supported Linux or
 Apple silicon macOS 15+ through vllm-metal; MLX targets Apple silicon. External
 engines require a compatible reviewed executable/bridge, model and platform.
 Registration uses the local OpenAI-compatible API and does not grant every
@@ -168,3 +167,21 @@ Scheduled hourly inside the database with pg_cron
 (`sql/operations/retention-pg_cron.sql`), with `npm run prune` as the manual
 path. Both run the same policy; `docs/operations.md` has what each removes, what
 it never touches, and the real upper bound of the 24h cutoffs.
+
+## Product guides
+
+`/<locale>/guides` provides installation, first conversation, engine selection and external inference engine setup in all four site languages. Instructions use the visible button names, direct platform download choices and one action per illustrated step. Technical details and validation limits remain in expandable sections. User-facing help stays on the site; GitHub hosts release downloads, source and license.
+
+Guide copy lives in `src/content/guides`. Published app screenshots must be captured from a running native desktop app with its real Rust backend. An isolated profile and public model files keep personal data out of the capture. Do not substitute IPC responses, installed-runtime status, discovery results or model answers. The original screenshot collections are preserved in local task materials while their public images are replaced.
+
+The `public/screenshots/guides/v0.3.2` collection covers onboarding, engine and model setup, chat, updates and advanced registration in four languages. The separate `automatic-connection` collection covers the unreleased discovery, model selection and connection flow. A capture record identifies its source commit, released/unreleased state, app version, executable hash, native process, Linux execution environment, capture session and timestamp. The record, rather than the directory name, determines whether a screen is released. The screenshot and supporting evidence have their own SHA-256 hashes. Captures showing actual model responses additionally need the engine and model artifact hashes and request/response evidence. The evidence labels whether request/response digests cover the visible UI conversation or actual HTTP payloads; a UI-text digest is not described as a wire capture. A screenshot alone does not establish installation, every device/engine combination, model quality or update-installation acceptance. F09, full Linux acceptance and real v0.3.1 → v0.3.2 update installation/UI checks remain open.
+
+The homepage light/dark pair must follow the same native-capture requirement. Capture-only test harnesses and synthetic backend code are not shipped. Image URLs include the content hash so replacements invalidate browser/CDN optimization caches. Tests check file integrity, native provenance and locale coverage. Guide images enlarge in an accessible native dialog, with horizontal viewing on small screens.
+
+The external-engine guide leads with the unreleased automatic flow: find a local server or choose an installation folder, select a model, then connect. It does not ask users for engine IDs, JSON, executables or probe commands. The current implementation targets loopback OpenAI-compatible v1; it does not infer or translate arbitrary wire protocols. A running local server must return an actual model list before it is offered, and actual text/chat and SSE checks must pass before a connection is saved. An existing server remains outside AioLM's process ownership; disconnecting stops AioLM's proxy, not the original server. An installed program is considered for managed launch only when its launch method and model identity are clear. Ambiguous commands or models, different protocols and required credentials remain unconfirmed. An already running container server can use the same local protocol, but automatic container/daemon creation and management are not implemented. These are previews of the next desktop change, not features already released in v0.3.2 or all-engine validation.
+
+The published v0.3.2 manual path remains under expandable advanced guidance, with its five registration screenshots. That section distinguishes provider-authored `*.setup.json` input recipes with companion programs, provider/developer-prepared completed registration JSON for advanced import (`*.engine.json` is only a filename example), and the engine's own configuration files such as `deployment.json`. Manual registration does not require either import file: the form constructs the registration and successful registration saves it internally as `adapters/<engine-id>/<runtime-id>/registration.json`. It does not export a separate `.engine.json` or infer unknown model/port/probe settings.
+
+Public guides describe the common connection contract and file roles rather than publishing an external-engine catalog. The former `/<locale>/guides/external-engines` URL permanently redirects to `/<locale>/guides/adapters#files`. The 16 user-specified engines are test cases for engine neutrality; their original source revisions, launch observations and validation statuses are preserved unchanged in `tests/fixtures/external-engine-targets-2026-10-28.json`, outside the public assets and product imports. They do not establish installed adapters or universal compatibility. The three actual CPU CLI execution reports remain public under `public/verification` and linked from the adapter guide, with their initial failures and limited scope preserved. Automatic configuration is being developed in the desktop app; these records do not verify that new flow or a released all-engine capability.
+
+Preserve the unresolved F09, overall Linux acceptance and real update-installation/UI limits when updating the guides. Do not replace the original device-validation materials or v0.3.1 fixtures with these UI examples.

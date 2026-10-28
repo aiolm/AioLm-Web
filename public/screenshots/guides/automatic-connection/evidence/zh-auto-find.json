@@ -1,0 +1,29 @@
+{
+  "locale": "zh",
+  "id": "auto-find",
+  "file": "zh/auto-find.png",
+  "width": 1280,
+  "height": 900,
+  "sha256": "6286935af4b0b0587ea15586efe36b54fedfcff22b2cce1b9c62ae8ec3b5a699",
+  "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+  "app_version": "0.3.2",
+  "released": false,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+  "process_id": 7979,
+  "capture_session": "native-current-713789d-20261028",
+  "captured_at": "2026-10-28T09:16:16.753823+00:00",
+  "evidence_file": "evidence/zh-auto-find.json",
+  "image_sha256": "6286935af4b0b0587ea15586efe36b54fedfcff22b2cce1b9c62ae8ec3b5a699",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual native automatic connection form before starting discovery.",
+    "The displayed controls are from the running production-source app; no candidate or success data injected."
+  ],
+  "visible_text": "AioLM\n跳转到工作区\nAioLM\n工作空间\n聊天\n项目\n模型管理\n运行模型\n发现\n运行与优化\nLoaded sessions\n推理引擎\n基准测试\n外部集成\nAPI 服务器\nMCP 服务器\n工具\n诊断\n设置\n本地 AI 工作空间\nv0.3.2\n推理引擎\n选择模型\nllama.cpp · PATH\n未加载模型\n推理引擎\n\n自动查找或选择安装文件夹，再选择模型并连接。保存连接前，AioLM会检查模型的实际响应。\n\n刷新列表\n所有推理引擎\n连接外部推理引擎\n\n查找本机正在运行的服务器，或检查安装目录的启动方式。无需知道引擎使用什么编程语言。\n\n自动查找\n选择模型\n连接\n自动查找\n选择安装文件夹\n\n未找到时，请选择引擎的安装文件夹。无需选择可执行文件或配置文件。\n\n高级：手动设置启动方式\n高级：导入注册文件（manifest）",
+  "capture_method": "Unmodified native Tauri WebView screenshot through WebKitGTK WebDriver; real Rust IPC backend. No route, IPC or response mock.",
+  "build_test_fixtures": false,
+  "build_embedded_assets": true
+}

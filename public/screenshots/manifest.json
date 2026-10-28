@@ -1,0 +1,52 @@
+{
+  "source": "aiolm/AioLM",
+  "released": true,
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "method": "Unmodified native Tauri WebKitGTK window captures with the real Rust IPC backend; no route, IPC, installed-state, probe or model-response mock.",
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "scope": "Observed native Linux desktop UI only. Model-response evidence is scoped per capture. These screenshots do not complete all-engine/device support, F09, full Linux acceptance, or real v0.3.1-to-v0.3.2 update installation/UI acceptance.",
+  "captures": [
+    {
+      "locale": "en",
+      "id": "product-models-en-light",
+      "file": "product-models-en-light.png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "6d6639d68473d933b446fb98660a807377e2702e7b6d21ba93767a1ee13c3192",
+      "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+      "app_version": "0.3.2",
+      "released": true,
+      "platform": "linux-x86_64",
+      "native_backend": true,
+      "ipc_mock": false,
+      "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+      "process_id": 9195,
+      "capture_session": "native-linux-1585426088974027bd0db0a60f61e8f1",
+      "captured_at": "2026-10-28T09:58:22.242450+00:00",
+      "evidence_file": "evidence/en-product-models-en-light.json",
+      "evidence_sha256": "d0325dda46f57d554610a7bca00b7c4e4acf1b53f957de26d71c8f8ce8f8e2d0"
+    },
+    {
+      "locale": "en",
+      "id": "product-models-en-dark",
+      "file": "product-models-en-dark.png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "c7e170432bd1a9d6c622cbb9b8dc6203ecccaf242a05d2724ae03bca3e664f42",
+      "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+      "app_version": "0.3.2",
+      "released": true,
+      "platform": "linux-x86_64",
+      "native_backend": true,
+      "ipc_mock": false,
+      "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+      "process_id": 9195,
+      "capture_session": "native-linux-1585426088974027bd0db0a60f61e8f1",
+      "captured_at": "2026-10-28T09:58:23.268370+00:00",
+      "evidence_file": "evidence/en-product-models-en-dark.json",
+      "evidence_sha256": "a795159ac3cc31bc07d4d8d31bf7ec238f357a08807c19cd8958abfe753545f5"
+    }
+  ]
+}

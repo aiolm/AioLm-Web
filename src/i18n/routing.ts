@@ -1,7 +1,7 @@
 import { defaultLocale, isLocale, locales, type Locale } from './config';
-/** Only former public page routes negotiate. Unknown paths must stay real 404s. */
+/** Only recognized public page routes negotiate. Unknown paths must stay real 404s. */
 export function isLegacyPage(pathname: string): boolean {
-  return /^\/(?:benchmarks(?:\/[^/.]+)?|manage|verify\/[^/.]+)?\/?$/.test(pathname);
+  return /^\/(?:benchmarks(?:\/[^/.]+)?|guides(?:\/(?:install|compatibility|adapters|getting-started))?|manage|verify\/[^/.]+)?\/?$/.test(pathname);
 }
 /** RFC language ranges with stable quality ordering; malformed entries are ignored. */
 export function negotiateLocale(cookie: string | undefined, acceptLanguage: string | null): Locale {

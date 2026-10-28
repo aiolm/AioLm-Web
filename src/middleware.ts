@@ -12,4 +12,4 @@ export function middleware(request: NextRequest) {
   return response;
 }
 // Explicit locale pages and every API/asset path bypass negotiation entirely.
-export const config = { matcher: ['/', '/benchmarks/:path*', '/manage', '/verify/:path*'] };
+export const config = { matcher: ['/', '/benchmarks/:path*', '/guides/:path*', '/manage', '/verify/:path*'] };

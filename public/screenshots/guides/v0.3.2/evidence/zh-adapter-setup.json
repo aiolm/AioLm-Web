@@ -1,0 +1,30 @@
+{
+  "locale": "zh",
+  "id": "adapter-setup",
+  "file": "zh/adapter-setup.png",
+  "width": 1280,
+  "height": 900,
+  "sha256": "52ca9cc034a065b671befd2b12621074e37b6c20ad4d593cebb5aab2533fa550",
+  "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+  "app_version": "0.3.2",
+  "released": false,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+  "process_id": 7979,
+  "capture_session": "native-current-713789d-20261028",
+  "captured_at": "2026-10-28T09:33:05.954449+00:00",
+  "evidence_file": "evidence/zh-adapter-setup.json",
+  "image_sha256": "52ca9cc034a065b671befd2b12621074e37b6c20ad4d593cebb5aab2533fa550",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "The actual native file chooser imported engine.setup.json from the neutral local adapter example.",
+    "Existing executable and real GGUF model paths were entered using normal native WebDriver keyboard input.",
+    "The setup preparation button will execute actual --help and source-based model checks; no prefilled success data."
+  ],
+  "visible_text": "AioLM\n跳转到工作区\nAioLM\n工作空间\n聊天\n项目\n模型管理\n运行模型\n发现\n运行与优化\nLoaded sessions\n推理引擎\n基准测试\n外部集成\nAPI 服务器\nMCP 服务器\n工具\n诊断\n设置\n本地 AI 工作空间\nv0.3.2\n推理引擎\n选择模型\nllama.cpp · PATH\n未加载模型\n推理引擎\n\n自动查找或选择安装文件夹，再选择模型并连接。保存连接前，AioLM会检查模型的实际响应。\n\n刷新列表\n所有推理引擎\n连接外部推理引擎\n\n查找本机正在运行的服务器，或检查安装目录的启动方式。无需知道引擎使用什么编程语言。\n\n自动查找\n选择模型\n连接\n自动查找\n选择安装文件夹\n\n未找到时，请选择引擎的安装文件夹。无需选择可执行文件或配置文件。\n\n高级：手动设置启动方式\n注册可执行文件或入口点\n\n选择引擎的启动方式，阅读帮助，然后设置模型、连接及兼容性检查。最后的“注册”成功后，AioLM会自动保存连接信息，无需自行创建.engine.json文件。\n\n有连接设置文件吗？\n\n导入引擎或适配器提供方准备的AioLM设置。选择可执行文件不会自动生成此设置文件。\n\n导入AioLM连接设置 (.json)\n\n解压适配器文件夹并选择连接设置JSON（例如*.setup.json）。普通引擎配置JSON和模型文件不是连接设置。没有设置文件时，请在下方手动注册。\n\nLocal inference server\n\nConnect the selected installed server and model. The app reads the executable's real help, and the model check sends actual JSON and streaming requests to the running local service. This temporary guide example is not a bundled engine.\n\n输入此适配器的安装位置。\nInstalled server executable (必填)\n浏览\nModel file (必填)\n浏览\nDisplay name (必填)\n\n此设置会运行所选程序以检查连接信息。请检查可执行文件和参数。\n\n设置检查命令\n检查安装并继续\n1. 可执行文件和入口点\n2. 检查帮助\n3. 连接与模型检查\n4. 检查并注册\n没有设置文件时手动注册\n\n选择服务器可执行文件（例如llama-server.exe或llama-server）。Python引擎请选择安装时使用的python.exe或bin/python，再在下方逐项添加脚本路径或-m和模块名。不要将模型、安装程序或普通配置JSON选作可执行文件。\n\n引擎本身或独立bridge必须提供OpenAI兼容HTTP/SSE，并需要模型兼容性检查（probe）。只有可执行文件无法完成连接。请向提供方确认模型/端口选项及AioLM兼容probe。\n\n可执行文件或解释器\n浏览\n入口点参数（脚本、-m模块、子命令、固定选项 — 按顺序）\n添加参数\n添加文件参数\n显示名称\n引擎ID (custom.*)\n运行时ID\n工作目录（可选）\n浏览\n需要校验哈希的文件（脚本、适配器代码）\n添加参数\n添加文件参数\n固定环境变量（不含机密）\n添加变量\n服务方式\n引擎自身提供OpenAI兼容HTTP\n由单独的bridge程序提供HTTP\n启动参数用途（可选）\n声明固定选项和子命令\n\n指定启动参数是固定选项、选项值还是子命令。即使文本相同，也不会将选项值作为子命令。解释器和脚本参数保持不变。\n\n补充选项信息（JSON，可选）\n\n请粘贴引擎或适配器提供的带版本信息的选项说明，用于确认帮助未充分说明的值类型、单位、机密值、重启条件和限制。\n\n下一步\n高级：导入注册文件（manifest）",
+  "capture_method": "Unmodified native Tauri WebView screenshot through WebKitGTK WebDriver; real Rust IPC backend. No route, IPC or response mock.",
+  "build_test_fixtures": false,
+  "build_embedded_assets": true
+}

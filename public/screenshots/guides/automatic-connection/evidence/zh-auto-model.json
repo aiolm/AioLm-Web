@@ -1,0 +1,29 @@
+{
+  "locale": "zh",
+  "id": "auto-model",
+  "file": "zh/auto-model.png",
+  "width": 1280,
+  "height": 900,
+  "sha256": "10ae4a775686892e4fd1df7fdd997680ad97097a6dea1fbdf03c417f3e3942a8",
+  "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+  "app_version": "0.3.2",
+  "released": false,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+  "process_id": 7979,
+  "capture_session": "native-current-713789d-20261028",
+  "captured_at": "2026-10-28T09:17:38.838912+00:00",
+  "evidence_file": "evidence/zh-auto-model.json",
+  "image_sha256": "10ae4a775686892e4fd1df7fdd997680ad97097a6dea1fbdf03c417f3e3942a8",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual discovery found same-user process llama-server listening on loopback port39567.",
+    "Model dropdown is populated from the actual live /v1/models response."
+  ],
+  "visible_text": "AioLM\n跳转到工作区\nAioLM\n工作空间\n聊天\n项目\n模型管理\n运行模型\n发现\n运行与优化\nLoaded sessions\n推理引擎\n基准测试\n外部集成\nAPI 服务器\nMCP 服务器\n工具\n诊断\n设置\n本地 AI 工作空间\nv0.3.2\n推理引擎\n选择模型\nllama.cpp · PATH\n未加载模型\n推理引擎\n\n自动查找或选择安装文件夹，再选择模型并连接。保存连接前，AioLM会检查模型的实际响应。\n\n刷新列表\n所有推理引擎\n连接外部推理引擎\n\n查找本机正在运行的服务器，或检查安装目录的启动方式。无需知道引擎使用什么编程语言。\n\n自动查找\n选择模型\n连接\n自动查找\n选择安装文件夹\n\n未找到时，请选择引擎的安装文件夹。无需选择可执行文件或配置文件。\n\n找到的项目\n\n选择要连接的项目。出现在列表中并不表示连接已经通过验证。\n\nllama-server127.0.0.1:39567\n\n连接已在运行的服务器。在AioLM中断开连接后，原服务器仍将继续运行。\n\n要使用的模型Qwen2.5-0.5B-Instruct\n\n此检查不验证图像、音频、视频、工具调用的支持情况或回答质量。\n\n连接\n高级：手动设置启动方式\n高级：导入注册文件（manifest）\n选择模型\nQwen2.5-0.5B-Instruct",
+  "capture_method": "Unmodified native Tauri WebView screenshot through WebKitGTK WebDriver; real Rust IPC backend. No route, IPC or response mock.",
+  "build_test_fixtures": false,
+  "build_embedded_assets": true
+}

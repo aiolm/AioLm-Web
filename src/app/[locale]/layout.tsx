@@ -38,7 +38,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
       <a className="skip-link" href="#main">{t('site.skip')}</a>
       <SiteHeader locale={locale} t={t} />
       <main id="main" tabIndex={-1}>{children}</main>
-      <SiteFooter t={t} />
+      <SiteFooter t={t} locale={locale} />
     </I18nProvider>
   </body></html>;
 }

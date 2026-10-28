@@ -1,0 +1,297 @@
+{
+  "locale": "zh",
+  "id": "discover",
+  "file": "zh/discover.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "44316382eb76f02532a3ecae3746eaa9aba5a71673d456f24fa6b6fc25628122",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 9195,
+  "capture_session": "native-linux-4b40562e5d2745b4af5ee0bd73f59fab",
+  "captured_at": "2026-10-28T09:55:37.426945+00:00",
+  "image_sha256": "44316382eb76f02532a3ecae3746eaa9aba5a71673d456f24fa6b6fc25628122",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual repository search in the released native app",
+    "The model list comes from live public model metadata; no result fixture"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\n跳转到工作区\nAioLM\n工作空间\n聊天\n项目\n模型管理\n运行模型\n发现\n运行与优化\nLoaded sessions\n推理引擎\n基准测试\n外部集成\nAPI 服务器\nMCP 服务器\n工具\n诊断\n设置\n本地 AI 工作空间\nv0.3.2\n发现\nQwen2.5-0.5B-Instruct-Q4_K_M.gguf\nLocal inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 已注册的安装\n模型已加载\n卸载\n在Hugging Face查找模型\n\n浏览并下载模型文件，在运行设置中检查运行时兼容性。\n\n目标位置\n/opt/aiolm-demo/models\n推理引擎\nLocal inference server\n模型格式\nGGUF\n搜索\nSort\nMost downloads\n正在扫描\n仓库 (30)\n正在搜索\nQwen/Qwen2.5-0.5B-Instruct-GGUF\n发布者\nQwen\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+8项\n35.8万 downloads\n♥ 点赞160\nbartowski/Qwen2.5-0.5B-Instruct-GGUF\n发布者\nbartowski\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+7项\n10.9万 downloads\n♥ 点赞19\nQwen/Qwen2.5-Coder-0.5B-Instruct-GGUF\n发布者\nQwen\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\ncode\n+14项\n3.2万 downloads\n♥ 点赞40\nlmstudio-community/Qwen2.5-0.5B-Instruct-GGUF\n发布者\nlmstudio-community\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+7项\n1.3万 downloads\n♥ 点赞8\nbartowski/Qwen2.5-Coder-0.5B-Instruct-GGUF\n发布者\nbartowski\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\ncode\n+11项\n6269 downloads\n♥ 点赞4\nThomasBaruzier/Qwen2.5-0.5B-Instruct-GGUF\n发布者\nThomasBaruzier\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+20项\n5067 downloads\n♥ 点赞0\nbartowski/Qwen2.5-Coder-0.5B-Instruct-abliterated-GGUF\n发布者\nbartowski\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\ncode\n+13项\n3603 downloads\n♥ 点赞13\nmradermacher/Qwen2.5-0.5B-Instruct-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\nchat\n标签:\nen\n+7项\n2535 downloads\n♥ 点赞0\nlegraphista/Qwen2.5-0.5B-Instruct-IMat-GGUF\n发布者\nlegraphista\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+19项\n2251 downloads\n♥ 点赞0\nunsloth/Qwen2.5-Coder-0.5B-Instruct-GGUF\n发布者\nunsloth\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ncode\n标签:\nqwen-coder\n+13项\n2213 downloads\n♥ 点赞12\nlmstudio-community/Qwen2.5-Coder-0.5B-Instruct-GGUF\n发布者\nlmstudio-community\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\ncode\n+11项\n2210 downloads\n♥ 点赞6\nmradermacher/Qwen2.5-0.5B-Instruct-3MPER0RR-abliterated-i1-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\nconversational\n标签:\nen\n+8项\n1980 downloads\n♥ 点赞0\nmradermacher/Qwen2.5-0.5B-Instruct-i1-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\nchat\n标签:\nen\n+8项\n1860 downloads\n♥ 点赞2\nmradermacher/Qwen2.5-0.5B-Instruct-abliterated-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\nchat\n标签:\nabliterated\n+21项\n1789 downloads\n♥ 点赞1\nsecond-state/Qwen2.5-0.5B-Instruct-GGUF\n发布者\nsecond-state\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+8项\n1656 downloads\n♥ 点赞2\nunsloth/Qwen2.5-Coder-0.5B-Instruct-128K-GGUF\n发布者\nunsloth\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ncode\n标签:\nqwen-coder\n+14项\n1598 downloads\n♥ 点赞7\nQuantFactory/Qwen2.5-0.5B-Instruct-GGUF\n发布者\nQuantFactory\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+8项\n1588 downloads\n♥ 点赞3\nMaziyarPanahi/Qwen2.5-0.5B-Instruct-GGUF\n发布者\nMaziyarPanahi\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nmistral\n+11项\n1353 downloads\n♥ 点赞2\nmradermacher/Qwen2.5-0.5B-Instruct-uncensored-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\nen\n标签:\nconversational\n+5项\n1276 downloads\n♥ 点赞2\nMungert/Qwen2.5-0.5B-Instruct-GGUF\n发布者\nMungert\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+10项\n1240 downloads\n♥ 点赞5\nmradermacher/Qwen2.5-0.5B-Instruct-abliterated-SFT-i1-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation-inference\n标签:\nunsloth\n+12项\n1013 downloads\n♥ 点赞1\nmradermacher/BitCache-Qwen2.5-0.5B-Instruct-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\nbitcache\n标签:\nspectral-compression\n+13项\n1011 downloads\n♥ 点赞2\nmradermacher/Qwen2.5-0.5B-Instruct-abliterated-i1-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\nchat\n标签:\nabliterated\n+22项\n982 downloads\n♥ 点赞0\ntensorblock/Qwen2.5-0.5B-Instruct-GGUF\n发布者\ntensorblock\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+9项\n978 downloads\n♥ 点赞0\ngaianet/Qwen2.5-0.5B-Instruct-GGUF\n发布者\ngaianet\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+20项\n935 downloads\n♥ 点赞0\nThomasBaruzier/Qwen2.5-Coder-0.5B-Instruct-GGUF\n发布者\nThomasBaruzier\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\ncode\n+14项\n836 downloads\n♥ 点赞1\nmradermacher/Qwen2.5-Coder-0.5B-Instruct-i1-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ncode\n标签:\ncodeqwen\n+12项\n761 downloads\n♥ 点赞1\nFelladrin/gguf-Q5_K_M-Qwen2.5-0.5B-Instruct\n发布者\nFelladrin\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n量化:\nQ5_K_M\n标签:\ngguf\n标签:\ntext-generation\n+23项\n672 downloads\n♥ 点赞0\nsecond-state/Qwen2.5-Coder-0.5B-Instruct-GGUF\n发布者\nsecond-state\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\ncode\n+13项\n672 downloads\n♥ 点赞1\nmradermacher/Qwen2.5-Coder-0.5B-Instruct-abliterated-i1-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ncode\n标签:\ncodeqwen\n+14项\n636 downloads\n♥ 点赞0\n选择仓库以查看模型文件。",
+    "theme": "light",
+    "locale": "zh",
+    "buttons": [
+      {
+        "aria": "最小化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "最大化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "关闭",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "收起侧边栏",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "聊天",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "项目",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "运行模型",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "发现",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Loaded sessions",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "推理引擎",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "基准测试",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "API 服务器",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MCP 服务器",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "诊断",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "设置",
+        "id": ""
+      },
+      {
+        "aria": "选择模型: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "id": ""
+      },
+      {
+        "aria": "模型设置",
+        "text": "Local inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 已注册的安装",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "卸载",
+        "id": ""
+      },
+      {
+        "aria": "推理引擎",
+        "text": "Local inference server",
+        "id": ""
+      },
+      {
+        "aria": "模型格式",
+        "text": "GGUF",
+        "id": ""
+      },
+      {
+        "aria": "Sort",
+        "text": "Most downloads",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "正在扫描",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Qwen/Qwen2.5-0.5B-Instruct-GGUF\n发布者\nQwen\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+8项\n35.8万 downloads\n♥ 点赞160",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "bartowski/Qwen2.5-0.5B-Instruct-GGUF\n发布者\nbartowski\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+7项\n10.9万 downloads\n♥ 点赞19",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF\n发布者\nQwen\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\ncode\n+14项\n3.2万 downloads\n♥ 点赞40",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "lmstudio-community/Qwen2.5-0.5B-Instruct-GGUF\n发布者\nlmstudio-community\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+7项\n1.3万 downloads\n♥ 点赞8",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "bartowski/Qwen2.5-Coder-0.5B-Instruct-GGUF\n发布者\nbartowski\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\ncode\n+11项\n6269 downloads\n♥ 点赞4",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "ThomasBaruzier/Qwen2.5-0.5B-Instruct-GGUF\n发布者\nThomasBaruzier\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+20项\n5067 downloads\n♥ 点赞0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "bartowski/Qwen2.5-Coder-0.5B-Instruct-abliterated-GGUF\n发布者\nbartowski\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\ncode\n+13项\n3603 downloads\n♥ 点赞13",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\nchat\n标签:\nen\n+7项\n2535 downloads\n♥ 点赞0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "legraphista/Qwen2.5-0.5B-Instruct-IMat-GGUF\n发布者\nlegraphista\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+19项\n2251 downloads\n♥ 点赞0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "unsloth/Qwen2.5-Coder-0.5B-Instruct-GGUF\n发布者\nunsloth\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ncode\n标签:\nqwen-coder\n+13项\n2213 downloads\n♥ 点赞12",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "lmstudio-community/Qwen2.5-Coder-0.5B-Instruct-GGUF\n发布者\nlmstudio-community\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\ncode\n+11项\n2210 downloads\n♥ 点赞6",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-3MPER0RR-abliterated-i1-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\nconversational\n标签:\nen\n+8项\n1980 downloads\n♥ 点赞0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-i1-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\nchat\n标签:\nen\n+8项\n1860 downloads\n♥ 点赞2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-abliterated-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\nchat\n标签:\nabliterated\n+21项\n1789 downloads\n♥ 点赞1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "second-state/Qwen2.5-0.5B-Instruct-GGUF\n发布者\nsecond-state\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+8项\n1656 downloads\n♥ 点赞2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "unsloth/Qwen2.5-Coder-0.5B-Instruct-128K-GGUF\n发布者\nunsloth\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ncode\n标签:\nqwen-coder\n+14项\n1598 downloads\n♥ 点赞7",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "QuantFactory/Qwen2.5-0.5B-Instruct-GGUF\n发布者\nQuantFactory\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+8项\n1588 downloads\n♥ 点赞3",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MaziyarPanahi/Qwen2.5-0.5B-Instruct-GGUF\n发布者\nMaziyarPanahi\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nmistral\n+11项\n1353 downloads\n♥ 点赞2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-uncensored-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\nen\n标签:\nconversational\n+5项\n1276 downloads\n♥ 点赞2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Mungert/Qwen2.5-0.5B-Instruct-GGUF\n发布者\nMungert\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+10项\n1240 downloads\n♥ 点赞5",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-abliterated-SFT-i1-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation-inference\n标签:\nunsloth\n+12项\n1013 downloads\n♥ 点赞1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/BitCache-Qwen2.5-0.5B-Instruct-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\nbitcache\n标签:\nspectral-compression\n+13项\n1011 downloads\n♥ 点赞2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-abliterated-i1-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\nchat\n标签:\nabliterated\n+22项\n982 downloads\n♥ 点赞0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "tensorblock/Qwen2.5-0.5B-Instruct-GGUF\n发布者\ntensorblock\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+9项\n978 downloads\n♥ 点赞0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "gaianet/Qwen2.5-0.5B-Instruct-GGUF\n发布者\ngaianet\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\nchat\n+20项\n935 downloads\n♥ 点赞0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "ThomasBaruzier/Qwen2.5-Coder-0.5B-Instruct-GGUF\n发布者\nThomasBaruzier\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\ncode\n+14项\n836 downloads\n♥ 点赞1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-Coder-0.5B-Instruct-i1-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ncode\n标签:\ncodeqwen\n+12项\n761 downloads\n♥ 点赞1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Felladrin/gguf-Q5_K_M-Qwen2.5-0.5B-Instruct\n发布者\nFelladrin\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n量化:\nQ5_K_M\n标签:\ngguf\n标签:\ntext-generation\n+23项\n672 downloads\n♥ 点赞0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "second-state/Qwen2.5-Coder-0.5B-Instruct-GGUF\n发布者\nsecond-state\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ntext-generation\n标签:\ncode\n+13项\n672 downloads\n♥ 点赞1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-Coder-0.5B-Instruct-abliterated-i1-GGUF\n发布者\nmradermacher\n模型系列:\nQwen2.5\n参数规模:\n0.5B\n标签:\ngguf\n标签:\ncode\n标签:\ncodeqwen\n+14项\n636 downloads\n♥ 点赞0",
+        "id": ""
+      }
+    ]
+  }
+}

@@ -1,0 +1,168 @@
+{
+  "locale": "ja",
+  "id": "llama-install",
+  "file": "ja/llama-install.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "b51cbc550c97d4398f905b41aaaaec9c0b8cf93a2ab57940c3a75afafb0df725",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 2688,
+  "capture_session": "native-linux-aa587bc8eb66468faa8c51e71ab0d8d3",
+  "captured_at": "2026-10-28T09:21:58.721206+00:00",
+  "image_sha256": "b51cbc550c97d4398f905b41aaaaec9c0b8cf93a2ab57940c3a75afafb0df725",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual CPU runtime installation controls from the released native app",
+    "The available build metadata comes from the actual public release API",
+    "No runtime was installed for this screenshot"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\nワークスペースへ移動\nAioLM\nワークスペース\nチャット\nプロジェクト\nモデル管理\nモデル実行\n検索\n実行・最適化\nLoaded sessions\n推論エンジン\nベンチマーク\n外部連携\nAPIサーバー\nMCPサーバー\nツール\n診断\n設定\nローカル AI ワークスペース\nv0.3.2\n推論エンジン\nモデルを選択\nllama.cpp · PATH\nモデルなし\n推論エンジン\n\n推論エンジンの実行ファイルかエントリーポイントを登録し、--helpから実行オプションを設定します。標準アダプターも同じ一覧で利用できます。\n\nインストール可能なバージョンを更新\nすべての推論エンジン\nllama.cpp\n\n標準アダプター · llama-server\n\nDetected device\nGPU\nNo dedicated GPU detected\nCPU\nAMD EPYC 9V74 80-Core Processor\n5 Core / 5 Thread\nOS\nlinux/x86_64\nShow all backends\n6 hidden for this device\n\nモデル選択・設定 → プロファイル\nExecution profiles\n\nDeep verification\n\nllama.cpp · PATH\n\nRuns the correctness check against the selected model itself instead of the small canary. It reads the model twice and can take up to an hour; progress and cancellation are in the task strip, and the panel can be left meanwhile.\n\nDeep verification\nInstalled runtimes\nなし\nAvailable runtimes\nCPU-only\nrecommended\n\nno GPU required · No GPU detected, so the CPU build is the fit.\n\nLatest b11946 · SHA-256 published\nInstall b11946\n詳細",
+    "theme": "light",
+    "locale": "ja",
+    "buttons": [
+      {
+        "aria": "最小化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "最大化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "閉じる",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "サイドバーを折りたたむ",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "チャット",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "プロジェクト",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "モデル実行",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "検索",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Loaded sessions",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "推論エンジン",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "ベンチマーク",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "APIサーバー",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MCPサーバー",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "診断",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "設定",
+        "id": ""
+      },
+      {
+        "aria": "モデルを選択",
+        "text": "モデルを選択",
+        "id": ""
+      },
+      {
+        "aria": "モデル設定",
+        "text": "llama.cpp · PATH",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "インストール可能なバージョンを更新",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "すべての推論エンジン",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "",
+        "id": "runtime-show-all"
+      },
+      {
+        "aria": null,
+        "text": "Execution profiles",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Deep verification",
+        "id": ""
+      },
+      {
+        "aria": "Install b11946: CPU-only",
+        "text": "Install b11946",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "",
+        "id": ""
+      }
+    ]
+  }
+}

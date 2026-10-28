@@ -1,0 +1,29 @@
+{
+  "locale": "ko",
+  "id": "adapter-check",
+  "file": "ko/adapter-check.png",
+  "width": 1280,
+  "height": 900,
+  "sha256": "131b4d1900e7a9b994f88d0083f8c080a1d6385cae5716dd777858aa75f0580e",
+  "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+  "app_version": "0.3.2",
+  "released": false,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+  "process_id": 7979,
+  "capture_session": "native-current-713789d-20261028",
+  "captured_at": "2026-10-28T09:45:09.607243+00:00",
+  "evidence_file": "evidence/ko-adapter-check.json",
+  "image_sha256": "131b4d1900e7a9b994f88d0083f8c080a1d6385cae5716dd777858aa75f0580e",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual native form keeps the model, port and host bindings documented by the real executable help.",
+    "Actual model-probe command and authentication variable are shown; this configuration screen does not claim model acceptance by itself."
+  ],
+  "visible_text": "AioLM\n작업 공간으로 건너뛰기\nAioLM\n작업 공간\n채팅\n프로젝트\n모델 관리\n모델 실행\n찾아보기\n실행·성능\n로드된 세션\n추론 엔진\n벤치마크\n외부 연동\nAPI 서버\nMCP 서버\n공통 도구\n진단\n설정\n나의 로컬 AI 작업 공간\nv0.3.2\n추론 엔진\n모델 선택\nllama.cpp · PATH\n모델 없음\n추론 엔진\n\n자동으로 찾거나 설치 폴더를 고른 뒤, 모델을 선택해 연결하세요. 연결을 저장하기 전에 실제 모델 응답을 확인합니다.\n\n목록 새로고침\n모든 추론 엔진\n외부 추론 엔진 연결\n\n이 컴퓨터에서 실행 중인 서버를 찾거나, 설치 폴더에서 실행 방법을 확인합니다. 어떤 언어로 만든 엔진인지 알 필요는 없습니다.\n\n자동 찾기\n모델 선택\n연결\n자동 찾기\n설치 폴더 선택\n\n찾지 못했다면 엔진을 설치한 폴더를 선택하세요. 파일이나 설정을 직접 고르지 않아도 됩니다.\n\n고급: 실행 방법 직접 설정\n실행 파일·엔트리포인트 등록\n\n엔진 실행 방법을 선택하고 도움말을 읽은 뒤 모델·연결·호환성 확인 방법을 설정하세요. 마지막 ‘등록’이 성공하면 AioLM이 연결 정보를 자동 저장하므로 .engine.json을 직접 만들 필요가 없습니다.\n\n1. 실행 파일과 엔트리포인트\n2. 도움말 확인\n3. 연결과 모델 확인\n4. 검토와 등록\n모델 연결\n도움말의 옵션\n--model\n--옵션=값 형식\n포트 연결\n도움말의 옵션\n--port\n--옵션=값 형식\n호스트 연결 (선택)\n도움말의 옵션\n--host\n--옵션=값 형식\n제공 모델 이름 연결 (선택)\n사용 안 함\n인증 키 전달\n엔진은 키를 받지 않음 (앱 gateway가 인증)\n환경 변수로 전달\n환경 변수 이름\n모델 호환성 확인 명령 (probe JSON 출력 필요)\n호환성 확인 프로그램\n찾아보기\n호환성 확인 인자\n인자 제거\n인자 제거\n인자 제거\n인자 제거\n인자 제거\n인자 제거\n인자 제거\n인자 제거\n인자 제거\n인자 제거\n인자 제거\n인자 추가\n{model} 넣기\n{options_json} 넣기\n상태 확인 경로\n상태 확인에 인증 필요\n등록할 모델 형식 (호환성은 모델마다 별도 확인)\ngguf\nhf-safetensors\nmlx\nunknown\n이전\n등록 내용 검토\n고급: 등록 파일(manifest) 가져오기",
+  "capture_method": "Unmodified native Tauri WebView screenshot through WebKitGTK WebDriver; real Rust IPC backend. No route, IPC or response mock.",
+  "build_test_fixtures": false,
+  "build_embedded_assets": true
+}

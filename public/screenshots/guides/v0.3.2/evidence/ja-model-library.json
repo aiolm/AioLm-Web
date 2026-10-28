@@ -1,0 +1,157 @@
+{
+  "locale": "ja",
+  "id": "model-library",
+  "file": "ja/model-library.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "8c16660d2976f51bc793022a512fd067138deca6c59e3c48dfb9e86d8d251abb",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 9195,
+  "capture_session": "native-linux-d5765405162a493db8ef23ca7783a180",
+  "captured_at": "2026-10-28T09:50:46.941664+00:00",
+  "image_sha256": "8c16660d2976f51bc793022a512fd067138deca6c59e3c48dfb9e86d8d251abb",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual model library scans the pinned local GGUF file",
+    "A real registered CPU engine is loaded; file metadata and status are from the native backend"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\nワークスペースへ移動\nAioLM\nワークスペース\nチャット\nプロジェクト\nモデル管理\nモデル実行\n検索\n実行・最適化\nLoaded sessions\n推論エンジン\nベンチマーク\n外部連携\nAPIサーバー\nMCPサーバー\nツール\n診断\n設定\nローカル AI ワークスペース\nv0.3.2\nモデル実行\nQwen2.5-0.5B-Instruct-Q4_K_M.gguf\nLocal inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 登録したインストール先\nモデル読み込み済み\nアンロード\nモデル実行\n\nモデルを選択し、設定を確認して実行します。\n\nモデルディレクトリ\n参照\nモデル\n1\nすべてのエンジン\nモデルの補助ファイルを表示\n再スキャン\nQwen2.5-0.5B-Instruct-Q4_K_M.gguf\nアーキテクチャ:\nqwen2\nパラメータ数:\n630M\n量子化:\nQ4_K_M\nコンテキスト長:\n32K\nタグ:\ngguf\n+3件\n468.6 MiB\n実行中\n/opt/aiolm-demo/models/Qwen2.5-0.5B-Instruct-Q4_K_M.gguf\nCopy path\n削除",
+    "theme": "light",
+    "locale": "ja",
+    "buttons": [
+      {
+        "aria": "最小化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "最大化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "閉じる",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "サイドバーを折りたたむ",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "チャット",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "プロジェクト",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "モデル実行",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "検索",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Loaded sessions",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "推論エンジン",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "ベンチマーク",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "APIサーバー",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MCPサーバー",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "診断",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "設定",
+        "id": ""
+      },
+      {
+        "aria": "モデルを選択: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "id": ""
+      },
+      {
+        "aria": "モデル設定",
+        "text": "Local inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 登録したインストール先",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "アンロード",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "参照",
+        "id": ""
+      },
+      {
+        "aria": "推論エンジン",
+        "text": "すべてのエンジン",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "再スキャン",
+        "id": ""
+      },
+      {
+        "aria": "設定して実行: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Qwen2.5-0.5B-Instruct-Q4_K_M.gguf\nアーキテクチャ:\nqwen2\nパラメータ数:\n630M\n量子化:\nQ4_K_M\nコンテキスト長:\n32K\nタグ:\ngguf\n+3件",
+        "id": ""
+      },
+      {
+        "aria": "Copy path: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Copy path",
+        "id": ""
+      },
+      {
+        "aria": "削除: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "削除",
+        "id": ""
+      }
+    ]
+  }
+}

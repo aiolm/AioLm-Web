@@ -1,0 +1,188 @@
+{
+  "locale": "ja",
+  "id": "model-settings",
+  "file": "ja/model-settings.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "63a694c07dddf7a22c03e44955c75dc5d49ebc35cd4000be6c6a4a2db9ca6c99",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 9195,
+  "capture_session": "native-linux-4934f4309a85410ab36622c188656bd0",
+  "captured_at": "2026-10-28T10:04:27.164413+00:00",
+  "image_sha256": "63a694c07dddf7a22c03e44955c75dc5d49ebc35cd4000be6c6a4a2db9ca6c99",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual model settings before launching: the app-managed model has been unloaded through its normal UI",
+    "Step 1 Choose runtime is active, showing the actual Local inference server and registered local-cpu runtime",
+    "Continue to profile is enabled; no model has been launched for this settings screenshot"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\nワークスペースへ移動\nAioLM\nワークスペース\nチャット\nプロジェクト\nモデル管理\nモデル実行\n検索\n実行・最適化\nLoaded sessions\n推論エンジン\nベンチマーク\n外部連携\nAPIサーバー\nMCPサーバー\nツール\n診断\n設定\nローカル AI ワークスペース\nv0.3.2\nモデル実行\nモデルを選択\nLocal inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 登録したインストール先\nモデルなし\nモデル実行\n\nモデルを選択し、設定を確認して実行します。\n\nモデルディレクトリ\n参照\nモデル\n1\nすべてのエンジン\nモデルの補助ファイルを表示\n再スキャン\nQwen2.5-0.5B-Instruct-Q4_K_M.gguf\nアーキテクチャ:\nqwen2\nパラメータ数:\n630M\n量子化:\nQ4_K_M\nコンテキスト長:\n32K\nタグ:\ngguf\n+3件\n468.6 MiB\n/opt/aiolm-demo/models/Qwen2.5-0.5B-Instruct-Q4_K_M.gguf\nCopy path\n削除\n既定の実行 · 停止\nモデル選択・設定\n1\nランタイムを選択\nLocal inference server · local-cpu\n2\nプロファイルを選択\n未選択\n3\nオプションを調整\nランタイムを選択\n\n最初に推論エンジンとインストール済みランタイムを選択してください。\n\n推論エンジン\nllama.cpp\nvLLM\nMLX\nMLX runtimes (mlx-vlm) are supported on Apple Silicon macOS only; this host is linux/x86_64.\nLocal inference server\nランタイム\nversion: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 登録したインストール先\nopenai-v1\n値を消去\nランタイム管理\n\nランタイムオプションを確認中…\n\nプロファイルの選択へ",
+    "theme": "light",
+    "locale": "ja",
+    "buttons": [
+      {
+        "aria": "最小化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "最大化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "閉じる",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "サイドバーを折りたたむ",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "チャット",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "プロジェクト",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "モデル実行",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "検索",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Loaded sessions",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "推論エンジン",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "ベンチマーク",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "APIサーバー",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MCPサーバー",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "診断",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "設定",
+        "id": ""
+      },
+      {
+        "aria": "モデルを選択",
+        "text": "モデルを選択",
+        "id": ""
+      },
+      {
+        "aria": "モデル設定",
+        "text": "Local inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 登録したインストール先",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "参照",
+        "id": ""
+      },
+      {
+        "aria": "推論エンジン",
+        "text": "すべてのエンジン",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "再スキャン",
+        "id": ""
+      },
+      {
+        "aria": "設定して実行: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Qwen2.5-0.5B-Instruct-Q4_K_M.gguf\nアーキテクチャ:\nqwen2\nパラメータ数:\n630M\n量子化:\nQ4_K_M\nコンテキスト長:\n32K\nタグ:\ngguf\n+3件",
+        "id": ""
+      },
+      {
+        "aria": "Copy path: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Copy path",
+        "id": ""
+      },
+      {
+        "aria": "削除: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "削除",
+        "id": ""
+      },
+      {
+        "aria": "閉じる",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "1\nランタイムを選択\nLocal inference server · local-cpu",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "2\nプロファイルを選択\n未選択",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "3\nオプションを調整",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "値を消去",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "ランタイム管理",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "プロファイルの選択へ",
+        "id": ""
+      }
+    ]
+  }
+}

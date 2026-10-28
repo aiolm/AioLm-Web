@@ -1,0 +1,177 @@
+{
+  "locale": "zh",
+  "id": "updates",
+  "file": "zh/updates.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "342ed8088ed10f238c993c063263962990bacc0ff58f0a3c689a3b6ddc35fc33",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 9195,
+  "capture_session": "native-linux-d5765405162a493db8ef23ca7783a180",
+  "captured_at": "2026-10-28T09:50:51.556273+00:00",
+  "image_sha256": "342ed8088ed10f238c993c063263962990bacc0ff58f0a3c689a3b6ddc35fc33",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual application update check in the released desktop app",
+    "The current version and check result come from the native update backend"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\n跳转到工作区\nAioLM\n工作空间\n聊天\n项目\n模型管理\n运行模型\n发现\n运行与优化\nLoaded sessions\n推理引擎\n基准测试\n外部集成\nAPI 服务器\nMCP 服务器\n工具\n诊断\n设置\n本地 AI 工作空间\nv0.3.2\n设置\nQwen2.5-0.5B-Instruct-Q4_K_M.gguf\nLocal inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 已注册的安装\n模型已加载\n卸载\n设置\n\n自定义语言、外观、聊天、服务器行为和高级安全选项。\n\n常规\n外观\n聊天\n个性化\n通知\n服务器\n高级\n常规\n语言\n\n选择整个应用使用的语言。\n\n简体中文\n界面密度\n\n调整设置和面板的间距。\n\n舒适\n应用更新\n\n检查AioLM的新版本并安装更新。\n\n当前版本: 0.3.2\n\nAioLM已是最新版本。\n\n检查更新",
+    "theme": "light",
+    "locale": "zh",
+    "buttons": [
+      {
+        "aria": "最小化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "最大化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "关闭",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "收起侧边栏",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "聊天",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "项目",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "运行模型",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "发现",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Loaded sessions",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "推理引擎",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "基准测试",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "API 服务器",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MCP 服务器",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "诊断",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "设置",
+        "id": ""
+      },
+      {
+        "aria": "选择模型: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "id": ""
+      },
+      {
+        "aria": "模型设置",
+        "text": "Local inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 已注册的安装",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "卸载",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "常规",
+        "id": "settings-tab-general"
+      },
+      {
+        "aria": null,
+        "text": "外观",
+        "id": "settings-tab-appearance"
+      },
+      {
+        "aria": null,
+        "text": "聊天",
+        "id": "settings-tab-chat"
+      },
+      {
+        "aria": null,
+        "text": "个性化",
+        "id": "settings-tab-personalization"
+      },
+      {
+        "aria": null,
+        "text": "通知",
+        "id": "settings-tab-notifications"
+      },
+      {
+        "aria": null,
+        "text": "服务器",
+        "id": "settings-tab-server"
+      },
+      {
+        "aria": null,
+        "text": "高级",
+        "id": "settings-tab-advanced"
+      },
+      {
+        "aria": null,
+        "text": "简体中文",
+        "id": "settings-language"
+      },
+      {
+        "aria": null,
+        "text": "舒适",
+        "id": "settings-density"
+      },
+      {
+        "aria": null,
+        "text": "检查更新",
+        "id": "settings-check-update"
+      }
+    ]
+  }
+}

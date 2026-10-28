@@ -9,7 +9,7 @@ import { createTranslator } from '@/i18n/translate';
 import Link from "next/link";
 import { GITHUB_REPOSITORY_URL, GitHubMark } from "@/components/site-links";
 import { ProductScreenshot } from "@/components/product-screenshot";
-import { InstallCommand } from "@/components/install-command";
+import { InstallSection } from "@/components/install-section";
 import "@/components/home-redesign.css";
 
 /**
@@ -75,6 +75,10 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
               {t('home.subtitle')}
             </p>
 
+            <div className="home-install">
+              <p className="home-install-label" aria-hidden="true">{t('home.installCommandTitle')}</p>
+              <InstallSection locale={locale} messages={home} />
+            </div>
             <div className="home-hero-actions">
               <a className="button button-primary" href={GITHUB_REPOSITORY_URL}>
                 <GitHubMark />
@@ -84,30 +88,6 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
                 <span>{t('home.explore')}</span>
                 <ArrowIcon />
               </Link>
-            </div>
-
-            <div className="home-install">
-              <p className="home-install-label" aria-hidden="true">{t('home.installCommandTitle')}</p>
-              <InstallCommand
-                macosGuideUrl={`${GITHUB_REPOSITORY_URL}/blob/main/docs/guides/install${locale === 'en' ? '' : `.${locale}`}.md#macos`}
-                linuxGuideUrl={`${GITHUB_REPOSITORY_URL}/blob/main/docs/guides/install${locale === 'en' ? '' : `.${locale}`}.md#linux`}
-                messages={{
-                  windows: t('home.windows'),
-                  macos: t('home.macos'),
-                  linux: t('home.linux'),
-                  title: t('home.installCommandTitle'),
-                  copy: t('home.copyCommand'),
-                  copied: t('home.copied'),
-                  copyFailed: t('home.copyFailed'),
-                  download: t('home.download'),
-                  macosRequirements: t('home.macosRequirements'),
-                  macosInstructions: t('home.macosInstructions'),
-                  macosGuide: t('home.macosGuide'),
-                  linuxRequirements: t('home.linuxRequirements'),
-                  linuxInstructions: t('home.linuxInstructions'),
-                  linuxGuide: t('home.linuxGuide'),
-                }}
-              />
             </div>
           </div>
         </div>
@@ -125,8 +105,8 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           <p className="home-section-detail">{t('home.enginesHelp')}</p>
         </header>
         <div className="home-hero-actions">
-          <a className="home-text-link" href={`${GITHUB_REPOSITORY_URL}/blob/v0.3.2/docs/reference/inference-runtimes.md`}>{t('home.enginesGuide')}<ArrowIcon /></a>
-          <a className="home-text-link" href={`${GITHUB_REPOSITORY_URL}/blob/v0.3.2/docs/reference/runtime-adapter-handoff.ko.md`}>{t('home.adaptersGuide')}<ArrowIcon /></a>
+          <Link className="home-text-link" href={localizedPath(locale, '/guides/compatibility')}>{t('home.enginesGuide')}<ArrowIcon /></Link>
+          <Link className="home-text-link" href={localizedPath(locale, '/guides/adapters')}>{t('home.adaptersGuide')}<ArrowIcon /></Link>
         </div>
       </section>
 

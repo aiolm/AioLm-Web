@@ -1,0 +1,29 @@
+{
+  "locale": "ja",
+  "id": "auto-find",
+  "file": "ja/auto-find.png",
+  "width": 1280,
+  "height": 900,
+  "sha256": "09cf1a4515e8621dc88da014b6975a48553468538e3b5e162f5f5d9e5eed867a",
+  "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+  "app_version": "0.3.2",
+  "released": false,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+  "process_id": 7979,
+  "capture_session": "native-current-713789d-20261028",
+  "captured_at": "2026-10-28T09:16:15.783917+00:00",
+  "evidence_file": "evidence/ja-auto-find.json",
+  "image_sha256": "09cf1a4515e8621dc88da014b6975a48553468538e3b5e162f5f5d9e5eed867a",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual native automatic connection form before starting discovery.",
+    "The displayed controls are from the running production-source app; no candidate or success data injected."
+  ],
+  "visible_text": "AioLM\nワークスペースへ移動\nAioLM\nワークスペース\nチャット\nプロジェクト\nモデル管理\nモデル実行\n検索\n実行・最適化\nLoaded sessions\n推論エンジン\nベンチマーク\n外部連携\nAPIサーバー\nMCPサーバー\nツール\n診断\n設定\nローカル AI ワークスペース\nv0.3.2\n推論エンジン\nモデルを選択\nllama.cpp · PATH\nモデルなし\n推論エンジン\n\n自動で検索するかインストール先フォルダーを選び、モデルを選択して接続してください。接続を保存する前に、実際のモデル応答を確認します。\n\n一覧を更新\nすべての推論エンジン\n外部推論エンジンに接続\n\nこのパソコンで実行中のサーバーを探すか、インストール先の起動方法を確認します。エンジンの開発言語を知る必要はありません。\n\n自動で探す\nモデルを選択\n接続\n自動で探す\nインストール先を選択\n\n見つからない場合は、エンジンをインストールしたフォルダーを選んでください。実行ファイルや設定ファイルを選ぶ必要はありません。\n\n詳細：起動方法を手動で設定\n詳細：登録ファイル（manifest）を読み込む",
+  "capture_method": "Unmodified native Tauri WebView screenshot through WebKitGTK WebDriver; real Rust IPC backend. No route, IPC or response mock.",
+  "build_test_fixtures": false,
+  "build_embedded_assets": true
+}

@@ -1,0 +1,57 @@
+{
+  "locale": "ja",
+  "id": "language",
+  "file": "ja/language.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "ad54a8e0ab67ab90ff8ebfc45ceee01b04b29c61f4dc69e30869efd1682d632b",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 2688,
+  "capture_session": "native-linux-bba01fd05a19466c9b8cbe90468f2d33",
+  "captured_at": "2026-10-28T09:14:19.208451+00:00",
+  "image_sha256": "ad54a8e0ab67ab90ff8ebfc45ceee01b04b29c61f4dc69e30869efd1682d632b",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual released app onboarding language selection",
+    "Native Tauri backend and embedded frontend"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\nAioLM\nAioLMへようこそ\n\nいくつかの設定で、自分だけのワークスペースに。\n\n1\n言語\n2\nテーマ\n3\nモデルフォルダー\n\nあとで設定とモデルライブラリから変更できます。\n\n01 / 03\n言語を選択\n\nAioLMで使用する言語を選択してください。\n\n言語\nEnglish\n한국어\n日本語\n简体中文\n次へ\n→",
+    "theme": "light",
+    "locale": "ja",
+    "buttons": [
+      {
+        "aria": "最小化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "最大化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "閉じる",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "次へ\n→",
+        "id": ""
+      }
+    ]
+  }
+}

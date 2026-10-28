@@ -1,0 +1,29 @@
+{
+  "locale": "en",
+  "id": "auto-find",
+  "file": "en/auto-find.png",
+  "width": 1280,
+  "height": 900,
+  "sha256": "d3d8f5d8dd15c464660c0626735dc9b64932612646bd4f86dad5070b7ba6355a",
+  "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+  "app_version": "0.3.2",
+  "released": false,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+  "process_id": 7979,
+  "capture_session": "native-current-713789d-20261028",
+  "captured_at": "2026-10-28T09:16:13.826784+00:00",
+  "evidence_file": "evidence/en-auto-find.json",
+  "image_sha256": "d3d8f5d8dd15c464660c0626735dc9b64932612646bd4f86dad5070b7ba6355a",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual native automatic connection form before starting discovery.",
+    "The displayed controls are from the running production-source app; no candidate or success data injected."
+  ],
+  "visible_text": "AioLM\nSkip to workspace\nAioLM\nWorkspace\nChat\nProjects\nModels\nRun a model\nDiscover\nRun & optimize\nLoaded sessions\nInference engines\nBenchmark\nIntegrations\nAPI server\nMCP servers\nTools\nDiagnostics\nSettings\nYour local AI workspace\nv0.3.2\nInference engines\nChoose model\nllama.cpp · PATH\nno model loaded\nInference engines\n\nFind an engine automatically or choose its installation folder, then select a model and connect. AioLM checks actual model responses before saving the connection.\n\nRefresh list\nAll inference engines\nConnect an external inference engine\n\nFind a running server on this computer, or check how to launch an installation. You do not need to know which language the engine uses.\n\nFind automatically\nChoose a model\nConnect\nFind automatically\nChoose installation folder\n\nIf discovery misses your engine, choose its installation folder. You do not need to pick an executable or configuration file.\n\nAdvanced: configure the launch method manually\nAdvanced: import registration file (manifest)",
+  "capture_method": "Unmodified native Tauri WebView screenshot through WebKitGTK WebDriver; real Rust IPC backend. No route, IPC or response mock.",
+  "build_test_fixtures": false,
+  "build_embedded_assets": true
+}

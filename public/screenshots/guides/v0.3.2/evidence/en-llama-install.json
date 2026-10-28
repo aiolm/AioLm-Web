@@ -1,0 +1,168 @@
+{
+  "locale": "en",
+  "id": "llama-install",
+  "file": "en/llama-install.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "4ba89ff29969e6fe74e18785ac790a43c09fc2e90e3a450bf93b900170716904",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 2688,
+  "capture_session": "native-linux-aa587bc8eb66468faa8c51e71ab0d8d3",
+  "captured_at": "2026-10-28T09:22:00.223114+00:00",
+  "image_sha256": "4ba89ff29969e6fe74e18785ac790a43c09fc2e90e3a450bf93b900170716904",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual CPU runtime installation controls from the released native app",
+    "The available build metadata comes from the actual public release API",
+    "No runtime was installed for this screenshot"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\nSkip to workspace\nAioLM\nWorkspace\nChat\nProjects\nModels\nRun a model\nDiscover\nRun & optimize\nLoaded sessions\nInference engines\nBenchmark\nIntegrations\nAPI server\nMCP servers\nTools\nDiagnostics\nSettings\nYour local AI workspace\nv0.3.2\nInference engines\nChoose model\nllama.cpp · PATH\nno model loaded\nInference engines\n\nRegister an inference engine from its executable or entry point, then configure its options from --help. Built-in adapters are available in the same list.\n\nRefresh available versions\nAll inference engines\nllama.cpp\n\nBuilt-in adapter · llama-server\n\nDetected device\nGPU\nNo dedicated GPU detected\nCPU\nAMD EPYC 9V74 80-Core Processor\n5 Core / 5 Thread\nOS\nlinux/x86_64\nShow all backends\n6 hidden for this device\n\nModel & settings → Profiles\nExecution profiles\n\nDeep verification\n\nllama.cpp · PATH\n\nRuns the correctness check against the selected model itself instead of the small canary. It reads the model twice and can take up to an hour; progress and cancellation are in the task strip, and the panel can be left meanwhile.\n\nDeep verification\nInstalled runtimes\nnone\nAvailable runtimes\nCPU-only\nrecommended\n\nno GPU required · No GPU detected, so the CPU build is the fit.\n\nLatest b11946 · SHA-256 published\nInstall b11946\nAdvanced",
+    "theme": "light",
+    "locale": "en",
+    "buttons": [
+      {
+        "aria": "Minimize",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "Maximize",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "Close",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "Collapse sidebar",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Chat",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Projects",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Run a model",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Discover",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Loaded sessions",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Inference engines",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Benchmark",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "API server",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MCP servers",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Diagnostics",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Settings",
+        "id": ""
+      },
+      {
+        "aria": "Choose model",
+        "text": "Choose model",
+        "id": ""
+      },
+      {
+        "aria": "Model settings",
+        "text": "llama.cpp · PATH",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Refresh available versions",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "All inference engines",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "",
+        "id": "runtime-show-all"
+      },
+      {
+        "aria": null,
+        "text": "Execution profiles",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Deep verification",
+        "id": ""
+      },
+      {
+        "aria": "Install b11946: CPU-only",
+        "text": "Install b11946",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "",
+        "id": ""
+      }
+    ]
+  }
+}

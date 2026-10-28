@@ -1,0 +1,496 @@
+{
+  "source": "aiolm/AioLM",
+  "released": false,
+  "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+  "method": "Unmodified native Tauri WebKitGTK window captures with the real Rust IPC backend; no route, IPC, installed-state, probe or model-response mock.",
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "scope": "Observed native Linux desktop UI only. Model-response evidence is scoped per capture. These screenshots do not complete all-engine/device support, F09, full Linux acceptance, or real v0.3.1-to-v0.3.2 update installation/UI acceptance.",
+  "captures": [
+    {
+      "locale": "en",
+      "id": "auto-find",
+      "file": "en/auto-find.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "d3d8f5d8dd15c464660c0626735dc9b64932612646bd4f86dad5070b7ba6355a",
+      "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+      "app_version": "0.3.2",
+      "released": false,
+      "platform": "linux-x86_64",
+      "native_backend": true,
+      "ipc_mock": false,
+      "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+      "process_id": 7979,
+      "capture_session": "native-current-713789d-20261028",
+      "captured_at": "2026-10-28T09:16:13.826784+00:00",
+      "evidence_file": "evidence/en-auto-find.json",
+      "evidence_sha256": "8e41f26e352852cf64b92d8bf1382cfebdebac4389081ed5b1c7015bd16124b3"
+    },
+    {
+      "locale": "en",
+      "id": "auto-model",
+      "file": "en/auto-model.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "f16bc32cadd9abc6db5b8e90133535558008c06a3d3b9aee7ab9a9c94cb3b322",
+      "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+      "app_version": "0.3.2",
+      "released": false,
+      "platform": "linux-x86_64",
+      "native_backend": true,
+      "ipc_mock": false,
+      "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+      "process_id": 7979,
+      "capture_session": "native-current-713789d-20261028",
+      "captured_at": "2026-10-28T09:17:34.530640+00:00",
+      "evidence_file": "evidence/en-auto-model.json",
+      "evidence_sha256": "6c3df8d0747f00a1047daaa993716e906877caf312be9662f6b44e7b23d70866"
+    },
+    {
+      "locale": "en",
+      "id": "auto-connect",
+      "file": "en/auto-connect.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "2daba21666a1c6e51b84b73c469316c8a7f916df3d736b7d55110f5d2124a864",
+      "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+      "app_version": "0.3.2",
+      "released": false,
+      "platform": "linux-x86_64",
+      "native_backend": true,
+      "ipc_mock": false,
+      "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+      "process_id": 7979,
+      "capture_session": "native-current-713789d-20261028",
+      "captured_at": "2026-10-28T09:21:04.158223+00:00",
+      "evidence_file": "evidence/en-auto-connect.json",
+      "inference_evidence": {
+        "actual_inference": true,
+        "digest_kind": "http-payload",
+        "model_sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+        "engine_binary_sha256": "3f2b53013c2eb596c8aca87e4740240a41f95bcebf72e61084d6d5ba0db761cc",
+        "request_sha256": "7e7432ddb84ec733935b4bc9134fc79a1a8d7e8407452b741329ca8b049199bf",
+        "response_sha256": "87fe0fa9a36fee0e91bed7b0e77c83dd7e9306570ac06d7f36dec753cee2998f",
+        "response_text": "5",
+        "request_payload": {
+          "model": "Qwen2.5-0.5B-Instruct",
+          "messages": [
+            {
+              "role": "user",
+              "content": "What is 2 + 3? Reply with only the number."
+            }
+          ],
+          "temperature": 0,
+          "max_tokens": 32,
+          "stream": false,
+          "stream_options": {
+            "include_usage": true
+          }
+        },
+        "response_payload": {
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "5"
+              }
+            }
+          ],
+          "created": 1793178088,
+          "model": "Qwen2.5-0.5B-Instruct",
+          "system_fingerprint": "b11669-620d2225c",
+          "object": "chat.completion",
+          "usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 43,
+            "total_tokens": 45,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "id": "chatcmpl-lbrNwtQYFL15h2pyHl55vs7EB4MeEelk",
+          "timings": {
+            "cache_n": 0,
+            "prompt_n": 43,
+            "prompt_ms": 293.906,
+            "prompt_per_token_ms": 6.835023255813954,
+            "prompt_per_second": 146.30528128040936,
+            "predicted_n": 2,
+            "predicted_ms": 22.41,
+            "predicted_per_token_ms": 22.41,
+            "predicted_per_second": 44.62293618920125
+          }
+        },
+        "scope": "Independent actual HTTP request/response on the same real engine process. The native UI connection shown separately ran production Rust model-identity, chat-response and sse-stream checks; this digest is not a GUI wire capture."
+      },
+      "evidence_sha256": "ec4283e94c2789fa238800b5e5e7a03d6724e09ccc15cf166b55bc40f8876f0b"
+    },
+    {
+      "locale": "ko",
+      "id": "auto-find",
+      "file": "ko/auto-find.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "c76d88cb3752e67d82eb11fee1e66714d3056cbcf74bff7114a7b750b9d732c5",
+      "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+      "app_version": "0.3.2",
+      "released": false,
+      "platform": "linux-x86_64",
+      "native_backend": true,
+      "ipc_mock": false,
+      "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+      "process_id": 7979,
+      "capture_session": "native-current-713789d-20261028",
+      "captured_at": "2026-10-28T09:16:14.782703+00:00",
+      "evidence_file": "evidence/ko-auto-find.json",
+      "evidence_sha256": "f59069b471e3bf92ba9c18db99360aa382199ea7791b5549d9752563b5acd738"
+    },
+    {
+      "locale": "ko",
+      "id": "auto-model",
+      "file": "ko/auto-model.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "9f8c8f913d8b24d0f6d0e6f5895d444ad409a71e594ae1a2ce27e546c0852eac",
+      "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+      "app_version": "0.3.2",
+      "released": false,
+      "platform": "linux-x86_64",
+      "native_backend": true,
+      "ipc_mock": false,
+      "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+      "process_id": 7979,
+      "capture_session": "native-current-713789d-20261028",
+      "captured_at": "2026-10-28T09:17:35.970786+00:00",
+      "evidence_file": "evidence/ko-auto-model.json",
+      "evidence_sha256": "08a8f44514745cedbfe117a025cb1544742a4827739320b3cf703798a8077069"
+    },
+    {
+      "locale": "ko",
+      "id": "auto-connect",
+      "file": "ko/auto-connect.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "974ec436c724617948a33b6209aea4e6ec0943725d358820174525249c6588b6",
+      "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+      "app_version": "0.3.2",
+      "released": false,
+      "platform": "linux-x86_64",
+      "native_backend": true,
+      "ipc_mock": false,
+      "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+      "process_id": 7979,
+      "capture_session": "native-current-713789d-20261028",
+      "captured_at": "2026-10-28T09:21:05.122883+00:00",
+      "evidence_file": "evidence/ko-auto-connect.json",
+      "inference_evidence": {
+        "actual_inference": true,
+        "digest_kind": "http-payload",
+        "model_sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+        "engine_binary_sha256": "3f2b53013c2eb596c8aca87e4740240a41f95bcebf72e61084d6d5ba0db761cc",
+        "request_sha256": "7e7432ddb84ec733935b4bc9134fc79a1a8d7e8407452b741329ca8b049199bf",
+        "response_sha256": "87fe0fa9a36fee0e91bed7b0e77c83dd7e9306570ac06d7f36dec753cee2998f",
+        "response_text": "5",
+        "request_payload": {
+          "model": "Qwen2.5-0.5B-Instruct",
+          "messages": [
+            {
+              "role": "user",
+              "content": "What is 2 + 3? Reply with only the number."
+            }
+          ],
+          "temperature": 0,
+          "max_tokens": 32,
+          "stream": false,
+          "stream_options": {
+            "include_usage": true
+          }
+        },
+        "response_payload": {
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "5"
+              }
+            }
+          ],
+          "created": 1793178088,
+          "model": "Qwen2.5-0.5B-Instruct",
+          "system_fingerprint": "b11669-620d2225c",
+          "object": "chat.completion",
+          "usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 43,
+            "total_tokens": 45,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "id": "chatcmpl-lbrNwtQYFL15h2pyHl55vs7EB4MeEelk",
+          "timings": {
+            "cache_n": 0,
+            "prompt_n": 43,
+            "prompt_ms": 293.906,
+            "prompt_per_token_ms": 6.835023255813954,
+            "prompt_per_second": 146.30528128040936,
+            "predicted_n": 2,
+            "predicted_ms": 22.41,
+            "predicted_per_token_ms": 22.41,
+            "predicted_per_second": 44.62293618920125
+          }
+        },
+        "scope": "Independent actual HTTP request/response on the same real engine process. The native UI connection shown separately ran production Rust model-identity, chat-response and sse-stream checks; this digest is not a GUI wire capture."
+      },
+      "evidence_sha256": "852954dc679869f6996634b6999f0a57b1138c9226005ce7ecacc6a7abc84686"
+    },
+    {
+      "locale": "ja",
+      "id": "auto-find",
+      "file": "ja/auto-find.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "09cf1a4515e8621dc88da014b6975a48553468538e3b5e162f5f5d9e5eed867a",
+      "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+      "app_version": "0.3.2",
+      "released": false,
+      "platform": "linux-x86_64",
+      "native_backend": true,
+      "ipc_mock": false,
+      "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+      "process_id": 7979,
+      "capture_session": "native-current-713789d-20261028",
+      "captured_at": "2026-10-28T09:16:15.783917+00:00",
+      "evidence_file": "evidence/ja-auto-find.json",
+      "evidence_sha256": "b8fc26c3cbeeca0801d88e978dd3e944908f587f83ee3da626c44f05acde4b22"
+    },
+    {
+      "locale": "ja",
+      "id": "auto-model",
+      "file": "ja/auto-model.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "1b49ecd9208f2f5320d2e28906795ae4b55e637b02bf7c36fa6cf7f056457293",
+      "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+      "app_version": "0.3.2",
+      "released": false,
+      "platform": "linux-x86_64",
+      "native_backend": true,
+      "ipc_mock": false,
+      "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+      "process_id": 7979,
+      "capture_session": "native-current-713789d-20261028",
+      "captured_at": "2026-10-28T09:17:37.376896+00:00",
+      "evidence_file": "evidence/ja-auto-model.json",
+      "evidence_sha256": "b5be52e058ecad1eb1ea3f2e7c2b82f1f0d8b4efb60fd487576a620da74d8d12"
+    },
+    {
+      "locale": "ja",
+      "id": "auto-connect",
+      "file": "ja/auto-connect.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "22f8b442da68cc6ba53d09fdfaa7548b849893961107c391c740a62033642d09",
+      "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+      "app_version": "0.3.2",
+      "released": false,
+      "platform": "linux-x86_64",
+      "native_backend": true,
+      "ipc_mock": false,
+      "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+      "process_id": 7979,
+      "capture_session": "native-current-713789d-20261028",
+      "captured_at": "2026-10-28T09:21:06.123937+00:00",
+      "evidence_file": "evidence/ja-auto-connect.json",
+      "inference_evidence": {
+        "actual_inference": true,
+        "digest_kind": "http-payload",
+        "model_sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+        "engine_binary_sha256": "3f2b53013c2eb596c8aca87e4740240a41f95bcebf72e61084d6d5ba0db761cc",
+        "request_sha256": "7e7432ddb84ec733935b4bc9134fc79a1a8d7e8407452b741329ca8b049199bf",
+        "response_sha256": "87fe0fa9a36fee0e91bed7b0e77c83dd7e9306570ac06d7f36dec753cee2998f",
+        "response_text": "5",
+        "request_payload": {
+          "model": "Qwen2.5-0.5B-Instruct",
+          "messages": [
+            {
+              "role": "user",
+              "content": "What is 2 + 3? Reply with only the number."
+            }
+          ],
+          "temperature": 0,
+          "max_tokens": 32,
+          "stream": false,
+          "stream_options": {
+            "include_usage": true
+          }
+        },
+        "response_payload": {
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "5"
+              }
+            }
+          ],
+          "created": 1793178088,
+          "model": "Qwen2.5-0.5B-Instruct",
+          "system_fingerprint": "b11669-620d2225c",
+          "object": "chat.completion",
+          "usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 43,
+            "total_tokens": 45,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "id": "chatcmpl-lbrNwtQYFL15h2pyHl55vs7EB4MeEelk",
+          "timings": {
+            "cache_n": 0,
+            "prompt_n": 43,
+            "prompt_ms": 293.906,
+            "prompt_per_token_ms": 6.835023255813954,
+            "prompt_per_second": 146.30528128040936,
+            "predicted_n": 2,
+            "predicted_ms": 22.41,
+            "predicted_per_token_ms": 22.41,
+            "predicted_per_second": 44.62293618920125
+          }
+        },
+        "scope": "Independent actual HTTP request/response on the same real engine process. The native UI connection shown separately ran production Rust model-identity, chat-response and sse-stream checks; this digest is not a GUI wire capture."
+      },
+      "evidence_sha256": "94ca7cd245ed73bfa03fc8eeb5a23f621a943e809f4fe8639e38b7141fd38bc3"
+    },
+    {
+      "locale": "zh",
+      "id": "auto-find",
+      "file": "zh/auto-find.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "6286935af4b0b0587ea15586efe36b54fedfcff22b2cce1b9c62ae8ec3b5a699",
+      "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+      "app_version": "0.3.2",
+      "released": false,
+      "platform": "linux-x86_64",
+      "native_backend": true,
+      "ipc_mock": false,
+      "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+      "process_id": 7979,
+      "capture_session": "native-current-713789d-20261028",
+      "captured_at": "2026-10-28T09:16:16.753823+00:00",
+      "evidence_file": "evidence/zh-auto-find.json",
+      "evidence_sha256": "360a25b6857effbe579d3e0181c6f55a4c3e64fefd0637b34fcd7e7119c7397f"
+    },
+    {
+      "locale": "zh",
+      "id": "auto-model",
+      "file": "zh/auto-model.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "10ae4a775686892e4fd1df7fdd997680ad97097a6dea1fbdf03c417f3e3942a8",
+      "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+      "app_version": "0.3.2",
+      "released": false,
+      "platform": "linux-x86_64",
+      "native_backend": true,
+      "ipc_mock": false,
+      "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+      "process_id": 7979,
+      "capture_session": "native-current-713789d-20261028",
+      "captured_at": "2026-10-28T09:17:38.838912+00:00",
+      "evidence_file": "evidence/zh-auto-model.json",
+      "evidence_sha256": "44abb114f94d4c60c9dacc0e66f1a39b87f5e1b20055c8369accc2f8a00cfaa5"
+    },
+    {
+      "locale": "zh",
+      "id": "auto-connect",
+      "file": "zh/auto-connect.png",
+      "width": 1280,
+      "height": 900,
+      "sha256": "e4f7bd10ec5167d6a1a7372a8c44aebcd92cbed7a6ad0c5a6406077fc5b25625",
+      "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+      "app_version": "0.3.2",
+      "released": false,
+      "platform": "linux-x86_64",
+      "native_backend": true,
+      "ipc_mock": false,
+      "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+      "process_id": 7979,
+      "capture_session": "native-current-713789d-20261028",
+      "captured_at": "2026-10-28T09:21:07.147503+00:00",
+      "evidence_file": "evidence/zh-auto-connect.json",
+      "inference_evidence": {
+        "actual_inference": true,
+        "digest_kind": "http-payload",
+        "model_sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+        "engine_binary_sha256": "3f2b53013c2eb596c8aca87e4740240a41f95bcebf72e61084d6d5ba0db761cc",
+        "request_sha256": "7e7432ddb84ec733935b4bc9134fc79a1a8d7e8407452b741329ca8b049199bf",
+        "response_sha256": "87fe0fa9a36fee0e91bed7b0e77c83dd7e9306570ac06d7f36dec753cee2998f",
+        "response_text": "5",
+        "request_payload": {
+          "model": "Qwen2.5-0.5B-Instruct",
+          "messages": [
+            {
+              "role": "user",
+              "content": "What is 2 + 3? Reply with only the number."
+            }
+          ],
+          "temperature": 0,
+          "max_tokens": 32,
+          "stream": false,
+          "stream_options": {
+            "include_usage": true
+          }
+        },
+        "response_payload": {
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "5"
+              }
+            }
+          ],
+          "created": 1793178088,
+          "model": "Qwen2.5-0.5B-Instruct",
+          "system_fingerprint": "b11669-620d2225c",
+          "object": "chat.completion",
+          "usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 43,
+            "total_tokens": 45,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "id": "chatcmpl-lbrNwtQYFL15h2pyHl55vs7EB4MeEelk",
+          "timings": {
+            "cache_n": 0,
+            "prompt_n": 43,
+            "prompt_ms": 293.906,
+            "prompt_per_token_ms": 6.835023255813954,
+            "prompt_per_second": 146.30528128040936,
+            "predicted_n": 2,
+            "predicted_ms": 22.41,
+            "predicted_per_token_ms": 22.41,
+            "predicted_per_second": 44.62293618920125
+          }
+        },
+        "scope": "Independent actual HTTP request/response on the same real engine process. The native UI connection shown separately ran production Rust model-identity, chat-response and sse-stream checks; this digest is not a GUI wire capture."
+      },
+      "evidence_sha256": "7fdc19b4873f53b27704410d2864c380b47ce00cfcd6d1c86b9f608f7e2ebd7c"
+    }
+  ]
+}
