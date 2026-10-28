@@ -1,8 +1,9 @@
 import type { GuideContent } from './types';
+import { DESKTOP_RELEASE_VERSION } from '@/lib/desktop-release';
 const content: GuideContent = {
   title: 'AioLM 使用指南', description: '第一次使用？先安装应用，再对照图片逐个点击按钮，在自己的电脑上开始 AI 对话。',
   navigation: '使用指南', onPage: '本页目录', related: '接着看', download: '查看全部下载文件',
-  screenshotNotice: "图片说明与记录会注明应用版本和运行环境。Linux画面不代表已验证Windows、Mac、所有引擎或更新安装。",
+  screenshotNotice: "图片为v0.3.2与开发中应用的真实Linux截图，版本标记以拍摄时为准。不代表已验证Windows、Mac、所有引擎或更新安装。",
   enlarge: '放大查看', close: '关闭',
   panHint: '左右滑动可查看图片其他部分。',
   guides: {
@@ -12,7 +13,7 @@ const content: GuideContent = {
       { id: 'macos', title: '在 Mac 上安装', downloads: 'macos', steps: ['打开 Apple 菜单 → 关于本机。芯片显示 Apple M1、M2 等时选择 aarch64.dmg；处理器显示 Intel 时选择 x64.dmg。', '打开 DMG，将 AioLM 拖到“应用程序”文件夹。', '打开AioLM。如果macOS阻止打开，请先核对官方发布和校验和。如需继续，前往系统设置 → 隐私与安全性 → 仍要打开。'], note: '需要macOS 13.3或更新版本。应用采用ad-hoc签名且未经Apple公证，可能会显示安全警告。安装前请核对官方发布和文件校验和。' },
       { id: 'linux', title: '在 Linux 上安装', downloads: 'linux', body: ['适用于 Ubuntu 24.04+ 的 x86_64 电脑。第一次使用建议选择 DEB。'], steps: ['双击下载的DEB打开软件包安装窗口，或在下载目录运行上方Linux命令。', '完成后从应用菜单打开 AioLM。'], more: [{ title: '点击 DEB 后没有安装窗口', body: ['下载目录中只保留要安装的那一个版本的DEB。在该目录打开终端，运行上方安装选项卡中的Linux命令。'] }, { title: '使用 AppImage，不安装软件包', body: ['将 AppImage 放在固定目录，运行下方命令。移动文件后需要重新注册菜单入口。', '如需菜单入口，从同一版本下载并验证 register-linux-desktop.py，然后运行 python3 register-linux-desktop.py --appimage <文件>。切换到 DEB 前用 --remove 移除入口。需要 Python 3。'], code: 'sudo apt install libgomp1 libfuse2t64\nchmod +x ./AioLM_*.AppImage\n./AioLM_*.AppImage' }] },
       { id: 'first-open', title: '应用打开后', body: ['看到下方语言选择界面就准备好了。选择简体中文并点击继续。已有设置的用户会直接进入工作区。'], image: 'language', caption: '首次打开默认是 English。选择语言后，接着阅读“开始第一次对话”。' },
-      { id: 'verify', title: '检查下载文件', body: ['请使用官方下载文件。如需进一步确认文件没有损坏，可展开下面的方法。'], more: [{ title: '用校验和检查文件', body: ['从安装包所在的同一版本下载 checksums.txt。校验和是文件的识别值。将命令的完整结果与相同文件名的 SHA-256 比较；不一致就停止安装。校验和不能代替发布者签名。', 'Windows 请将下方文件名换成实际下载的名称。Mac 使用 shasum -a 256 加文件路径，Linux 使用 sha256sum。'], code: 'Get-FileHash -Algorithm SHA256 .\\AioLM_0.3.2_x64-setup.exe' }] },
+      { id: 'verify', title: '检查下载文件', body: ['请使用官方下载文件。如需进一步确认文件没有损坏，可展开下面的方法。'], more: [{ title: '用校验和检查文件', body: ['从安装包所在的同一版本下载 checksums.txt。校验和是文件的识别值。将命令的完整结果与相同文件名的 SHA-256 比较；不一致就停止安装。校验和不能代替发布者签名。', 'Windows 请将下方文件名换成实际下载的名称。Mac 使用 shasum -a 256 加文件路径，Linux 使用 sha256sum。'], code: `Get-FileHash -Algorithm SHA256 .\\AioLM_${DESKTOP_RELEASE_VERSION}_x64-setup.exe` }] },
       { id: 'updates', title: '以后如何更新', body: ['打开左侧设置 → 常规，点击检查更新。如有新版本，先保存工作，再选择下载并安装。完成系统安装程序后重新打开 AioLM。'], image: 'updates', caption: '设置中的应用更新区域。此示例已经在使用 v0.3.2。', more: [{ title: '备份、卸载和手动更新', body: ['Mac DMG 请替换原来的应用。AppImage 和手动安装请使用下载页面。替换应用会保留对话和设置。', '数据位于 Mac/Linux 的 ~/.aiolm、Windows 的 %USERPROFILE%\\.aiolm，或 AIOLM_HOME 指定的位置。请备份该目录及模型文件。', 'Windows EXE（NSIS）卸载程序可明确选择删除应用数据。MSI、DEB 卸载和将 Mac 应用移到废纸篓会保留数据。'] }, { title: '更新验证范围', body: ['v0.3.2 安装包检查已通过。真实的 v0.3.1 → v0.3.2 更新安装和设备 UI 验收尚未完成。'] }] },
     ] },
     'getting-started': { title: '开始第一次对话', description: "模型是AI数据，引擎负责运行模型。请选择适合设备和模型格式的引擎，再按以下步骤操作。", sections: [
@@ -26,20 +27,20 @@ const content: GuideContent = {
       { id: 'chat', title: '8. 发送一句简短的话', body: ['模型加载后点击左侧聊天，在下方输入框写一个简短问题并发送。', '先确认文本对话正常。图片、音频、视频和工具必须同时得到模型和引擎的支持。'], image: 'chat', caption: '启动模型后，在输入框发送一个简短问题。回答会显示在上方对话中。', more: [{ title: '想测量速度或分享结果', body: ['基准测试测的是处理速度，请比较相同测量方法和任务的结果。分数高不代表回答质量或所有设备功能已经验证。', '分享是可选操作，需要浏览器验证。先检查公开内容，私下保管恢复码或备份文件，以便不注册账户也能管理记录。从应用打开管理页面，或使用本站的管理页面。'] }] },
     ] },
     compatibility: { title: '选择适合电脑的引擎', description: "比较操作系统、设备、内存与模型格式后选择引擎，同时确认安装条件和实际验证状态。", sections: [
-      { id: 'engines', title: '打开引擎列表', body: ['点击左侧推理引擎。标有“此设备不可用”的引擎不要选择。'], image: 'engines', caption: '尚未发布的更新中的推理引擎界面。选择前请检查安装状态和设备支持条件。' },
+      { id: 'engines', title: '打开引擎列表', body: ['点击左侧推理引擎。标有“此设备不可用”的引擎不要选择。'], image: 'engines', caption: '推理引擎界面。选择前请检查安装状态和设备支持条件。' },
       {"id":"choose","title":"应该选哪一个？","table":{"headers":["引擎","适用情况"],"rows":[["llama.cpp","在支持的Windows、Mac或Linux程序中使用GGUF时"],["vLLM","已经准备好受支持的 Linux 加速器环境"],["vLLM · vllm-metal","在 Apple 芯片 Mac、macOS 15+ 上使用 vLLM"],["MLX","在 Apple 芯片 Mac 上使用 MLX 模型"],["外部推理引擎","准备单独安装的引擎，并确认设备、模型和本地连接要求"]]},"note":"Intel Mac 无法使用 MLX 或 vllm-metal，请先检查安装界面的要求。"},
       { id: 'models', title: '下载匹配格式的模型', body: ['llama.cpp 使用 GGUF 文件。vLLM 和 MLX 通常需要包含模型、配置和 tokenizer 的完整目录。不要只复制一个文件，请在搜索页面选择正确格式。', '内存不足时尝试更小的模型。需要图片或音频时，同时检查模型说明和应用显示的支持情况。'], image: 'discover', caption: '先在搜索页面顶部选择引擎和模型格式。', more: [{ title: 'vLLM 和 MLX 的详细条件', body: ['Linux 托管 vLLM 安装 CUDA 依赖。AMD ROCm 需要另外准备与驱动匹配的 Python 环境并注册。AioLM 不安装系统显卡驱动。', 'vllm-metal 需要 Apple 芯片、macOS 15+ 和原生 arm64 Python 3.12，不支持 Intel 和 Rosetta Python。MLX 也需要 Apple 芯片及兼容 Python 环境。', '原生 Windows vLLM、WSL 和远程服务器不是此应用的本地运行目标。Python 模型需要完整 safetensors 或受支持的 MLX 快照。vllm-metal 只支持部分 GGUF，不能等同于普通 GGUF 支持。'] }] },
       { id: 'limits', title: '仍需确认的地方', body: ['图片、音频、视频和工具需要模型与引擎同时支持。注册引擎不会自动启用所有功能。'], more: [{ title: 'v0.3.2 验证范围与已知问题', body: ['SmolVLM 图片、视频内容质量问题（F09）尚未解决。', '安装包构建通过，不表示所有设备上的推理都已验证。Linux 整体验证及真实的 v0.3.1 → v0.3.2 更新安装、UI 验收也尚未完成。', '基准、深度验证和便携包因引擎而异。外部推理引擎（custom.*）目前不属于公开基准分享对象。'] }] },
     ] },
     adapters: {
       "title": "连接外部推理引擎",
-      "description": "尚未发布的自动连接预览：自动查找 → 选择模型 → 连接。公开v0.3.2用户请参阅下方高级手动注册说明。",
+      "description": "自动查找 → 选择模型 → 连接。v0.3.3及以上版本可用。v0.3.2用户请参阅下方高级手动注册说明。",
       "sections": [
         {
           "id": "prepare",
-          "title": "公开版本与下一次更新",
+          "title": "连接前请确认",
           "body": [
-            "开发中的自动连接目前针对本机运行的OpenAI兼容v1服务器。不论开发语言，均使用相同约定，不会自动转换其他通信协议。",
+            "自动连接针对本机运行的OpenAI兼容v1服务器。不论开发语言，均使用相同约定，不会自动转换其他通信协议。",
             "基本三步无需创建连接设置文件或填写引擎ID，只有使用所选模型验证实际连接后才会保存。"
           ]
         },
@@ -52,7 +53,7 @@ const content: GuideContent = {
           ],
           "note": "出现在列表中不代表连接已验证。只有明确确认启动方式后，才能对安装目录中的项目继续检查。",
           "image": "auto-find",
-          "caption": "尚未发布的自动查找界面。选择找到的项目；未找到时请选择安装文件夹。"
+          "caption": "自动查找界面。选择找到的项目；未找到时请选择安装文件夹。"
         },
         {
           "id": "choose-model",
@@ -62,7 +63,7 @@ const content: GuideContent = {
             "没有可选模型时，请在服务器上准备模型，或向AioLM添加模型后重新检查。"
           ],
           "image": "auto-model",
-          "caption": "尚未发布的模型选择界面。从所选运行中的服务器提供的模型中选择。"
+          "caption": "模型选择界面。从所选运行中的服务器提供的模型中选择。"
         },
         {
           "id": "connect",
@@ -73,7 +74,7 @@ const content: GuideContent = {
           ],
           "note": "文本连接检查不代表已验证图像、音频、视频、工具调用的支持情况或回答内容的质量。",
           "image": "auto-connect",
-          "caption": "尚未发布的连接结果界面。所选模型通过响应与流式传输检查后，才会保存为已连接。"
+          "caption": "连接结果界面。所选模型通过响应与流式传输检查后，才会保存为已连接。"
         },
         {
           "id": "unconfirmed",
@@ -131,28 +132,28 @@ const content: GuideContent = {
           },
           "note": "手动注册无需自行创建*.engine.json。填写表单并注册成功后，AioLM会在内部保存注册信息，不会另行导出.engine.json。仅选择可执行文件不会生成这两种输入JSON，修改JSON文件名也不会改变其内容。",
           "body": [
-            "此表用于公开v0.3.2的手动注册和高级设置。新的自动连接基本三步不需要准备这些设置文件。"
+            "此表用于高级手动注册，也适用于v0.3.2。自动连接基本三步不需要准备这些设置文件。"
           ]
         },
         {
           "id": "advanced",
           "title": "高级：手动设置启动方式",
           "body": [
-            "使用公开v0.3.2或需要手动配置已知启动方式时，可展开下列说明。图片展示尚未发布的更新中的高级注册界面。与公开版本不同的按钮名称会在下文说明。"
+            "使用v0.3.2或需要手动配置已知启动方式时，可展开下列说明。图片展示高级注册界面。v0.3.2中不同的按钮名称会在下文说明。"
           ],
           "more": [
             {
               "title": "打开手动注册界面",
               "body": [
-                "停止运行中的模型，点击推理引擎 → 添加推理引擎。公开v0.3.2使用手动注册表单；尚未发布的更新中，请展开自动连接下方的“高级：手动设置启动方式”。"
+                "停止运行中的模型，点击推理引擎 → 添加推理引擎。v0.3.2使用手动注册表单；v0.3.3及以上版本中，请展开自动连接下方的“高级：手动设置启动方式”。"
               ],
               "image": "adapter-add",
-              "caption": "在尚未发布的更新中打开高级注册表单的位置。需要自行输入启动方式时使用。"
+              "caption": "打开高级注册表单的位置。需要自行输入启动方式时使用。"
             },
             {
               "title": "导入已经收到的连接设置文件",
               "steps": [
-                "公开v0.3.2中点击导入适配器设置，尚未发布的界面中点击导入AioLM连接设置 (.json)，然后选择解压文件夹中的AioLM专用*.setup.json。",
+                "v0.3.2中点击导入适配器设置，v0.3.3及以上版本中点击导入AioLM连接设置 (.json)，然后选择解压文件夹中的AioLM专用*.setup.json。",
                 "按提供方说明指定程序、目录和文件，检查命令后点击检查安装并继续，再确认帮助信息。"
               ],
               "code": "解压后的适配器文件夹/\n  engine.setup.json  ← 导入时选择\n  prepare.py        ← 一起保留\n  probe.py          ← 一起保留",
@@ -169,7 +170,7 @@ const content: GuideContent = {
                 "若提供方命令为“python -m vendor_engine.serve”，选择对应Python，将参数分别填写。请将示例模块名替换为实际安装的模块。"
               ],
               "image": "adapter-setup",
-              "caption": "尚未发布的更新中的手动注册界面。检查已安装程序的路径和参数；模型响应需要另外检查。",
+              "caption": "手动注册界面。检查已安装程序的路径和参数；模型响应需要另外检查。",
               "code": "可执行文件：环境中的python.exe或bin/python\n参数1：-m\n参数2：vendor_engine.serve"
             },
             {
@@ -178,7 +179,7 @@ const content: GuideContent = {
                 "点击发现帮助以读取所选程序的选项。失败时检查文件、Python环境和必需依赖。帮助显示成功不等于模型推理成功。"
               ],
               "image": "adapter-help",
-              "caption": "尚未发布的高级注册中的帮助检查步骤。显示选项不代表模型能够回答，仍需进行响应检查。"
+              "caption": "高级注册中的帮助检查步骤。显示选项不代表模型能够回答，仍需进行响应检查。"
             },
             {
               "title": "设置模型连接和兼容性检查",
@@ -188,7 +189,7 @@ const content: GuideContent = {
                 "probe以JSON返回schema_version: 1、已注册的engine_id/runtime_id、模型路径、支持状态与能力。不支持的模型必须保持失败状态。HTTP/SSE、健康检查路径及模型/端口/认证传递方法须匹配实际服务器，不能通过显示名称或修改扩展名代替。"
               ],
               "image": "adapter-check",
-              "caption": "在尚未发布的高级注册中检查模型与端口连接、兼容性与健康检查，以及支持的模型格式。"
+              "caption": "在高级注册中检查模型与端口连接、兼容性与健康检查，以及支持的模型格式。"
             },
             {
               "title": "检查、保存并运行实际模型",
@@ -197,7 +198,7 @@ const content: GuideContent = {
                 "通过模型兼容性检查后运行，确认能回答简短问题、取消生成后再次提问、停止及重启。"
               ],
               "image": "adapter-review",
-              "caption": "尚未发布的高级注册中的最后确认。保存注册后，请运行模型并检查回答。",
+              "caption": "高级注册中的最后确认。保存注册后，请运行模型并检查回答。",
               "body": []
             }
           ]

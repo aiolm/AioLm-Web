@@ -52,7 +52,7 @@ const messages = {
   "home.caption": "The desktop model workspace. Select a local model to review its runtime and execution settings.",
   "home.enginesTitle": "Built-in and external inference engines",
   "home.enginesBuiltin": "Use llama.cpp across Windows, macOS and Linux; vLLM on supported Linux systems or Apple silicon Macs through vllm-metal; and MLX on Apple silicon Macs.",
-  "home.enginesExternal": "External inference engines connect through verified launch methods and communication protocols, regardless of implementation language. The published v0.3.2 uses manual registration; the next update is developing Find automatically → Choose a model → Connect. Unverified items are not marked as connected.",
+  "home.enginesExternal": "In v0.3.3 and later, connect an external inference engine with Find automatically → Choose a model → Connect. The same verified connection rules apply regardless of implementation language. Unverified items are not marked as connected.",
   "home.enginesHelp": "The selected engine’s command help and adapter metadata drive the shared option editor. Chat, projects, sessions and the API gateway use the capabilities verified for that engine and model.",
   "home.enginesGuide": "Built-in engine compatibility",
   "home.adaptersGuide": "Connect an external inference engine",

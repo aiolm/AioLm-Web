@@ -53,7 +53,7 @@ const messages = {
   "home.caption": "모델 실행 화면입니다. 로컬 모델을 선택해 사용할 런타임과 실행 설정을 확인합니다.",
   "home.enginesTitle": "기본 제공 엔진과 외부 추론 엔진",
   "home.enginesBuiltin": "Windows·macOS·Linux의 llama.cpp, 지원 Linux 환경 또는 Apple Silicon Mac의 vllm-metal을 통한 vLLM, Apple Silicon Mac의 MLX를 사용할 수 있습니다.",
-  "home.enginesExternal": "외부 추론 엔진은 개발 언어와 관계없이 확인된 실행 방식과 통신 규약으로 연결합니다. 공개 v0.3.2는 직접 등록을 사용하며, 다음 변경에서 자동 찾기 → 모델 선택 → 연결 흐름을 개발 중입니다. 확인되지 않은 항목을 연결 완료로 표시하지 않습니다.",
+  "home.enginesExternal": "v0.3.3 이상에서 자동 찾기 → 모델 선택 → 연결로 외부 추론 엔진을 연결하세요. 개발 언어와 관계없이 같은 연결 규칙으로 검사하며, 확인되지 않은 항목은 연결 완료로 표시하지 않습니다.",
   "home.enginesHelp": "선택한 엔진의 실제 명령어 도움말과 어댑터 메타데이터가 공통 옵션 편집기를 구성합니다. 채팅·프로젝트·세션·API 게이트웨이는 해당 엔진과 모델에서 확인된 능력을 사용합니다.",
   "home.enginesGuide": "기본 제공 엔진 호환성",
   "home.adaptersGuide": "외부 추론 엔진 연결 안내",

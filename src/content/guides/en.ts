@@ -1,8 +1,9 @@
 import type { GuideContent } from './types';
+import { DESKTOP_RELEASE_VERSION } from '@/lib/desktop-release';
 const content: GuideContent = {
   title: 'AioLM guides', description: 'New here? Install the app first, then follow the pictures and buttons to start a conversation on your own computer.',
   navigation: 'Guides', onPage: 'On this page', related: 'Next steps', download: 'See all download files',
-  screenshotNotice: "Captions and capture records identify the app version and execution environment. Linux screens do not establish Windows or Mac support, every engine, or update installation.",
+  screenshotNotice: "These real Linux screenshots were captured in v0.3.2 and development builds; version labels describe the capture time. They do not verify Windows, Mac, every engine or update installation.",
   enlarge: 'View larger', close: 'Close',
   panHint: 'Swipe sideways to see the rest of the image.',
   guides: {
@@ -12,7 +13,7 @@ const content: GuideContent = {
       { id: 'macos', title: 'Install on Mac', downloads: 'macos', steps: ['Open Apple menu → About This Mac. If Chip says Apple M1, M2 or similar, choose aarch64.dmg. If Processor says Intel, choose x64.dmg.', 'Open the DMG and drag AioLM to Applications.', 'Open AioLM. If macOS blocks it, verify the official release and checksum. To continue, open System Settings → Privacy & Security → Open Anyway.'], note: 'Requires macOS 13.3+. The app is ad-hoc signed and not notarized by Apple, so macOS may show a security warning. Check the official AioLM release and file checksum before installing.' },
       { id: 'linux', title: 'Install on Linux', downloads: 'linux', body: ['For Ubuntu 24.04+ on x86_64 PCs. Choose the DEB if you are starting out.'], steps: ['Double-click the downloaded DEB to open your package installer, or use the Linux command above in the download folder.', 'After installation, open AioLM from the application menu.'], more: [{ title: 'The DEB does not open an installer', body: ['Keep only the DEB version you want in the download folder. Open a terminal there and use the Linux command in the installation tabs above.'] }, { title: 'Use AppImage without installing a package', body: ['Keep the AppImage in a permanent folder and run the commands below. If you move it, register its launcher again.', 'For an application-menu launcher, download and verify register-linux-desktop.py from the same release, then run python3 register-linux-desktop.py --appimage <file>. Use --remove before switching to DEB. Python 3 is required.'], code: 'sudo apt install libgomp1 libfuse2t64\nchmod +x ./AioLM_*.AppImage\n./AioLM_*.AppImage' }] },
       { id: 'first-open', title: 'When the app opens', body: ['If you see the language screen below, you are ready. Choose your language and Continue. Returning users with existing settings go straight to the workspace.'], image: 'language', caption: 'A fresh installation starts in English. Continue in “Start your first conversation” after choosing your language.' },
-      { id: 'verify', title: 'Check the downloaded file', body: ['Use the official download files. For an extra check that the file arrived intact, expand the instructions below.'], more: [{ title: 'Check the file’s checksum', body: ['Download checksums.txt from the same release as your installer. A checksum is a file’s identifying value. Compare the full command result with the SHA-256 entry for that exact filename. Stop if they differ. A checksum does not replace a publisher signature.', 'On Windows, replace the filename below with the one you downloaded. On Mac, use shasum -a 256 followed by the file path; on Linux use sha256sum.'], code: 'Get-FileHash -Algorithm SHA256 .\\AioLM_0.3.2_x64-setup.exe' }] },
+      { id: 'verify', title: 'Check the downloaded file', body: ['Use the official download files. For an extra check that the file arrived intact, expand the instructions below.'], more: [{ title: 'Check the file’s checksum', body: ['Download checksums.txt from the same release as your installer. A checksum is a file’s identifying value. Compare the full command result with the SHA-256 entry for that exact filename. Stop if they differ. A checksum does not replace a publisher signature.', 'On Windows, replace the filename below with the one you downloaded. On Mac, use shasum -a 256 followed by the file path; on Linux use sha256sum.'], code: `Get-FileHash -Algorithm SHA256 .\\AioLM_${DESKTOP_RELEASE_VERSION}_x64-setup.exe` }] },
       { id: 'updates', title: 'Update later', body: ['Open Settings → General and select Check for updates. If a new version is available, save your work and choose Download and install. Finish the system installer, then reopen AioLM.'], image: 'updates', caption: 'The application-update area in Settings. This example is already on v0.3.2.', more: [{ title: 'Backups, removal and manual updates', body: ['For a Mac DMG, replace the existing app. AppImage and manual installations use the download page. Replacing the app keeps existing conversations and settings.', 'Data lives in ~/.aiolm on Mac/Linux or %USERPROFILE%\\.aiolm on Windows, unless AIOLM_HOME selects another folder. Back up that folder and your model files.', 'The Windows EXE (NSIS) uninstaller can explicitly delete app data. MSI and DEB removal, or moving the Mac app to Trash, leave data in place.'] }, { title: 'What update testing has covered', body: ['v0.3.2 package checks passed. Actual v0.3.1 → v0.3.2 update installation and device UI acceptance are still pending.'] }] },
     ] },
     'getting-started': { title: 'Start your first conversation', description: "A model is the AI data; an engine runs it. Choose an engine that fits your device and model format, then follow these steps.", sections: [
@@ -26,20 +27,20 @@ const content: GuideContent = {
       { id: 'chat', title: '8. Send a short message', body: ['After loading the model, select Chat on the left. Type a short question in the box below and select Send message.', 'Check text chat first. Images, audio, video and tools work only when both the model and engine support them.'], image: 'chat', caption: 'After running the model, send a short question from the message box. Its answer appears in the conversation above.', more: [{ title: 'Measure speed or share a result', body: ['A benchmark measures processing speed. Compare the same method and workload; a high score does not verify answer quality or every device feature.', 'Sharing is optional and requires browser verification. Review the public data first. Keep your recovery code or backup file private so you can manage the record without an account. Open Manage from the app or use this site’s Manage page.'] }] },
     ] },
     compatibility: { title: 'Choose an engine for your computer', description: "Compare your OS, device, memory and model format before choosing an engine. Check installation requirements and actual verification status together.", sections: [
-      { id: 'engines', title: 'Open the engine list', body: ['Select Inference engines on the left. Avoid an engine marked Unavailable on this device.'], image: 'engines', caption: 'The inference-engine screen in the unreleased update. Check the installation and device-support status before choosing an item.' },
+      { id: 'engines', title: 'Open the engine list', body: ['Select Inference engines on the left. Avoid an engine marked Unavailable on this device.'], image: 'engines', caption: 'The inference-engine screen. Check the installation and device-support status before choosing an item.' },
       {"id":"choose","title":"Which engine should I choose?","table":{"headers":["Engine","Choose it when…"],"rows":[["llama.cpp","Using GGUF with a supported Windows, Mac or Linux build"],["vLLM","You have a supported Linux accelerator setup"],["vLLM · vllm-metal","Using vLLM on an Apple silicon Mac with macOS 15+"],["MLX","Using MLX models on an Apple silicon Mac"],["External inference engine","Prepare a separately installed engine, then check its device, model and local connection requirements."]]},"note":"Intel Macs cannot use MLX or vllm-metal. Check the installation screen’s requirements first."},
       { id: 'models', title: 'Download the right model type', body: ['llama.cpp uses GGUF files. vLLM and MLX usually need a complete model folder with weights, settings and tokenizer files. Do not copy just one file; choose the right format in Discover.', 'If memory is limited, try a smaller model. For images or audio, check both the model description and the support shown in the app.'], image: 'discover', caption: 'Choose the engine and model format at the top of Discover first.', more: [{ title: 'Detailed vLLM and MLX requirements', body: ['Managed Linux vLLM installs CUDA dependencies. AMD ROCm needs a separately prepared compatible Python environment and driver. AioLM does not install system GPU drivers.', 'vllm-metal needs Apple silicon, macOS 15+ and native arm64 Python 3.12; Intel and Rosetta Python are not supported. MLX also needs Apple silicon and a compatible Python environment.', 'Native Windows vLLM, WSL and remote servers are not local runtime targets here. Python models need a complete safetensors or supported MLX snapshot. vllm-metal supports only a subset of GGUF files, not all ordinary GGUF models.'] }] },
       { id: 'limits', title: 'What still needs checking', body: ['Images, audio, video and tools need support from both the engine and model. Registering an engine does not enable every feature.'], more: [{ title: 'v0.3.2 verification limits and known issues', body: ['The SmolVLM image/video content-quality failure (F09) is unresolved.', 'Passing a package build does not verify inference on every device. Overall Linux acceptance and real v0.3.1 → v0.3.2 update installation/UI acceptance are not complete.', 'Benchmarks, deep verification and portable bundles have engine-specific support. External inference engines (custom.*) are not accepted by the current public benchmark-sharing contract.'] }] },
     ] },
     adapters: {
       "title": "Connect an external inference engine",
-      "description": "Unreleased automatic-connection preview: Find automatically → Choose a model → Connect. If you use the published v0.3.2, see the advanced manual-registration guide below.",
+      "description": "Find automatically → Choose a model → Connect, available in v0.3.3 and later. For v0.3.2, see the advanced manual-registration guide below.",
       "sections": [
         {
           "id": "prepare",
-          "title": "Published version and the next update",
+          "title": "Before you connect",
           "body": [
-            "This preview currently targets OpenAI-compatible v1 servers on this computer. It does not automatically translate other communication protocols, regardless of the engine’s implementation language.",
+            "Automatic connection works with OpenAI-compatible v1 servers on this computer. The same connection rules apply regardless of the engine’s implementation language; other protocols are not automatically translated.",
             "The three-step flow does not ask you to create connection files or enter engine IDs. It saves only a connection verified with the selected model."
           ]
         },
@@ -52,7 +53,7 @@ const content: GuideContent = {
           ],
           "note": "A discovered item is a candidate, not a verified connection. Installation discovery can continue only when the launch method is clear.",
           "image": "auto-find",
-          "caption": "The unreleased automatic-discovery screen. Select a discovered item, or choose the installation folder if none is found."
+          "caption": "The automatic-discovery screen. Select a discovered item, or choose the installation folder if none is found."
         },
         {
           "id": "choose-model",
@@ -62,7 +63,7 @@ const content: GuideContent = {
             "If no model is available, prepare a model on the running server or add a model to AioLM, then check again."
           ],
           "image": "auto-model",
-          "caption": "The unreleased model-selection screen. Choose a model offered by the selected running server."
+          "caption": "The model-selection screen. Choose a model offered by the selected running server."
         },
         {
           "id": "connect",
@@ -73,7 +74,7 @@ const content: GuideContent = {
           ],
           "note": "A text connection check does not verify image, audio, video, tool support or answer quality.",
           "image": "auto-connect",
-          "caption": "The unreleased connection-result screen. A completed connection is saved only after the selected model passes response and streaming checks."
+          "caption": "The connection-result screen. A completed connection is saved only after the selected model passes response and streaming checks."
         },
         {
           "id": "unconfirmed",
@@ -131,28 +132,28 @@ const content: GuideContent = {
           },
           "note": "You do not need to create *.engine.json for manual registration. AioLM builds the registration from the completed form and saves it internally after Register succeeds; it does not export a separate .engine.json. Selecting an executable alone generates neither input JSON. Changing a JSON filename does not change its contents.",
           "body": [
-            "This table is for the published v0.3.2 manual method and advanced setup. These files are not required by the new three-step automatic flow."
+            "This table is for advanced manual registration, including v0.3.2. The three-step automatic flow does not require these files."
           ]
         },
         {
           "id": "advanced",
           "title": "Advanced: manual registration",
           "body": [
-            "Expand these instructions when using the public v0.3.2 or when you need to configure a known launch method manually. The pictures show the advanced registration controls in the unreleased update. Button names in the public version are explained below."
+            "Expand these instructions if you use v0.3.2 or need to configure a known launch method manually. The pictures show the advanced registration form. Differences in v0.3.2 button names are explained below."
           ],
           "more": [
             {
               "title": "Open manual registration",
               "body": [
-                "Stop running models, then select Inference engines → Add inference engine. In the public v0.3.2, use the manual registration form. In the unreleased update, expand Advanced: configure the launch method manually below automatic connection."
+                "Stop running models, then select Inference engines → Add inference engine. In v0.3.2, use the manual registration form. In v0.3.3 and later, expand Advanced: configure the launch method manually below automatic connection."
               ],
               "image": "adapter-add",
-              "caption": "Open the advanced registration form in the unreleased update when you need to enter the launch method yourself."
+              "caption": "Open the advanced registration form when you need to enter the launch method yourself."
             },
             {
               "title": "Import a setup file you already received",
               "steps": [
-                "In published v0.3.2, select Import adapter setup; in the unreleased UI, select Import AioLM connection setup (.json). Choose the AioLM *.setup.json from the unpacked folder.",
+                "In v0.3.2, select Import adapter setup; in v0.3.3 and later, select Import AioLM connection setup (.json). Choose the AioLM *.setup.json from the unpacked folder.",
                 "Fill in the requested executable, folders and files as the provider instructs. Review the command and select Check installation and continue, then check its help."
               ],
               "code": "Unpacked adapter folder/\n  engine.setup.json  ← select when importing\n  prepare.py        ← keep together\n  probe.py          ← keep together",
@@ -169,7 +170,7 @@ const content: GuideContent = {
                 "If the provider’s command is “python -m vendor_engine.serve”, choose that Python and enter two separate arguments. Replace vendor_engine.serve with the real installed module."
               ],
               "image": "adapter-setup",
-              "caption": "The manual-registration screen in the unreleased update. Check the installed program and its arguments; model responses are verified separately.",
+              "caption": "The manual-registration screen. Check the installed program and its arguments; model responses are verified separately.",
               "code": "Executable: installed environment’s python.exe or bin/python\nArgument 1: -m\nArgument 2: vendor_engine.serve"
             },
             {
@@ -178,7 +179,7 @@ const content: GuideContent = {
                 "Select Discover help to read the selected program’s options. If it fails, check the file, Python environment and required libraries. Successful help discovery does not prove model inference."
               ],
               "image": "adapter-help",
-              "caption": "The help-review step in the unreleased advanced form. Seeing program options does not establish that a model can answer."
+              "caption": "The help-review step in the advanced form. Seeing program options does not establish that a model can answer."
             },
             {
               "title": "Set model bindings and compatibility checks",
@@ -188,7 +189,7 @@ const content: GuideContent = {
                 "The probe reports schema_version: 1, the registered engine_id/runtime_id, model path, support and capabilities as JSON. Unsupported models must remain failures. HTTP/SSE, health path and model/port/auth bindings must match the real server. A display name or renamed extension cannot replace this contract."
               ],
               "image": "adapter-check",
-              "caption": "In the unreleased advanced form, review model and port bindings, compatibility and health checks, and supported model formats."
+              "caption": "In the advanced form, review model and port bindings, compatibility and health checks, and supported model formats."
             },
             {
               "title": "Review, save and run a real model",
@@ -197,7 +198,7 @@ const content: GuideContent = {
                 "Run it after model compatibility checks pass. Check a short answer, cancellation followed by another question, stopping and restarting."
               ],
               "image": "adapter-review",
-              "caption": "The final review in the unreleased advanced form. After saving the registration, run the model and check its response.",
+              "caption": "The final review in the advanced form. After saving the registration, run the model and check its response.",
               "body": []
             }
           ]
