@@ -29,12 +29,12 @@ describe('localized static homepage', () => {
     }
     expect(html).toContain(home['home.enginesExternal']);
     expect(html).toContain(home['home.faqEnginesAnswer']);
-    expect(html).toContain('/blob/v0.3.2/docs/reference/runtime-adapter-handoff.ko.md');
-    expect(html).toContain('/blob/v0.3.2/docs/reference/inference-runtimes.md');
+    expect(html).toContain(`/${locale}/guides/adapters`);
+    expect(html).toContain(`/${locale}/guides/compatibility`);
   });
   it('advertises the canonical sitemap and excludes API and private pages from crawling', () => {
     expect(robots()).toEqual({ rules: { userAgent: '*', allow: '/', disallow: ['/v1/', '/manage', '/verify/', ...locales.flatMap(locale => ['/' + locale + '/manage', '/' + locale + '/verify/'])] }, sitemap: ['https://example.invalid/sitemap.xml', 'https://example.invalid/benchmarks/sitemap.xml'] });
-    expect(sitemap()).toHaveLength(8);
+    expect(sitemap()).toHaveLength(28);
     expect(sitemap().map(entry => entry.url)).toContain('https://example.invalid/zh/benchmarks');
     expect(sitemap().every(entry => Object.keys(entry.alternates?.languages ?? {}).length === 4)).toBe(true);
   });
@@ -52,13 +52,15 @@ describe('localized static homepage', () => {
     expect(html).toContain(messages['home.macosRequirements']);
     expect(html).toContain('"operatingSystem":["Windows","macOS","Linux"]');
     expect(html).toContain('releases/latest/download/install.sh | bash');
-    expect(html).toContain(`href="https://github.com/aiolm/AioLM/blob/main/docs/guides/install${locale === 'en' ? '' : `.${locale}`}.md#macos"`);
-    expect(html).toContain(`href="https://github.com/aiolm/AioLM/blob/main/docs/guides/install${locale === 'en' ? '' : `.${locale}`}.md#linux"`);
+    expect(html).toContain(`href="/${locale}/guides/install#macos"`);
+    expect(html).toContain(`href="/${locale}/guides/install#linux"`);
     expect(html).toContain(messages['home.choose']);
     expect(html).toContain(messages['home.caption']);
     expect(html).toContain('alt="' + messages['home.screenshotAlt'] + '"');
     expect(html).toContain('https://github.com/aiolm/AioLM/releases/latest/download/install.ps1 | iex');
     expect(html).toContain(site['site.skip']);
+    expect(html).toContain(`href="/${locale}/guides"`);
+    expect(html).not.toMatch(/href="[^"]*github[^\"]*(?:\.md|\/docs)/);
     expect(html).toContain('href="/' + locale + '/benchmarks"');
     expect(html).not.toMatch(/>(?:home|site)\.[a-zA-Z]+</);
     expect(await homeMetadata({ params })).toMatchObject({ alternates: { canonical: '/' + locale, languages: { en: '/en', ko: '/ko', ja: '/ja', zh: '/zh' } } });

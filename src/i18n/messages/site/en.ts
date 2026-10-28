@@ -9,7 +9,7 @@ const messages = {
   "site.github": "View on GitHub",
   "site.tagline": "One GUI for built-in and external local inference engines.",
   "site.project": "Project",
-  "site.docs": "Documentation",
+  "site.docs": "Guides",
   "site.license": "MIT licensed",
   "site.language": "Language",
   "site.languageHint": "Changing language opens this page in the selected language.",

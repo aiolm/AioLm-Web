@@ -10,7 +10,7 @@ const messages = {
   "site.github": "GitHub에서 보기",
   "site.tagline": "기본 제공 엔진과 외부 추론 엔진을 하나의 GUI에서.",
   "site.project": "프로젝트",
-  "site.docs": "문서",
+  "site.docs": "사용 안내",
   "site.license": "MIT 라이선스",
   "site.language": "언어",
   "site.languageHint": "언어를 변경하면 이 페이지가 선택한 언어로 열립니다.",

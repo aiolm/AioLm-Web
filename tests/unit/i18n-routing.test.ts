@@ -18,12 +18,12 @@ describe('locale page routing', () => {
   it.each(['https://example.invalid/', '//example.invalid/', '/\\example.invalid/'])('rejects non-local destination %s', path => {
     expect(() => localizedPath('en', path)).toThrow('same-origin');
   });
-  it.each(['/v1/readiness', '/v1/benchmark-runs', '/api/test', '/_next/static/file.js', '/favicon.png', '/brand/aio-monogram.png', '/sitemap.xml', '/en', '/ko/benchmarks', '/fr/benchmarks', '/unknown', '/benchmarks/example/unknown', '/manage/unknown'])('does not negotiate %s', path => {
+  it.each(['/v1/readiness', '/v1/benchmark-runs', '/api/test', '/_next/static/file.js', '/favicon.png', '/brand/aio-monogram.png', '/sitemap.xml', '/en', '/ko/benchmarks', '/fr/benchmarks', '/unknown', '/benchmarks/example/unknown', '/manage/unknown', '/guides/unknown', '/guides/install/unknown'])('does not negotiate %s', path => {
     expect(isLegacyPage(path)).toBe(false);
     const response = middleware(new NextRequest('https://example.invalid' + path, { headers: { 'accept-language': 'ko' } }));
     expect(response.headers.has('location')).toBe(false);
   });
-  it.each(['/', '/benchmarks', '/benchmarks/example', '/manage', '/verify/example', '/benchmarks/'])('negotiates recognized legacy page %s', path => {
+  it.each(['/', '/benchmarks', '/benchmarks/example', '/manage', '/verify/example', '/benchmarks/', '/guides', '/guides/install', '/guides/compatibility', '/guides/adapters', '/guides/getting-started'])('negotiates recognized public page %s', path => {
     expect(isLegacyPage(path)).toBe(true);
   });
   it('uses cookie before weighted browser preferences without caching redirects', () => {

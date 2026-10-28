@@ -10,7 +10,7 @@ const messages = {
   "site.github": "在 GitHub 上查看",
   "site.tagline": "在一个 GUI 中使用内置及外部本地推理引擎。",
   "site.project": "项目",
-  "site.docs": "文档",
+  "site.docs": "使用指南",
   "site.license": "MIT 许可证",
   "site.language": "语言",
   "site.languageHint": "更改语言后，将以所选语言打开此页面。",

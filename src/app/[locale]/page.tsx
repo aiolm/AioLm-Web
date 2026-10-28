@@ -89,8 +89,8 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             <div className="home-install">
               <p className="home-install-label" aria-hidden="true">{t('home.installCommandTitle')}</p>
               <InstallCommand
-                macosGuideUrl={`${GITHUB_REPOSITORY_URL}/blob/main/docs/guides/install${locale === 'en' ? '' : `.${locale}`}.md#macos`}
-                linuxGuideUrl={`${GITHUB_REPOSITORY_URL}/blob/main/docs/guides/install${locale === 'en' ? '' : `.${locale}`}.md#linux`}
+                macosGuideUrl={localizedPath(locale, '/guides/install#macos')}
+                linuxGuideUrl={localizedPath(locale, '/guides/install#linux')}
                 messages={{
                   windows: t('home.windows'),
                   macos: t('home.macos'),
@@ -125,8 +125,8 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           <p className="home-section-detail">{t('home.enginesHelp')}</p>
         </header>
         <div className="home-hero-actions">
-          <a className="home-text-link" href={`${GITHUB_REPOSITORY_URL}/blob/v0.3.2/docs/reference/inference-runtimes.md`}>{t('home.enginesGuide')}<ArrowIcon /></a>
-          <a className="home-text-link" href={`${GITHUB_REPOSITORY_URL}/blob/v0.3.2/docs/reference/runtime-adapter-handoff.ko.md`}>{t('home.adaptersGuide')}<ArrowIcon /></a>
+          <Link className="home-text-link" href={localizedPath(locale, '/guides/compatibility')}>{t('home.enginesGuide')}<ArrowIcon /></Link>
+          <Link className="home-text-link" href={localizedPath(locale, '/guides/adapters')}>{t('home.adaptersGuide')}<ArrowIcon /></Link>
         </div>
       </section>
 

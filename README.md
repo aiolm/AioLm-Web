@@ -41,10 +41,10 @@ The homepage has Windows, macOS and Linux installation tabs in English, Korean,
 Japanese and Chinese. macOS targets 13.3+ on Apple silicon and Intel with
 DMGs (desktop v0.3.0+); its tab shows the `install.sh` command, which verifies
 the DMG's SHA-256 and installs into Applications, plus release downloads and a
-localized [macOS guide](https://github.com/aiolm/AioLM/blob/main/docs/guides/install.md#macos).
+[macOS guide](https://aiolm.vercel.app/en/guides/install#macos).
 Linux targets Ubuntu 24.04+ x86_64 with DEB/AppImage (desktop v0.2.1+); its tab
 includes the DEB command, release downloads and a localized
-[Linux guide](https://github.com/aiolm/AioLM/blob/main/docs/guides/install.md#linux).
+[Linux guide](https://aiolm.vercel.app/en/guides/install#linux).
 Keep these tabs, the OS FAQ and SoftwareApplication metadata consistent when the
 supported platforms change.
 
@@ -168,3 +168,7 @@ Scheduled hourly inside the database with pg_cron
 (`sql/operations/retention-pg_cron.sql`), with `npm run prune` as the manual
 path. Both run the same policy; `docs/operations.md` has what each removes, what
 it never touches, and the real upper bound of the 24h cutoffs.
+
+## Product guides
+
+`/<locale>/guides` provides concise installation, engine/model compatibility, external-adapter registration and first-run guidance in all four site languages. User-facing help links stay on the site; GitHub remains the release download, repository and license destination. Guide copy lives in `src/content/guides`, pinned to the v0.3.2 behavior. The first-run guide labels the existing actual desktop screenshot as earlier UI (v0.1.18); it does not illustrate current engine settings or a newly verified engine. Keep F09 and update/device acceptance limitations explicit when updating the guides.

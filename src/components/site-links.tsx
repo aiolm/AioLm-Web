@@ -3,7 +3,6 @@
  * never drift between the header, the footer and the explorer empty state.
  */
 export const GITHUB_REPOSITORY_URL = "https://github.com/aiolm/AioLM";
-export const GITHUB_DOCS_URL = "https://github.com/aiolm/AioLM/tree/main/docs";
 export const GITHUB_LICENSE_URL = "https://github.com/aiolm/AioLM/blob/main/LICENSE";
 
 /** GitHub's mark, inline so the header costs no extra request. */

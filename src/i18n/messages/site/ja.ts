@@ -10,7 +10,7 @@ const messages = {
   "site.github": "GitHubで見る",
   "site.tagline": "組み込み・外部のローカル推論エンジンをひとつのGUIで。",
   "site.project": "プロジェクト",
-  "site.docs": "ドキュメント",
+  "site.docs": "ガイド",
   "site.license": "MITライセンス",
   "site.language": "言語",
   "site.languageHint": "言語を変更すると、このページが選択した言語で開きます。",

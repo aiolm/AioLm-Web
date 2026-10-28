@@ -1,11 +1,13 @@
+import Link from 'next/link';
+import { localizedPath, type Locale } from '@/i18n/config';
 import type { Translator } from '@/i18n/types';
-import { GITHUB_DOCS_URL, GITHUB_LICENSE_URL, GITHUB_REPOSITORY_URL } from "@/components/site-links";
+import { GITHUB_LICENSE_URL, GITHUB_REPOSITORY_URL } from "@/components/site-links";
 
 /**
  * Site-wide footer. Every destination is a real project URL; there is no
  * community link, no invented copyright line and no release or download link.
  */
-export function SiteFooter({ t }: { t: Translator }): React.JSX.Element {
+export function SiteFooter({ t, locale }: { t: Translator; locale: Locale }): React.JSX.Element {
   return (
     <footer className="site-footer">
       <div className="site-shell site-footer-inner">
@@ -17,7 +19,7 @@ export function SiteFooter({ t }: { t: Translator }): React.JSX.Element {
 
         <nav className="site-footer-links" aria-label={t('site.project')}>
           <a href={GITHUB_REPOSITORY_URL}>GitHub</a>
-          <a href={GITHUB_DOCS_URL}>{t('site.docs')}</a>
+          <Link href={localizedPath(locale, '/guides')}>{t('site.docs')}</Link>
           <a href={GITHUB_LICENSE_URL}>{t('site.license')}</a>
         </nav>
       </div>
