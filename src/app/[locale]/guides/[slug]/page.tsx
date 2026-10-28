@@ -10,6 +10,7 @@ import { GuideLayout, GuideScreenshot } from '@/components/guide-layout';
 import { GuideTableOfContents } from '@/components/guide-table-of-contents';
 import { InstallSection, InstallSecurityWarning } from '@/components/install-section';
 import { GITHUB_REPOSITORY_URL } from '@/components/site-links';
+import { DESKTOP_RELEASE_VERSION } from '@/lib/desktop-release';
 
 type Params = Promise<{ locale: string; slug: string }>;
 function isGuide(slug: string): slug is GuideSlug { return guideSlugs.some(value => value === slug); }
@@ -40,7 +41,7 @@ export default async function GuidePage({ params }: { params: Params }) {
       {guide.sections.map(section => <section className="guide-section" key={section.id} id={section.id} aria-labelledby={`title-${section.id}`}>
         <h2 id={`title-${section.id}`} tabIndex={-1}>{section.title}</h2>
         {slug === 'install' && ['windows', 'macos'].includes(section.id) && section.note && <InstallSecurityWarning locale={locale}>{section.note}</InstallSecurityWarning>}
-        {section.downloads && <div className="guide-download-choices">{downloadFiles[section.downloads].map(({ file, label }) => <a key={file} href={`${GITHUB_REPOSITORY_URL}/releases/download/v0.3.2/${file}`}><span>{label} ↓</span><small>{file}</small></a>)}</div>}
+        {section.downloads && <div className="guide-download-choices">{downloadFiles[section.downloads].map(({ file, label }) => <a key={file} href={`${GITHUB_REPOSITORY_URL}/releases/download/v${DESKTOP_RELEASE_VERSION}/${file}`}><span>{label} ↓</span><small>{file}</small></a>)}</div>}
         {section.body?.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
         {slug === 'install' && section.id === 'commands' && installMessages && <InstallSection locale={locale} messages={installMessages} />}
         {section.links?.map(link => <p key={link.href}><Link href={link.href}>{link.label} →</Link></p>)}
@@ -59,7 +60,7 @@ export default async function GuidePage({ params }: { params: Params }) {
           {detail.image && <GuideScreenshot locale={locale} id={detail.image} caption={detail.caption ?? detail.title} content={content} />}
           {detail.report && <a href={detail.report.href}>{detail.report.label} ↗</a>}
           {detail.links?.map(link => <p key={link.href}><a href={link.href}>{link.label} ↗</a></p>)}
-          {section.id === 'verify' && <a href={`${GITHUB_REPOSITORY_URL}/releases/download/v0.3.2/checksums.txt`}>checksums.txt ↓</a>}
+          {section.id === 'verify' && <a href={`${GITHUB_REPOSITORY_URL}/releases/download/v${DESKTOP_RELEASE_VERSION}/checksums.txt`}>checksums.txt ↓</a>}
         </details>)}
       </section>)}
       {slug === 'install' && <a className="guide-download" href={`${GITHUB_REPOSITORY_URL}/releases/latest`}>{content.download} ↗</a>}
@@ -72,7 +73,7 @@ export default async function GuidePage({ params }: { params: Params }) {
 }
 
 const downloadFiles = {
-  windows: [{ label: 'Windows x64', file: 'AioLM_0.3.2_x64-setup.exe' }],
-  macos: [{ label: 'Mac · Apple Silicon (M1, M2, …)', file: 'AioLM_0.3.2_aarch64.dmg' }, { label: 'Mac · Intel', file: 'AioLM_0.3.2_x64.dmg' }],
-  linux: [{ label: 'Linux · DEB', file: 'AioLM_0.3.2_amd64.deb' }, { label: 'Linux · AppImage', file: 'AioLM_0.3.2_amd64.AppImage' }],
+  windows: [{ label: 'Windows x64', file: `AioLM_${DESKTOP_RELEASE_VERSION}_x64-setup.exe` }],
+  macos: [{ label: 'Mac · Apple Silicon (M1, M2, …)', file: `AioLM_${DESKTOP_RELEASE_VERSION}_aarch64.dmg` }, { label: 'Mac · Intel', file: `AioLM_${DESKTOP_RELEASE_VERSION}_x64.dmg` }],
+  linux: [{ label: 'Linux · DEB', file: `AioLM_${DESKTOP_RELEASE_VERSION}_amd64.deb` }, { label: 'Linux · AppImage', file: `AioLM_${DESKTOP_RELEASE_VERSION}_amd64.AppImage` }],
 } as const;

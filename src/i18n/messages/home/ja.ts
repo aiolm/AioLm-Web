@@ -53,7 +53,7 @@ const messages = {
   "home.caption": "モデル実行画面です。ローカルモデルを選び、ランタイムと実行設定を確認できます。",
   "home.enginesTitle": "基本エンジンと外部推論エンジン",
   "home.enginesBuiltin": "Windows・macOS・Linuxのllama.cpp、対応Linux環境またはApple Silicon Macのvllm-metal経由のvLLM、Apple Silicon MacのMLXを利用できます。",
-  "home.enginesExternal": "外部推論エンジンは実装言語に関係なく、確認された起動方法と通信規約で接続します。公開v0.3.2は手動登録を使い、次の更新で自動で探す → モデルを選択 → 接続を開発中です。未確認の項目を接続済みとは表示しません。",
+  "home.enginesExternal": "v0.3.3以降では、自動で探す → モデルを選択 → 接続で外部推論エンジンを接続できます。実装言語に関係なく同じ接続規則で検査し、未確認の項目を接続済みとは表示しません。",
   "home.enginesHelp": "選択したエンジンのコマンドヘルプとアダプターのメタデータが共通のオプションエディターを構成します。チャット・プロジェクト・セッション・APIゲートウェイは、そのエンジンとモデルで確認された機能を使います。",
   "home.enginesGuide": "組み込みエンジンの互換性",
   "home.adaptersGuide": "外部推論エンジンの接続ガイド",

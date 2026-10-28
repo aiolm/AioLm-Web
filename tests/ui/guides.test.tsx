@@ -6,6 +6,7 @@ import { getGuides } from '@/content/guides';
 import { guideSlugs } from '@/content/guides/types';
 import config from '../../next.config';
 import type { MessageCatalog } from '@/i18n/types';
+import { DESKTOP_RELEASE_VERSION } from '@/lib/desktop-release';
 vi.mock('@/i18n/server', () => {
   const dictionaries = import.meta.glob<{ default: MessageCatalog }>('../../src/i18n/messages/*/*.ts', { eager: true });
   return { getMessages: async (locale: string, namespace: string) => dictionaries['../../src/i18n/messages/' + namespace + '/' + locale + '.ts'].default };
@@ -50,6 +51,7 @@ describe('public product guides', () => {
       });
       if (slug === 'compatibility') for (const engine of ['llama.cpp', 'vLLM', 'MLX', 'vllm-metal', 'F09']) expect(html).toContain(engine);
       if (slug === 'adapters') {
+        expect(content.guides.adapters.description).toContain('v0.3.3');
         for (const text of ['custom.*', 'HTTP/SSE']) expect(html).toContain(text);
         expect(html).toContain(`/${locale}/guides/adapters#files`);
         const primaryIds = ['find', 'choose-model', 'connect'];
@@ -76,6 +78,17 @@ describe('public product guides', () => {
       }
       if (slug === 'install') {
         for (const text of ['checksums.txt', 'SHA-256', 'aarch64.dmg', 'x64.dmg', 'AIOLM_HOME', 'v0.3.1', 'v0.3.2']) expect(html).toContain(text);
+        const releaseDownloads = [...html.matchAll(/href="https:\/\/github\.com\/aiolm\/AioLM\/releases\/download\/([^\"]+)"/g)].map(match => match[1]);
+        expect(releaseDownloads).toEqual([
+          `v${DESKTOP_RELEASE_VERSION}/AioLM_${DESKTOP_RELEASE_VERSION}_x64-setup.exe`,
+          `v${DESKTOP_RELEASE_VERSION}/AioLM_${DESKTOP_RELEASE_VERSION}_aarch64.dmg`,
+          `v${DESKTOP_RELEASE_VERSION}/AioLM_${DESKTOP_RELEASE_VERSION}_x64.dmg`,
+          `v${DESKTOP_RELEASE_VERSION}/AioLM_${DESKTOP_RELEASE_VERSION}_amd64.deb`,
+          `v${DESKTOP_RELEASE_VERSION}/AioLM_${DESKTOP_RELEASE_VERSION}_amd64.AppImage`,
+          `v${DESKTOP_RELEASE_VERSION}/checksums.txt`,
+        ]);
+        expect(sections.find(section => section.id === 'verify')?.more?.[0].code).toContain(`AioLM_${DESKTOP_RELEASE_VERSION}_x64-setup.exe`);
+        expect(sections.find(section => section.id === 'updates')?.caption).toContain('v0.3.2');
         expect(sections[0].id).toBe('commands');
         expect(html.indexOf('class="install-box"')).toBeLessThan(html.indexOf('class="guide-download-choices"'));
         const windows = html.slice(html.indexOf('id="windows"'), html.indexOf('id="macos"'));

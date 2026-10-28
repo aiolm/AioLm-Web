@@ -53,7 +53,7 @@ const messages = {
   "home.caption": "模型运行界面。选择本地模型，查看所用运行时与执行设置。",
   "home.enginesTitle": "内置引擎与外部推理引擎",
   "home.enginesBuiltin": "支持 Windows、macOS 和 Linux 上的 llama.cpp；受支持的 Linux 环境或通过 Apple Silicon Mac 上的 vllm-metal 使用 vLLM；以及 Apple Silicon Mac 上的 MLX。",
-  "home.enginesExternal": "外部推理引擎按已确认的启动方式和通信约定连接，与开发语言无关。公开v0.3.2使用手动注册，下一次更新正在开发自动查找 → 选择模型 → 连接流程。未经验证的项目不会标为已连接。",
+  "home.enginesExternal": "v0.3.3及以上版本可通过自动查找 → 选择模型 → 连接来连接外部推理引擎。无论开发语言，都按相同的连接规则检查，未经验证的项目不会标为已连接。",
   "home.enginesHelp": "所选引擎的实际命令帮助和适配器元数据构成统一的选项编辑器。聊天、项目、会话和 API 网关使用该引擎与模型已验证的能力。",
   "home.enginesGuide": "内置引擎兼容性",
   "home.adaptersGuide": "连接外部推理引擎",
