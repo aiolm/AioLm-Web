@@ -18,14 +18,19 @@ import Layout, { generateMetadata as layoutMetadata, generateStaticParams } from
 import { getMessages } from '@/i18n/server';
 
 describe('localized static homepage', () => {
-  it.each(locales)('explains built-in and external engine adapters in %s with setup and compatibility guidance', async locale => {
+  it.each(locales)('explains built-in and custom engine adapters in %s with setup and compatibility guidance', async locale => {
     const html = renderToStaticMarkup(await Home({ params: Promise.resolve({ locale }) }));
     const home = await getMessages(locale, 'home');
     const site = await getMessages(locale, 'site');
-    for (const name of ['llama.cpp', 'vLLM', 'MLX', 'Strata', 'TensorFold']) {
+    for (const name of ['llama.cpp', 'vLLM', 'MLX']) {
       expect(home['home.subtitle']).toContain(name);
       expect(site['site.description']).toContain(name);
       expect(html).toContain(name);
+    }
+    for (const example of ['Strata', 'TensorFold']) {
+      expect(home['home.subtitle']).not.toContain(example);
+      expect(site['site.description']).not.toContain(example);
+      expect(html).not.toContain(example);
     }
     expect(html).toContain(home['home.enginesExternal']);
     expect(html).toContain(home['home.faqEnginesAnswer']);

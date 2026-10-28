@@ -2,8 +2,7 @@
 
 Website for AioLM — All-in-One LM — the desktop workspace for local language
 inference engines. The desktop app is an engine-neutral GUI adapter for
-llama.cpp, vLLM, MLX and compatible external engines such as Strata, TensorFold
-and user builds. Product introduction and anonymous public benchmark explorer. Next.js
+llama.cpp, vLLM, MLX and compatible custom engines. Product introduction and anonymous public benchmark explorer. Next.js
 App Router + PostgreSQL (Supabase-compatible) + Cloudflare Turnstile. No
 accounts in v1.
 
@@ -50,7 +49,7 @@ supported platforms change.
 
 The homepage, FAQ and search descriptions describe the adapter architecture in
 all four languages. The shared social card names the built-in engines and
-external adapters. Built-in vLLM targets supported Linux or
+adapters for custom engines. Built-in vLLM targets supported Linux or
 Apple silicon macOS 15+ through vllm-metal; MLX targets Apple silicon. External
 engines require a compatible reviewed executable/bridge, model and platform.
 Registration uses the local OpenAI-compatible API and does not grant every
@@ -171,7 +170,7 @@ it never touches, and the real upper bound of the 24h cutoffs.
 
 ## Product guides
 
-`/<locale>/guides` provides installation, first conversation, engine selection and external-engine setup in all four site languages. Instructions use the visible button names, direct platform download choices and one action per illustrated step. Technical details and validation limits remain in expandable sections. User-facing help stays on the site; GitHub hosts release downloads, source and license.
+`/<locale>/guides` provides installation, first conversation, engine selection and custom engine setup in all four site languages. Instructions use the visible button names, direct platform download choices and one action per illustrated step. Technical details and validation limits remain in expandable sections. User-facing help stays on the site; GitHub hosts release downloads, source and license.
 
 Guide copy lives in `src/content/guides` and follows v0.3.2. The 64 localized screenshots in `public/screenshots/guides/v0.3.2` render the released desktop React components at commit `e439b52038142439c8c85b112d2949687fa273f2` with synthetic IPC and example data. They show where controls are, not completed native installation, model inference, compatibility probes or device acceptance. This distinction is visible in each article and relevant captions. The manifest records source, dimensions, hashes and highlight positions; tests check file integrity and locale coverage. Capture harnesses and synthetic backend code are not shipped. Images enlarge in an accessible native dialog, with horizontal viewing on small screens.
 
