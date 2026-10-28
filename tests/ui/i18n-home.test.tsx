@@ -57,6 +57,9 @@ describe('localized static homepage', () => {
     expect(html).toContain(messages['home.windows']);
     expect(html).toContain(messages['home.linuxRequirements']);
     expect(html).toContain(messages['home.macosRequirements']);
+    expect(html).toContain(messages['home.windowsWarning']);
+    expect(html).toContain(messages['home.macosWarning']);
+    expect(html.indexOf('class="install-box"')).toBeLessThan(html.indexOf('class="home-hero-actions"'));
     expect(html).toContain('"operatingSystem":["Windows","macOS","Linux"]');
     expect(html).toContain('releases/latest/download/install.sh | bash');
     expect(html).toContain(`href="/${locale}/guides/install#macos"`);

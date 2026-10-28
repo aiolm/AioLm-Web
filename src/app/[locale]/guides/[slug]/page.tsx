@@ -4,8 +4,11 @@ import { notFound } from 'next/navigation';
 import { isLocale, localizedPath } from '@/i18n/config';
 import { publicMetadata } from '@/lib/seo';
 import { getGuides } from '@/content/guides';
+import { getMessages } from '@/i18n/server';
 import { guideSlugs, type GuideSlug } from '@/content/guides/types';
 import { GuideLayout, GuideScreenshot } from '@/components/guide-layout';
+import { GuideTableOfContents } from '@/components/guide-table-of-contents';
+import { InstallSection, InstallSecurityWarning } from '@/components/install-section';
 import { GITHUB_REPOSITORY_URL } from '@/components/site-links';
 
 type Params = Promise<{ locale: string; slug: string }>;
@@ -20,22 +23,25 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 export default async function GuidePage({ params }: { params: Params }) {
   const { locale, slug } = await params;
   if (!isLocale(locale) || !isGuide(slug)) notFound();
-  const content = await getGuides(locale);
+  const [content, installMessages] = await Promise.all([
+    getGuides(locale),
+    slug === 'install' ? getMessages(locale, 'home') : Promise.resolve(null),
+  ]);
   const guide = content.guides[slug];
   return <GuideLayout locale={locale} content={content} active={slug}>
-    <article>
+    <article className="guide-article">
       <header className="guide-header">
         <h1>{guide.title}</h1><p>{guide.description}</p>
-        {slug === 'install' && <a className="guide-download" href={`${GITHUB_REPOSITORY_URL}/releases/latest`}>{content.download} ↗</a>}
       </header>
+      <GuideTableOfContents label={content.onPage} sections={guide.sections.map(({ id, title }) => ({ id, title }))} />
+      <div className="guide-body">
       {guide.sections.some(section => section.image) && <p className="guide-screen-notice">{content.screenshotNotice}</p>}
-      <nav className="guide-toc" aria-label={content.onPage}>
-        {guide.sections.map(section => <a key={section.id} href={`#${section.id}`}>{section.title}</a>)}
-      </nav>
       {guide.sections.map(section => <section className="guide-section" key={section.id} id={section.id} aria-labelledby={`title-${section.id}`}>
-        <h2 id={`title-${section.id}`}>{section.title}</h2>
+        <h2 id={`title-${section.id}`} tabIndex={-1}>{section.title}</h2>
+        {slug === 'install' && ['windows', 'macos'].includes(section.id) && section.note && <InstallSecurityWarning locale={locale}>{section.note}</InstallSecurityWarning>}
         {section.downloads && <div className="guide-download-choices">{downloadFiles[section.downloads].map(({ file, label }) => <a key={file} href={`${GITHUB_REPOSITORY_URL}/releases/download/v0.3.2/${file}`}><span>{label} ↓</span><small>{file}</small></a>)}</div>}
         {section.body?.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
+        {slug === 'install' && section.id === 'commands' && installMessages && <InstallSection locale={locale} messages={installMessages} />}
         {section.links?.map(link => <p key={link.href}><Link href={link.href}>{link.label} →</Link></p>)}
         {section.steps && <ol>{section.steps.map(step => <li key={step}>{step}</li>)}</ol>}
         {section.table && <div className="guide-table-wrap"><table className="guide-table" aria-label={section.title}>
@@ -43,7 +49,7 @@ export default async function GuidePage({ params }: { params: Params }) {
           <tbody>{section.table.rows.map(row => <tr key={row[0]}>{row.map((cell, index) => index === 0 ? <th key={index} scope="row">{cell}</th> : <td key={index}>{cell}</td>)}</tr>)}</tbody>
         </table></div>}
         {section.code && <pre tabIndex={0}><code>{section.code}</code></pre>}
-        {section.note && <p className="guide-note">{section.note}</p>}
+        {section.note && !(slug === 'install' && ['windows', 'macos'].includes(section.id)) && <p className="guide-note">{section.note}</p>}
         {section.image && <GuideScreenshot locale={locale} id={section.image} caption={section.caption ?? section.title} content={content} />}
         {section.more?.map(detail => <details className="guide-more" key={detail.title}><summary>{detail.title}</summary>
           {detail.body.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
@@ -53,9 +59,11 @@ export default async function GuidePage({ params }: { params: Params }) {
           {section.id === 'verify' && <a href={`${GITHUB_REPOSITORY_URL}/releases/download/v0.3.2/checksums.txt`}>checksums.txt ↓</a>}
         </details>)}
       </section>)}
+      {slug === 'install' && <a className="guide-download" href={`${GITHUB_REPOSITORY_URL}/releases/latest`}>{content.download} ↗</a>}
       <footer className="guide-related"><h2>{content.related}</h2><div className="guide-related-links">
         {guideSlugs.filter(value => value !== slug).map(value => <Link key={value} href={localizedPath(locale, `/guides/${value}`)}>{content.guides[value].title} →</Link>)}
       </div></footer>
+      </div>
     </article>
   </GuideLayout>;
 }

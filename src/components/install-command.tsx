@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { Locale } from '@/i18n/config';
+import { InstallSecurityWarning } from './install-security-warning';
 
 const WINDOWS_INSTALL_CMD =
   'powershell -ExecutionPolicy Bypass -Command "irm https://github.com/aiolm/AioLM/releases/latest/download/install.ps1 | iex"';
@@ -36,15 +38,19 @@ export interface InstallMessages {
   copied: string;
   copyFailed: string;
   download: string;
+  windowsRequirements: string;
+  windowsInstructions: string;
+  windowsWarning: string;
   macosRequirements: string;
   macosInstructions: string;
+  macosWarning: string;
   macosGuide: string;
   linuxRequirements: string;
   linuxInstructions: string;
   linuxGuide: string;
 }
 
-export function InstallCommand({ messages, macosGuideUrl, linuxGuideUrl }: { messages: InstallMessages; macosGuideUrl: string; linuxGuideUrl: string }): React.JSX.Element {
+export function InstallCommand({ locale, messages, macosGuideUrl, linuxGuideUrl }: { locale: Locale; messages: InstallMessages; macosGuideUrl: string; linuxGuideUrl: string }): React.JSX.Element {
   const [selectedOs, setSelectedOs] = useState<InstallOs>("windows");
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
@@ -131,6 +137,9 @@ export function InstallCommand({ messages, macosGuideUrl, linuxGuideUrl }: { mes
 
       <div className="install-panel-container">
           <div id="panel-windows" role="tabpanel" aria-labelledby="tab-windows" hidden={selectedOs !== "windows"} className="install-panel">
+            <p className="install-requirements">{messages.windowsRequirements}</p>
+            <p className="install-instructions">{messages.windowsInstructions}</p>
+            <InstallSecurityWarning locale={locale}>{messages.windowsWarning}</InstallSecurityWarning>
             <div className="install-cmd-row">
               <code className="install-cmd-code" title={WINDOWS_INSTALL_CMD}>
                 <span className="install-cmd-prompt">&gt;</span> {WINDOWS_INSTALL_CMD}
@@ -144,10 +153,14 @@ export function InstallCommand({ messages, macosGuideUrl, linuxGuideUrl }: { mes
                 <span>{copied ? messages.copied : messages.copy}</span>
               </button>
             </div>
+            <div className="install-links">
+              <a href="https://github.com/aiolm/AioLM/releases/latest">{messages.download}</a>
+            </div>
           </div>
           <div id="panel-macos" role="tabpanel" aria-labelledby="tab-macos" hidden={selectedOs !== "macos"} tabIndex={0} className="install-panel install-panel-detail">
             <p className="install-requirements">{messages.macosRequirements}</p>
             <p className="install-instructions">{messages.macosInstructions}</p>
+            <InstallSecurityWarning locale={locale}>{messages.macosWarning}</InstallSecurityWarning>
             <div className="install-cmd-row">
               <code className="install-cmd-code" title={MACOS_INSTALL_CMD}>
                 <span className="install-cmd-prompt">$</span> {MACOS_INSTALL_CMD}

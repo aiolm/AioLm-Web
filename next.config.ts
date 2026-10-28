@@ -3,6 +3,9 @@ import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  images: {
+    localPatterns: [{ pathname: "/screenshots/**" }],
+  },
   async headers() {
     return [
       {

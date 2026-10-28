@@ -434,19 +434,43 @@ main > .grid {
 
 .install-panel {
   width: 100%;
-  padding: 6px 10px;
+  min-width: 0;
+  padding: 16px;
 }
+
+.install-panel[hidden] { display: none; }
+.install-requirements { margin: 0 0 8px; font-size: var(--fs-support); font-weight: 600; }
+.install-instructions { margin: 0 0 14px; font-size: var(--fs-support); line-height: 1.65; color: var(--ui-muted); }
+.install-links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-block-start: 12px; font-size: var(--fs-support); }
+.install-links a { display: inline-flex; align-items: center; min-height: 44px; }
+.install-security-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-block: 14px;
+  padding: 16px;
+  border: 1px solid var(--tone-warning-border);
+  border-inline-start-width: 4px;
+  border-radius: var(--ui-radius-md);
+  background: var(--tone-warning-bg);
+  color: var(--tone-warning-ink);
+  font-size: var(--fs-support);
+  line-height: 1.65;
+}
+.install-security-warning > svg { flex-shrink: 0; margin-block-start: 2px; }
+.install-security-warning .install-security-copy { min-width: 0; }
+.install-security-warning .install-security-copy strong { display: block; margin-block-end: 4px; font-weight: 700; }
+.install-security-warning .install-security-copy p { margin: 0; color: inherit; }
+.install-copy-error { padding: 0 14px 12px; color: var(--ui-danger); font-size: var(--fs-support); line-height: 1.5; }
 
 .install-cmd-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
 }
 
 .install-cmd-code {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  display: block;
   flex: 1;
   min-width: 0;
   padding: 6px 8px;
@@ -456,9 +480,8 @@ main > .grid {
   color: var(--ui-mono-ink);
   background: var(--ui-mono-bg);
   border-radius: var(--ui-radius-sm);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .install-cmd-prompt {
