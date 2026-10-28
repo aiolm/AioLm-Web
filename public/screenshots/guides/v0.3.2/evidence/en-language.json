@@ -1,0 +1,57 @@
+{
+  "locale": "en",
+  "id": "language",
+  "file": "en/language.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "5a3fd393d0807a4775b0c1fca983f9d81b8c40d5ad8ec12cedceb0091f43897d",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 2688,
+  "capture_session": "native-linux-bba01fd05a19466c9b8cbe90468f2d33",
+  "captured_at": "2026-10-28T09:14:20.183400+00:00",
+  "image_sha256": "5a3fd393d0807a4775b0c1fca983f9d81b8c40d5ad8ec12cedceb0091f43897d",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual released app onboarding language selection",
+    "Native Tauri backend and embedded frontend"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\nAioLM\nWelcome to AioLM\n\nA few choices to make this space yours.\n\n1\nLanguage\n2\nAppearance\n3\nModel folder\n\nYou can change these choices later in Settings and the model library.\n\n01 / 03\nChoose your language\n\nChoose the language you want to use in AioLM.\n\nLanguage\nEnglish\n한국어\n日本語\n简体中文\nContinue\n→",
+    "theme": "light",
+    "locale": "en",
+    "buttons": [
+      {
+        "aria": "Minimize",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "Maximize",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "Close",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Continue\n→",
+        "id": ""
+      }
+    ]
+  }
+}

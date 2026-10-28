@@ -1,0 +1,168 @@
+{
+  "locale": "ko",
+  "id": "llama-install",
+  "file": "ko/llama-install.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "29537b9ba3847ac7f64d9451aa29110cc3152f4153600bdc2fae3614935b536b",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 2688,
+  "capture_session": "native-linux-aa587bc8eb66468faa8c51e71ab0d8d3",
+  "captured_at": "2026-10-28T09:21:57.948347+00:00",
+  "image_sha256": "29537b9ba3847ac7f64d9451aa29110cc3152f4153600bdc2fae3614935b536b",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual CPU runtime installation controls from the released native app",
+    "The available build metadata comes from the actual public release API",
+    "No runtime was installed for this screenshot"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\n작업 공간으로 건너뛰기\nAioLM\n작업 공간\n채팅\n프로젝트\n모델 관리\n모델 실행\n찾아보기\n실행·성능\n로드된 세션\n추론 엔진\n벤치마크\n외부 연동\nAPI 서버\nMCP 서버\n공통 도구\n진단\n설정\n나의 로컬 AI 작업 공간\nv0.3.2\n추론 엔진\n모델 선택\nllama.cpp · PATH\n모델 없음\n추론 엔진\n\n추론 엔진의 실행 파일이나 엔트리포인트를 등록하고 --help에서 실행 옵션을 확인해 설정하세요. 기본 제공 어댑터도 같은 목록에서 사용할 수 있습니다.\n\n설치 가능한 버전 새로고침\n모든 추론 엔진\nllama.cpp\n\n기본 제공 어댑터 · llama-server\n\n감지된 장치\nGPU\n전용 GPU가 감지되지 않았습니다\nCPU\nAMD EPYC 9V74 80-Core Processor\n5 Core / 5 Thread\nOS\nlinux/x86_64\n모든 백엔드 표시\n이 장치에 맞지 않아 6개 숨김\n\n모델 선택·설정 → 프로필\n실행 프로필\n\n심층 검증\n\nllama.cpp · PATH\n\n작은 카나리 모델 대신 선택한 모델로 정확성을 검사합니다. 모델을 두 번 읽으므로 최대 1시간까지 걸릴 수 있고, 진행 상황과 취소는 아래 작업 탭에 있으며 그동안 다른 페이지로 이동해도 됩니다.\n\n심층 검증\n설치된 런타임\n없음\n사용 가능한 런타임\nCPU 전용\n권장\n\nGPU 불필요 · GPU가 감지되지 않아 CPU 빌드가 적합합니다.\n\n최신 b11946 · SHA-256 공개됨\nb11946 설치\n고급",
+    "theme": "light",
+    "locale": "ko",
+    "buttons": [
+      {
+        "aria": "최소화",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "최대화",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "닫기",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "사이드바 접기",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "채팅",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "프로젝트",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "모델 실행",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "찾아보기",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "로드된 세션",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "추론 엔진",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "벤치마크",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "API 서버",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MCP 서버",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "진단",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "설정",
+        "id": ""
+      },
+      {
+        "aria": "모델 선택",
+        "text": "모델 선택",
+        "id": ""
+      },
+      {
+        "aria": "모델 설정",
+        "text": "llama.cpp · PATH",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "설치 가능한 버전 새로고침",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "모든 추론 엔진",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "",
+        "id": "runtime-show-all"
+      },
+      {
+        "aria": null,
+        "text": "실행 프로필",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "심층 검증",
+        "id": ""
+      },
+      {
+        "aria": "b11946 설치: CPU 전용",
+        "text": "b11946 설치",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "",
+        "id": ""
+      }
+    ]
+  }
+}

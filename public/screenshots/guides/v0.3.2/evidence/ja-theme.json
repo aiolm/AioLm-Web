@@ -1,0 +1,61 @@
+{
+  "locale": "ja",
+  "id": "theme",
+  "file": "ja/theme.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "61689c063d928edbac8f5f6ad4dd60119c174c96a8162f173d30c55805d06606",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 2688,
+  "capture_session": "native-linux-bba01fd05a19466c9b8cbe90468f2d33",
+  "captured_at": "2026-10-28T09:14:19.344756+00:00",
+  "image_sha256": "61689c063d928edbac8f5f6ad4dd60119c174c96a8162f173d30c55805d06606",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual onboarding appearance step with light theme selected"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\nAioLM\nAioLMへようこそ\n\nいくつかの設定で、自分だけのワークスペースに。\n\n✓\n言語\n2\nテーマ\n3\nモデルフォルダー\n\nあとで設定とモデルライブラリから変更できます。\n\n02 / 03\nテーマを選択\n\nテーマを選ぶと、すぐに画面に反映されます。\n\nテーマ\nライト\n明るく鮮明に\nダーク\n目にやさしく\nシステム\nデバイスに合わせる\n戻る\n次へ\n→",
+    "theme": "light",
+    "locale": "ja",
+    "buttons": [
+      {
+        "aria": "最小化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "最大化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "閉じる",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "戻る",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "次へ\n→",
+        "id": ""
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "locale": "ko",
+  "id": "engines",
+  "file": "ko/engines.png",
+  "width": 1280,
+  "height": 900,
+  "sha256": "3354604052e76c70ecc655f187dfa63e0783f93dcb93e0cb483f9e9e4cc149eb",
+  "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+  "app_version": "0.3.2",
+  "released": false,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+  "process_id": 7979,
+  "capture_session": "native-current-713789d-20261028",
+  "captured_at": "2026-10-28T09:14:55.793025+00:00",
+  "evidence_file": "evidence/ko-engines.json",
+  "image_sha256": "3354604052e76c70ecc655f187dfa63e0783f93dcb93e0cb483f9e9e4cc149eb",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Native engine inventory and Add inference engine control.",
+    "Unreleased 713789d production UI, no provided-adapter menu."
+  ],
+  "visible_text": "AioLM\n작업 공간으로 건너뛰기\nAioLM\n작업 공간\n채팅\n프로젝트\n모델 관리\n모델 실행\n찾아보기\n실행·성능\n로드된 세션\n추론 엔진\n벤치마크\n외부 연동\nAPI 서버\nMCP 서버\n공통 도구\n진단\n설정\n나의 로컬 AI 작업 공간\nv0.3.2\n추론 엔진\n모델 선택\nllama.cpp · PATH\n모델 없음\n추론 엔진\n\n자동으로 찾거나 설치 폴더를 고른 뒤, 모델을 선택해 연결하세요. 연결을 저장하기 전에 실제 모델 응답을 확인합니다.\n\n목록 새로고침\n추론 엔진 추가\n\n자동 찾기로 시작하세요. 엔진의 개발 언어나 설정 파일을 알 필요가 없습니다.\n\n자동 찾기\n모델 선택\n연결\n추론 엔진 추가\n추론 엔진\n엔진 검색\n\n3/3개 엔진\n\nllama.cpp\nllama-server\n기본 제공\n설치된 런타임 없음\n세부 정보 llama.cpp\nmlx\nmlx-vlm\n기본 제공\n이 기기에서 사용할 수 없음\n세부 정보 mlx\nvllm\nvllm\n기본 제공\n설치된 런타임 없음\n세부 정보 vllm\n\n등록 후 실행 프로필에서 모델을 선택하면 이 엔진으로 실행할 수 있는지 확인합니다.\n\n모델 선택·설정 → 프로필\n실행 프로필",
+  "capture_method": "Unmodified native Tauri WebView screenshot through WebKitGTK WebDriver; real Rust IPC backend. No route, IPC or response mock.",
+  "build_test_fixtures": false,
+  "build_embedded_assets": true
+}

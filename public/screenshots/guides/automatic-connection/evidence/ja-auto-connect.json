@@ -1,0 +1,90 @@
+{
+  "locale": "ja",
+  "id": "auto-connect",
+  "file": "ja/auto-connect.png",
+  "width": 1280,
+  "height": 900,
+  "sha256": "22f8b442da68cc6ba53d09fdfaa7548b849893961107c391c740a62033642d09",
+  "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+  "app_version": "0.3.2",
+  "released": false,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+  "process_id": 7979,
+  "capture_session": "native-current-713789d-20261028",
+  "captured_at": "2026-10-28T09:21:06.123937+00:00",
+  "evidence_file": "evidence/ja-auto-connect.json",
+  "image_sha256": "22f8b442da68cc6ba53d09fdfaa7548b849893961107c391c740a62033642d09",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual native UI Connect completed with model-identity, chat-response and sse-stream verification checks.",
+    "Registration was saved by the real Rust backend, with the independent actual inference service left running."
+  ],
+  "visible_text": "AioLM\nワークスペースへ移動\nAioLM\nワークスペース\nチャット\nプロジェクト\nモデル管理\nモデル実行\n検索\n実行・最適化\nLoaded sessions\n推論エンジン\nベンチマーク\n外部連携\nAPIサーバー\nMCPサーバー\nツール\n診断\n設定\nローカル AI ワークスペース\nv0.3.2\n推論エンジン\nモデルを選択\nllama.cpp · PATH\nモデルなし\n推論エンジン\n\n自動で検索するかインストール先フォルダーを選び、モデルを選択して接続してください。接続を保存する前に、実際のモデル応答を確認します。\n\n一覧を更新\nすべての推論エンジン\n外部推論エンジンに接続\n\nこのパソコンで実行中のサーバーを探すか、インストール先の起動方法を確認します。エンジンの開発言語を知る必要はありません。\n\n自動で探す\nモデルを選択\n接続\n別の項目に接続\nインストール先を選択\n\n見つからない場合は、エンジンをインストールしたフォルダーを選んでください。実行ファイルや設定ファイルを選ぶ必要はありません。\n\n見つかった項目\n\n接続する項目を選んでください。この一覧にあるだけでは接続は確認されていません。\n\nllama-server127.0.0.1:39567\n\nすでに実行中のサーバーに接続します。AioLMで接続を終了しても、元のサーバーは実行を続けます。\n\n使用するモデルQwen2.5-0.5B-Instruct\n\nこの検査は画像・音声・動画・ツール利用の対応や応答の品質を確認するものではありません。\n\n接続\n接続を確認しました。\n\nこのモデルのテキスト応答とストリーミングを確認し、接続情報をアプリに保存しました。設定ファイルを作る必要はありません。\n\nすでに実行中のサーバーに接続します。AioLMで接続を終了しても、元のサーバーは実行を続けます。\n\nこの検査は画像・音声・動画・ツール利用の対応や応答の品質を確認するものではありません。\n\n確認情報\nmodel-identity\nchat-response\nsse-stream\n詳細：起動方法を手動で設定\n詳細：登録ファイル（manifest）を読み込む",
+  "capture_method": "Unmodified native Tauri WebView screenshot through WebKitGTK WebDriver; real Rust IPC backend. No route, IPC or response mock.",
+  "build_test_fixtures": false,
+  "build_embedded_assets": true,
+  "inference_evidence": {
+    "actual_inference": true,
+    "digest_kind": "http-payload",
+    "model_sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+    "engine_binary_sha256": "3f2b53013c2eb596c8aca87e4740240a41f95bcebf72e61084d6d5ba0db761cc",
+    "request_sha256": "7e7432ddb84ec733935b4bc9134fc79a1a8d7e8407452b741329ca8b049199bf",
+    "response_sha256": "87fe0fa9a36fee0e91bed7b0e77c83dd7e9306570ac06d7f36dec753cee2998f",
+    "response_text": "5",
+    "request_payload": {
+      "model": "Qwen2.5-0.5B-Instruct",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is 2 + 3? Reply with only the number."
+        }
+      ],
+      "temperature": 0,
+      "max_tokens": 32,
+      "stream": false,
+      "stream_options": {
+        "include_usage": true
+      }
+    },
+    "response_payload": {
+      "choices": [
+        {
+          "finish_reason": "stop",
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "5"
+          }
+        }
+      ],
+      "created": 1793178088,
+      "model": "Qwen2.5-0.5B-Instruct",
+      "system_fingerprint": "b11669-620d2225c",
+      "object": "chat.completion",
+      "usage": {
+        "completion_tokens": 2,
+        "prompt_tokens": 43,
+        "total_tokens": 45,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "id": "chatcmpl-lbrNwtQYFL15h2pyHl55vs7EB4MeEelk",
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 43,
+        "prompt_ms": 293.906,
+        "prompt_per_token_ms": 6.835023255813954,
+        "prompt_per_second": 146.30528128040936,
+        "predicted_n": 2,
+        "predicted_ms": 22.41,
+        "predicted_per_token_ms": 22.41,
+        "predicted_per_second": 44.62293618920125
+      }
+    },
+    "scope": "Independent actual HTTP request/response on the same real engine process. The native UI connection shown separately ran production Rust model-identity, chat-response and sse-stream checks; this digest is not a GUI wire capture."
+  }
+}

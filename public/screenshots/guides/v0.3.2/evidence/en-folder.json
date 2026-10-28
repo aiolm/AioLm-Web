@@ -1,0 +1,72 @@
+{
+  "locale": "en",
+  "id": "folder",
+  "file": "en/folder.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "dfc995d005c66733213bb79c5e300a87082ae53f74aaaebb2f7055a865931c59",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 2688,
+  "capture_session": "native-linux-bba01fd05a19466c9b8cbe90468f2d33",
+  "captured_at": "2026-10-28T09:14:20.394360+00:00",
+  "image_sha256": "dfc995d005c66733213bb79c5e300a87082ae53f74aaaebb2f7055a865931c59",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual model folder selected through the native GTK file picker",
+    "Selected folder /opt/aiolm-demo/models contains the real GGUF model"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\nAioLM\nWelcome to AioLM\n\nA few choices to make this space yours.\n\n✓\nLanguage\n✓\nAppearance\n3\nModel folder\n\nYou can change these choices later in Settings and the model library.\n\n03 / 03\nGive your models a home\n\nChoose where AioLM finds your local models and saves new downloads.\n\nModels folder\n\nUse the default folder or choose one that already contains local models. You can download your first model later.\n\nChoose folder\nUse default folder\nNo model needed yet\n\nYour workspace will be ready when you are. Choosing a folder does not move or delete any files.\n\nBack\nStart using AioLM\n→",
+    "theme": "light",
+    "locale": "en",
+    "buttons": [
+      {
+        "aria": "Minimize",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "Maximize",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "Close",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Choose folder",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Use default folder",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Back",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Start using AioLM\n→",
+        "id": ""
+      }
+    ]
+  }
+}

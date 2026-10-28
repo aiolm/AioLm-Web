@@ -1,0 +1,188 @@
+{
+  "locale": "en",
+  "id": "model-settings",
+  "file": "en/model-settings.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "e80c139bcd358c5dd83572814955b1a446a9709ce7da08e9cdddc17e346bc145",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 9195,
+  "capture_session": "native-linux-4934f4309a85410ab36622c188656bd0",
+  "captured_at": "2026-10-28T10:04:30.093890+00:00",
+  "image_sha256": "e80c139bcd358c5dd83572814955b1a446a9709ce7da08e9cdddc17e346bc145",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual model settings before launching: the app-managed model has been unloaded through its normal UI",
+    "Step 1 Choose runtime is active, showing the actual Local inference server and registered local-cpu runtime",
+    "Continue to profile is enabled; no model has been launched for this settings screenshot"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\nSkip to workspace\nAioLM\nWorkspace\nChat\nProjects\nModels\nRun a model\nDiscover\nRun & optimize\nLoaded sessions\nInference engines\nBenchmark\nIntegrations\nAPI server\nMCP servers\nTools\nDiagnostics\nSettings\nYour local AI workspace\nv0.3.2\nRun a model\nChoose model\nLocal inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · Registered installation\nno model loaded\nRun a model\n\nChoose a model, review its setup, and start it here.\n\nModels directory\nBrowse\nModels\n1\nAll engines\nShow supporting model files\nRescan\nQwen2.5-0.5B-Instruct-Q4_K_M.gguf\nArchitecture:\nqwen2\nParameters:\n630M\nQuantization:\nQ4_K_M\nContext length:\n32K\nTag:\ngguf\n+3 more\n468.6 MiB\n/opt/aiolm-demo/models/Qwen2.5-0.5B-Instruct-Q4_K_M.gguf\nCopy path\nDelete\nDefault execution · Stopped\nModel & settings\n1\nChoose runtime\nLocal inference server · local-cpu\n2\nChoose profile\nNot selected\n3\nAdjust options\nChoose runtime\n\nChoose the inference engine and its installed runtime first.\n\nInference engine\nllama.cpp\nvLLM\nMLX\nMLX runtimes (mlx-vlm) are supported on Apple Silicon macOS only; this host is linux/x86_64.\nLocal inference server\nRuntime\nversion: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · Registered installation\nopenai-v1\nClear value\nManage runtimes\nContinue to profile",
+    "theme": "light",
+    "locale": "en",
+    "buttons": [
+      {
+        "aria": "Minimize",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "Maximize",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "Close",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "Collapse sidebar",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Chat",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Projects",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Run a model",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Discover",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Loaded sessions",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Inference engines",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Benchmark",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "API server",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MCP servers",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Diagnostics",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Settings",
+        "id": ""
+      },
+      {
+        "aria": "Choose model",
+        "text": "Choose model",
+        "id": ""
+      },
+      {
+        "aria": "Model settings",
+        "text": "Local inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · Registered installation",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Browse",
+        "id": ""
+      },
+      {
+        "aria": "Inference engine",
+        "text": "All engines",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Rescan",
+        "id": ""
+      },
+      {
+        "aria": "Configure & run: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Qwen2.5-0.5B-Instruct-Q4_K_M.gguf\nArchitecture:\nqwen2\nParameters:\n630M\nQuantization:\nQ4_K_M\nContext length:\n32K\nTag:\ngguf\n+3 more",
+        "id": ""
+      },
+      {
+        "aria": "Copy path: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Copy path",
+        "id": ""
+      },
+      {
+        "aria": "Delete: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Delete",
+        "id": ""
+      },
+      {
+        "aria": "Close",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "1\nChoose runtime\nLocal inference server · local-cpu",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "2\nChoose profile\nNot selected",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "3\nAdjust options",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Clear value",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Manage runtimes",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Continue to profile",
+        "id": ""
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "locale": "ja",
+  "id": "adapter-check",
+  "file": "ja/adapter-check.png",
+  "width": 1280,
+  "height": 900,
+  "sha256": "71c51cfe244a510b8275ce7306c5c5f66237ccb880ead7a317b6a30713637740",
+  "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+  "app_version": "0.3.2",
+  "released": false,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+  "process_id": 7979,
+  "capture_session": "native-current-713789d-20261028",
+  "captured_at": "2026-10-28T09:45:10.581770+00:00",
+  "evidence_file": "evidence/ja-adapter-check.json",
+  "image_sha256": "71c51cfe244a510b8275ce7306c5c5f66237ccb880ead7a317b6a30713637740",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual native form keeps the model, port and host bindings documented by the real executable help.",
+    "Actual model-probe command and authentication variable are shown; this configuration screen does not claim model acceptance by itself."
+  ],
+  "visible_text": "AioLM\nワークスペースへ移動\nAioLM\nワークスペース\nチャット\nプロジェクト\nモデル管理\nモデル実行\n検索\n実行・最適化\nLoaded sessions\n推論エンジン\nベンチマーク\n外部連携\nAPIサーバー\nMCPサーバー\nツール\n診断\n設定\nローカル AI ワークスペース\nv0.3.2\n推論エンジン\nモデルを選択\nllama.cpp · PATH\nモデルなし\n推論エンジン\n\n自動で検索するかインストール先フォルダーを選び、モデルを選択して接続してください。接続を保存する前に、実際のモデル応答を確認します。\n\n一覧を更新\nすべての推論エンジン\n外部推論エンジンに接続\n\nこのパソコンで実行中のサーバーを探すか、インストール先の起動方法を確認します。エンジンの開発言語を知る必要はありません。\n\n自動で探す\nモデルを選択\n接続\n自動で探す\nインストール先を選択\n\n見つからない場合は、エンジンをインストールしたフォルダーを選んでください。実行ファイルや設定ファイルを選ぶ必要はありません。\n\n詳細：起動方法を手動で設定\n実行ファイル・エントリーポイントの登録\n\nエンジンの起動方法を選び、ヘルプを読んでからモデル・接続・互換性の確認方法を設定してください。最後の「登録」が成功すると、AioLMが接続情報を自動保存します。.engine.jsonを自分で作る必要はありません。\n\n1. 実行ファイルとエントリーポイント\n2. ヘルプの確認\n3. 接続とモデルの確認\n4. 確認と登録\nモデルの接続\nヘルプのオプション\n--model\n--オプション=値の形式\nポートの接続\nヘルプのオプション\n--port\n--オプション=値の形式\nホストの接続（任意）\nヘルプのオプション\n--host\n--オプション=値の形式\n提供モデル名の接続（任意）\n使用しない\n認証キーの受け渡し\nエンジンはキーを受け取らない（アプリのgatewayが認証）\n環境変数で渡す\n環境変数名\nモデル互換性の確認コマンド（probe JSONの出力が必要）\n互換性確認プログラム\n参照\n互換性確認の引数\n引数を削除\n引数を削除\n引数を削除\n引数を削除\n引数を削除\n引数を削除\n引数を削除\n引数を削除\n引数を削除\n引数を削除\n引数を削除\n引数を追加\n{model}を挿入\n{options_json}を挿入\nヘルスチェックのパス\nヘルスチェックに認証が必要\n登録するモデル形式（互換性はモデルごとに確認）\ngguf\nhf-safetensors\nmlx\nunknown\n前へ\n登録内容を確認\n詳細：登録ファイル（manifest）を読み込む",
+  "capture_method": "Unmodified native Tauri WebView screenshot through WebKitGTK WebDriver; real Rust IPC backend. No route, IPC or response mock.",
+  "build_test_fixtures": false,
+  "build_embedded_assets": true
+}

@@ -1,0 +1,61 @@
+{
+  "locale": "zh",
+  "id": "theme",
+  "file": "zh/theme.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "3ef49c3d4d647f4985f5188ce0634c09a026d7aaf574163594c6a8079a1b030b",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 2688,
+  "capture_session": "native-linux-bba01fd05a19466c9b8cbe90468f2d33",
+  "captured_at": "2026-10-28T09:14:19.841087+00:00",
+  "image_sha256": "3ef49c3d4d647f4985f5188ce0634c09a026d7aaf574163594c6a8079a1b030b",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual onboarding appearance step with light theme selected"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\nAioLM\n欢迎使用 AioLM\n\n只需几项设置，即可打造你的工作空间。\n\n✓\n语言\n2\n主题\n3\n模型文件夹\n\n以后可以在设置和模型库中更改这些选项。\n\n02 / 03\n选择喜欢的主题\n\n选择主题，即刻预览效果。\n\n主题\n浅色\n明亮清晰\n深色\n舒适护眼\n跟随系统\n跟随设备设置\n上一步\n继续\n→",
+    "theme": "light",
+    "locale": "zh",
+    "buttons": [
+      {
+        "aria": "最小化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "最大化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "关闭",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "上一步",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "继续\n→",
+        "id": ""
+      }
+    ]
+  }
+}

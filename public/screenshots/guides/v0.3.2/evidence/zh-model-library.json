@@ -1,0 +1,157 @@
+{
+  "locale": "zh",
+  "id": "model-library",
+  "file": "zh/model-library.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "3bb07eec263eb86acfa45bc429bb1c2972feda8e8819845195a4758d9acf0914",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 9195,
+  "capture_session": "native-linux-d5765405162a493db8ef23ca7783a180",
+  "captured_at": "2026-10-28T09:50:49.679623+00:00",
+  "image_sha256": "3bb07eec263eb86acfa45bc429bb1c2972feda8e8819845195a4758d9acf0914",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual model library scans the pinned local GGUF file",
+    "A real registered CPU engine is loaded; file metadata and status are from the native backend"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\n跳转到工作区\nAioLM\n工作空间\n聊天\n项目\n模型管理\n运行模型\n发现\n运行与优化\nLoaded sessions\n推理引擎\n基准测试\n外部集成\nAPI 服务器\nMCP 服务器\n工具\n诊断\n设置\n本地 AI 工作空间\nv0.3.2\n运行模型\nQwen2.5-0.5B-Instruct-Q4_K_M.gguf\nLocal inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 已注册的安装\n模型已加载\n卸载\n运行模型\n\n选择模型，检查配置，然后在此运行。\n\n模型目录\n浏览\n模型\n1\n所有引擎\n显示模型辅助文件\n重新扫描\nQwen2.5-0.5B-Instruct-Q4_K_M.gguf\n架构:\nqwen2\n参数规模:\n630M\n量化:\nQ4_K_M\n上下文长度:\n32K\n标签:\ngguf\n+3项\n468.6 MiB\n运行中\n/opt/aiolm-demo/models/Qwen2.5-0.5B-Instruct-Q4_K_M.gguf\nCopy path\n删除",
+    "theme": "light",
+    "locale": "zh",
+    "buttons": [
+      {
+        "aria": "最小化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "最大化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "关闭",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "收起侧边栏",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "聊天",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "项目",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "运行模型",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "发现",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Loaded sessions",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "推理引擎",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "基准测试",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "API 服务器",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MCP 服务器",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "诊断",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "设置",
+        "id": ""
+      },
+      {
+        "aria": "选择模型: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "id": ""
+      },
+      {
+        "aria": "模型设置",
+        "text": "Local inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 已注册的安装",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "卸载",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "浏览",
+        "id": ""
+      },
+      {
+        "aria": "推理引擎",
+        "text": "所有引擎",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "重新扫描",
+        "id": ""
+      },
+      {
+        "aria": "配置并运行: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Qwen2.5-0.5B-Instruct-Q4_K_M.gguf\n架构:\nqwen2\n参数规模:\n630M\n量化:\nQ4_K_M\n上下文长度:\n32K\n标签:\ngguf\n+3项",
+        "id": ""
+      },
+      {
+        "aria": "Copy path: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Copy path",
+        "id": ""
+      },
+      {
+        "aria": "删除: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "删除",
+        "id": ""
+      }
+    ]
+  }
+}

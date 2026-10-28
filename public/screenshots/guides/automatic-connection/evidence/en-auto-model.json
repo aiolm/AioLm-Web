@@ -1,0 +1,29 @@
+{
+  "locale": "en",
+  "id": "auto-model",
+  "file": "en/auto-model.png",
+  "width": 1280,
+  "height": 900,
+  "sha256": "f16bc32cadd9abc6db5b8e90133535558008c06a3d3b9aee7ab9a9c94cb3b322",
+  "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+  "app_version": "0.3.2",
+  "released": false,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+  "process_id": 7979,
+  "capture_session": "native-current-713789d-20261028",
+  "captured_at": "2026-10-28T09:17:34.530640+00:00",
+  "evidence_file": "evidence/en-auto-model.json",
+  "image_sha256": "f16bc32cadd9abc6db5b8e90133535558008c06a3d3b9aee7ab9a9c94cb3b322",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual discovery found same-user process llama-server listening on loopback port39567.",
+    "Model dropdown is populated from the actual live /v1/models response."
+  ],
+  "visible_text": "AioLM\nSkip to workspace\nAioLM\nWorkspace\nChat\nProjects\nModels\nRun a model\nDiscover\nRun & optimize\nLoaded sessions\nInference engines\nBenchmark\nIntegrations\nAPI server\nMCP servers\nTools\nDiagnostics\nSettings\nYour local AI workspace\nv0.3.2\nInference engines\nChoose model\nllama.cpp · PATH\nno model loaded\nInference engines\n\nFind an engine automatically or choose its installation folder, then select a model and connect. AioLM checks actual model responses before saving the connection.\n\nRefresh list\nAll inference engines\nConnect an external inference engine\n\nFind a running server on this computer, or check how to launch an installation. You do not need to know which language the engine uses.\n\nFind automatically\nChoose a model\nConnect\nFind automatically\nChoose installation folder\n\nIf discovery misses your engine, choose its installation folder. You do not need to pick an executable or configuration file.\n\nDiscovered items\n\nSelect an item to connect. Appearing here does not mean its connection has been verified.\n\nllama-server127.0.0.1:39567\n\nConnects to an already running server. Disconnecting in AioLM leaves the original server running.\n\nModel to useQwen2.5-0.5B-Instruct\n\nThis check does not verify image, audio, video, tool use, or response quality.\n\nConnect\nAdvanced: configure the launch method manually\nAdvanced: import registration file (manifest)\nChoose a model\nQwen2.5-0.5B-Instruct",
+  "capture_method": "Unmodified native Tauri WebView screenshot through WebKitGTK WebDriver; real Rust IPC backend. No route, IPC or response mock.",
+  "build_test_fixtures": false,
+  "build_embedded_assets": true
+}

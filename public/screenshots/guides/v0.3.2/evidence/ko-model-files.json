@@ -1,0 +1,342 @@
+{
+  "locale": "ko",
+  "id": "model-files",
+  "file": "ko/model-files.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "5659231a266948fd16bcfadc41a9e01c9be108c27aaba87bc8ac658e36b50bbd",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 9195,
+  "capture_session": "native-linux-4b40562e5d2745b4af5ee0bd73f59fab",
+  "captured_at": "2026-10-28T09:55:32.679982+00:00",
+  "image_sha256": "5659231a266948fd16bcfadc41a9e01c9be108c27aaba87bc8ac658e36b50bbd",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual selected repository and real quantization-file metadata",
+    "No model download was started for this screenshot"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\n작업 공간으로 건너뛰기\nAioLM\n작업 공간\n채팅\n프로젝트\n모델 관리\n모델 실행\n찾아보기\n실행·성능\n로드된 세션\n추론 엔진\n벤치마크\n외부 연동\nAPI 서버\nMCP 서버\n공통 도구\n진단\n설정\n나의 로컬 AI 작업 공간\nv0.3.2\n찾아보기\nQwen2.5-0.5B-Instruct-Q4_K_M.gguf\nLocal inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 직접 등록한 설치본\n모델 로드됨\n언로드\nHugging Face 모델 찾아보기\n\n모델 파일을 찾아 다운로드하고 실행 설정에서 런타임 호환성을 확인합니다.\n\n대상\n/opt/aiolm-demo/models\n추론 엔진\nLocal inference server\n모델 형식\nGGUF\n검색\n정렬\n다운로드순\n모델 검색\n저장소 (30)\nQwen/Qwen2.5-0.5B-Instruct-GGUF\n배포자\nQwen\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+8개\n35.8만 다운로드\n♥ 좋아요160\nbartowski/Qwen2.5-0.5B-Instruct-GGUF\n배포자\nbartowski\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+7개\n10.9만 다운로드\n♥ 좋아요19\nQwen/Qwen2.5-Coder-0.5B-Instruct-GGUF\n배포자\nQwen\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\ncode\n+14개\n3.2만 다운로드\n♥ 좋아요40\nlmstudio-community/Qwen2.5-0.5B-Instruct-GGUF\n배포자\nlmstudio-community\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+7개\n1.3만 다운로드\n♥ 좋아요8\nbartowski/Qwen2.5-Coder-0.5B-Instruct-GGUF\n배포자\nbartowski\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\ncode\n+11개\n6.3천 다운로드\n♥ 좋아요4\nThomasBaruzier/Qwen2.5-0.5B-Instruct-GGUF\n배포자\nThomasBaruzier\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+20개\n5.1천 다운로드\n♥ 좋아요0\nbartowski/Qwen2.5-Coder-0.5B-Instruct-abliterated-GGUF\n배포자\nbartowski\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\ncode\n+13개\n3.6천 다운로드\n♥ 좋아요13\nmradermacher/Qwen2.5-0.5B-Instruct-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\nchat\n태그:\nen\n+7개\n2.5천 다운로드\n♥ 좋아요0\nlegraphista/Qwen2.5-0.5B-Instruct-IMat-GGUF\n배포자\nlegraphista\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+19개\n2.3천 다운로드\n♥ 좋아요0\nunsloth/Qwen2.5-Coder-0.5B-Instruct-GGUF\n배포자\nunsloth\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ncode\n태그:\nqwen-coder\n+13개\n2.2천 다운로드\n♥ 좋아요12\nlmstudio-community/Qwen2.5-Coder-0.5B-Instruct-GGUF\n배포자\nlmstudio-community\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\ncode\n+11개\n2.2천 다운로드\n♥ 좋아요6\nmradermacher/Qwen2.5-0.5B-Instruct-3MPER0RR-abliterated-i1-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\nconversational\n태그:\nen\n+8개\n2천 다운로드\n♥ 좋아요0\nmradermacher/Qwen2.5-0.5B-Instruct-i1-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\nchat\n태그:\nen\n+8개\n1.9천 다운로드\n♥ 좋아요2\nmradermacher/Qwen2.5-0.5B-Instruct-abliterated-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\nchat\n태그:\nabliterated\n+21개\n1.8천 다운로드\n♥ 좋아요1\nsecond-state/Qwen2.5-0.5B-Instruct-GGUF\n배포자\nsecond-state\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+8개\n1.7천 다운로드\n♥ 좋아요2\nunsloth/Qwen2.5-Coder-0.5B-Instruct-128K-GGUF\n배포자\nunsloth\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ncode\n태그:\nqwen-coder\n+14개\n1.6천 다운로드\n♥ 좋아요7\nQuantFactory/Qwen2.5-0.5B-Instruct-GGUF\n배포자\nQuantFactory\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+8개\n1.6천 다운로드\n♥ 좋아요3\nMaziyarPanahi/Qwen2.5-0.5B-Instruct-GGUF\n배포자\nMaziyarPanahi\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nmistral\n+11개\n1.4천 다운로드\n♥ 좋아요2\nmradermacher/Qwen2.5-0.5B-Instruct-uncensored-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\nen\n태그:\nconversational\n+5개\n1.3천 다운로드\n♥ 좋아요2\nMungert/Qwen2.5-0.5B-Instruct-GGUF\n배포자\nMungert\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+10개\n1.2천 다운로드\n♥ 좋아요5\nmradermacher/Qwen2.5-0.5B-Instruct-abliterated-SFT-i1-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation-inference\n태그:\nunsloth\n+12개\n1천 다운로드\n♥ 좋아요1\nmradermacher/BitCache-Qwen2.5-0.5B-Instruct-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\nbitcache\n태그:\nspectral-compression\n+13개\n1천 다운로드\n♥ 좋아요2\nmradermacher/Qwen2.5-0.5B-Instruct-abliterated-i1-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\nchat\n태그:\nabliterated\n+22개\n982 다운로드\n♥ 좋아요0\ntensorblock/Qwen2.5-0.5B-Instruct-GGUF\n배포자\ntensorblock\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+9개\n978 다운로드\n♥ 좋아요0\ngaianet/Qwen2.5-0.5B-Instruct-GGUF\n배포자\ngaianet\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+20개\n935 다운로드\n♥ 좋아요0\nThomasBaruzier/Qwen2.5-Coder-0.5B-Instruct-GGUF\n배포자\nThomasBaruzier\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\ncode\n+14개\n836 다운로드\n♥ 좋아요1\nmradermacher/Qwen2.5-Coder-0.5B-Instruct-i1-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ncode\n태그:\ncodeqwen\n+12개\n761 다운로드\n♥ 좋아요1\nFelladrin/gguf-Q5_K_M-Qwen2.5-0.5B-Instruct\n배포자\nFelladrin\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n양자화:\nQ5_K_M\n태그:\ngguf\n태그:\ntext-generation\n+23개\n672 다운로드\n♥ 좋아요0\nsecond-state/Qwen2.5-Coder-0.5B-Instruct-GGUF\n배포자\nsecond-state\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\ncode\n+13개\n672 다운로드\n♥ 좋아요1\nmradermacher/Qwen2.5-Coder-0.5B-Instruct-abliterated-i1-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ncode\n태그:\ncodeqwen\n+14개\n636 다운로드\n♥ 좋아요0\nQwen/Qwen2.5-0.5B-Instruct-GGUF\n배포자\nQwen\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+8개\n전체 모델 정보 (14개)\nHugging Face에서 모델 카드 보기\n↗\n모델 형식 · text-generation\nqwen2.5-0.5b-instruct-fp16.gguf\n1.18 GiB\nunknown\n파일 검증 정보\n다운로드\nqwen2.5-0.5b-instruct-q2_k.gguf\n395.9 MiB\nQ2_K\n파일 검증 정보\n다운로드\nqwen2.5-0.5b-instruct-q3_k_m.gguf\n412.0 MiB\nQ3_K_M\n파일 검증 정보\n다운로드\nqwen2.5-0.5b-instruct-q4_0.gguf\n408.9 MiB\nQ4_0\n파일 검증 정보\n다운로드\nqwen2.5-0.5b-instruct-q4_k_m.gguf\n468.6 MiB\nQ4_K_M\n파일 검증 정보\n다운로드\nqwen2.5-0.5b-instruct-q5_0.gguf\n467.8 MiB\nQ5_0\n파일 검증 정보\n다운로드\nqwen2.5-0.5b-instruct-q5_k_m.gguf\n498.0 MiB\nQ5_K_M\n파일 검증 정보\n다운로드\nqwen2.5-0.5b-instruct-q6_k.gguf\n620.2 MiB\nQ6_K\n파일 검증 정보\n다운로드\nqwen2.5-0.5b-instruct-q8_0.gguf\n644.4 MiB\nQ8_0\n파일 검증 정보\n다운로드",
+    "theme": "light",
+    "locale": "ko",
+    "buttons": [
+      {
+        "aria": "최소화",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "최대화",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "닫기",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "사이드바 접기",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "채팅",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "프로젝트",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "모델 실행",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "찾아보기",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "로드된 세션",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "추론 엔진",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "벤치마크",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "API 서버",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MCP 서버",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "진단",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "설정",
+        "id": ""
+      },
+      {
+        "aria": "모델 선택: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "id": ""
+      },
+      {
+        "aria": "모델 설정",
+        "text": "Local inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 직접 등록한 설치본",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "언로드",
+        "id": ""
+      },
+      {
+        "aria": "추론 엔진",
+        "text": "Local inference server",
+        "id": ""
+      },
+      {
+        "aria": "모델 형식",
+        "text": "GGUF",
+        "id": ""
+      },
+      {
+        "aria": "정렬",
+        "text": "다운로드순",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "모델 검색",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Qwen/Qwen2.5-0.5B-Instruct-GGUF\n배포자\nQwen\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+8개\n35.8만 다운로드\n♥ 좋아요160",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "bartowski/Qwen2.5-0.5B-Instruct-GGUF\n배포자\nbartowski\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+7개\n10.9만 다운로드\n♥ 좋아요19",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF\n배포자\nQwen\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\ncode\n+14개\n3.2만 다운로드\n♥ 좋아요40",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "lmstudio-community/Qwen2.5-0.5B-Instruct-GGUF\n배포자\nlmstudio-community\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+7개\n1.3만 다운로드\n♥ 좋아요8",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "bartowski/Qwen2.5-Coder-0.5B-Instruct-GGUF\n배포자\nbartowski\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\ncode\n+11개\n6.3천 다운로드\n♥ 좋아요4",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "ThomasBaruzier/Qwen2.5-0.5B-Instruct-GGUF\n배포자\nThomasBaruzier\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+20개\n5.1천 다운로드\n♥ 좋아요0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "bartowski/Qwen2.5-Coder-0.5B-Instruct-abliterated-GGUF\n배포자\nbartowski\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\ncode\n+13개\n3.6천 다운로드\n♥ 좋아요13",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\nchat\n태그:\nen\n+7개\n2.5천 다운로드\n♥ 좋아요0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "legraphista/Qwen2.5-0.5B-Instruct-IMat-GGUF\n배포자\nlegraphista\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+19개\n2.3천 다운로드\n♥ 좋아요0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "unsloth/Qwen2.5-Coder-0.5B-Instruct-GGUF\n배포자\nunsloth\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ncode\n태그:\nqwen-coder\n+13개\n2.2천 다운로드\n♥ 좋아요12",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "lmstudio-community/Qwen2.5-Coder-0.5B-Instruct-GGUF\n배포자\nlmstudio-community\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\ncode\n+11개\n2.2천 다운로드\n♥ 좋아요6",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-3MPER0RR-abliterated-i1-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\nconversational\n태그:\nen\n+8개\n2천 다운로드\n♥ 좋아요0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-i1-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\nchat\n태그:\nen\n+8개\n1.9천 다운로드\n♥ 좋아요2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-abliterated-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\nchat\n태그:\nabliterated\n+21개\n1.8천 다운로드\n♥ 좋아요1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "second-state/Qwen2.5-0.5B-Instruct-GGUF\n배포자\nsecond-state\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+8개\n1.7천 다운로드\n♥ 좋아요2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "unsloth/Qwen2.5-Coder-0.5B-Instruct-128K-GGUF\n배포자\nunsloth\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ncode\n태그:\nqwen-coder\n+14개\n1.6천 다운로드\n♥ 좋아요7",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "QuantFactory/Qwen2.5-0.5B-Instruct-GGUF\n배포자\nQuantFactory\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+8개\n1.6천 다운로드\n♥ 좋아요3",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MaziyarPanahi/Qwen2.5-0.5B-Instruct-GGUF\n배포자\nMaziyarPanahi\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nmistral\n+11개\n1.4천 다운로드\n♥ 좋아요2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-uncensored-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\nen\n태그:\nconversational\n+5개\n1.3천 다운로드\n♥ 좋아요2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Mungert/Qwen2.5-0.5B-Instruct-GGUF\n배포자\nMungert\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+10개\n1.2천 다운로드\n♥ 좋아요5",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-abliterated-SFT-i1-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation-inference\n태그:\nunsloth\n+12개\n1천 다운로드\n♥ 좋아요1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/BitCache-Qwen2.5-0.5B-Instruct-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\nbitcache\n태그:\nspectral-compression\n+13개\n1천 다운로드\n♥ 좋아요2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-abliterated-i1-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\nchat\n태그:\nabliterated\n+22개\n982 다운로드\n♥ 좋아요0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "tensorblock/Qwen2.5-0.5B-Instruct-GGUF\n배포자\ntensorblock\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+9개\n978 다운로드\n♥ 좋아요0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "gaianet/Qwen2.5-0.5B-Instruct-GGUF\n배포자\ngaianet\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\nchat\n+20개\n935 다운로드\n♥ 좋아요0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "ThomasBaruzier/Qwen2.5-Coder-0.5B-Instruct-GGUF\n배포자\nThomasBaruzier\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\ncode\n+14개\n836 다운로드\n♥ 좋아요1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-Coder-0.5B-Instruct-i1-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ncode\n태그:\ncodeqwen\n+12개\n761 다운로드\n♥ 좋아요1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Felladrin/gguf-Q5_K_M-Qwen2.5-0.5B-Instruct\n배포자\nFelladrin\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n양자화:\nQ5_K_M\n태그:\ngguf\n태그:\ntext-generation\n+23개\n672 다운로드\n♥ 좋아요0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "second-state/Qwen2.5-Coder-0.5B-Instruct-GGUF\n배포자\nsecond-state\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ntext-generation\n태그:\ncode\n+13개\n672 다운로드\n♥ 좋아요1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-Coder-0.5B-Instruct-abliterated-i1-GGUF\n배포자\nmradermacher\n모델 계열:\nQwen2.5\n파라미터 규모:\n0.5B\n태그:\ngguf\n태그:\ncode\n태그:\ncodeqwen\n+14개\n636 다운로드\n♥ 좋아요0",
+        "id": ""
+      },
+      {
+        "aria": "다운로드: qwen2.5-0.5b-instruct-fp16.gguf",
+        "text": "다운로드",
+        "id": ""
+      },
+      {
+        "aria": "다운로드: qwen2.5-0.5b-instruct-q2_k.gguf",
+        "text": "다운로드",
+        "id": ""
+      },
+      {
+        "aria": "다운로드: qwen2.5-0.5b-instruct-q3_k_m.gguf",
+        "text": "다운로드",
+        "id": ""
+      },
+      {
+        "aria": "다운로드: qwen2.5-0.5b-instruct-q4_0.gguf",
+        "text": "다운로드",
+        "id": ""
+      },
+      {
+        "aria": "다운로드: qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        "text": "다운로드",
+        "id": ""
+      },
+      {
+        "aria": "다운로드: qwen2.5-0.5b-instruct-q5_0.gguf",
+        "text": "다운로드",
+        "id": ""
+      },
+      {
+        "aria": "다운로드: qwen2.5-0.5b-instruct-q5_k_m.gguf",
+        "text": "다운로드",
+        "id": ""
+      },
+      {
+        "aria": "다운로드: qwen2.5-0.5b-instruct-q6_k.gguf",
+        "text": "다운로드",
+        "id": ""
+      },
+      {
+        "aria": "다운로드: qwen2.5-0.5b-instruct-q8_0.gguf",
+        "text": "다운로드",
+        "id": ""
+      }
+    ]
+  }
+}

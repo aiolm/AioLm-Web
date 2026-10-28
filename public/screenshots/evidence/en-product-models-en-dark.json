@@ -1,0 +1,158 @@
+{
+  "locale": "en",
+  "id": "product-models-en-dark",
+  "file": "product-models-en-dark.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "c7e170432bd1a9d6c622cbb9b8dc6203ecccaf242a05d2724ae03bca3e664f42",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 9195,
+  "capture_session": "native-linux-1585426088974027bd0db0a60f61e8f1",
+  "captured_at": "2026-10-28T09:58:23.268370+00:00",
+  "image_sha256": "c7e170432bd1a9d6c622cbb9b8dc6203ecccaf242a05d2724ae03bca3e664f42",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual released desktop app model library with the real local model loaded",
+    "Dark theme selected through the app Settings interface",
+    "Raw native 1280 by 800 screenshot, no resizing or retouching"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\nSkip to workspace\nAioLM\nWorkspace\nChat\nProjects\nModels\nRun a model\nDiscover\nRun & optimize\nLoaded sessions\nInference engines\nBenchmark\nIntegrations\nAPI server\nMCP servers\nTools\nDiagnostics\nSettings\nYour local AI workspace\nv0.3.2\nRun a model\nQwen2.5-0.5B-Instruct-Q4_K_M.gguf\nLocal inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · Registered installation\nmodel loaded\nUnload\nRun a model\n\nChoose a model, review its setup, and start it here.\n\nModels directory\nBrowse\nModels\n1\nAll engines\nShow supporting model files\nRescan\nQwen2.5-0.5B-Instruct-Q4_K_M.gguf\nArchitecture:\nqwen2\nParameters:\n630M\nQuantization:\nQ4_K_M\nContext length:\n32K\nTag:\ngguf\n+3 more\n468.6 MiB\nRunning\n/opt/aiolm-demo/models/Qwen2.5-0.5B-Instruct-Q4_K_M.gguf\nCopy path\nDelete",
+    "theme": "dark",
+    "locale": "en",
+    "buttons": [
+      {
+        "aria": "Minimize",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "Maximize",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "Close",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "Collapse sidebar",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Chat",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Projects",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Run a model",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Discover",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Loaded sessions",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Inference engines",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Benchmark",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "API server",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MCP servers",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Diagnostics",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Settings",
+        "id": ""
+      },
+      {
+        "aria": "Choose model: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "id": ""
+      },
+      {
+        "aria": "Model settings",
+        "text": "Local inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · Registered installation",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Unload",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Browse",
+        "id": ""
+      },
+      {
+        "aria": "Inference engine",
+        "text": "All engines",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Rescan",
+        "id": ""
+      },
+      {
+        "aria": "Configure & run: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Qwen2.5-0.5B-Instruct-Q4_K_M.gguf\nArchitecture:\nqwen2\nParameters:\n630M\nQuantization:\nQ4_K_M\nContext length:\n32K\nTag:\ngguf\n+3 more",
+        "id": ""
+      },
+      {
+        "aria": "Copy path: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Copy path",
+        "id": ""
+      },
+      {
+        "aria": "Delete: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Delete",
+        "id": ""
+      }
+    ]
+  }
+}

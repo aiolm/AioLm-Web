@@ -1,0 +1,30 @@
+{
+  "locale": "ko",
+  "id": "adapter-setup",
+  "file": "ko/adapter-setup.png",
+  "width": 1280,
+  "height": 900,
+  "sha256": "ebc99913faffa0337e525820a01e61cf29813d0607e185d3233b09a792179969",
+  "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+  "app_version": "0.3.2",
+  "released": false,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+  "process_id": 7979,
+  "capture_session": "native-current-713789d-20261028",
+  "captured_at": "2026-10-28T09:33:03.957746+00:00",
+  "evidence_file": "evidence/ko-adapter-setup.json",
+  "image_sha256": "ebc99913faffa0337e525820a01e61cf29813d0607e185d3233b09a792179969",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "The actual native file chooser imported engine.setup.json from the neutral local adapter example.",
+    "Existing executable and real GGUF model paths were entered using normal native WebDriver keyboard input.",
+    "The setup preparation button will execute actual --help and source-based model checks; no prefilled success data."
+  ],
+  "visible_text": "AioLM\n작업 공간으로 건너뛰기\nAioLM\n작업 공간\n채팅\n프로젝트\n모델 관리\n모델 실행\n찾아보기\n실행·성능\n로드된 세션\n추론 엔진\n벤치마크\n외부 연동\nAPI 서버\nMCP 서버\n공통 도구\n진단\n설정\n나의 로컬 AI 작업 공간\nv0.3.2\n추론 엔진\n모델 선택\nllama.cpp · PATH\n모델 없음\n추론 엔진\n\n자동으로 찾거나 설치 폴더를 고른 뒤, 모델을 선택해 연결하세요. 연결을 저장하기 전에 실제 모델 응답을 확인합니다.\n\n목록 새로고침\n모든 추론 엔진\n외부 추론 엔진 연결\n\n이 컴퓨터에서 실행 중인 서버를 찾거나, 설치 폴더에서 실행 방법을 확인합니다. 어떤 언어로 만든 엔진인지 알 필요는 없습니다.\n\n자동 찾기\n모델 선택\n연결\n자동 찾기\n설치 폴더 선택\n\n찾지 못했다면 엔진을 설치한 폴더를 선택하세요. 파일이나 설정을 직접 고르지 않아도 됩니다.\n\n고급: 실행 방법 직접 설정\n실행 파일·엔트리포인트 등록\n\n엔진 실행 방법을 선택하고 도움말을 읽은 뒤 모델·연결·호환성 확인 방법을 설정하세요. 마지막 ‘등록’이 성공하면 AioLM이 연결 정보를 자동 저장하므로 .engine.json을 직접 만들 필요가 없습니다.\n\n연결 설정 파일이 있나요?\n\n엔진·어댑터 제공자가 준비한 AioLM용 설정을 가져오세요. 실행 파일을 선택해도 이 설정 파일은 자동 생성되지 않습니다.\n\nAioLM 연결 설정 가져오기 (.json)\n\n압축을 푼 어댑터 폴더에서 연결 설정 JSON(예: *.setup.json)을 선택하세요. 일반 엔진 설정 JSON·모델 파일은 사용할 수 없습니다. 설정 파일이 없다면 아래에서 직접 등록하세요.\n\nLocal inference server\n\nConnect the selected installed server and model. The app reads the executable's real help, and the model check sends actual JSON and streaming requests to the running local service. This temporary guide example is not a bundled engine.\n\n선택한 어댑터의 설치 위치를 입력하세요.\nInstalled server executable (필수)\n찾아보기\nModel file (필수)\n찾아보기\nDisplay name (필수)\n\n이 설정은 선택한 프로그램을 실행해 연결 정보를 확인합니다. 실행 파일과 인자를 검토하세요.\n\n설정 확인 명령\n설치 정보 확인하고 계속\n1. 실행 파일과 엔트리포인트\n2. 도움말 확인\n3. 연결과 모델 확인\n4. 검토와 등록\n설정 파일 없이 직접 등록하기\n\n서버 실행 파일(예: llama-server.exe 또는 llama-server)을 고르세요. Python 엔진은 설치에 사용한 python.exe 또는 bin/python을 고르고, 스크립트 경로나 -m 모듈명을 아래 인자에 한 칸씩 추가합니다. 모델(.gguf·.safetensors), 설치 파일, 일반 설정 JSON을 실행 파일로 선택하지 마세요.\n\n엔진이 OpenAI 호환 HTTP/SSE를 제공하거나 별도 bridge가 이를 제공해야 합니다. 모델 호환성 검사(probe)도 필요합니다. 실행 파일만으로는 연결되지 않습니다. 제공자에게 모델·포트 옵션과 AioLM용 probe를 확인하세요.\n\n실행 파일 또는 인터프리터\n찾아보기\n엔트리포인트 인자 (스크립트, -m 모듈, 서브커맨드, 고정 옵션 — 순서 그대로)\n인자 추가\n파일 인자 추가\n표시 이름\n엔진 ID (custom.*)\n런타임 ID\n작업 디렉터리 (선택)\n찾아보기\n해시를 확인할 파일 (스크립트·어댑터 코드)\n인자 추가\n파일 인자 추가\n고정 환경 변수 (비밀 값 제외)\n변수 추가\n제공 방식\n엔진이 OpenAI 호환 HTTP를 직접 제공\n별도 bridge 프로그램이 HTTP를 제공\n실행 인자 역할 (선택)\n고정 옵션과 서브커맨드 명시\n\n실행 인자가 고정 옵션인지, 그 옵션의 값인지, 서브커맨드인지 지정하세요. 단어가 같아도 옵션 값은 서브커맨드로 처리하지 않습니다. 인터프리터와 스크립트 인자는 그대로 유지됩니다.\n\n추가 옵션 정보 (JSON, 선택)\n\n엔진이나 어댑터가 제공한 버전 정보가 있는 옵션 설명만 붙여 넣으세요. 도움말만으로 알기 어려운 값 형식·단위·비밀 값·재시작 조건·제약을 확인하는 데 사용합니다.\n\n다음\n고급: 등록 파일(manifest) 가져오기",
+  "capture_method": "Unmodified native Tauri WebView screenshot through WebKitGTK WebDriver; real Rust IPC backend. No route, IPC or response mock.",
+  "build_test_fixtures": false,
+  "build_embedded_assets": true
+}

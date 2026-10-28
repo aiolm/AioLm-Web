@@ -1,0 +1,30 @@
+{
+  "locale": "en",
+  "id": "adapter-setup",
+  "file": "en/adapter-setup.png",
+  "width": 1280,
+  "height": 900,
+  "sha256": "e8772f6b0fd6afc308ed2b070fb98fb5d4f6f8715a70974307d22ce6e3444de4",
+  "source_commit": "713789d2c50fec6bcddaa15f4739d62f86b9909f",
+  "app_version": "0.3.2",
+  "released": false,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "e8da4e94076713fdfb817840a3afdea1fae2a093a058818ee7fb46e57f096572",
+  "process_id": 7979,
+  "capture_session": "native-current-713789d-20261028",
+  "captured_at": "2026-10-28T09:33:02.938078+00:00",
+  "evidence_file": "evidence/en-adapter-setup.json",
+  "image_sha256": "e8772f6b0fd6afc308ed2b070fb98fb5d4f6f8715a70974307d22ce6e3444de4",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "The actual native file chooser imported engine.setup.json from the neutral local adapter example.",
+    "Existing executable and real GGUF model paths were entered using normal native WebDriver keyboard input.",
+    "The setup preparation button will execute actual --help and source-based model checks; no prefilled success data."
+  ],
+  "visible_text": "AioLM\nSkip to workspace\nAioLM\nWorkspace\nChat\nProjects\nModels\nRun a model\nDiscover\nRun & optimize\nLoaded sessions\nInference engines\nBenchmark\nIntegrations\nAPI server\nMCP servers\nTools\nDiagnostics\nSettings\nYour local AI workspace\nv0.3.2\nInference engines\nChoose model\nllama.cpp · PATH\nno model loaded\nInference engines\n\nFind an engine automatically or choose its installation folder, then select a model and connect. AioLM checks actual model responses before saving the connection.\n\nRefresh list\nAll inference engines\nConnect an external inference engine\n\nFind a running server on this computer, or check how to launch an installation. You do not need to know which language the engine uses.\n\nFind automatically\nChoose a model\nConnect\nFind automatically\nChoose installation folder\n\nIf discovery misses your engine, choose its installation folder. You do not need to pick an executable or configuration file.\n\nAdvanced: configure the launch method manually\nRegister an executable or entry point\n\nChoose how to launch the engine, read its help, then configure model, connection and compatibility checks. After Register succeeds, AioLM saves the connection details automatically. You do not need to create an .engine.json file.\n\nHave a connection setup file?\n\nImport an AioLM setup prepared by the engine or adapter provider. Choosing an executable does not generate this file.\n\nImport AioLM connection setup (.json)\n\nUnpack the adapter folder and select its connection setup JSON (for example *.setup.json). Ordinary engine configuration JSON and model files are not setup recipes. Without a setup file, register manually below.\n\nLocal inference server\n\nConnect the selected installed server and model. The app reads the executable's real help, and the model check sends actual JSON and streaming requests to the running local service. This temporary guide example is not a bundled engine.\n\nEnter the installation locations for this adapter.\nInstalled server executable (Required)\nBrowse\nModel file (Required)\nBrowse\nDisplay name (Required)\n\nThis setup runs the selected program to check connection details. Review the executable and arguments.\n\nSetup command\nCheck installation and continue\n1. Executable and entry point\n2. Check help\n3. Connection and model checks\n4. Review and register\nRegister manually without a setup file\n\nChoose the server executable (for example llama-server.exe or llama-server). For a Python engine, choose the python.exe or bin/python used to install it, then add the script path or -m and module name as separate arguments below. Do not select a model (.gguf or .safetensors), installer or ordinary configuration JSON as the executable.\n\nThe engine must provide OpenAI-compatible HTTP/SSE, or a separate bridge must provide it. A model compatibility probe is also required. An executable alone is insufficient. Ask the provider for model/port options and an AioLM-compatible probe.\n\nExecutable or interpreter\nBrowse\nEntry point arguments (script, -m module, subcommand, fixed options — in order)\nAdd argument\nAdd file argument\nDisplay name\nEngine ID (custom.*)\nRuntime ID\nWorking directory (optional)\nBrowse\nFiles whose hashes are checked (scripts, adapter code)\nAdd argument\nAdd file argument\nFixed environment variables (no secrets)\nAdd variable\nServing\nThe engine serves OpenAI-compatible HTTP itself\nA separate bridge program serves HTTP\nLaunch argument roles (optional)\nDeclare fixed options and subcommands\n\nIdentify which launch arguments are fixed options, their values or subcommands. A value is not a subcommand even if its text matches. Interpreter and script arguments stay unchanged.\n\nAdditional option information (JSON, optional)\n\nPaste versioned option information provided by the engine or adapter. It describes value types, units, secrets, restart requirements and constraints that help alone may not explain.\n\nNext\nAdvanced: import registration file (manifest)",
+  "capture_method": "Unmodified native Tauri WebView screenshot through WebKitGTK WebDriver; real Rust IPC backend. No route, IPC or response mock.",
+  "build_test_fixtures": false,
+  "build_embedded_assets": true
+}

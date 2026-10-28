@@ -2,7 +2,7 @@ import type { GuideContent } from './types';
 const content: GuideContent = {
   title: 'AioLM guides', description: 'New here? Install the app first, then follow the pictures and buttons to start a conversation on your own computer.',
   navigation: 'Guides', onPage: 'On this page', related: 'Next steps', download: 'See all download files',
-  screenshotNotice: "Captions distinguish the released v0.3.2 interface from unreleased previews. All screenshots use example data; none records native installation or model inference.",
+  screenshotNotice: "Captions and capture records identify the app version and execution environment. Linux screens do not establish Windows or Mac support, every engine, or update installation.",
   enlarge: 'View larger', close: 'Close',
   panHint: 'Swipe sideways to see the rest of the image.',
   guides: {
@@ -22,11 +22,11 @@ const content: GuideContent = {
       {"id":"engine","title":"4. Prepare the engine","body":["Open Inference engines and compare OS, device and model-format requirements before choosing an engine. Install the selected runtime if needed; for a separately installed engine, follow the external connection guide."],"image":"llama-install","caption":"The llama.cpp CPU screen illustrates where the Install button is. It is not a preferred-engine recommendation or verification of other engines.","note":"A runtime is an installed copy of an engine. Check device compatibility and the external-engine connection guide first.","links":[{"href":"/en/guides/adapters#find","label":"External-engine connection steps"}]},
       {"id":"download","title":"5. Download one small model","body":["Open Discover, select a format supported by your chosen engine and search for a model. Open a repository to see its files. Check whether the engine needs one file or a complete model folder.","Start with a small text model. Select Download next to a file and wait until it finishes. Check the model’s license and memory requirements too."],"image":"model-files","caption":"A GGUF example showing model search and download controls. Download the format and complete files required by your selected engine."},
       { id: 'library', title: '6. Find the downloaded file', body: ['Open Run a model on the left. Select your downloaded filename to open its settings. If it is missing, check that Models directory points to your download folder, then Rescan.'], image: 'model-library', caption: 'Select your own downloaded filename in the model list, rather than copying the example name.' },
-      { id: 'model', title: '7. Select the downloaded model', body: ['Open Run a model and select the downloaded file. In Model & settings, choose your installed engine and runtime, then follow Choose profile and Adjust options. A profile is a saved group of settings; start with Default.', 'Keep the defaults to begin with. Review required items and select the run action. If something is not ready, follow the explanation in the window first.'], image: 'model-settings', caption: 'Select step 1, Choose runtime, at the top to open this view. Choose your installed item on the right. The displayed installation state is illustrative.', more: [{ title: 'The model does not load', body: ['Check that the model matches the engine and fits in your computer’s memory. Read the readiness message and engine log first. Avoid changing unfamiliar options at random.', 'Context is how much conversation the AI can consider at once. Setting it too high can exhaust memory. Changing context, parallelism or launch options requires restarting the model.'] }] },
-      { id: 'chat', title: '8. Send a short message', body: ['After loading the model, select Chat on the left. Type a short question in the box below and select Send message.', 'Check text chat first. Images, audio, video and tools work only when both the model and engine support them.'], image: 'chat', caption: 'This shows the message box before a model is loaded, so sending is disabled. Run your model in step 7 first.', more: [{ title: 'Measure speed or share a result', body: ['A benchmark measures processing speed. Compare the same method and workload; a high score does not verify answer quality or every device feature.', 'Sharing is optional and requires browser verification. Review the public data first. Keep your recovery code or backup file private so you can manage the record without an account. Open Manage from the app or use this site’s Manage page.'] }] },
+      { id: 'model', title: '7. Select the downloaded model', body: ['Open Run a model and select the downloaded file. In Model & settings, choose your installed engine and runtime, then follow Choose profile and Adjust options. A profile is a saved group of settings; start with Default.', 'Keep the defaults to begin with. Review required items and select the run action. If something is not ready, follow the explanation in the window first.'], image: 'model-settings', caption: 'Select step 1, Choose runtime, at the top. Choose the runtime you installed on the right.', more: [{ title: 'The model does not load', body: ['Check that the model matches the engine and fits in your computer’s memory. Read the readiness message and engine log first. Avoid changing unfamiliar options at random.', 'Context is how much conversation the AI can consider at once. Setting it too high can exhaust memory. Changing context, parallelism or launch options requires restarting the model.'] }] },
+      { id: 'chat', title: '8. Send a short message', body: ['After loading the model, select Chat on the left. Type a short question in the box below and select Send message.', 'Check text chat first. Images, audio, video and tools work only when both the model and engine support them.'], image: 'chat', caption: 'After running the model, send a short question from the message box. Its answer appears in the conversation above.', more: [{ title: 'Measure speed or share a result', body: ['A benchmark measures processing speed. Compare the same method and workload; a high score does not verify answer quality or every device feature.', 'Sharing is optional and requires browser verification. Review the public data first. Keep your recovery code or backup file private so you can manage the record without an account. Open Manage from the app or use this site’s Manage page.'] }] },
     ] },
     compatibility: { title: 'Choose an engine for your computer', description: "Compare your OS, device, memory and model format before choosing an engine. Check installation requirements and actual verification status together.", sections: [
-      { id: 'engines', title: 'Open the engine list', body: ['Select Inference engines on the left. Avoid an engine marked Unavailable on this device.'], image: 'engines', caption: 'Built-in engines still need to be installed. An item appearing in this list does not mean it is installed.' },
+      { id: 'engines', title: 'Open the engine list', body: ['Select Inference engines on the left. Avoid an engine marked Unavailable on this device.'], image: 'engines', caption: 'The inference-engine screen in the unreleased update. Check the installation and device-support status before choosing an item.' },
       {"id":"choose","title":"Which engine should I choose?","table":{"headers":["Engine","Choose it when…"],"rows":[["llama.cpp","Using GGUF with a supported Windows, Mac or Linux build"],["vLLM","You have a supported Linux accelerator setup"],["vLLM · vllm-metal","Using vLLM on an Apple silicon Mac with macOS 15+"],["MLX","Using MLX models on an Apple silicon Mac"],["External inference engine","Prepare a separately installed engine, then check its device, model and local connection requirements."]]},"note":"Intel Macs cannot use MLX or vllm-metal. Check the installation screen’s requirements first."},
       { id: 'models', title: 'Download the right model type', body: ['llama.cpp uses GGUF files. vLLM and MLX usually need a complete model folder with weights, settings and tokenizer files. Do not copy just one file; choose the right format in Discover.', 'If memory is limited, try a smaller model. For images or audio, check both the model description and the support shown in the app.'], image: 'discover', caption: 'Choose the engine and model format at the top of Discover first.', more: [{ title: 'Detailed vLLM and MLX requirements', body: ['Managed Linux vLLM installs CUDA dependencies. AMD ROCm needs a separately prepared compatible Python environment and driver. AioLM does not install system GPU drivers.', 'vllm-metal needs Apple silicon, macOS 15+ and native arm64 Python 3.12; Intel and Rosetta Python are not supported. MLX also needs Apple silicon and a compatible Python environment.', 'Native Windows vLLM, WSL and remote servers are not local runtime targets here. Python models need a complete safetensors or supported MLX snapshot. vllm-metal supports only a subset of GGUF files, not all ordinary GGUF models.'] }] },
       { id: 'limits', title: 'What still needs checking', body: ['Images, audio, video and tools need support from both the engine and model. Registering an engine does not enable every feature.'], more: [{ title: 'v0.3.2 verification limits and known issues', body: ['The SmolVLM image/video content-quality failure (F09) is unresolved.', 'Passing a package build does not verify inference on every device. Overall Linux acceptance and real v0.3.1 → v0.3.2 update installation/UI acceptance are not complete.', 'Benchmarks, deep verification and portable bundles have engine-specific support. External inference engines (custom.*) are not accepted by the current public benchmark-sharing contract.'] }] },
@@ -52,7 +52,7 @@ const content: GuideContent = {
           ],
           "note": "A discovered item is a candidate, not a verified connection. Installation discovery can continue only when the launch method is clear.",
           "image": "auto-find",
-          "caption": "An unreleased automatic-discovery screen with example data, not an actual engine run."
+          "caption": "The unreleased automatic-discovery screen. Select a discovered item, or choose the installation folder if none is found."
         },
         {
           "id": "choose-model",
@@ -62,7 +62,7 @@ const content: GuideContent = {
             "If no model is available, prepare a model on the running server or add a model to AioLM, then check again."
           ],
           "image": "auto-model",
-          "caption": "Choosing a model from an example server in the unreleased screen."
+          "caption": "The unreleased model-selection screen. Choose a model offered by the selected running server."
         },
         {
           "id": "connect",
@@ -73,7 +73,7 @@ const content: GuideContent = {
           ],
           "note": "A text connection check does not verify image, audio, video, tool support or answer quality.",
           "image": "auto-connect",
-          "caption": "An example of the unreleased success screen. The displayed result is illustrative, not an actual engine check."
+          "caption": "The unreleased connection-result screen. A completed connection is saved only after the selected model passes response and streaming checks."
         },
         {
           "id": "unconfirmed",
@@ -138,16 +138,16 @@ const content: GuideContent = {
           "id": "advanced",
           "title": "Advanced: manual registration",
           "body": [
-            "Use these expandable instructions for the public v0.3.2 or when configuring a known launch method manually. In the next update, open Advanced: configure the launch method manually below automatic connection. The pictures show the earlier registration controls, not the new automatic flow."
+            "Expand these instructions when using the public v0.3.2 or when you need to configure a known launch method manually. The pictures show the advanced registration controls in the unreleased update. Button names in the public version are explained below."
           ],
           "more": [
             {
-              "title": "Open registration in the published v0.3.2",
+              "title": "Open manual registration",
               "body": [
-                "Stop running models, then select Inference engines → Add inference engine. Use a supplied setup file if you have one, or fill in the manual registration form."
+                "Stop running models, then select Inference engines → Add inference engine. In the public v0.3.2, use the manual registration form. In the unreleased update, expand Advanced: configure the launch method manually below automatic connection."
               ],
               "image": "adapter-add",
-              "caption": "Add a new external engine here. No vendor selection is required."
+              "caption": "Open the advanced registration form in the unreleased update when you need to enter the launch method yourself."
             },
             {
               "title": "Import a setup file you already received",
@@ -169,7 +169,7 @@ const content: GuideContent = {
                 "If the provider’s command is “python -m vendor_engine.serve”, choose that Python and enter two separate arguments. Replace vendor_engine.serve with the real installed module."
               ],
               "image": "adapter-setup",
-              "caption": "Preview of the manual-registration form in an unreleased source update. Example Engine and its paths are illustrative; select your actual files. This is not an inference result.",
+              "caption": "The manual-registration screen in the unreleased update. Check the installed program and its arguments; model responses are verified separately.",
               "code": "Executable: installed environment’s python.exe or bin/python\nArgument 1: -m\nArgument 2: vendor_engine.serve"
             },
             {
@@ -178,7 +178,7 @@ const content: GuideContent = {
                 "Select Discover help to read the selected program’s options. If it fails, check the file, Python environment and required libraries. Successful help discovery does not prove model inference."
               ],
               "image": "adapter-help",
-              "caption": "Review help for the selected command. This screenshot is not evidence of successful execution."
+              "caption": "The help-review step in the unreleased advanced form. Seeing program options does not establish that a model can answer."
             },
             {
               "title": "Set model bindings and compatibility checks",
@@ -188,7 +188,7 @@ const content: GuideContent = {
                 "The probe reports schema_version: 1, the registered engine_id/runtime_id, model path, support and capabilities as JSON. Unsupported models must remain failures. HTTP/SSE, health path and model/port/auth bindings must match the real server. A display name or renamed extension cannot replace this contract."
               ],
               "image": "adapter-check",
-              "caption": "Model/port bindings are above; probe, health checks and model formats are below. The example probe.py is not a bundled file."
+              "caption": "In the unreleased advanced form, review model and port bindings, compatibility and health checks, and supported model formats."
             },
             {
               "title": "Review, save and run a real model",
@@ -197,7 +197,7 @@ const content: GuideContent = {
                 "Run it after model compatibility checks pass. Check a short answer, cancellation followed by another question, stopping and restarting."
               ],
               "image": "adapter-review",
-              "caption": "Review the common registration details. Successful registration and successful inference are separate checks.",
+              "caption": "The final review in the unreleased advanced form. After saving the registration, run the model and check its response.",
               "body": []
             }
           ]
@@ -231,7 +231,7 @@ const content: GuideContent = {
           "title": "What has actually been verified",
           "body": [
             "2026-10-28: registered external CPU llama-server b11669 as custom.independent-cpu through the public v0.3.2 CLI with a fixed Qwen2.5-0.5B model. Verified a real “5” response, token usage, stream cancellation, restart, removal/re-registration and closed ports after shutdown.",
-            "This is CLI evidence for that Linux CPU combination. It does not establish compatibility with other engine, model or device combinations. Screenshots use example data. Native app UI, actual update installation and overall Linux acceptance were not completed by this check."
+            "This historical record covers that Linux CPU CLI combination. The app captures have separate records; neither establishes other engine or device combinations, overall Linux acceptance, or actual update installation."
           ],
           "more": [
             {

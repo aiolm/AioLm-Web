@@ -1,0 +1,168 @@
+{
+  "locale": "zh",
+  "id": "llama-install",
+  "file": "zh/llama-install.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "86b4916dc17132bd104e1e49179bcf33932de48db4f0e01fc4f4b791953b51f3",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 2688,
+  "capture_session": "native-linux-aa587bc8eb66468faa8c51e71ab0d8d3",
+  "captured_at": "2026-10-28T09:21:59.491552+00:00",
+  "image_sha256": "86b4916dc17132bd104e1e49179bcf33932de48db4f0e01fc4f4b791953b51f3",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual CPU runtime installation controls from the released native app",
+    "The available build metadata comes from the actual public release API",
+    "No runtime was installed for this screenshot"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\n跳转到工作区\nAioLM\n工作空间\n聊天\n项目\n模型管理\n运行模型\n发现\n运行与优化\nLoaded sessions\n推理引擎\n基准测试\n外部集成\nAPI 服务器\nMCP 服务器\n工具\n诊断\n设置\n本地 AI 工作空间\nv0.3.2\n推理引擎\n选择模型\nllama.cpp · PATH\n未加载模型\n推理引擎\n\n注册推理引擎的可执行文件或入口点，再根据--help配置运行选项。内置适配器也在同一列表中提供。\n\n刷新可安装版本\n所有推理引擎\nllama.cpp\n\n内置适配器 · llama-server\n\nDetected device\nGPU\nNo dedicated GPU detected\nCPU\nAMD EPYC 9V74 80-Core Processor\n5 Core / 5 Thread\nOS\nlinux/x86_64\nShow all backends\n6 hidden for this device\n\n模型选择与设置 → 配置预设\nExecution profiles\n\nDeep verification\n\nllama.cpp · PATH\n\nRuns the correctness check against the selected model itself instead of the small canary. It reads the model twice and can take up to an hour; progress and cancellation are in the task strip, and the panel can be left meanwhile.\n\nDeep verification\nInstalled runtimes\n无\nAvailable runtimes\nCPU-only\nrecommended\n\nno GPU required · No GPU detected, so the CPU build is the fit.\n\nLatest b11946 · SHA-256 published\nInstall b11946\n高级",
+    "theme": "light",
+    "locale": "zh",
+    "buttons": [
+      {
+        "aria": "最小化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "最大化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "关闭",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "收起侧边栏",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "聊天",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "项目",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "运行模型",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "发现",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Loaded sessions",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "推理引擎",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "基准测试",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "API 服务器",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MCP 服务器",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "诊断",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "设置",
+        "id": ""
+      },
+      {
+        "aria": "选择模型",
+        "text": "选择模型",
+        "id": ""
+      },
+      {
+        "aria": "模型设置",
+        "text": "llama.cpp · PATH",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "刷新可安装版本",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "所有推理引擎",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "",
+        "id": "runtime-show-all"
+      },
+      {
+        "aria": null,
+        "text": "Execution profiles",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Deep verification",
+        "id": ""
+      },
+      {
+        "aria": "Install b11946: CPU-only",
+        "text": "Install b11946",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "",
+        "id": ""
+      }
+    ]
+  }
+}

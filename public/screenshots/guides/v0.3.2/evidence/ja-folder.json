@@ -1,0 +1,72 @@
+{
+  "locale": "ja",
+  "id": "folder",
+  "file": "ja/folder.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "83d47ba0124c27e17ee3e134e513e88a8c43f220248f4e9a3f7ada46945d62fb",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 2688,
+  "capture_session": "native-linux-bba01fd05a19466c9b8cbe90468f2d33",
+  "captured_at": "2026-10-28T09:14:19.484149+00:00",
+  "image_sha256": "83d47ba0124c27e17ee3e134e513e88a8c43f220248f4e9a3f7ada46945d62fb",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual model folder selected through the native GTK file picker",
+    "Selected folder /opt/aiolm-demo/models contains the real GGUF model"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\nAioLM\nAioLMへようこそ\n\nいくつかの設定で、自分だけのワークスペースに。\n\n✓\n言語\n✓\nテーマ\n3\nモデルフォルダー\n\nあとで設定とモデルライブラリから変更できます。\n\n03 / 03\nモデルの保存先を選択\n\nローカルモデルの検索先と、新しいモデルのダウンロード先を選択してください。\n\nモデルフォルダー\n\n既定のフォルダー、またはローカルモデルがあるフォルダーを選択してください。モデルはあとでダウンロードできます。\n\nフォルダーを選択\n既定のフォルダーを使用\nモデルはあとから追加できます\n\n準備ができたらモデルを追加しましょう。フォルダーを選択しても、既存のファイルは移動・削除されません。\n\n戻る\nAioLMを始める\n→",
+    "theme": "light",
+    "locale": "ja",
+    "buttons": [
+      {
+        "aria": "最小化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "最大化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "閉じる",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "フォルダーを選択",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "既定のフォルダーを使用",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "戻る",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "AioLMを始める\n→",
+        "id": ""
+      }
+    ]
+  }
+}

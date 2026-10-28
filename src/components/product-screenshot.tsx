@@ -4,14 +4,12 @@ import lightCapture from '../../public/screenshots/product-models-en-light.png';
 import darkCapture from '../../public/screenshots/product-models-en-dark.png';
 
 /**
- * A real screenshot of the desktop app's model workspace.
- *
- * The light and dark captures are one <picture> that follows the operating
- * system: the browser downloads only the one that matches. The models
- * shown are public demonstration files; the captures carry no personal paths,
- * hardware or settings.
+ * Native desktop captures of the model workspace in light and dark themes.
+ * Source, process and image evidence is recorded in screenshots/manifest.json.
+ * The picture follows the operating system color scheme and downloads one
+ * variant. Captures must use an isolated profile without personal user data.
  */
-const SCREENSHOT = { width: 1440, height: 900 } as const;
+const SCREENSHOT = { width: 1280, height: 800 } as const;
 
 export function ProductScreenshot({ t }: { t: Translator }): React.JSX.Element {
   const common = {

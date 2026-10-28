@@ -1,0 +1,297 @@
+{
+  "locale": "ja",
+  "id": "discover",
+  "file": "ja/discover.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "e300c7e0d1d66650115be7fbd269c3108975d94a714bf2f322c4d692a72810c0",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 9195,
+  "capture_session": "native-linux-4b40562e5d2745b4af5ee0bd73f59fab",
+  "captured_at": "2026-10-28T09:55:34.946308+00:00",
+  "image_sha256": "e300c7e0d1d66650115be7fbd269c3108975d94a714bf2f322c4d692a72810c0",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual repository search in the released native app",
+    "The model list comes from live public model metadata; no result fixture"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\nワークスペースへ移動\nAioLM\nワークスペース\nチャット\nプロジェクト\nモデル管理\nモデル実行\n検索\n実行・最適化\nLoaded sessions\n推論エンジン\nベンチマーク\n外部連携\nAPIサーバー\nMCPサーバー\nツール\n診断\n設定\nローカル AI ワークスペース\nv0.3.2\n検索\nQwen2.5-0.5B-Instruct-Q4_K_M.gguf\nLocal inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 登録したインストール先\nモデル読み込み済み\nアンロード\nHugging Faceでモデルを探す\n\nモデルファイルを探してダウンロードし、起動設定でランタイムとの互換性を確認します。\n\n保存先\n/opt/aiolm-demo/models\n推論エンジン\nLocal inference server\nモデル形式\nGGUF\n検索\nSort\nMost downloads\nスキャン中\nリポジトリ (30)\n検索中\nQwen/Qwen2.5-0.5B-Instruct-GGUF\n配布元\nQwen\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+8件\n35.8万 downloads\n♥ いいね160\nbartowski/Qwen2.5-0.5B-Instruct-GGUF\n配布元\nbartowski\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+7件\n10.9万 downloads\n♥ いいね19\nQwen/Qwen2.5-Coder-0.5B-Instruct-GGUF\n配布元\nQwen\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\ncode\n+14件\n3.2万 downloads\n♥ いいね40\nlmstudio-community/Qwen2.5-0.5B-Instruct-GGUF\n配布元\nlmstudio-community\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+7件\n1.3万 downloads\n♥ いいね8\nbartowski/Qwen2.5-Coder-0.5B-Instruct-GGUF\n配布元\nbartowski\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\ncode\n+11件\n6269 downloads\n♥ いいね4\nThomasBaruzier/Qwen2.5-0.5B-Instruct-GGUF\n配布元\nThomasBaruzier\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+20件\n5067 downloads\n♥ いいね0\nbartowski/Qwen2.5-Coder-0.5B-Instruct-abliterated-GGUF\n配布元\nbartowski\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\ncode\n+13件\n3603 downloads\n♥ いいね13\nmradermacher/Qwen2.5-0.5B-Instruct-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\nchat\nタグ:\nen\n+7件\n2535 downloads\n♥ いいね0\nlegraphista/Qwen2.5-0.5B-Instruct-IMat-GGUF\n配布元\nlegraphista\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+19件\n2251 downloads\n♥ いいね0\nunsloth/Qwen2.5-Coder-0.5B-Instruct-GGUF\n配布元\nunsloth\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ncode\nタグ:\nqwen-coder\n+13件\n2213 downloads\n♥ いいね12\nlmstudio-community/Qwen2.5-Coder-0.5B-Instruct-GGUF\n配布元\nlmstudio-community\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\ncode\n+11件\n2210 downloads\n♥ いいね6\nmradermacher/Qwen2.5-0.5B-Instruct-3MPER0RR-abliterated-i1-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\nconversational\nタグ:\nen\n+8件\n1980 downloads\n♥ いいね0\nmradermacher/Qwen2.5-0.5B-Instruct-i1-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\nchat\nタグ:\nen\n+8件\n1860 downloads\n♥ いいね2\nmradermacher/Qwen2.5-0.5B-Instruct-abliterated-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\nchat\nタグ:\nabliterated\n+21件\n1789 downloads\n♥ いいね1\nsecond-state/Qwen2.5-0.5B-Instruct-GGUF\n配布元\nsecond-state\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+8件\n1656 downloads\n♥ いいね2\nunsloth/Qwen2.5-Coder-0.5B-Instruct-128K-GGUF\n配布元\nunsloth\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ncode\nタグ:\nqwen-coder\n+14件\n1598 downloads\n♥ いいね7\nQuantFactory/Qwen2.5-0.5B-Instruct-GGUF\n配布元\nQuantFactory\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+8件\n1588 downloads\n♥ いいね3\nMaziyarPanahi/Qwen2.5-0.5B-Instruct-GGUF\n配布元\nMaziyarPanahi\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nmistral\n+11件\n1353 downloads\n♥ いいね2\nmradermacher/Qwen2.5-0.5B-Instruct-uncensored-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\nen\nタグ:\nconversational\n+5件\n1276 downloads\n♥ いいね2\nMungert/Qwen2.5-0.5B-Instruct-GGUF\n配布元\nMungert\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+10件\n1240 downloads\n♥ いいね5\nmradermacher/Qwen2.5-0.5B-Instruct-abliterated-SFT-i1-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation-inference\nタグ:\nunsloth\n+12件\n1013 downloads\n♥ いいね1\nmradermacher/BitCache-Qwen2.5-0.5B-Instruct-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\nbitcache\nタグ:\nspectral-compression\n+13件\n1011 downloads\n♥ いいね2\nmradermacher/Qwen2.5-0.5B-Instruct-abliterated-i1-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\nchat\nタグ:\nabliterated\n+22件\n982 downloads\n♥ いいね0\ntensorblock/Qwen2.5-0.5B-Instruct-GGUF\n配布元\ntensorblock\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+9件\n978 downloads\n♥ いいね0\ngaianet/Qwen2.5-0.5B-Instruct-GGUF\n配布元\ngaianet\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+20件\n935 downloads\n♥ いいね0\nThomasBaruzier/Qwen2.5-Coder-0.5B-Instruct-GGUF\n配布元\nThomasBaruzier\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\ncode\n+14件\n836 downloads\n♥ いいね1\nmradermacher/Qwen2.5-Coder-0.5B-Instruct-i1-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ncode\nタグ:\ncodeqwen\n+12件\n761 downloads\n♥ いいね1\nFelladrin/gguf-Q5_K_M-Qwen2.5-0.5B-Instruct\n配布元\nFelladrin\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\n量子化:\nQ5_K_M\nタグ:\ngguf\nタグ:\ntext-generation\n+23件\n672 downloads\n♥ いいね0\nsecond-state/Qwen2.5-Coder-0.5B-Instruct-GGUF\n配布元\nsecond-state\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\ncode\n+13件\n672 downloads\n♥ いいね1\nmradermacher/Qwen2.5-Coder-0.5B-Instruct-abliterated-i1-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ncode\nタグ:\ncodeqwen\n+14件\n636 downloads\n♥ いいね0\nモデルファイルを確認するリポジトリを選択してください。",
+    "theme": "light",
+    "locale": "ja",
+    "buttons": [
+      {
+        "aria": "最小化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "最大化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "閉じる",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "サイドバーを折りたたむ",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "チャット",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "プロジェクト",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "モデル実行",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "検索",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Loaded sessions",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "推論エンジン",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "ベンチマーク",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "APIサーバー",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MCPサーバー",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "診断",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "設定",
+        "id": ""
+      },
+      {
+        "aria": "モデルを選択: Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "text": "Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+        "id": ""
+      },
+      {
+        "aria": "モデル設定",
+        "text": "Local inference server · version: 0.7.0-dev (build 11669, commit 620d2225c) built with GNU 11.4.0 for Linux x86_64 (local-cpu) · cpu · 登録したインストール先",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "アンロード",
+        "id": ""
+      },
+      {
+        "aria": "推論エンジン",
+        "text": "Local inference server",
+        "id": ""
+      },
+      {
+        "aria": "モデル形式",
+        "text": "GGUF",
+        "id": ""
+      },
+      {
+        "aria": "Sort",
+        "text": "Most downloads",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "スキャン中",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Qwen/Qwen2.5-0.5B-Instruct-GGUF\n配布元\nQwen\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+8件\n35.8万 downloads\n♥ いいね160",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "bartowski/Qwen2.5-0.5B-Instruct-GGUF\n配布元\nbartowski\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+7件\n10.9万 downloads\n♥ いいね19",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF\n配布元\nQwen\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\ncode\n+14件\n3.2万 downloads\n♥ いいね40",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "lmstudio-community/Qwen2.5-0.5B-Instruct-GGUF\n配布元\nlmstudio-community\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+7件\n1.3万 downloads\n♥ いいね8",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "bartowski/Qwen2.5-Coder-0.5B-Instruct-GGUF\n配布元\nbartowski\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\ncode\n+11件\n6269 downloads\n♥ いいね4",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "ThomasBaruzier/Qwen2.5-0.5B-Instruct-GGUF\n配布元\nThomasBaruzier\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+20件\n5067 downloads\n♥ いいね0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "bartowski/Qwen2.5-Coder-0.5B-Instruct-abliterated-GGUF\n配布元\nbartowski\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\ncode\n+13件\n3603 downloads\n♥ いいね13",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\nchat\nタグ:\nen\n+7件\n2535 downloads\n♥ いいね0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "legraphista/Qwen2.5-0.5B-Instruct-IMat-GGUF\n配布元\nlegraphista\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+19件\n2251 downloads\n♥ いいね0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "unsloth/Qwen2.5-Coder-0.5B-Instruct-GGUF\n配布元\nunsloth\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ncode\nタグ:\nqwen-coder\n+13件\n2213 downloads\n♥ いいね12",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "lmstudio-community/Qwen2.5-Coder-0.5B-Instruct-GGUF\n配布元\nlmstudio-community\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\ncode\n+11件\n2210 downloads\n♥ いいね6",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-3MPER0RR-abliterated-i1-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\nconversational\nタグ:\nen\n+8件\n1980 downloads\n♥ いいね0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-i1-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\nchat\nタグ:\nen\n+8件\n1860 downloads\n♥ いいね2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-abliterated-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\nchat\nタグ:\nabliterated\n+21件\n1789 downloads\n♥ いいね1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "second-state/Qwen2.5-0.5B-Instruct-GGUF\n配布元\nsecond-state\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+8件\n1656 downloads\n♥ いいね2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "unsloth/Qwen2.5-Coder-0.5B-Instruct-128K-GGUF\n配布元\nunsloth\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ncode\nタグ:\nqwen-coder\n+14件\n1598 downloads\n♥ いいね7",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "QuantFactory/Qwen2.5-0.5B-Instruct-GGUF\n配布元\nQuantFactory\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+8件\n1588 downloads\n♥ いいね3",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "MaziyarPanahi/Qwen2.5-0.5B-Instruct-GGUF\n配布元\nMaziyarPanahi\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nmistral\n+11件\n1353 downloads\n♥ いいね2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-uncensored-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\nen\nタグ:\nconversational\n+5件\n1276 downloads\n♥ いいね2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Mungert/Qwen2.5-0.5B-Instruct-GGUF\n配布元\nMungert\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+10件\n1240 downloads\n♥ いいね5",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-abliterated-SFT-i1-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation-inference\nタグ:\nunsloth\n+12件\n1013 downloads\n♥ いいね1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/BitCache-Qwen2.5-0.5B-Instruct-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\nbitcache\nタグ:\nspectral-compression\n+13件\n1011 downloads\n♥ いいね2",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-0.5B-Instruct-abliterated-i1-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\nchat\nタグ:\nabliterated\n+22件\n982 downloads\n♥ いいね0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "tensorblock/Qwen2.5-0.5B-Instruct-GGUF\n配布元\ntensorblock\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+9件\n978 downloads\n♥ いいね0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "gaianet/Qwen2.5-0.5B-Instruct-GGUF\n配布元\ngaianet\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\nchat\n+20件\n935 downloads\n♥ いいね0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "ThomasBaruzier/Qwen2.5-Coder-0.5B-Instruct-GGUF\n配布元\nThomasBaruzier\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\ncode\n+14件\n836 downloads\n♥ いいね1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-Coder-0.5B-Instruct-i1-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ncode\nタグ:\ncodeqwen\n+12件\n761 downloads\n♥ いいね1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "Felladrin/gguf-Q5_K_M-Qwen2.5-0.5B-Instruct\n配布元\nFelladrin\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\n量子化:\nQ5_K_M\nタグ:\ngguf\nタグ:\ntext-generation\n+23件\n672 downloads\n♥ いいね0",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "second-state/Qwen2.5-Coder-0.5B-Instruct-GGUF\n配布元\nsecond-state\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ntext-generation\nタグ:\ncode\n+13件\n672 downloads\n♥ いいね1",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "mradermacher/Qwen2.5-Coder-0.5B-Instruct-abliterated-i1-GGUF\n配布元\nmradermacher\nモデル系統:\nQwen2.5\nパラメータ数:\n0.5B\nタグ:\ngguf\nタグ:\ncode\nタグ:\ncodeqwen\n+14件\n636 downloads\n♥ いいね0",
+        "id": ""
+      }
+    ]
+  }
+}

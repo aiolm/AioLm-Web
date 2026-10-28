@@ -1,0 +1,72 @@
+{
+  "locale": "zh",
+  "id": "folder",
+  "file": "zh/folder.png",
+  "width": 1280,
+  "height": 800,
+  "sha256": "423a801608f95cd111b3819a5d24f681412518d5e26eba876fddf558024932d2",
+  "source_commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "app_version": "0.3.2",
+  "released": true,
+  "platform": "linux-x86_64",
+  "native_backend": true,
+  "ipc_mock": false,
+  "binary_sha256": "4d0230f8efc7a64aa0fcf53f71f63d6bb2c064b2e622e586136188fc2d799b13",
+  "process_id": 2688,
+  "capture_session": "native-linux-bba01fd05a19466c9b8cbe90468f2d33",
+  "captured_at": "2026-10-28T09:14:19.980683+00:00",
+  "image_sha256": "423a801608f95cd111b3819a5d24f681412518d5e26eba876fddf558024932d2",
+  "native_origin": "tauri://localhost",
+  "ui_observations": [
+    "Actual model folder selected through the native GTK file picker",
+    "Selected folder /opt/aiolm-demo/models contains the real GGUF model"
+  ],
+  "ui_snapshot": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "title": "AioLM — All-In-One LM",
+    "url": "tauri://localhost",
+    "text": "AioLM\nAioLM\n欢迎使用 AioLM\n\n只需几项设置，即可打造你的工作空间。\n\n✓\n语言\n✓\n主题\n3\n模型文件夹\n\n以后可以在设置和模型库中更改这些选项。\n\n03 / 03\n选择模型存储位置\n\n选择查找本地模型和保存新下载模型的位置。\n\n模型文件夹\n\n使用默认文件夹，或选择已有本地模型的文件夹。你可以稍后下载第一个模型。\n\n选择文件夹\n使用默认文件夹\n暂时没有模型也没关系\n\n准备好后再添加模型。选择文件夹不会移动或删除任何现有文件。\n\n上一步\n开始使用 AioLM\n→",
+    "theme": "light",
+    "locale": "zh",
+    "buttons": [
+      {
+        "aria": "最小化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "最大化",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": "关闭",
+        "text": "",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "选择文件夹",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "使用默认文件夹",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "上一步",
+        "id": ""
+      },
+      {
+        "aria": null,
+        "text": "开始使用 AioLM\n→",
+        "id": ""
+      }
+    ]
+  }
+}
