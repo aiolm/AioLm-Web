@@ -22,7 +22,7 @@ const messages = {
   "home.copyFailed": "コピーできませんでした。コマンドを選択して手動でコピーしてください。",
   "home.download": "ダウンロード",
   "home.windowsRequirements": "Windows x64 · EXE / MSI",
-  "home.windowsInstructions": "PowerShellで以下のコマンドを実行します。公式インストーラーを取得し、SHA-256チェックサムを確認してAioLMをインストールします。手動でインストールする場合は下のダウンロードリンクを使います。",
+  "home.windowsInstructions": "PowerShellで以下のコマンドを実行します。公式インストーラーを取得し、SHA-256チェックサムを確認してAioLMをインストールします。手動でインストールする場合は下のダウンロードボタンを使います。",
   "home.windowsWarning": "Windowsのインストーラーには発行元の署名がなく、セキュリティ警告が表示される場合があります。インストール前にAioLMの公式リリースとファイルのチェックサムを確認してください。",
   "home.macosRequirements": "macOS 13.3 以降 · Apple Silicon / Intel · DMG",
   "home.macosInstructions": "ターミナルで以下のコマンドを実行してください。Mac に合った DMG をダウンロードして SHA-256 チェックサムを確認し、アプリケーションフォルダーに AioLM をインストールします。ダウンロードした DMG からのインストールはガイドをご覧ください。",

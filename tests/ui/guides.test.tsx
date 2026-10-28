@@ -30,6 +30,9 @@ describe('public product guides', () => {
     expect(JSON.stringify(content)).not.toMatch(/Strata|TensorFold/);
     const index = renderToStaticMarkup(await Guides({ params: Promise.resolve({ locale }) }));
     expect(index).not.toContain('/guides/external-engines');
+    expect(index).toContain('class="guide-toc-region"');
+    expect(index).toContain('class="site-shell guide-layout guide-layout--article"');
+    for (const slug of guideSlugs) expect(index).toContain(`href="#guide-${slug}"`);
     for (const slug of guideSlugs) {
       expect(index).toContain(`href="/${locale}/guides/${slug}"`);
       const params = Promise.resolve({ locale, slug });
@@ -93,7 +96,7 @@ describe('public product guides', () => {
         expect(html.indexOf('class="install-box"')).toBeLessThan(html.indexOf('class="guide-download-choices"'));
         const windows = html.slice(html.indexOf('id="windows"'), html.indexOf('id="macos"'));
         expect(windows).toContain('class="install-security-warning" role="note"');
-        expect(windows.indexOf('install-security-warning')).toBeLessThan(windows.indexOf('guide-download-choices'));
+        expect(windows.indexOf('install-security-warning')).toBeGreaterThan(windows.indexOf('guide-download-choices'));
       }
       if (slug === 'getting-started') {
         expect(sections.filter(section => section.image).length).toBeGreaterThanOrEqual(7);
