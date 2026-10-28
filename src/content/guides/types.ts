@@ -1,5 +1,9 @@
-export const guideSlugs = ['install', 'compatibility', 'adapters', 'getting-started'] as const;
+export const guideSlugs = ['install', 'getting-started', 'compatibility', 'adapters'] as const;
 export type GuideSlug = typeof guideSlugs[number];
+export const guideImageIds = ['language', 'theme', 'folder', 'engines', 'llama-install', 'discover', 'model-files', 'model-library', 'model-settings', 'chat', 'updates', 'adapter-add', 'adapter-setup', 'adapter-help', 'adapter-check', 'adapter-review'] as const;
+export type GuideImageId = typeof guideImageIds[number];
+export type GuideTable = { headers: string[]; rows: string[][] };
+export type GuideMore = { title: string; body: string[]; code?: string };
 export type GuideSection = {
   id: string;
   title: string;
@@ -7,12 +11,15 @@ export type GuideSection = {
   steps?: string[];
   code?: string;
   note?: string;
-  table?: { headers: string[]; rows: string[][] };
-  screenshot?: boolean;
+  table?: GuideTable;
+  image?: GuideImageId;
+  caption?: string;
+  downloads?: 'windows' | 'macos' | 'linux';
+  more?: GuideMore[];
 };
 export type Guide = { title: string; description: string; sections: GuideSection[] };
 export type GuideContent = {
   title: string; description: string; navigation: string; onPage: string; related: string;
-  download: string; screenshotAlt: string; screenshotCaption: string;
+  download: string; screenshotNotice: string; enlarge: string; close: string; panHint: string;
   guides: Record<GuideSlug, Guide>;
 };

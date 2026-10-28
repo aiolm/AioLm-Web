@@ -18,6 +18,7 @@ describe('public product guides', () => {
       const html = renderToStaticMarkup(await GuidePage({ params }));
       expect(html).toContain(content.guides[slug].title);
       expect(html).toContain('aria-current="page"');
+      expect(html).toContain(content.screenshotNotice);
       expect(html).not.toMatch(/href="[^"]*github[^\"]*(?:\.md|\/docs)/);
       const sections = content.guides[slug].sections;
       expect(new Set(sections.map(section => section.id)).size).toBe(sections.length);
@@ -31,7 +32,13 @@ describe('public product guides', () => {
       if (slug === 'compatibility') for (const engine of ['llama.cpp', 'vLLM', 'MLX', 'vllm-metal', 'F09']) expect(html).toContain(engine);
       if (slug === 'adapters') for (const text of ['Strata', 'TensorFold', 'custom.*', 'HTTP/SSE']) expect(html).toContain(text);
       if (slug === 'install') for (const text of ['checksums.txt', 'SHA-256', 'aarch64.dmg', 'x64.dmg', 'AIOLM_HOME', 'v0.3.1', 'v0.3.2']) expect(html).toContain(text);
-      if (slug === 'getting-started') expect(html).toContain(content.screenshotCaption);
+      if (slug === 'getting-started') {
+        expect(sections.filter(section => section.image).length).toBeGreaterThanOrEqual(7);
+        for (const section of sections.filter(section => section.image)) {
+          expect(html).toContain(`/screenshots/guides/v0.3.2/${locale}/${section.image}.png`);
+          expect(html).toContain(section.caption);
+        }
+      }
     }
   });
   it.each(['missing', 'install.md', '__proto__'])('returns 404 for unknown guide %s', async slug => {

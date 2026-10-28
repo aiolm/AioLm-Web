@@ -1,0 +1,904 @@
+{
+  "source": "aiolm/AioLM",
+  "commit": "e439b52038142439c8c85b112d2949687fa273f2",
+  "version": "0.3.2",
+  "method": "Released React UI rendered in an isolated browser with synthetic IPC/data. No installer, model inference or engine probe was executed. Captures demonstrate controls, not native validation.",
+  "captures": [
+    {
+      "locale": "ko",
+      "id": "language",
+      "file": "ko/language.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "b2f83d161a0fe754bd78aae8d5045638a6636c6ae061cd6e6065aac540710599",
+      "focus": {
+        "x": 70.5234,
+        "y": 44.0165,
+        "width": 1.3333,
+        "height": 1.8824
+      }
+    },
+    {
+      "locale": "ko",
+      "id": "theme",
+      "file": "ko/theme.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "0f7724be6cc6d99aa0eaa321a80886b39baf5fbf6137747240ccd96f41b93a8c",
+      "focus": {
+        "x": 46.2969,
+        "y": 55.6048,
+        "width": 1.3333,
+        "height": 1.8824
+      }
+    },
+    {
+      "locale": "ko",
+      "id": "folder",
+      "file": "ko/folder.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "f62813bf763260245b197c90c2b907ce318fd6033d743a75c1c1903b31f12db1",
+      "focus": {
+        "x": 45.4635,
+        "y": 48.8695,
+        "width": 46.4531,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "ko",
+      "id": "engines",
+      "file": "ko/engines.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "b64fb4e89aac037fb71d76515ac686d221b060ca435b4c08311a6abb23e9b65d",
+      "focus": {
+        "x": 21.0833,
+        "y": 53.9816,
+        "width": 54.8776,
+        "height": 5.5882
+      }
+    },
+    {
+      "locale": "ko",
+      "id": "llama-install",
+      "file": "ko/llama-install.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "5c686baabc6ba380badf1f75a0a0678800fbc4f7c8e6ddfc753b2fb9f2aea7db",
+      "focus": {
+        "x": 86.5052,
+        "y": 86.1783,
+        "width": 9.9948,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "ko",
+      "id": "discover",
+      "file": "ko/discover.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "8bb82699e05f894eae6fe95aa88dabe361bfdcaeff2bfdb5da32ce6e5992a269",
+      "focus": {
+        "x": 24.6667,
+        "y": 34.9449,
+        "width": 12.8958,
+        "height": 2.2941
+      }
+    },
+    {
+      "locale": "ko",
+      "id": "model-files",
+      "file": "ko/model-files.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "d83afd97bd9378e4500297797e2ef048eaa259caffeb1a8da269e5580654f389",
+      "focus": {
+        "x": 53.7539,
+        "y": 49.75,
+        "width": 35.3333,
+        "height": 2.2941
+      }
+    },
+    {
+      "locale": "ko",
+      "id": "model-library",
+      "file": "ko/model-library.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "0a97d6f7da9a63505839c073609f66e43a2c11e34f2f41fa2015fc56635fee9e",
+      "focus": {
+        "x": 20.3333,
+        "y": 39.386,
+        "width": 52.3958,
+        "height": 2.4173
+      }
+    },
+    {
+      "locale": "ko",
+      "id": "model-settings",
+      "file": "ko/model-settings.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "a7f8df8124c4dd6ea7a3f621ada880ebecaad9ec87f823218619e97ae1ab5ead",
+      "focus": {
+        "x": 37.7656,
+        "y": 34.1268,
+        "width": 20.5,
+        "height": 1.693
+      }
+    },
+    {
+      "locale": "ko",
+      "id": "chat",
+      "file": "ko/chat.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "71d01ad778e02f60043420ba92d42176a68010bd12c741f31621b12d5e1494b2",
+      "focus": {
+        "x": 39.6667,
+        "y": 84.0588,
+        "width": 56.8333,
+        "height": 7.5294
+      }
+    },
+    {
+      "locale": "ko",
+      "id": "updates",
+      "file": "ko/updates.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "6c3aae7a65a26bfe8a06cecdb3cd297f72a50fd52e84bafa9abd9fcb1cef5c42",
+      "focus": {
+        "x": 54.9167,
+        "y": 59.9963,
+        "width": 9.2708,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "ko",
+      "id": "adapter-add",
+      "file": "ko/adapter-add.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "a6c1d8d1242cc35cbb5f9ea2039b5d2e4048517543c674ebdd6d77790b993e28",
+      "focus": {
+        "x": 20,
+        "y": 34.5129,
+        "width": 8.1615,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "ko",
+      "id": "adapter-setup",
+      "file": "ko/adapter-setup.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "d2b7d76262b9856aa29dc3ee4d353bf4376598c261613723d0edc0289cd435ec",
+      "focus": {
+        "x": 20,
+        "y": 41.864,
+        "width": 9.099,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "ko",
+      "id": "adapter-help",
+      "file": "ko/adapter-help.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "c1c0357f661d5e170ae3f5f4a5ee6bc08754c099ff96bf3a333630f7954b8330",
+      "focus": {
+        "x": 20,
+        "y": 84.8768,
+        "width": 6.9544,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "ko",
+      "id": "adapter-check",
+      "file": "ko/adapter-check.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "4dcf51f04e70b01229ecff9a32570495385d43332d05d7b626835edb0d736b36",
+      "focus": {
+        "x": 20,
+        "y": 50.807,
+        "width": 24.6107,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "ko",
+      "id": "adapter-review",
+      "file": "ko/adapter-review.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "7595fc49c5dfe6fe95b92842eb4942c783219c00839a1ad1063f062664efbb16",
+      "focus": {
+        "x": 20,
+        "y": 41.7482,
+        "width": 76.5,
+        "height": 43.7647
+      }
+    },
+    {
+      "locale": "en",
+      "id": "language",
+      "file": "en/language.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "bd826c86071d85393d9da5b53e727ee039b8fd519e87b26a67e49a27c325abae",
+      "focus": {
+        "x": 46.7969,
+        "y": 44.0165,
+        "width": 1.3333,
+        "height": 1.8824
+      }
+    },
+    {
+      "locale": "en",
+      "id": "theme",
+      "file": "en/theme.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "0532c772484fee8ec9fea0cae8d300d39ad9b16732aad817a3e4ada3a9a86a83",
+      "focus": {
+        "x": 46.2969,
+        "y": 55.6048,
+        "width": 1.3333,
+        "height": 1.8824
+      }
+    },
+    {
+      "locale": "en",
+      "id": "folder",
+      "file": "en/folder.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "1ecf50b6cafe4a60d342a5b270421246681d5cc2cebf2e8c4f06f3515ef0146e",
+      "focus": {
+        "x": 45.4635,
+        "y": 50.068,
+        "width": 46.4531,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "en",
+      "id": "engines",
+      "file": "en/engines.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "63954d7f9489dd9961ed6df2459670d12eb51937e8494f142121a1cbf56e01ee",
+      "focus": {
+        "x": 21.0833,
+        "y": 53.9816,
+        "width": 54.3815,
+        "height": 5.5882
+      }
+    },
+    {
+      "locale": "en",
+      "id": "llama-install",
+      "file": "en/llama-install.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "47871c9af047999f43bfd8bed6ae2c6fafc9eb93f958ba483a87b0709f54b823",
+      "focus": {
+        "x": 85.819,
+        "y": 88.3658,
+        "width": 10.681,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "en",
+      "id": "discover",
+      "file": "en/discover.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "22c5219f5b9a0a35e4ef6c5e4c7e072d6f3b8ff0042e13b75478585cd0ba3df2",
+      "focus": {
+        "x": 24.6667,
+        "y": 34.9449,
+        "width": 12.8958,
+        "height": 2.2941
+      }
+    },
+    {
+      "locale": "en",
+      "id": "model-files",
+      "file": "en/model-files.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "daed0ff6616664c602d558fdd9130b99f4e223b84d1db15bba29f99ca9d91a9b",
+      "focus": {
+        "x": 53.7539,
+        "y": 49.75,
+        "width": 34.2253,
+        "height": 2.2941
+      }
+    },
+    {
+      "locale": "en",
+      "id": "model-library",
+      "file": "en/model-library.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "c96ea199e445f09610cbf71b07218e921f586941d42b8a4a279ffe697883c148",
+      "focus": {
+        "x": 20.3333,
+        "y": 39.386,
+        "width": 50.3073,
+        "height": 2.4173
+      }
+    },
+    {
+      "locale": "en",
+      "id": "model-settings",
+      "file": "en/model-settings.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "250646079a9511043634313c30e7642ac817f9a97c27796155991694ffb1e2c6",
+      "focus": {
+        "x": 37.7656,
+        "y": 34.1268,
+        "width": 22.4596,
+        "height": 1.693
+      }
+    },
+    {
+      "locale": "en",
+      "id": "chat",
+      "file": "en/chat.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "7b5126ef98d9b0320beb3d926ab817f8f096761887ab9d2a49e60af26b6442c3",
+      "focus": {
+        "x": 39.6667,
+        "y": 84.0588,
+        "width": 56.8333,
+        "height": 7.5294
+      }
+    },
+    {
+      "locale": "en",
+      "id": "updates",
+      "file": "en/updates.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "660eda120dcf1acefe7eebb1603272c94220fd5e914e18d3f9265ed4833b90c7",
+      "focus": {
+        "x": 54.9167,
+        "y": 59.9963,
+        "width": 12.0638,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "en",
+      "id": "adapter-add",
+      "file": "en/adapter-add.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "ce5baf7c511bb19716635bdd65f8d62a7d69c8ae9f4553ccb86436c8cc05a531",
+      "focus": {
+        "x": 20,
+        "y": 34.5129,
+        "width": 12.3034,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "en",
+      "id": "adapter-setup",
+      "file": "en/adapter-setup.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "d991f018d2eb691eee1b36cd710aa6715f69a2ec3e56ee73fde88cff15ab72d9",
+      "focus": {
+        "x": 20,
+        "y": 44.0515,
+        "width": 14.7227,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "en",
+      "id": "adapter-help",
+      "file": "en/adapter-help.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "f31da6ff52f8ac3915365f31b8873e8dda9e0c892971cbb7b270d5f4270a0b90",
+      "focus": {
+        "x": 20,
+        "y": 87.0643,
+        "width": 8.5573,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "en",
+      "id": "adapter-check",
+      "file": "en/adapter-check.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "6ce0bdb332859c2ac3247b7c45282ccf9c4ef04565b3e49e99c8a6ee96367874",
+      "focus": {
+        "x": 20,
+        "y": 50.8768,
+        "width": 24.6107,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "en",
+      "id": "adapter-review",
+      "file": "en/adapter-review.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "95c9a497fc58566ff599e28b50a253d80f7fc0e1ea571c7ff8769e34404f150a",
+      "focus": {
+        "x": 20,
+        "y": 42.5239,
+        "width": 76.5,
+        "height": 43.7647
+      }
+    },
+    {
+      "locale": "ja",
+      "id": "language",
+      "file": "ja/language.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "588692ed134b12ec9221662e0b288e1dd0dfdbff486eca2cafea4bd7880785ca",
+      "focus": {
+        "x": 46.7969,
+        "y": 51.6636,
+        "width": 1.3333,
+        "height": 1.8824
+      }
+    },
+    {
+      "locale": "ja",
+      "id": "theme",
+      "file": "ja/theme.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "03a307093a9e91d4946f88705e18967791e2f0b77851fddabccd1f235d616ec8",
+      "focus": {
+        "x": 46.2969,
+        "y": 55.6048,
+        "width": 1.3333,
+        "height": 1.8824
+      }
+    },
+    {
+      "locale": "ja",
+      "id": "folder",
+      "file": "ja/folder.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "497d56370050745be51e814ad8a952b3bc63cad81ade67228f20d390716f5981",
+      "focus": {
+        "x": 45.4635,
+        "y": 48.8695,
+        "width": 46.4531,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "ja",
+      "id": "engines",
+      "file": "ja/engines.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "f6ed0608a19da5bd4f05df26f8eae448b534f65014919b1ba4db925360bc4060",
+      "focus": {
+        "x": 21.0833,
+        "y": 53.9816,
+        "width": 54.5169,
+        "height": 5.5882
+      }
+    },
+    {
+      "locale": "ja",
+      "id": "llama-install",
+      "file": "ja/llama-install.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "db2452810b090dcdfb423a3de3b82ad87aa177cf08dbba9779a35742ea5985d2",
+      "focus": {
+        "x": 82.306,
+        "y": 88.3658,
+        "width": 14.194,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "ja",
+      "id": "discover",
+      "file": "ja/discover.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "fa1ae108964c74b9a96c04c219b85d21b8ad4473a91bfc2880cc2777eb5c2b3b",
+      "focus": {
+        "x": 24.6667,
+        "y": 34.9449,
+        "width": 12.8958,
+        "height": 2.2941
+      }
+    },
+    {
+      "locale": "ja",
+      "id": "model-files",
+      "file": "ja/model-files.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "2bbcfdde2f98cc7021ce191813e4feeeec70aa2bc1e07cc433a7c970600a5bb5",
+      "focus": {
+        "x": 53.7539,
+        "y": 49.75,
+        "width": 32.9857,
+        "height": 2.2941
+      }
+    },
+    {
+      "locale": "ja",
+      "id": "model-library",
+      "file": "ja/model-library.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "d67e1a03afca3e0871bb120888f75c6432db1a96606e79361c2f5dea1afb5c12",
+      "focus": {
+        "x": 20.3333,
+        "y": 39.386,
+        "width": 51.2031,
+        "height": 2.4173
+      }
+    },
+    {
+      "locale": "ja",
+      "id": "model-settings",
+      "file": "ja/model-settings.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "6082589bdcdfadc449d919b4a6341b109642f26c1f587c0426f75c8c9c94faae",
+      "focus": {
+        "x": 37.7656,
+        "y": 34.1268,
+        "width": 23.375,
+        "height": 1.693
+      }
+    },
+    {
+      "locale": "ja",
+      "id": "chat",
+      "file": "ja/chat.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "71053f0d523415026ce3815e99c71070a283ae0b52ea7763b6d18d60ae6527c8",
+      "focus": {
+        "x": 39.6667,
+        "y": 84.0588,
+        "width": 56.8333,
+        "height": 7.5294
+      }
+    },
+    {
+      "locale": "ja",
+      "id": "updates",
+      "file": "ja/updates.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "acd4342f753cc4924f359facae1482a632d5cc920eb8b2e06d536c2ced4cbddb",
+      "focus": {
+        "x": 54.9167,
+        "y": 59.9963,
+        "width": 8.7721,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "ja",
+      "id": "adapter-add",
+      "file": "ja/adapter-add.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "d22e2e03d3dee239195b91c847d4f818f86895a30cb8e7416d563be8a0747264",
+      "focus": {
+        "x": 20,
+        "y": 34.5129,
+        "width": 11.4128,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "ja",
+      "id": "adapter-setup",
+      "file": "ja/adapter-setup.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "45e2ece8d9a2ce6de3344aa831a80334644ca004ca4c2c3d08f2dedfd1d4aab4",
+      "focus": {
+        "x": 20,
+        "y": 41.864,
+        "width": 12.4284,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "ja",
+      "id": "adapter-help",
+      "file": "ja/adapter-help.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "a2954cbedd3797cddb4816cc95a247fdba356a3addda58c309841f4ec3ba61cc",
+      "focus": {
+        "x": 20,
+        "y": 84.8768,
+        "width": 8.2305,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "ja",
+      "id": "adapter-check",
+      "file": "ja/adapter-check.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "fe5d88f304542af941f3e66fcc38c638964072097c374c33fb5dc7408e6295df",
+      "focus": {
+        "x": 20,
+        "y": 50.807,
+        "width": 24.6107,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "ja",
+      "id": "adapter-review",
+      "file": "ja/adapter-review.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "ea31068ddde9702f208c841b5f3589f234251f91f83b8a76261e374cbd1a4700",
+      "focus": {
+        "x": 20,
+        "y": 41.7482,
+        "width": 76.5,
+        "height": 43.7647
+      }
+    },
+    {
+      "locale": "zh",
+      "id": "language",
+      "file": "zh/language.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "42e42dc2bc18210a9ff09e6c6dfdfa674fba2c4badc0d5c02cc40b73ac3869a8",
+      "focus": {
+        "x": 70.5234,
+        "y": 51.6636,
+        "width": 1.3333,
+        "height": 1.8824
+      }
+    },
+    {
+      "locale": "zh",
+      "id": "theme",
+      "file": "zh/theme.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "e6fd8e7ddf83024dee60ffff5ebf068cca36f1da832ac3d6686cc2539793aa33",
+      "focus": {
+        "x": 46.2969,
+        "y": 55.6048,
+        "width": 1.3333,
+        "height": 1.8824
+      }
+    },
+    {
+      "locale": "zh",
+      "id": "folder",
+      "file": "zh/folder.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "54db8f815e89cd8a9ec932ec400e2b7e1ccc2a918903716027bd09b635caa34d",
+      "focus": {
+        "x": 45.4635,
+        "y": 48.8695,
+        "width": 46.4531,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "zh",
+      "id": "engines",
+      "file": "zh/engines.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "5a58f7aff2f04edd3bbf0ef53b49cf14b730f99fd5214249ef20564ea11edddb",
+      "focus": {
+        "x": 21.0833,
+        "y": 53.9816,
+        "width": 59.8294,
+        "height": 5.5882
+      }
+    },
+    {
+      "locale": "zh",
+      "id": "llama-install",
+      "file": "zh/llama-install.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "20e154369f11287226be33c63bd22e87f17f8b087eeb20567e68a06204df72a2",
+      "focus": {
+        "x": 85.819,
+        "y": 88.3658,
+        "width": 10.681,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "zh",
+      "id": "discover",
+      "file": "zh/discover.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "7753180559f92407170f89aaa70672403721949f0bec7baba8f92d96625438ec",
+      "focus": {
+        "x": 24.6667,
+        "y": 34.9449,
+        "width": 12.8958,
+        "height": 2.2941
+      }
+    },
+    {
+      "locale": "zh",
+      "id": "model-files",
+      "file": "zh/model-files.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "aec52a68cbff7a11a10010f10024d725474eb2aa6f5d6ca18188512ef9747f16",
+      "focus": {
+        "x": 53.7539,
+        "y": 49.75,
+        "width": 36.9115,
+        "height": 2.2941
+      }
+    },
+    {
+      "locale": "zh",
+      "id": "model-library",
+      "file": "zh/model-library.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "b046887e39d3d66a2bd5947f8aee4a63a09139a944596a3f09c6f59726741d2e",
+      "focus": {
+        "x": 20.3333,
+        "y": 39.386,
+        "width": 51.2031,
+        "height": 2.4173
+      }
+    },
+    {
+      "locale": "zh",
+      "id": "model-settings",
+      "file": "zh/model-settings.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "044f00000e2020b65b81ece5b125a3576b804bb8c8101165ab5025143b2253d4",
+      "focus": {
+        "x": 37.7656,
+        "y": 34.1268,
+        "width": 19.8125,
+        "height": 1.693
+      }
+    },
+    {
+      "locale": "zh",
+      "id": "chat",
+      "file": "zh/chat.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "e509a36bed450f8fdd742d480c604591912a4814a6c238e350491acba4561d5f",
+      "focus": {
+        "x": 39.6667,
+        "y": 84.0588,
+        "width": 56.8333,
+        "height": 7.5294
+      }
+    },
+    {
+      "locale": "zh",
+      "id": "updates",
+      "file": "zh/updates.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "6098cc6502fef0614958b2f0672a046c8b9d8996c76521b5bd238acf248fc486",
+      "focus": {
+        "x": 54.9167,
+        "y": 59.9963,
+        "width": 7.8346,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "zh",
+      "id": "adapter-add",
+      "file": "zh/adapter-add.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "b1e522190b8b25c6882a6d23c0e958aad79875aa5afe301187db5c2db21780ac",
+      "focus": {
+        "x": 20,
+        "y": 34.5129,
+        "width": 8.5013,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "zh",
+      "id": "adapter-setup",
+      "file": "zh/adapter-setup.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "5f95796a95eeeeb2228dc49404e06acd125fef727d840ec5e2d3ec8a7377a7f1",
+      "focus": {
+        "x": 20,
+        "y": 41.864,
+        "width": 9.5846,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "zh",
+      "id": "adapter-help",
+      "file": "zh/adapter-help.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "ceeb8219b1fdad54e3de8a86866dad0135e1b03493be3c3084cf1df5bf317ca9",
+      "focus": {
+        "x": 20,
+        "y": 84.8768,
+        "width": 6.3346,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "zh",
+      "id": "adapter-check",
+      "file": "zh/adapter-check.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "59a0ed671331206cb5268a673c656e2d06bbf529c6a4b51d4498327c08f4f8c6",
+      "focus": {
+        "x": 20,
+        "y": 50.807,
+        "width": 24.6107,
+        "height": 3.7647
+      }
+    },
+    {
+      "locale": "zh",
+      "id": "adapter-review",
+      "file": "zh/adapter-review.png",
+      "width": 1200,
+      "height": 850,
+      "sha256": "a294bedf4f7325de934368b3e69dc98020ebdeeac7abdd301fec59ba521a771d",
+      "focus": {
+        "x": 20,
+        "y": 41.7482,
+        "width": 76.5,
+        "height": 43.7647
+      }
+    }
+  ]
+}

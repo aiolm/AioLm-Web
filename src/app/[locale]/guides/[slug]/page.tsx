@@ -28,11 +28,13 @@ export default async function GuidePage({ params }: { params: Params }) {
         <h1>{guide.title}</h1><p>{guide.description}</p>
         {slug === 'install' && <a className="guide-download" href={`${GITHUB_REPOSITORY_URL}/releases/latest`}>{content.download} ↗</a>}
       </header>
+      <p className="guide-screen-notice">{content.screenshotNotice}</p>
       <nav className="guide-toc" aria-label={content.onPage}>
         {guide.sections.map(section => <a key={section.id} href={`#${section.id}`}>{section.title}</a>)}
       </nav>
       {guide.sections.map(section => <section className="guide-section" key={section.id} id={section.id} aria-labelledby={`title-${section.id}`}>
         <h2 id={`title-${section.id}`}>{section.title}</h2>
+        {section.downloads && <div className="guide-download-choices">{downloadFiles[section.downloads].map(({ file, label }) => <a key={file} href={`${GITHUB_REPOSITORY_URL}/releases/download/v0.3.2/${file}`}><span>{label} ↓</span><small>{file}</small></a>)}</div>}
         {section.body?.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
         {section.steps && <ol>{section.steps.map(step => <li key={step}>{step}</li>)}</ol>}
         {section.table && <div className="guide-table-wrap"><table className="guide-table" aria-label={section.title}>
@@ -41,7 +43,12 @@ export default async function GuidePage({ params }: { params: Params }) {
         </table></div>}
         {section.code && <pre tabIndex={0}><code>{section.code}</code></pre>}
         {section.note && <p className="guide-note">{section.note}</p>}
-        {section.screenshot && <GuideScreenshot content={content} />}
+        {section.image && <GuideScreenshot locale={locale} id={section.image} caption={section.caption ?? section.title} content={content} />}
+        {section.more?.map(detail => <details className="guide-more" key={detail.title}><summary>{detail.title}</summary>
+          {detail.body.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
+          {detail.code && <pre tabIndex={0}><code>{detail.code}</code></pre>}
+          {section.id === 'verify' && <a href={`${GITHUB_REPOSITORY_URL}/releases/download/v0.3.2/checksums.txt`}>checksums.txt ↓</a>}
+        </details>)}
       </section>)}
       <footer className="guide-related"><h2>{content.related}</h2><div className="guide-related-links">
         {guideSlugs.filter(value => value !== slug).map(value => <Link key={value} href={localizedPath(locale, `/guides/${value}`)}>{content.guides[value].title} →</Link>)}
@@ -49,3 +56,9 @@ export default async function GuidePage({ params }: { params: Params }) {
     </article>
   </GuideLayout>;
 }
+
+const downloadFiles = {
+  windows: [{ label: 'Windows x64', file: 'AioLM_0.3.2_x64-setup.exe' }],
+  macos: [{ label: 'Mac · Apple Silicon (M1, M2, …)', file: 'AioLM_0.3.2_aarch64.dmg' }, { label: 'Mac · Intel', file: 'AioLM_0.3.2_x64.dmg' }],
+  linux: [{ label: 'Linux · DEB', file: 'AioLM_0.3.2_amd64.deb' }, { label: 'Linux · AppImage', file: 'AioLM_0.3.2_amd64.AppImage' }],
+} as const;

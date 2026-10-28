@@ -1,10 +1,8 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { localizedPath, type Locale } from '@/i18n/config';
-import { guideSlugs, type GuideContent, type GuideSlug } from '@/content/guides/types';
-import lightCapture from '../../public/screenshots/product-models-en-light.png';
-import darkCapture from '../../public/screenshots/product-models-en-dark.png';
-import { getImageProps } from 'next/image';
+import { guideSlugs, type GuideContent, type GuideImageId, type GuideSlug } from '@/content/guides/types';
+import { GuideImageViewer } from './guide-image-viewer';
+import screenshots from '../../public/screenshots/guides/v0.3.2/manifest.json';
 import './guides.css';
 
 export function GuideLayout({ locale, content, active, children }: {
@@ -19,15 +17,9 @@ export function GuideLayout({ locale, content, active, children }: {
   </div>;
 }
 
-export function GuideScreenshot({ content }: { content: GuideContent }) {
-  const { props: { srcSet: dark } } = getImageProps({ src: darkCapture, width: 1440, height: 900, alt: content.screenshotAlt, sizes: '(max-width: 60rem) 100vw, 56rem' });
-  return <figure className="guide-screenshot">
-    <a href="/screenshots/product-models-en-light.png" aria-label={content.screenshotAlt}>
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcSet={dark} />
-        <Image src={lightCapture} width={1440} height={900} alt={content.screenshotAlt} sizes="(max-width: 60rem) 100vw, 56rem" />
-      </picture>
-    </a>
-    <figcaption>{content.screenshotCaption}</figcaption>
-  </figure>;
+export function GuideScreenshot({ locale, id, caption, content }: { locale: Locale; id: GuideImageId; caption: string; content: GuideContent }) {
+  const capture = screenshots.captures.find(item => item.locale === locale && item.id === id);
+  if (!capture) throw new Error(`Missing guide screenshot: ${locale}/${id}`);
+  return <GuideImageViewer src={`/screenshots/guides/v0.3.2/${capture.file}`} caption={caption} enlarge={content.enlarge} close={content.close} panHint={content.panHint}
+    width={capture.width} height={capture.height} focus={capture.focus} />;
 }
