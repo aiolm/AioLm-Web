@@ -54,10 +54,6 @@
 .guide-image-focus { position: absolute; pointer-events: none; border: 3px solid #dc5818; outline: 2px solid white; border-radius: 4px; min-width: 10px; min-height: 10px; box-shadow: 0 0 0 4px rgb(220 88 24 / 12%); }
 .guide-image-enlarge { position: absolute; bottom: 10px; right: 10px; padding: 4px 10px; background: var(--ui-surface); border: 1px solid var(--ui-border); border-radius: 4px; color: var(--ui-ink); font-size: .75rem; box-shadow: var(--ui-elev-1); }
 .guide-screen-notice { margin-block: 0 24px; color: var(--ui-muted); font-size: .8125rem; line-height: 1.65; }
-.guide-download-choices { display: flex; flex-wrap: wrap; gap: 12px; margin-block: 12px 18px; }
-.guide-download-choices a { display: inline-flex; flex-direction: column; justify-content: center; min-height: 60px; background: var(--ui-accent-soft); padding: 10px 14px; border-radius: var(--ui-radius-md); font-size: .9375rem; font-weight: 600; overflow-wrap: anywhere; text-decoration: none; }
-.guide-download-choices a:hover { text-decoration: underline; }
-.guide-download-choices small { font-size: .75rem; font-weight: 400; color: var(--ui-muted); }
 .guide-more { padding-block: 14px; border-block-end: 1px solid var(--ui-border); font-size: .9375rem; }
 .guide-more summary { cursor: pointer; color: var(--ui-accent); min-height: 32px; font-weight: 500; }
 .guide-more[open] summary { margin-block-end: 12px; }
@@ -114,3 +110,5 @@
   .guide-table th, .guide-table td { padding: 12px 6px; }
   .guide-table tbody th { width: 25%; }
 }
+
+.guide-body > .guide-list { margin-block: 0; }

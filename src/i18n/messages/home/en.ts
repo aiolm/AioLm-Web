@@ -21,7 +21,7 @@ const messages = {
   "home.copyFailed": "Could not copy. Select the command and copy it manually.",
   "home.download": "Downloads",
   "home.windowsRequirements": "Windows x64 · EXE / MSI",
-  "home.windowsInstructions": "Run this command in PowerShell. It downloads the official installer, verifies its SHA-256 checksum and installs AioLM. For manual installation, use the download link below.",
+  "home.windowsInstructions": "Run this command in PowerShell. It downloads the official installer, verifies its SHA-256 checksum and installs AioLM. For manual installation, use the download button below.",
   "home.windowsWarning": "The Windows installer has no publisher signature, so Windows may show a security warning. Check the official AioLM release and file checksum before installing.",
   "home.macosRequirements": "macOS 13.3+ · Apple silicon / Intel · DMG",
   "home.macosInstructions": "Run this command in Terminal. It downloads the DMG for your Mac, verifies its SHA-256 checksum and installs AioLM in Applications. See the guide for installing a downloaded DMG.",

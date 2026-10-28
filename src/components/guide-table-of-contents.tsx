@@ -24,7 +24,7 @@ export function GuideTableOfContents({ label, sections }: { label: string; secti
         if (heading.getBoundingClientRect().top > cutoff) break;
         next = section.id;
       }
-      if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2) {
+      if (window.scrollY > 0 && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2) {
         next = sections.at(-1)?.id ?? next;
       }
       setActiveId(current => current === next ? current : next);

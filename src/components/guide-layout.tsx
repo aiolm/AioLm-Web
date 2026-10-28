@@ -9,7 +9,7 @@ import './guides.css';
 export function GuideLayout({ locale, content, active, children }: {
   locale: Locale; content: GuideContent; active?: GuideSlug; children: React.ReactNode;
 }) {
-  return <div className={`site-shell guide-layout${active ? ' guide-layout--article' : ''}`}>
+  return <div className="site-shell guide-layout guide-layout--article">
     <nav className="guide-sidebar" aria-label={content.navigation}>
       <Link className="guide-nav-home" href={localizedPath(locale, '/guides')} aria-current={!active ? 'page' : undefined}>{content.navigation}</Link>
       {guideSlugs.map(slug => <Link key={slug} href={localizedPath(locale, `/guides/${slug}`)} aria-current={active === slug ? 'page' : undefined}>{content.guides[slug].title}</Link>)}

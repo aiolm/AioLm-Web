@@ -22,7 +22,7 @@ const messages = {
   "home.copyFailed": "无法复制。请选中命令并手动复制。",
   "home.download": "下载",
   "home.windowsRequirements": "Windows x64 · EXE / MSI",
-  "home.windowsInstructions": "在PowerShell中运行以下命令。它会下载官方安装程序、验证SHA-256校验和并安装AioLM。如需手动安装，请使用下方的下载链接。",
+  "home.windowsInstructions": "在PowerShell中运行以下命令。它会下载官方安装程序、验证SHA-256校验和并安装AioLM。如需手动安装，请使用下方的下载按钮。",
   "home.windowsWarning": "Windows安装程序没有发布者签名，可能会显示安全警告。安装前请确认来自AioLM官方发布，并核对文件校验和。",
   "home.macosRequirements": "macOS 13.3 或更新版本 · Apple Silicon / Intel · DMG",
   "home.macosInstructions": "请在终端中运行以下命令。它会下载适合当前 Mac 的 DMG，验证 SHA-256 校验和后将 AioLM 安装到“应用程序”文件夹。如需使用已下载的 DMG 安装，请参阅指南。",

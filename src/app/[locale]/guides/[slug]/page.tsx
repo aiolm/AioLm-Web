@@ -10,6 +10,7 @@ import { GuideLayout, GuideScreenshot } from '@/components/guide-layout';
 import { GuideTableOfContents } from '@/components/guide-table-of-contents';
 import { InstallSection, InstallSecurityWarning } from '@/components/install-section';
 import { GITHUB_REPOSITORY_URL } from '@/components/site-links';
+import { InstallerDownloads } from '@/components/installer-downloads';
 import { DESKTOP_RELEASE_VERSION } from '@/lib/desktop-release';
 
 type Params = Promise<{ locale: string; slug: string }>;
@@ -40,10 +41,10 @@ export default async function GuidePage({ params }: { params: Params }) {
       {hasScreenshots && <p className="guide-screen-notice">{content.screenshotNotice}</p>}
       {guide.sections.map(section => <section className="guide-section" key={section.id} id={section.id} aria-labelledby={`title-${section.id}`}>
         <h2 id={`title-${section.id}`} tabIndex={-1}>{section.title}</h2>
+        {section.downloads && <InstallerDownloads os={section.downloads} />}
         {slug === 'install' && ['windows', 'macos'].includes(section.id) && section.note && <InstallSecurityWarning locale={locale}>{section.note}</InstallSecurityWarning>}
-        {section.downloads && <div className="guide-download-choices">{downloadFiles[section.downloads].map(({ file, label }) => <a key={file} href={`${GITHUB_REPOSITORY_URL}/releases/download/v${DESKTOP_RELEASE_VERSION}/${file}`}><span>{label} ↓</span><small>{file}</small></a>)}</div>}
         {section.body?.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
-        {slug === 'install' && section.id === 'commands' && installMessages && <InstallSection locale={locale} messages={installMessages} />}
+        {slug === 'install' && section.id === 'commands' && installMessages && <InstallSection locale={locale} messages={installMessages} showDownloads={false} />}
         {section.links?.map(link => <p key={link.href}><Link href={link.href}>{link.label} →</Link></p>)}
         {section.steps && <ol>{section.steps.map(step => <li key={step}>{step}</li>)}</ol>}
         {section.table && <div className="guide-table-wrap"><table className="guide-table" aria-label={section.title}>
@@ -71,9 +72,3 @@ export default async function GuidePage({ params }: { params: Params }) {
     </article>
   </GuideLayout>;
 }
-
-const downloadFiles = {
-  windows: [{ label: 'Windows x64', file: `AioLM_${DESKTOP_RELEASE_VERSION}_x64-setup.exe` }],
-  macos: [{ label: 'Mac · Apple Silicon (M1, M2, …)', file: `AioLM_${DESKTOP_RELEASE_VERSION}_aarch64.dmg` }, { label: 'Mac · Intel', file: `AioLM_${DESKTOP_RELEASE_VERSION}_x64.dmg` }],
-  linux: [{ label: 'Linux · DEB', file: `AioLM_${DESKTOP_RELEASE_VERSION}_amd64.deb` }, { label: 'Linux · AppImage', file: `AioLM_${DESKTOP_RELEASE_VERSION}_amd64.AppImage` }],
-} as const;

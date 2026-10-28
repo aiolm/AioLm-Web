@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Locale } from '@/i18n/config';
+import { InstallerDownloads, type InstallOs } from './installer-downloads';
 import { InstallSecurityWarning } from './install-security-warning';
 
 const WINDOWS_INSTALL_CMD =
@@ -13,7 +14,6 @@ const LINUX_INSTALL_CMD = "sudo apt install ./AioLM_*_amd64.deb";
 
 const INSTALL_CMD: Record<InstallOs, string> = { windows: WINDOWS_INSTALL_CMD, macos: MACOS_INSTALL_CMD, linux: LINUX_INSTALL_CMD };
 
-type InstallOs = "windows" | "macos" | "linux";
 
 const OS_ORDER: readonly InstallOs[] = ["windows", "macos", "linux"];
 
@@ -50,7 +50,7 @@ export interface InstallMessages {
   linuxGuide: string;
 }
 
-export function InstallCommand({ locale, messages, macosGuideUrl, linuxGuideUrl }: { locale: Locale; messages: InstallMessages; macosGuideUrl: string; linuxGuideUrl: string }): React.JSX.Element {
+export function InstallCommand({ locale, messages, macosGuideUrl, linuxGuideUrl, showDownloads = true }: { showDownloads?: boolean; locale: Locale; messages: InstallMessages; macosGuideUrl: string; linuxGuideUrl: string }): React.JSX.Element {
   const [selectedOs, setSelectedOs] = useState<InstallOs>("windows");
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
@@ -139,7 +139,6 @@ export function InstallCommand({ locale, messages, macosGuideUrl, linuxGuideUrl 
           <div id="panel-windows" role="tabpanel" aria-labelledby="tab-windows" hidden={selectedOs !== "windows"} className="install-panel">
             <p className="install-requirements">{messages.windowsRequirements}</p>
             <p className="install-instructions">{messages.windowsInstructions}</p>
-            <InstallSecurityWarning locale={locale}>{messages.windowsWarning}</InstallSecurityWarning>
             <div className="install-cmd-row">
               <code className="install-cmd-code" title={WINDOWS_INSTALL_CMD}>
                 <span className="install-cmd-prompt">&gt;</span> {WINDOWS_INSTALL_CMD}
@@ -153,14 +152,14 @@ export function InstallCommand({ locale, messages, macosGuideUrl, linuxGuideUrl 
                 <span>{copied ? messages.copied : messages.copy}</span>
               </button>
             </div>
-            <div className="install-links">
-              <a href="https://github.com/aiolm/AioLM/releases/latest">{messages.download}</a>
-            </div>
+            {showDownloads && <>
+              <InstallerDownloads os="windows" />
+              <InstallSecurityWarning locale={locale}>{messages.windowsWarning}</InstallSecurityWarning>
+            </>}
           </div>
           <div id="panel-macos" role="tabpanel" aria-labelledby="tab-macos" hidden={selectedOs !== "macos"} tabIndex={0} className="install-panel install-panel-detail">
             <p className="install-requirements">{messages.macosRequirements}</p>
             <p className="install-instructions">{messages.macosInstructions}</p>
-            <InstallSecurityWarning locale={locale}>{messages.macosWarning}</InstallSecurityWarning>
             <div className="install-cmd-row">
               <code className="install-cmd-code" title={MACOS_INSTALL_CMD}>
                 <span className="install-cmd-prompt">$</span> {MACOS_INSTALL_CMD}
@@ -170,8 +169,11 @@ export function InstallCommand({ locale, messages, macosGuideUrl, linuxGuideUrl 
                 <span>{copied ? messages.copied : messages.copy}</span>
               </button>
             </div>
+            {showDownloads && <>
+              <InstallerDownloads os="macos" />
+              <InstallSecurityWarning locale={locale}>{messages.macosWarning}</InstallSecurityWarning>
+            </>}
             <div className="install-links">
-              <a href="https://github.com/aiolm/AioLM/releases/latest">{messages.download}</a>
               <a href={macosGuideUrl}>{messages.macosGuide}</a>
             </div>
           </div>
@@ -187,8 +189,8 @@ export function InstallCommand({ locale, messages, macosGuideUrl, linuxGuideUrl 
                 <span>{copied ? messages.copied : messages.copy}</span>
               </button>
             </div>
+            {showDownloads && <InstallerDownloads os="linux" />}
             <div className="install-links">
-              <a href="https://github.com/aiolm/AioLM/releases/latest">{messages.download}</a>
               <a href={linuxGuideUrl}>{messages.linuxGuide}</a>
             </div>
           </div>

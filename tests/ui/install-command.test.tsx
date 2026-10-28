@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { DESKTOP_RELEASE_VERSION } from "@/lib/desktop-release";
 import { InstallCommand, installTabForKey } from "@/components/install-command";
 
 const messages = {
@@ -29,7 +30,8 @@ describe("install platform tabs", () => {
   it("provides a Linux command and real download/guide destinations", () => {
     const html = renderToStaticMarkup(<InstallCommand locale="en" messages={messages} macosGuideUrl="/en/guides/install#macos" linuxGuideUrl="/en/guides/install#linux" />);
     expect(html).toContain("sudo apt install ./AioLM_*_amd64.deb");
-    expect(html).toContain('href="https://github.com/aiolm/AioLM/releases/latest"');
+    expect(html).toContain(`href="https://github.com/aiolm/AioLM/releases/download/v${DESKTOP_RELEASE_VERSION}/AioLM_${DESKTOP_RELEASE_VERSION}_amd64.deb"`);
+    expect(html).not.toContain('href="https://github.com/aiolm/AioLM/releases/latest"');
     expect(html).toContain('href="/en/guides/install#linux"');
     expect(html).not.toContain("Linux planned");
   });
@@ -38,11 +40,12 @@ describe("install platform tabs", () => {
     const panel = html.match(/<div id="panel-macos"[^]*?<div id="panel-linux"/)?.[0] ?? "";
     expect(panel).toContain("curl -fsSL https://github.com/aiolm/AioLM/releases/latest/download/install.sh | bash");
     expect(panel).toContain("macOS 13.3+ · Apple silicon / Intel · DMG");
-    expect(panel).toContain('href="https://github.com/aiolm/AioLM/releases/latest"');
+    expect(panel).toContain(`href="https://github.com/aiolm/AioLM/releases/download/v${DESKTOP_RELEASE_VERSION}/AioLM_${DESKTOP_RELEASE_VERSION}_aarch64.dmg"`);
+    expect(panel).toContain(`AioLM_${DESKTOP_RELEASE_VERSION}_x64.dmg`);
     expect(panel).toContain('href="/en/guides/install#macos"');
     expect(html).not.toMatch(/planned/i);
   });
-  it("shows installation warnings before commands and installer downloads after commands", () => {
+  it("shows commands first and compact security guidance beside direct installer downloads", () => {
     const html = renderToStaticMarkup(<InstallCommand locale="en" messages={messages} macosGuideUrl="/en/guides/install#macos" linuxGuideUrl="/en/guides/install#linux" />);
     for (const os of ['windows', 'macos', 'linux'] as const) {
       const start = html.indexOf(`id="panel-${os}"`);
@@ -50,10 +53,10 @@ describe("install platform tabs", () => {
       const panel = html.slice(start, end < 0 ? undefined : end);
       const commandPosition = panel.indexOf('<code');
       expect(commandPosition).toBeGreaterThan(0);
-      expect(panel.indexOf('href="https://github.com/aiolm/AioLM/releases/latest"')).toBeGreaterThan(commandPosition);
+      expect(panel.indexOf('class="guide-download-choices"')).toBeGreaterThan(commandPosition);
       if (os !== 'linux') {
         expect(panel.indexOf(`>${messages[`${os}Warning`]}<`)).toBeGreaterThan(0);
-        expect(panel.indexOf(`>${messages[`${os}Warning`]}<`)).toBeLessThan(commandPosition);
+        expect(panel.indexOf(`>${messages[`${os}Warning`]}<`)).toBeGreaterThan(panel.indexOf('class="guide-download-choices"'));
         expect(panel).toContain('class="install-security-warning" role="note"');
       }
     }

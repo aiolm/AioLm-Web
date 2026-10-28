@@ -7,10 +7,11 @@ import { InstallCommand } from './install-command';
 export { InstallSecurityWarning } from './install-security-warning';
 
 /** Share the published installer commands between the homepage and install guide. */
-export function InstallSection({ locale, messages }: { locale: Locale; messages: MessageCatalog }) {
+export function InstallSection({ locale, messages, showDownloads = true }: { showDownloads?: boolean; locale: Locale; messages: MessageCatalog }) {
   const t = createTranslator(messages);
   return <InstallCommand
     locale={locale}
+    showDownloads={showDownloads}
     macosGuideUrl={localizedPath(locale, '/guides/install#macos')}
     linuxGuideUrl={localizedPath(locale, '/guides/install#linux')}
     messages={{
