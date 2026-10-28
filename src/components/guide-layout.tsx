@@ -20,6 +20,6 @@ export function GuideLayout({ locale, content, active, children }: {
 export function GuideScreenshot({ locale, id, caption, content }: { locale: Locale; id: GuideImageId; caption: string; content: GuideContent }) {
   const capture = screenshots.captures.find(item => item.locale === locale && item.id === id);
   if (!capture) throw new Error(`Missing guide screenshot: ${locale}/${id}`);
-  return <GuideImageViewer src={`/screenshots/guides/v0.3.2/${capture.file}`} caption={caption} enlarge={content.enlarge} close={content.close} panHint={content.panHint}
+  return <GuideImageViewer src={`/screenshots/guides/v0.3.2/${capture.file}?v=${capture.sha256}`} caption={caption} enlarge={content.enlarge} close={content.close} panHint={content.panHint}
     width={capture.width} height={capture.height} focus={capture.focus} />;
 }
