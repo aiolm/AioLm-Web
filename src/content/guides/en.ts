@@ -14,19 +14,19 @@ const content: GuideContent = {
       { id: 'verify', title: 'Check the downloaded file', body: ['Use the official download files. For an extra check that the file arrived intact, expand the instructions below.'], more: [{ title: 'Check the file’s checksum', body: ['Download checksums.txt from the same release as your installer. A checksum is a file’s identifying value. Compare the full command result with the SHA-256 entry for that exact filename. Stop if they differ. A checksum does not replace a publisher signature.', 'On Windows, replace the filename below with the one you downloaded. On Mac, use shasum -a 256 followed by the file path; on Linux use sha256sum.'], code: 'Get-FileHash -Algorithm SHA256 .\\AioLM_0.3.2_x64-setup.exe' }] },
       { id: 'updates', title: 'Update later', body: ['Open Settings → General and select Check for updates. If a new version is available, save your work and choose Download and install. Finish the system installer, then reopen AioLM.'], image: 'updates', caption: 'The application-update area in Settings. This example is already on v0.3.2.', more: [{ title: 'Backups, removal and manual updates', body: ['For a Mac DMG, replace the existing app. AppImage and manual installations use the download page. Replacing the app keeps existing conversations and settings.', 'Data lives in ~/.aiolm on Mac/Linux or %USERPROFILE%\\.aiolm on Windows, unless AIOLM_HOME selects another folder. Back up that folder and your model files.', 'The Windows EXE (NSIS) uninstaller can explicitly delete app data. MSI and DEB removal, or moving the Mac app to Trash, leave data in place.'] }, { title: 'What update testing has covered', body: ['v0.3.2 package checks passed. Actual v0.3.1 → v0.3.2 update installation and device UI acceptance are still pending.'] }] },
     ] },
-    'getting-started': { title: 'Start your first conversation', description: 'A model is the AI file you talk to; an engine is the program that runs it. Start with llama.cpp and a small text model if you are new.', sections: [
+    'getting-started': { title: 'Start your first conversation', description: "A model is the AI data; an engine runs it. Choose an engine that fits your device and model format, then follow these steps.", sections: [
       { id: 'language', title: '1. Choose your language', body: ['Select your language and Continue. This is the first screen on a fresh installation. If you have already finished setup, skip to step 4.'], image: 'language', caption: 'Buttons and explanations switch to the language you choose.' },
       { id: 'theme', title: '2. Choose the screen colors', body: ['Pick Light, Dark or System, then Continue. You can change this later in Settings.'], image: 'theme', caption: 'Selecting a theme previews it immediately.' },
       { id: 'folder', title: '3. Choose where models are saved', body: ['Keep the default folder, or use Choose folder to pick another location. Select Start using AioLM to enter the workspace. You do not need a model file yet.'], image: 'folder', caption: 'Do not copy this example path. Choose a folder on your own computer.' },
-      { id: 'engine', title: '4. Prepare the engine', body: ['Select Inference engines on the left, then llama.cpp. Use the Install button for a recommended option that fits your computer, and wait for it to finish.'], image: 'llama-install', caption: 'This example shows the CPU-only option. Your recommended option and version can differ.', note: 'A runtime is an installed copy of an engine. To use vLLM or MLX, first read “Choose an engine for your computer”.' },
-      { id: 'download', title: '5. Download one small model', body: ['Open Discover on the left. Choose llama.cpp and GGUF, then search for a model. Select a repository to see its files on the right.', 'Start with a small text model. Select Download next to a file and wait until it finishes. Check the model’s license and memory requirements too.'], image: 'model-files', caption: 'An example of where to search and download. The displayed model is not a claim of verified compatibility or answer quality.' },
+      {"id":"engine","title":"4. Prepare the engine","body":["Open Inference engines and compare OS, device and model-format requirements before choosing an engine. Install the selected runtime if needed; for a separately installed engine, follow the external connection guide."],"image":"llama-install","caption":"The llama.cpp CPU screen illustrates where the Install button is. It is not a preferred-engine recommendation or verification of other engines.","note":"A runtime is an installed copy of an engine. Check “Choose an engine for your computer” and “Find the files for your engine” first."},
+      {"id":"download","title":"5. Download one small model","body":["Open Discover, select a format supported by your chosen engine and search for a model. Open a repository to see its files. Check whether the engine needs one file or a complete model folder.","Start with a small text model. Select Download next to a file and wait until it finishes. Check the model’s license and memory requirements too."],"image":"model-files","caption":"A GGUF example showing model search and download controls. Download the format and complete files required by your selected engine."},
       { id: 'library', title: '6. Find the downloaded file', body: ['Open Run a model on the left. Select your downloaded filename to open its settings. If it is missing, check that Models directory points to your download folder, then Rescan.'], image: 'model-library', caption: 'Select your own downloaded filename in the model list, rather than copying the example name.' },
       { id: 'model', title: '7. Select the downloaded model', body: ['Open Run a model and select the downloaded file. In Model & settings, choose your installed engine and runtime, then follow Choose profile and Adjust options. A profile is a saved group of settings; start with Default.', 'Keep the defaults to begin with. Review required items and select the run action. If something is not ready, follow the explanation in the window first.'], image: 'model-settings', caption: 'Select step 1, Choose runtime, at the top to open this view. Choose your installed item on the right. The displayed installation state is illustrative.', more: [{ title: 'The model does not load', body: ['Check that the model matches the engine and fits in your computer’s memory. Read the readiness message and engine log first. Avoid changing unfamiliar options at random.', 'Context is how much conversation the AI can consider at once. Setting it too high can exhaust memory. Changing context, parallelism or launch options requires restarting the model.'] }] },
       { id: 'chat', title: '8. Send a short message', body: ['After loading the model, select Chat on the left. Type a short question in the box below and select Send message.', 'Check text chat first. Images, audio, video and tools work only when both the model and engine support them.'], image: 'chat', caption: 'This shows the message box before a model is loaded, so sending is disabled. Run your model in step 7 first.', more: [{ title: 'Measure speed or share a result', body: ['A benchmark measures processing speed. Compare the same method and workload; a high score does not verify answer quality or every device feature.', 'Sharing is optional and requires browser verification. Review the public data first. Keep your recovery code or backup file private so you can manage the record without an account. Open Manage from the app or use this site’s Manage page.'] }] },
     ] },
-    compatibility: { title: 'Choose an engine for your computer', description: 'Unsure which to choose? Start with llama.cpp. vLLM, MLX and other engines need different preparation depending on your computer and model.', sections: [
+    compatibility: { title: 'Choose an engine for your computer', description: "Compare your OS, device, memory and model format before choosing an engine. Check installation requirements and actual verification status together.", sections: [
       { id: 'engines', title: 'Open the engine list', body: ['Select Inference engines on the left. Avoid an engine marked Unavailable on this device.'], image: 'engines', caption: 'Built-in engines still need to be installed. An item appearing in this list does not mean it is installed.' },
-      { id: 'choose', title: 'Which engine should I choose?', table: { headers: ['Engine', 'Choose it when…'], rows: [['llama.cpp', 'Starting with GGUF models on Windows, Mac or Linux'], ['vLLM', 'You have a supported Linux accelerator setup'], ['vLLM · vllm-metal', 'Using vLLM on an Apple silicon Mac with macOS 15+'], ['MLX', 'Using MLX models on an Apple silicon Mac'], ["External inference engine", 'Examples: Strata, TensorFold. Prepare a separately installed engine and a compatible adapter.']] }, note: 'Intel Macs cannot use MLX or vllm-metal. Check the installation screen’s requirements first.' },
+      {"id":"choose","title":"Which engine should I choose?","table":{"headers":["Engine","Choose it when…"],"rows":[["llama.cpp","Using GGUF with a supported Windows, Mac or Linux build"],["vLLM","You have a supported Linux accelerator setup"],["vLLM · vllm-metal","Using vLLM on an Apple silicon Mac with macOS 15+"],["MLX","Using MLX models on an Apple silicon Mac"],["External inference engine","Examples: Strata, TensorFold. Prepare a separately installed engine and a compatible adapter."]]},"note":"Intel Macs cannot use MLX or vllm-metal. Check the installation screen’s requirements first."},
       { id: 'models', title: 'Download the right model type', body: ['llama.cpp uses GGUF files. vLLM and MLX usually need a complete model folder with weights, settings and tokenizer files. Do not copy just one file; choose the right format in Discover.', 'If memory is limited, try a smaller model. For images or audio, check both the model description and the support shown in the app.'], image: 'discover', caption: 'Choose the engine and model format at the top of Discover first.', more: [{ title: 'Detailed vLLM and MLX requirements', body: ['Managed Linux vLLM installs CUDA dependencies. AMD ROCm needs a separately prepared compatible Python environment and driver. AioLM does not install system GPU drivers.', 'vllm-metal needs Apple silicon, macOS 15+ and native arm64 Python 3.12; Intel and Rosetta Python are not supported. MLX also needs Apple silicon and a compatible Python environment.', 'Native Windows vLLM, WSL and remote servers are not local runtime targets here. Python models need a complete safetensors or supported MLX snapshot. vllm-metal supports only a subset of GGUF files, not all ordinary GGUF models.'] }] },
       { id: 'limits', title: 'What still needs checking', body: ['Images, audio, video and tools need support from both the engine and model. Registering an engine does not enable every feature.'], more: [{ title: 'v0.3.2 verification limits and known issues', body: ['The SmolVLM image/video content-quality failure (F09) is unresolved.', 'Passing a package build does not verify inference on every device. Overall Linux acceptance and real v0.3.1 → v0.3.2 update installation/UI acceptance are not complete.', 'Benchmarks, deep verification and portable bundles have engine-specific support. External inference engines (custom.*) are not accepted by the current public benchmark-sharing contract.'] }] },
     ] },
@@ -212,7 +212,8 @@ const content: GuideContent = {
           "id": "choose",
           "title": "Select your engine",
           "body": [
-            "This is not an installation menu. Every external engine must meet the same connection contract and actual execution checks, including Strata and TensorFold."
+            "This is not an installation menu. Every external engine must meet the same connection contract and actual execution checks, including Strata and TensorFold.",
+            "Command examples below explain launch order. In AioLM registration, set model/host/port through their dedicated bindings rather than duplicating these options and values in fixed arguments."
           ],
           "more": [
             {
@@ -256,11 +257,12 @@ const content: GuideContent = {
               "title": "3. MLX (mlx-lm / MLX-VLM)",
               "body": [
                 "Requirements: Apple Silicon · macOS",
-                "Executable to select: installed Python",
+                "Executable to select: Python from the selected server’s environment",
                 "Model files: Complete local checkpoint with weights, configuration and tokenizer",
                 "Requires launch/model/port bindings and an AioLM probe. Arguments below illustrate placement; replace MODEL/HOST/PORT with selected values.",
                 "Current verification: Actual inference unverified here; not complete support",
-                "mlx-lm and MLX-VLM use different server modules. Validate text/image support for the specific model and module."
+                "mlx-lm and MLX-VLM use different server modules. Validate text/image support for the specific model and module.",
+                "Use only the alternative matching the server you installed. Do not put both module names into one command."
               ],
               "links": [
                 {
@@ -272,7 +274,7 @@ const content: GuideContent = {
                   "label": "Official project · Blaizzy/mlx-vlm"
                 }
               ],
-              "code": "Entry point example: -m mlx_lm.server / mlx_vlm.server"
+              "code": "Python + mlx-lm:\n-m\nmlx_lm.server\n\nPython + MLX-VLM:\n-m\nmlx_vlm.server"
             },
             {
               "title": "4. ExLlamaV3 (ExLlamaV2)",
@@ -338,10 +340,11 @@ const content: GuideContent = {
               "title": "7. vLLM",
               "body": [
                 "Requirements: supported vLLM device/build · Linux; vllm-metal is separate",
-                "Executable to select: vllm / installed Python",
+                "Executable to select: vllm / Python from the selected server’s environment",
                 "Model files: Complete local checkpoint with weights, configuration and tokenizer",
                 "Requires launch/model/port bindings and an AioLM probe. Arguments below illustrate placement; replace MODEL/HOST/PORT with selected values.",
-                "Current verification: Actual inference unverified here; not complete support"
+                "Current verification: Actual inference unverified here; not complete support",
+                "Use the alternative matching the selected executable. Replace MODEL with the actual model path; the Python route requires the -m module arguments."
               ],
               "links": [
                 {
@@ -349,7 +352,7 @@ const content: GuideContent = {
                   "label": "Official project · vllm-project/vllm"
                 }
               ],
-              "code": "Entry point example: serve MODEL"
+              "code": "vllm:\nserve\nMODEL\n\nPython:\n-m\nvllm.entrypoints.openai.api_server\n--model\nMODEL"
             },
             {
               "title": "8. Strata",

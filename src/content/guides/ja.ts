@@ -14,19 +14,19 @@ const content: GuideContent = {
       { id: 'verify', title: '取得したファイルを確認', body: ['公式のダウンロードを使ってください。ファイルが壊れていないか確認する方法は下にあります。'], more: [{ title: 'チェックサムで確認する', body: ['インストーラーと同じリリースの checksums.txt を取得します。チェックサムはファイルを識別する値です。コマンドの結果全体を、同じファイル名の SHA-256 と比較してください。不一致なら中止します。発行元の署名の代わりではありません。', 'Windows では下のファイル名を実際の名前に変えます。Mac は shasum -a 256、Linux は sha256sum の後にファイルのパスを指定します。'], code: 'Get-FileHash -Algorithm SHA256 .\\AioLM_0.3.2_x64-setup.exe' }] },
       { id: 'updates', title: 'あとで更新する', body: ['左の設定 → 一般で更新を確認します。新しい版があれば作業を保存してダウンロードとインストールを選びます。システム側のインストールを完了し、AioLM を開き直します。'], image: 'updates', caption: '設定にあるアプリ更新欄です。この例では v0.3.2 を使っています。', more: [{ title: 'バックアップ・削除・手動更新', body: ['Mac の DMG は既存アプリを置き換えます。AppImage・手動インストールはダウンロードページを使います。アプリの置き換えでは会話と設定は残ります。', 'データは Mac/Linux の ~/.aiolm、Windows の %USERPROFILE%\\.aiolm、または AIOLM_HOME の指定先にあります。このフォルダーとモデルをバックアップしてください。', 'Windows EXE（NSIS）の削除ではデータ削除を選べます。MSI・DEB の削除と Mac アプリをゴミ箱へ移す操作ではデータは残ります。'] }, { title: '更新の検証範囲', body: ['v0.3.2 のパッケージ検査は通過しました。実際の v0.3.1 → v0.3.2 更新インストールとデバイス UI 検証は未完了です。'] }] },
     ] },
-    'getting-started': { title: '最初の会話を始める', description: 'モデルは会話する AI のファイル、エンジンはそれを動かすプログラムです。初めてなら llama.cpp と小さなテキストモデルで始めましょう。', sections: [
+    'getting-started': { title: '最初の会話を始める', description: "モデルはAIのデータ、エンジンはそれを動かすプログラムです。機器とモデル形式に合うエンジンを選び、以下の手順へ進みます。", sections: [
       { id: 'language', title: '1. 言語を選ぶ', body: ['日本語を選び「次へ」を押します。初回はこの画面から始まります。設定済みなら 4 番へ進んでください。'], image: 'language', caption: '選んだ言語にボタンや説明が切り替わります。' },
       { id: 'theme', title: '2. 画面の色を選ぶ', body: ['ライト・ダーク・システムから好みを選び「次へ」を押します。あとで設定から変更できます。'], image: 'theme', caption: 'テーマを選ぶとすぐにプレビューできます。' },
       { id: 'folder', title: '3. モデルの保存先を選ぶ', body: ['既定のフォルダーを使うか「フォルダーを選択」で別の場所を選びます。「AioLMを始める」で作業画面が開きます。まだモデルがなくても大丈夫です。'], image: 'folder', caption: '例のパスを入力せず、自分のコンピューターのフォルダーを選んでください。' },
-      { id: 'engine', title: '4. エンジンを準備する', body: ['左の推論エンジンを開き llama.cpp を選びます。コンピューターに合う推奨項目のインストールを押し、完了を待ちます。'], image: 'llama-install', caption: 'GPU を使わない CPU 専用の例です。自分の機器では推奨項目とバージョンが異なることがあります。', note: 'ランタイムはインストール済みエンジンのことです。vLLM・MLX を使う場合は先に「自分の機器に合うエンジン」を読んでください。' },
-      { id: 'download', title: '5. 小さなモデルを取得する', body: ['左のモデル検索画面で llama.cpp と GGUF を選び、モデルを検索します。リポジトリを選ぶと右にファイルが出ます。', 'まず小さなテキストモデルを選びます。ファイル横のダウンロードを押し、完了を待ちます。使用条件と必要メモリーも確認してください。'], image: 'model-files', caption: '検索とダウンロードの位置を示す例です。表示モデルの互換性や回答品質を保証する画面ではありません。' },
+      {"id":"engine","title":"4. エンジンを準備する","body":["左の推論エンジンでOS・機器・モデル形式の条件を確認し、使うエンジンを選びます。必要なら選んだ実行ファイルをインストールし、別途導入したものは外部エンジン接続案内に従います。"],"image":"llama-install","caption":"インストールボタンの位置を示すllama.cpp CPU画面の例です。特定エンジンの優先推奨や他エンジンの検証結果ではありません。","note":"ランタイムはインストールしたエンジン実行ファイルです。先に「自分の機器に合うエンジン」と「エンジン別の接続ファイル」で条件を確認します。"},
+      {"id":"download","title":"5. 小さなモデルを取得する","body":["探す画面で選んだエンジンが対応する形式を選び、モデルを検索します。リポジトリーを開いて必要なファイルを確認し、単一ファイルか完全なモデルフォルダーかを確認してください。","まず小さなテキストモデルを選びます。ファイル横のダウンロードを押し、完了を待ちます。使用条件と必要メモリーも確認してください。"],"image":"model-files","caption":"モデル検索・取得の位置を示すGGUF画面の例です。選んだエンジンに合う形式と必要な全ファイルを取得します。"},
       { id: 'library', title: '6. 取得したファイルを探す', body: ['左のモデル実行画面を開き、ダウンロードしたファイル名を押します。見つからない場合はモデルフォルダーが保存先と同じか確認し、再検索します。'], image: 'model-library', caption: 'モデル一覧から、自分が取得したファイル名を選びます。' },
       { id: 'model', title: '7. 取得したモデルを選ぶ', body: ['モデル実行画面で取得したファイルを押します。モデル選択・設定でエンジンとインストール済みランタイムを選び、プロファイル、オプションの順に進みます。プロファイルは設定のまとまりです。初めはデフォルトを選びます。', '初めは既定値のまま進めます。必要項目を確認して実行します。準備できていない項目は、画面に表示された理由を先に解決してください。'], image: 'model-settings', caption: '上の 1 番のランタイム選択からこの画面を開きます。右側でインストールした項目を選びます。表示のインストール状態は説明用です。', more: [{ title: 'モデルを読み込めません', body: ['エンジンとモデルが合うか、メモリーが足りるか確認します。準備状態の案内とエンジンログを先に読み、知らないオプションをむやみに変えないでください。', 'コンテキストは一度に参照する会話の量です。大きすぎるとメモリー不足になります。コンテキスト・並列数・起動オプションを変えると再起動が必要です。'] }] },
       { id: 'chat', title: '8. 短いメッセージを送る', body: ['モデルを読み込んだら左のチャットを開きます。下の欄に短い質問を書き、送信を押します。', '先にテキストの会話を試してください。画像・音声・動画・ツールはモデルとエンジンの両方が対応する場合に使えます。'], image: 'chat', caption: '入力欄の位置を示しています。モデル読み込み前なので送信は無効です。先に 7 番でモデルを実行してください。', more: [{ title: '速度を測ったり結果を共有したい', body: ['ベンチマークは処理速度を測ります。同じ測定方法と作業で比較してください。高い点数は回答品質や全機能の検証ではありません。', '共有は任意でブラウザー確認が必要です。公開内容を先に確認し、アカウントなしで管理できるよう復旧コード・バックアップは非公開で保管します。アプリから管理を開くか、このサイトの管理画面を使います。'] }] },
     ] },
-    compatibility: { title: '自分の機器に合うエンジン', description: '迷ったら llama.cpp から始めてください。vLLM・MLX・外部推論エンジンは機器やモデルによって準備が変わります。', sections: [
+    compatibility: { title: '自分の機器に合うエンジン', description: "OS・機器・メモリー・モデル形式を比較してエンジンを選びます。導入条件と実際の検証状態を一緒に確認してください。", sections: [
       { id: 'engines', title: 'エンジン一覧を開く', body: ['左の推論エンジンを押します。このデバイスで利用不可と表示されたエンジンは選ばないでください。'], image: 'engines', caption: '基本提供のエンジンもインストールが必要です。一覧にあるだけではインストール済みではありません。' },
-      { id: 'choose', title: 'どのエンジンを選ぶ？', table: { headers: ['エンジン', '選ぶ場面'], rows: [['llama.cpp', 'Windows・Mac・Linux で GGUF から始める'], ['vLLM', '対応する Linux アクセラレーター環境を用意済み'], ['vLLM · vllm-metal', 'Apple silicon Mac、macOS 15+ で vLLM を使う'], ['MLX', 'Apple silicon Mac で MLX モデルを使う'], ["外部推論エンジン", '例：Strata・TensorFold。別途インストールしたエンジンと互換アダプターを用意する']] }, note: 'Intel Mac では MLX・vllm-metal は使えません。インストール画面の条件を確認してください。' },
+      {"id":"choose","title":"どのエンジンを選ぶ？","table":{"headers":["エンジン","選ぶ場面"],"rows":[["llama.cpp","対応するWindows・Mac・Linux実行ファイルでGGUFを使う場合"],["vLLM","対応する Linux アクセラレーター環境を用意済み"],["vLLM · vllm-metal","Apple silicon Mac、macOS 15+ で vLLM を使う"],["MLX","Apple silicon Mac で MLX モデルを使う"],["外部推論エンジン","例：Strata・TensorFold。別途インストールしたエンジンと互換アダプターを用意する"]]},"note":"Intel Mac では MLX・vllm-metal は使えません。インストール画面の条件を確認してください。"},
       { id: 'models', title: '合う形式のモデルを取得', body: ['llama.cpp は GGUF ファイルを使います。vLLM・MLX は通常、モデル・設定・tokenizer がそろったフォルダーが必要です。1 ファイルだけコピーせず、検索画面で対応形式を選びます。', 'メモリーが足りなければ小さなモデルを試します。画像・音声にはモデル説明とアプリの対応表示も確認してください。'], image: 'discover', caption: '検索画面の上でエンジンとモデル形式を先に選びます。', more: [{ title: 'vLLM・MLX の詳細な条件', body: ['Linux の管理対象 vLLM は CUDA 依存関係を使います。AMD ROCm はドライバーに合う Python 環境を別途準備して登録します。AioLM はシステム GPU ドライバーをインストールしません。', 'vllm-metal は Apple silicon・macOS 15+・ネイティブ arm64 Python 3.12 が必要です。Intel・Rosetta Python は非対応です。MLX も Apple silicon と互換 Python 環境が必要です。', 'ネイティブ Windows vLLM・WSL・リモートサーバーはローカル実行対象ではありません。Python モデルは完全な safetensors または対応 MLX スナップショットが必要です。vllm-metal の GGUF 対応は一部に限られます。'] }] },
       { id: 'limits', title: 'まだ確認が必要な点', body: ['画像・音声・動画・ツールはモデルとエンジンの両方が対応する必要があります。登録だけで全機能が使えるわけではありません。'], more: [{ title: 'v0.3.2 の検証範囲と既知の問題', body: ['SmolVLM の画像・動画の内容品質の失敗（F09）は未解決です。', 'パッケージのビルド成功は、全機器での推論を検証した意味ではありません。Linux 全体と実際の v0.3.1 → v0.3.2 更新インストール・UI 検証も未完了です。', 'ベンチマーク・詳細検証・ポータブルバンドルはエンジンごとに対応が異なります。外部推論エンジン（custom.*）は現在の公開ベンチマーク共有対象ではありません。'] }] },
     ] },
@@ -212,14 +212,15 @@ const content: GuideContent = {
           "id": "choose",
           "title": "自分のエンジンを選択",
           "body": [
-            "インストールメニューではありません。Strata・TensorFoldを含め、すべての外部エンジンに同じ接続規格と実行検査を適用します。"
+            "インストールメニューではありません。Strata・TensorFoldを含め、すべての外部エンジンに同じ接続規格と実行検査を適用します。",
+            "下のコマンド例は起動順序の説明です。AioLM登録ではモデル・ホスト・ポートを専用の接続項目で設定し、同じオプションや値を固定引数に重複入力しないでください。"
           ],
           "more": [
             {
               "title": "1. Halogen",
               "body": [
                 "条件: Strix Halo · Linux · ROCm",
-                "選ぶ実行ファイル: podman / docker + Halogen image",
+                "選ぶ実行ファイル: podman / docker + Halogenコンテナイメージ",
                 "モデルの準備: モデル専用の重み・tokenizer・追加ファイル一式。一般GGUFと同じと仮定しないでください。",
                 "コンテナ内の実行ファイルは通常のホストファイル選択では指定できません。イメージ、GPU、モデルマウント、コンテナ終了を管理するアダプターが必要で、まだ提供していません。",
                 "現在の検証状態: この環境で実際の推論は未検証・対応完了ではありません"
@@ -256,11 +257,12 @@ const content: GuideContent = {
               "title": "3. MLX (mlx-lm / MLX-VLM)",
               "body": [
                 "条件: Apple Silicon · macOS",
-                "選ぶ実行ファイル: installed Python",
+                "選ぶ実行ファイル: 選んだサーバーを導入した環境のPython",
                 "モデルの準備: 重み・設定・tokenizerを含む完全なローカルチェックポイント",
                 "起動・モデル・ポート接続とAioLM用probeが必要です。引数は配置例で、MODEL/HOST/PORTは実際の値に置き換えます。",
                 "現在の検証状態: この環境で実際の推論は未検証・対応完了ではありません",
-                "mlx-lmとMLX-VLMは別のサーバーモジュールです。テキスト・画像対応もモデルとモジュールごとに確認します。"
+                "mlx-lmとMLX-VLMは別のサーバーモジュールです。テキスト・画像対応もモデルとモジュールごとに確認します。",
+                "導入したサーバーに合う方法を1つだけ使います。2つのモジュール名を同じコマンドに入れないでください。"
               ],
               "links": [
                 {
@@ -272,13 +274,13 @@ const content: GuideContent = {
                   "label": "公式プロジェクト · Blaizzy/mlx-vlm"
                 }
               ],
-              "code": "起動方法の例: -m mlx_lm.server / mlx_vlm.server"
+              "code": "Python + mlx-lm:\n-m\nmlx_lm.server\n\nPython + MLX-VLM:\n-m\nmlx_vlm.server"
             },
             {
               "title": "4. ExLlamaV3 (ExLlamaV2)",
               "body": [
-                "条件: NVIDIA GPU · supported CUDA environment",
-                "選ぶ実行ファイル: TabbyAPI environment Python + main.py",
+                "条件: NVIDIA GPU · 対応するCUDA環境",
+                "選ぶ実行ファイル: TabbyAPI環境のPython + main.py",
                 "モデルの準備: V3はEXL3、V2はEXL2など、対応する完全なモデルフォルダー",
                 "デスクトップアプリやライブラリーではなくサーバーを使います。設定・モデル/ポート・プロセス所有権をつなぐアダプターが必要で、汎用接続パッケージはまだ提供していません。",
                 "現在の検証状態: この環境で実際の推論は未検証・対応完了ではありません",
@@ -303,7 +305,7 @@ const content: GuideContent = {
             {
               "title": "5. Rulith Inference",
               "body": [
-                "条件: Strix Halo · Windows 11; Linux build is separate",
+                "条件: Strix Halo · Windows 11; Linuxビルドは別途確認",
                 "選ぶ実行ファイル: bin/hip/llama-server.exe",
                 "モデルの準備: そのエンジンが対応するGGUFと必要な付属ファイル",
                 "デスクトップアプリやライブラリーではなくサーバーを使います。設定・モデル/ポート・プロセス所有権をつなぐアダプターが必要で、汎用接続パッケージはまだ提供していません。",
@@ -320,8 +322,8 @@ const content: GuideContent = {
             {
               "title": "6. SGLang",
               "body": [
-                "条件: supported SGLang device/build · Linux",
-                "選ぶ実行ファイル: installed Python",
+                "条件: SGLangが対応する機器・実行ファイル · Linux",
+                "選ぶ実行ファイル: エンジンを導入した環境のPython",
                 "モデルの準備: 重み・設定・tokenizerを含む完全なローカルチェックポイント",
                 "起動・モデル・ポート接続とAioLM用probeが必要です。引数は配置例で、MODEL/HOST/PORTは実際の値に置き換えます。",
                 "現在の検証状態: この環境で実際の推論は未検証・対応完了ではありません"
@@ -337,11 +339,12 @@ const content: GuideContent = {
             {
               "title": "7. vLLM",
               "body": [
-                "条件: supported vLLM device/build · Linux; vllm-metal is separate",
-                "選ぶ実行ファイル: vllm / installed Python",
+                "条件: vLLMが対応する機器・実行ファイル · Linux; vllm-metalは別経路",
+                "選ぶ実行ファイル: vllm / 選んだサーバーを導入した環境のPython",
                 "モデルの準備: 重み・設定・tokenizerを含む完全なローカルチェックポイント",
                 "起動・モデル・ポート接続とAioLM用probeが必要です。引数は配置例で、MODEL/HOST/PORTは実際の値に置き換えます。",
-                "現在の検証状態: この環境で実際の推論は未検証・対応完了ではありません"
+                "現在の検証状態: この環境で実際の推論は未検証・対応完了ではありません",
+                "選んだ実行ファイルに合う方法を1つ使います。MODELは実際のモデルパスに置き換え、Pythonでは-mとモジュール名を省略しません。"
               ],
               "links": [
                 {
@@ -349,13 +352,13 @@ const content: GuideContent = {
                   "label": "公式プロジェクト · vllm-project/vllm"
                 }
               ],
-              "code": "起動方法の例: serve MODEL"
+              "code": "vllm:\nserve\nMODEL\n\nPython:\n-m\nvllm.entrypoints.openai.api_server\n--model\nMODEL"
             },
             {
               "title": "8. Strata",
               "body": [
-                "条件: supported Windows/Linux engine build",
-                "選ぶ実行ファイル: installed Python + matching adapter",
+                "条件: 対応するWindows/Linux実行ファイル",
+                "選ぶ実行ファイル: エンジンを導入した環境のPython + その版用のアダプター",
                 "モデルの準備: 確認したrevision用の専用deployment JSONと参照する全ファイル",
                 "デスクトップアプリやライブラリーではなくサーバーを使います。設定・モデル/ポート・プロセス所有権をつなぐアダプターが必要で、汎用接続パッケージはまだ提供していません。",
                 "現在の検証状態: この環境で実際の推論は未検証・対応完了ではありません",
@@ -372,7 +375,7 @@ const content: GuideContent = {
             {
               "title": "9. TensorFold",
               "body": [
-                "条件: supported Metal / CUDA / Vulkan build",
+                "条件: 対応するMetal・CUDA・Vulkan実行ファイル",
                 "選ぶ実行ファイル: tensorfold",
                 "モデルの準備: 重み・設定・tokenizerを含む完全なローカルチェックポイント",
                 "起動・モデル・ポート接続とAioLM用probeが必要です。引数は配置例で、MODEL/HOST/PORTは実際の値に置き換えます。",
@@ -389,7 +392,7 @@ const content: GuideContent = {
             {
               "title": "10. vllm.cpp",
               "body": [
-                "条件: matching CPU / CUDA / Metal / Vulkan / ROCm build",
+                "条件: 機器に合うCPU・CUDA・Metal・Vulkan・ROCm実行ファイル",
                 "選ぶ実行ファイル: bin/vllm-server",
                 "モデルの準備: 対応するGGUFまたは完全なチェックポイント。量子化とモデル構造も確認します。",
                 "起動・モデル・ポート接続とAioLM用probeが必要です。引数は配置例で、MODEL/HOST/PORTは実際の値に置き換えます。",
@@ -411,7 +414,7 @@ const content: GuideContent = {
             {
               "title": "11. Mistral.rs",
               "body": [
-                "条件: matching CPU / CUDA / Metal build",
+                "条件: 機器に合うCPU・CUDA・Metal実行ファイル",
                 "選ぶ実行ファイル: mistralrs",
                 "モデルの準備: 対応するGGUFまたは完全なチェックポイント。量子化とモデル構造も確認します。",
                 "起動・モデル・ポート接続とAioLM用probeが必要です。引数は配置例で、MODEL/HOST/PORTは実際の値に置き換えます。",
@@ -432,8 +435,8 @@ const content: GuideContent = {
             {
               "title": "12. KTransformers",
               "body": [
-                "条件: supported CPU + accelerator combination",
-                "選ぶ実行ファイル: installed Python + SGLang/kt-kernel",
+                "条件: 対応するCPU・アクセラレーター構成",
+                "選ぶ実行ファイル: エンジンを導入した環境のPython + SGLang/kt-kernel",
                 "モデルの準備: SGLang用の全モデルとkt-kernel用expert重み・設定",
                 "起動・モデル・ポート接続とAioLM用probeが必要です。引数は配置例で、MODEL/HOST/PORTは実際の値に置き換えます。",
                 "現在の検証状態: この環境で実際の推論は未検証・対応完了ではありません"
@@ -449,7 +452,7 @@ const content: GuideContent = {
             {
               "title": "13. ik_llama.cpp",
               "body": [
-                "条件: matching CPU / CUDA / Vulkan build",
+                "条件: 機器に合うCPU・CUDA・Vulkan実行ファイル",
                 "選ぶ実行ファイル: build/bin/llama-server",
                 "モデルの準備: そのエンジンが対応するGGUFと必要な付属ファイル",
                 "起動・モデル・ポート接続とAioLM用probeが必要です。引数は配置例で、MODEL/HOST/PORTは実際の値に置き換えます。",
@@ -465,7 +468,7 @@ const content: GuideContent = {
             {
               "title": "14. Mullama",
               "body": [
-                "条件: matching CPU / GPU build",
+                "条件: OSとCPU・GPUに合う実行ファイル",
                 "選ぶ実行ファイル: mullama",
                 "モデルの準備: そのエンジンが対応するGGUFと必要な付属ファイル",
                 "起動・モデル・ポート接続とAioLM用probeが必要です。引数は配置例で、MODEL/HOST/PORTは実際の値に置き換えます。",
@@ -482,7 +485,7 @@ const content: GuideContent = {
             {
               "title": "15. llama.cpp",
               "body": [
-                "条件: matching Windows / macOS / Linux build",
+                "条件: OSに合うWindows・macOS・Linux実行ファイル",
                 "選ぶ実行ファイル: llama-server.exe / llama-server",
                 "モデルの準備: そのエンジンが対応するGGUFと必要な付属ファイル",
                 "起動・モデル・ポート接続とAioLM用probeが必要です。引数は配置例で、MODEL/HOST/PORTは実際の値に置き換えます。",

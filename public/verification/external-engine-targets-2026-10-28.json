@@ -83,15 +83,27 @@
         }
       ],
       "hardware": "Apple Silicon · macOS",
-      "program": "installed Python",
-      "entrypoint": [
-        "-m",
-        "mlx_lm.server / mlx_vlm.server"
-      ],
+      "program": "Python from the selected server environment",
       "model_kind": "hf",
       "route": "process",
       "validation": "unrun",
-      "builtin_external_adapter": false
+      "builtin_external_adapter": false,
+      "launch_alternatives": [
+        {
+          "program": "Python (mlx-lm environment)",
+          "args": [
+            "-m",
+            "mlx_lm.server"
+          ]
+        },
+        {
+          "program": "Python (MLX-VLM environment)",
+          "args": [
+            "-m",
+            "mlx_vlm.server"
+          ]
+        }
+      ]
     },
     {
       "id": "exllama",
@@ -184,15 +196,29 @@
         }
       ],
       "hardware": "supported vLLM device/build · Linux; vllm-metal is separate",
-      "program": "vllm / installed Python",
-      "entrypoint": [
-        "serve",
-        "MODEL"
-      ],
+      "program": "vllm or Python from the vLLM environment",
       "model_kind": "hf",
       "route": "process",
       "validation": "unrun",
-      "builtin_external_adapter": false
+      "builtin_external_adapter": false,
+      "launch_alternatives": [
+        {
+          "program": "vllm",
+          "args": [
+            "serve",
+            "MODEL"
+          ]
+        },
+        {
+          "program": "Python (vLLM environment)",
+          "args": [
+            "-m",
+            "vllm.entrypoints.openai.api_server",
+            "--model",
+            "MODEL"
+          ]
+        }
+      ]
     },
     {
       "id": "strata",

@@ -168,5 +168,135 @@
     "One pinned Linux CPU/model/template combination through the public CLI only.",
     "The failed Qwen2.5 combinations remain failures; the Qwen3.5 pass does not replace them.",
     "No general adapter package, all-model compatibility, GPU, native GUI, overall Linux acceptance, F09 fix or actual update installation/UI claim."
-  ]
+  ],
+  "recheck": {
+    "date_utc": "2026-10-28",
+    "synthetic": false,
+    "harness_source_commit": "c9cae36470d74b7f25212b09774989a8013f3df1",
+    "harness_source_dirty": false,
+    "harness_files": [
+      {
+        "file": "smoke-runtime-adapters.mjs",
+        "sha256": "b9e299147dec5fa4049393a22fcb8485635608a5a5d4d5ff1c3bb9ef51c529d9"
+      },
+      {
+        "file": "runtime-adapter-stream.mjs",
+        "sha256": "5fd8a372d293ef6ae6f220154bc4c229ddb3f808e31d09778971cd28a917f958"
+      },
+      {
+        "file": "../src/shared/api/sse.ts",
+        "sha256": "196aa9dda7da64e127f6b8134912ecaa929a1b7808a3b7144a76721b8eff9f3f"
+      }
+    ],
+    "cli_sha256": "1e82dc8786f712f57b530f64503ebe558814f7a796a337d31a2534813589bd90",
+    "manifest_sha256": "d1a71ef90f6b1f47315e8dde9e7283cb85184854ef517e42cb8330a9c5c52154",
+    "request_timeout_ms": 120000,
+    "exact_answer_required": true,
+    "same_process_followup_required": true,
+    "scope": "Published v0.3.2 CLI, same pinned Linux CPU/build/model combination; stricter shared acceptance checks. Prior attempts above are retained.",
+    "supervisor": "Linux PR_SET_CHILD_SUBREAPER supplies normal init reaping; process and port cleanup checks remain enabled.",
+    "steps": [
+      {
+        "item": "A01 provenance",
+        "status": "pass",
+        "evidence": {
+          "modelRevision": "6ab461498e2023f6e3c1baea90a8f0fe38ab64d0",
+          "verifiedFiles": 5
+        }
+      },
+      {
+        "item": "A02 register and select",
+        "status": "pass",
+        "evidence": {
+          "engine": "custom.vllm-cpp",
+          "runtime": "v0-0-2-cpu",
+          "servedModel": "validation-model"
+        }
+      },
+      {
+        "item": "A03 actual response and usage",
+        "status": "pass",
+        "evidence": {
+          "content": "5",
+          "usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 25,
+            "total_tokens": 27
+          },
+          "answerExact": true
+        }
+      },
+      {
+        "item": "A04 cancellation preserves server",
+        "status": "pass",
+        "evidence": {
+          "content": "Here",
+          "reasoningChars": 0,
+          "streamAbortedAfterOutput": true,
+          "streamAbortedAfterContent": true,
+          "cancelledOn": "content",
+          "followup": {
+            "content": "5",
+            "usage": {
+              "completion_tokens": 2,
+              "prompt_tokens": 25,
+              "total_tokens": 27
+            },
+            "answerExact": true
+          },
+          "sameProcessAfterFollowup": true
+        }
+      },
+      {
+        "item": "A05 restart",
+        "status": "pass",
+        "evidence": {
+          "content": "5",
+          "usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 25,
+            "total_tokens": 27
+          },
+          "answerExact": true
+        }
+      },
+      {
+        "item": "A06 shutdown and unavailable selection",
+        "status": "pass",
+        "evidence": {
+          "savedSelectionPreserved": true,
+          "missingRegistrationRefused": true
+        }
+      },
+      {
+        "item": "A07 register again without rebuilding",
+        "status": "pass",
+        "evidence": {
+          "content": "5",
+          "usage": {
+            "completion_tokens": 2,
+            "prompt_tokens": 25,
+            "total_tokens": 27
+          },
+          "answerExact": true
+        }
+      },
+      {
+        "item": "A08 cleanup",
+        "status": "pass",
+        "evidence": {
+          "portClosed": true,
+          "terminated_process_count": 3
+        }
+      },
+      {
+        "item": "A09 external files preserved",
+        "status": "pass",
+        "evidence": {
+          "verifiedFiles": 5
+        }
+      }
+    ],
+    "result": "pass: 9 of 9"
+  }
 }

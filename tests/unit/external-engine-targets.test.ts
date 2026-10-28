@@ -29,6 +29,16 @@ describe('required external engine targets', () => {
     const entries = sections[0].more;
     expect(entries).toHaveLength(16);
     expect(entries?.map(entry => entry.title)).toEqual(targets.targets.map((target, index) => `${index + 1}. ${target.name}`));
+    for (const id of ['mlx', 'vllm']) {
+      const target = targets.targets.find(target => target.id === id)!;
+      const alternatives = 'launch_alternatives' in target ? target.launch_alternatives : [];
+      expect(alternatives).toHaveLength(2);
+      const displayed = entries?.[targets.targets.indexOf(target)].code ?? '';
+      for (const alternative of alternatives ?? []) {
+        expect(displayed).toContain(alternative.args.join('\n'));
+        if (alternative.program.startsWith('Python')) expect(alternative.args[0]).toBe('-m');
+      }
+    }
     for (const entry of entries ?? []) {
       expect(entry.body.length).toBeGreaterThanOrEqual(5);
       expect(entry.links?.every(link => !link.href.endsWith('.md'))).toBe(true);
