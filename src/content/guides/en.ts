@@ -30,14 +30,511 @@ const content: GuideContent = {
       { id: 'models', title: 'Download the right model type', body: ['llama.cpp uses GGUF files. vLLM and MLX usually need a complete model folder with weights, settings and tokenizer files. Do not copy just one file; choose the right format in Discover.', 'If memory is limited, try a smaller model. For images or audio, check both the model description and the support shown in the app.'], image: 'discover', caption: 'Choose the engine and model format at the top of Discover first.', more: [{ title: 'Detailed vLLM and MLX requirements', body: ['Managed Linux vLLM installs CUDA dependencies. AMD ROCm needs a separately prepared compatible Python environment and driver. AioLM does not install system GPU drivers.', 'vllm-metal needs Apple silicon, macOS 15+ and native arm64 Python 3.12; Intel and Rosetta Python are not supported. MLX also needs Apple silicon and a compatible Python environment.', 'Native Windows vLLM, WSL and remote servers are not local runtime targets here. Python models need a complete safetensors or supported MLX snapshot. vllm-metal supports only a subset of GGUF files, not all ordinary GGUF models.'] }] },
       { id: 'limits', title: 'What still needs checking', body: ['Images, audio, video and tools need support from both the engine and model. Registering an engine does not enable every feature.'], more: [{ title: 'v0.3.2 verification limits and known issues', body: ['The SmolVLM image/video content-quality failure (F09) is unresolved.', 'Passing a package build does not verify inference on every device. Overall Linux acceptance and real v0.3.1 → v0.3.2 update installation/UI acceptance are not complete.', 'Benchmarks, deep verification and portable bundles have engine-specific support. External inference engines (custom.*) are not accepted by the current public benchmark-sharing contract.'] }] },
     ] },
-    adapters: { title: "Connect an external inference engine", description: "External inference engines, such as Strata and TensorFold, are engines you install separately on your computer and connect in addition to the built-in engines. Prepare the engine and a compatible adapter, then follow these steps.", sections: [
-      { id: 'prepare', title: 'Have these ready', body: ['You need the engine program and connection settings made for it. An adapter is the connector that lets AioLM run and talk to another engine.', 'Finish the engine provider’s installation first. If you only have an executable, ask the provider for an AioLM-compatible adapter/setup file. These engines are not all bundled installers.'], note: 'Use trusted programs and setup files. Checking connection details also runs the selected program.' },
-      { id: 'add', title: '1. Add an inference engine', body: ['Stop running models and tasks. Select Inference engines on the left, then Add inference engine.'], image: 'adapter-add', caption: 'Add a new engine from the same list as the built-in engines.' },
-      {"id": "setup", "title": "2. Load the supplied connection settings", "body": ["Select Browse provided adapters, or Import adapter setup if you received a file. Choose the setup for your external inference engine.", "Fill in the program, installation folders and settings file as the provider instructs, then select Check installation and continue. Do not copy the example paths."], "caption": "Strata setup is shown as one example of connecting an external inference engine. For another engine, use its provider’s settings.", "more": [{"title": "See a connection example", "body": ["For example, Strata can be selected from the provided list. Choose the Python executable, the engine folder in Installed SDK folder, and the supplied file in Dedicated deployment JSON. Give Runtime ID a name such as local-engine; keep the other supplied values.", "TensorFold is another example of an external inference engine. Prepare its provider’s compatible adapter/setup file and follow the same connection steps. Installation requirements and supported features can differ."]}], "image": "adapter-setup"},
-      { id: 'help', title: '3. Select Discover help', body: ['The app reads the settings this engine supports. If it fails, check the selected files and installation instead of skipping. When it finishes, select Next.'], image: 'adapter-help', caption: 'The help screen before discovery. No real external inference engine was run for these guide examples.' },
-      { id: 'check', title: '4. Check the connection details', body: ['Compare the model, port and compatibility-check fields with the provider’s instructions. Keep values supplied by the setup; do not guess empty or unfamiliar fields.', 'Select Review registration details when ready. If manual entries are required and unclear, ask the provider.'], image: 'adapter-check', caption: 'Example field locations. Actual values depend on the engine and adapter.' },
-      { id: 'review', title: '5. Register, then choose a model', body: ['Review the details and select Register. Then choose the new engine, runtime and model in Model & settings.', 'Launch after the app’s compatibility check. Test a short question, cancellation, stop and restart. Registration alone does not prove that a model can run.'], image: 'adapter-review', caption: 'The review before registration. This is not a completed registration or successful inference result.', more: [{ title: 'Information needed for a manual connection', body: ['Manual setup is for providers and developers. It needs the executable and launch arguments, a custom.* engine ID/runtime ID, model/port bindings and a model-compatibility probe program.', 'If the engine does not serve OpenAI-compatible HTTP/SSE, a bridge must provide it. Pass credentials through the provider’s environment binding. Do not override app-owned model, host, port or authentication with extra arguments.', 'After changing the executable, launch method or adapter, review help and model compatibility again. Removing a registration keeps external files. Public benchmark sharing, deep verification and portable bundles require separate support.'] }] },
-    ] },
+    adapters: {
+      "title": "Connect an external inference engine",
+      "description": "External inference engines are programs you install separately and connect to AioLM. Strata and TensorFold are examples, subject to the same setup and compatibility checks as any other external engine. They are not built in or installed automatically.",
+      "sections": [
+        {
+          "id": "prepare",
+          "links": [{"href": "/en/guides/external-engines", "label": "Find the files for your engine"}],
+          "title": "Check what the connection needs",
+          "body": [
+            "Prepare the engine and its AioLM adapter. The adapter lets AioLM start the engine, check the selected model and exchange messages.",
+            "The engine or a bridge must provide OpenAI-compatible HTTP/SSE and respond to an AioLM model compatibility probe. Engines meeting this contract do not need their names added to the app. Selecting an arbitrary executable does not make it compatible."
+          ]
+        },
+        {
+          "id": "files",
+          "title": "Which file should I choose?",
+          "table": {
+            "headers": [
+              "What you have",
+              "File and location"
+            ],
+            "rows": [
+              [
+                "AioLM setup package",
+                "Unpack the entire folder. Import its *.setup.json file and keep its companion files together."
+              ],
+              [
+                "Server executable",
+                "In manual registration, select the actual server, for example llama-server.exe or llama-server. Do not select an installer or app shortcut."
+              ],
+              [
+                "Python script or module",
+                "Select python.exe (Windows) or bin/python (Mac/Linux) from the environment where you installed the engine. Add the script or module as arguments below."
+              ],
+              [
+                "Model or ordinary configuration",
+                "Select .gguf/.safetensors models after registration. Select deployment.json or another engine configuration only when the adapter specifically asks for it. It is not an AioLM setup recipe."
+              ]
+            ]
+          },
+          "note": "*.setup.json is a naming example. The contents must use the AioLM setup v1 format. Renaming an ordinary JSON file does not convert it."
+        },
+        {
+          "id": "add",
+          "title": "1. Add an inference engine",
+          "body": [
+            "Stop running models, then select Inference engines → Add inference engine. Continue to step 2 if you have a setup file, or step 3 otherwise."
+          ],
+          "image": "adapter-add",
+          "caption": "Add a new external engine here. No vendor selection is required."
+        },
+        {
+          "id": "setup",
+          "title": "2. Import a connection setup, if available",
+          "steps": [
+            "Select Import adapter setup and choose the AioLM *.setup.json from the unpacked folder.",
+            "Fill in the requested executable, folders and files as the provider instructs. Review the command and select Check installation and continue. Continue to step 4."
+          ],
+          "code": "Unpacked adapter folder/\n  engine.setup.json  ← select when importing\n  prepare.py        ← keep together\n  probe.py          ← keep together",
+          "note": "In v0.3.2, “Browse provided adapters” opens one older Strata example recipe. It does not discover installed engines or install an engine, and is not required for a connection.",
+          "more": [
+            {
+              "title": "What if I did not receive a setup file?",
+              "body": [
+                "Ask the provider for an AioLM setup v1 JSON, companion setup/probe programs, supported OS/Python/model formats and the exact executable to select. If there is no adapter, a developer must implement the common connection contract. The same requirement applies to Strata and TensorFold."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "manual",
+          "title": "3. Register manually without a setup file",
+          "body": [
+            "Under Executable or interpreter, select Browse and choose the program listed in the table above. Use Add file argument for a Python script; for a module, use Add argument to enter -m and the actual module name in separate fields.",
+            "Choose a display name, an engine ID in custom.* format, such as custom.my-engine and a runtime ID such as local-1, then select Next. Ask the provider first if you do not know the model/port options or probe command."
+          ],
+          "image": "adapter-setup",
+          "caption": "The common manual registration form in released v0.3.2. Example Engine and its paths are illustrative; select your actual files.",
+          "more": [
+            {
+              "title": "Direct server or bridge?",
+              "body": [
+                "Select direct HTTP if the engine provides OpenAI-compatible HTTP/SSE. Otherwise select a separate bridge and enter its program, arguments and engine JSON argv environment variable as its provider instructs. Ordinary console input/output does not become an HTTP server automatically."
+              ]
+            },
+            {
+              "title": "Example: starting a Python module",
+              "body": [
+                "If the provider’s command is “python -m vendor_engine.serve”, choose that Python and enter two separate arguments. Replace vendor_engine.serve with the real installed module."
+              ],
+              "code": "Executable: installed environment’s python.exe or bin/python\nArgument 1: -m\nArgument 2: vendor_engine.serve"
+            }
+          ]
+        },
+        {
+          "id": "help",
+          "title": "4. Check the launch command",
+          "body": [
+            "Select Discover help to read the selected program’s options. If it fails, check the file, Python environment and required libraries. Successful help discovery does not prove model inference."
+          ],
+          "image": "adapter-help",
+          "caption": "Review help for the selected command. This screenshot is not evidence of successful execution."
+        },
+        {
+          "id": "check",
+          "title": "5. Check model bindings and the probe",
+          "body": [
+            "Match the model and port options to the provider’s instructions. Do not assume every engine uses --model and --port. Review imported values too.",
+            "For Compatibility check program, select an AioLM-compatible probe. For a Python probe, select Python and add the probe.py path and placeholders such as {model} as separate arguments. An ordinary engine executable is not a substitute for a probe."
+          ],
+          "image": "adapter-check",
+          "caption": "Model/port bindings are above; probe, health checks and model formats are below. The example probe.py is not a bundled file.",
+          "more": [
+            {
+              "title": "The common contract for developers",
+              "body": [
+                "The probe reports schema_version: 1, the registered engine_id/runtime_id, model path, support and capabilities as JSON. Unsupported models must remain failures. HTTP/SSE, health path and model/port/auth bindings must match the real server. A display name or renamed extension cannot replace this contract."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "review",
+          "title": "6. Register and run a real model",
+          "steps": [
+            "Select Review registration details → Register. In model selection, choose the new engine/runtime and a supported model file or complete model folder.",
+            "Run it after model compatibility checks pass. Check a short answer, cancellation followed by another question, stopping and restarting."
+          ],
+          "image": "adapter-review",
+          "caption": "Review the common registration details. Successful registration and successful inference are separate checks."
+        },
+        {
+          "id": "trouble",
+          "title": "If the connection fails",
+          "more": [
+            {
+              "title": "Python or a file cannot be found",
+              "body": [
+                "Choose Python from the environment used to install the engine. Keep the complete adapter folder, rather than moving only the JSON. If a program or adapter changes or moves, import again, check help/model compatibility and register again."
+              ]
+            },
+            {
+              "title": "Registered, but the model will not run",
+              "body": [
+                "Check the model format, complete model files, memory and engine libraries. Inspect the compatibility result and server error log. Registration does not add unsupported image/audio/tool capabilities."
+              ]
+            },
+            {
+              "title": "Does removal delete my engine or model?",
+              "body": [
+                "Removing a registration leaves external engine/model files intact. Supply keys through the provider’s documented environment variables. Public benchmark sharing, deep validation and portable bundles require separate support for external engines."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "verified",
+          "title": "What has actually been verified",
+          "body": [
+            "2026-10-28: registered external CPU llama-server b11669 as custom.independent-cpu through the public v0.3.2 CLI with a fixed Qwen2.5-0.5B model. Verified a real “5” response, token usage, stream cancellation, restart, removal/re-registration and closed ports after shutdown.",
+            "This is CLI evidence for that Linux CPU combination. It does not establish actual Strata/TensorFold inference or compatibility with every external engine. Screenshots use example data. Native app UI, actual update installation and overall Linux acceptance were not completed by this check."
+          ],
+          "more": [
+            {
+              "title": "Reproduction details",
+              "report": {"href": "/verification/external-cpu-2026-10-28.json", "label": "View execution evidence (JSON)"},
+              "body": [
+                "Server: ggml-org/llama.cpp b11669. Model revision: 9217f5db79a29953eb74d5343926648285ec7e67. Verified official archive/model SHA-256 and 41 model/dependency files, including that external files stayed unchanged. All A01–A09 checks passed under normal process reaping. The initial container reaping failure remains recorded separately. F09 is still unresolved."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    'external-engines': {
+      "title": "Find the files for your engine",
+      "description": "These 16 engines are required connection targets. This does not mean they are installed or all verified. Expand your engine to find the relevant program and model files.",
+      "sections": [
+        {
+          "id": "choose",
+          "title": "Select your engine",
+          "body": [
+            "This is not an installation menu. Every external engine must meet the same connection contract and actual execution checks, including Strata and TensorFold."
+          ],
+          "more": [
+            {
+              "title": "1. Halogen",
+              "body": [
+                "Requirements: Strix Halo · Linux · ROCm",
+                "Executable to select: podman / docker + Halogen image",
+                "Model files: The model-specific weight/tokenizer/auxiliary package; do not assume ordinary GGUF compatibility",
+                "The executable inside a container cannot be selected in a normal host file picker. A lifecycle adapter must manage the image, GPU devices, model mounts and container shutdown; no such package is provided yet.",
+                "Current verification: Actual inference unverified here; not complete support"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/peonist-ai/halogen-server",
+                  "label": "Official project · peonist-ai/halogen-server"
+                },
+                {
+                  "href": "https://github.com/peonist-ai/halogen-flash-server",
+                  "label": "Official project · peonist-ai/halogen-flash-server"
+                }
+              ]
+            },
+            {
+              "title": "2. Strixite",
+              "body": [
+                "Requirements: Strix Halo · Linux",
+                "Executable to select: build/strix/strix_server",
+                "Model files: The model-specific weight/tokenizer/auxiliary package; do not assume ordinary GGUF compatibility",
+                "Requires launch/model/port bindings and an AioLM probe. Arguments below illustrate placement; replace MODEL/HOST/PORT with selected values.",
+                "Current verification: Actual inference unverified here; not complete support"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/shawnshekari/strixite",
+                  "label": "Official project · shawnshekari/strixite"
+                }
+              ],
+              "code": "Entry point example: --config DEDICATED_CONFIG"
+            },
+            {
+              "title": "3. MLX (mlx-lm / MLX-VLM)",
+              "body": [
+                "Requirements: Apple Silicon · macOS",
+                "Executable to select: installed Python",
+                "Model files: Complete local checkpoint with weights, configuration and tokenizer",
+                "Requires launch/model/port bindings and an AioLM probe. Arguments below illustrate placement; replace MODEL/HOST/PORT with selected values.",
+                "Current verification: Actual inference unverified here; not complete support",
+                "mlx-lm and MLX-VLM use different server modules. Validate text/image support for the specific model and module."
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/ml-explore/mlx-lm",
+                  "label": "Official project · ml-explore/mlx-lm"
+                },
+                {
+                  "href": "https://github.com/Blaizzy/mlx-vlm",
+                  "label": "Official project · Blaizzy/mlx-vlm"
+                }
+              ],
+              "code": "Entry point example: -m mlx_lm.server / mlx_vlm.server"
+            },
+            {
+              "title": "4. ExLlamaV3 (ExLlamaV2)",
+              "body": [
+                "Requirements: NVIDIA GPU · supported CUDA environment",
+                "Executable to select: TabbyAPI environment Python + main.py",
+                "Model files: Complete EXL3 folder for V3, or EXL2/other supported formats for V2",
+                "Use the server rather than a desktop app or library. A matching adapter must connect configuration, model/port choices and process ownership; no general connection package is provided yet.",
+                "Current verification: Actual inference unverified here; not complete support",
+                "TabbyAPI is the officially recommended server. Do not select an exllamav3/exllamav2 library file or CUDA DLL as the executable."
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/turboderp-org/exllamav3",
+                  "label": "Official project · turboderp-org/exllamav3"
+                },
+                {
+                  "href": "https://github.com/turboderp-org/exllamav2",
+                  "label": "Official project · turboderp-org/exllamav2"
+                },
+                {
+                  "href": "https://github.com/theroyallab/tabbyAPI",
+                  "label": "Official project · theroyallab/tabbyAPI"
+                }
+              ],
+              "code": "Entry point example: main.py"
+            },
+            {
+              "title": "5. Rulith Inference",
+              "body": [
+                "Requirements: Strix Halo · Windows 11; Linux build is separate",
+                "Executable to select: bin/hip/llama-server.exe",
+                "Model files: A GGUF file supported by that engine and any required companion files",
+                "Use the server rather than a desktop app or library. A matching adapter must connect configuration, model/port choices and process ownership; no general connection package is provided yet.",
+                "Current verification: Actual inference unverified here; not complete support",
+                "Use the patched server, rather than the Rulith desktop EXE. Its ROCm DLLs, environment and model layout must also match."
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/rulith-dev/rulith-inference",
+                  "label": "Official project · rulith-dev/rulith-inference"
+                }
+              ]
+            },
+            {
+              "title": "6. SGLang",
+              "body": [
+                "Requirements: supported SGLang device/build · Linux",
+                "Executable to select: installed Python",
+                "Model files: Complete local checkpoint with weights, configuration and tokenizer",
+                "Requires launch/model/port bindings and an AioLM probe. Arguments below illustrate placement; replace MODEL/HOST/PORT with selected values.",
+                "Current verification: Actual inference unverified here; not complete support"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/sgl-project/sglang",
+                  "label": "Official project · sgl-project/sglang"
+                }
+              ],
+              "code": "Entry point example: -m sglang.launch_server"
+            },
+            {
+              "title": "7. vLLM",
+              "body": [
+                "Requirements: supported vLLM device/build · Linux; vllm-metal is separate",
+                "Executable to select: vllm / installed Python",
+                "Model files: Complete local checkpoint with weights, configuration and tokenizer",
+                "Requires launch/model/port bindings and an AioLM probe. Arguments below illustrate placement; replace MODEL/HOST/PORT with selected values.",
+                "Current verification: Actual inference unverified here; not complete support"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/vllm-project/vllm",
+                  "label": "Official project · vllm-project/vllm"
+                }
+              ],
+              "code": "Entry point example: serve MODEL"
+            },
+            {
+              "title": "8. Strata",
+              "body": [
+                "Requirements: supported Windows/Linux engine build",
+                "Executable to select: installed Python + matching adapter",
+                "Model files: A dedicated deployment JSON for the reviewed revision and all files it references",
+                "Use the server rather than a desktop app or library. A matching adapter must connect configuration, model/port choices and process ownership; no general connection package is provided yet.",
+                "Current verification: Actual inference unverified here; not complete support",
+                "The existing SDK example is limited to source 296b59d2f73c8f04a805df29c2fa97655adace78. This is not support for the current Strata launch command."
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/Niko1221/Strata",
+                  "label": "Official project · Niko1221/Strata"
+                }
+              ],
+              "code": "Entry point example: -m serve.server"
+            },
+            {
+              "title": "9. TensorFold",
+              "body": [
+                "Requirements: supported Metal / CUDA / Vulkan build",
+                "Executable to select: tensorfold",
+                "Model files: Complete local checkpoint with weights, configuration and tokenizer",
+                "Requires launch/model/port bindings and an AioLM probe. Arguments below illustrate placement; replace MODEL/HOST/PORT with selected values.",
+                "Current verification: Actual inference unverified here; not complete support"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/ashhart/TensorFold",
+                  "label": "Official project · ashhart/TensorFold"
+                }
+              ],
+              "code": "Entry point example: serve MODEL"
+            },
+            {
+              "title": "10. vllm.cpp",
+              "body": [
+                "Requirements: matching CPU / CUDA / Metal / Vulkan / ROCm build",
+                "Executable to select: bin/vllm-server",
+                "Model files: Supported GGUF or full checkpoint; check quantization and model architecture too",
+                "Requires launch/model/port bindings and an AioLM probe. Arguments below illustrate placement; replace MODEL/HOST/PORT with selected values.",
+                "Current verification: One pinned Linux CPU/model CLI lifecycle passed; not a general adapter release or all-device validation",
+                "v0.0.2 CPU passed with Qwen3.5-0.8B Q8_0 and an explicit official tokenizer_config.json via --tokenizer-config. Qwen2.5 loader failures remain failures. The malformed repeating answer without a template was not accepted."
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/localai-org/vllm.cpp",
+                  "label": "Official project · localai-org/vllm.cpp"
+                },
+                {
+                  "href": "/verification/vllm-cpp-cpu-2026-10-28.json",
+                  "label": "View execution evidence"
+                }
+              ],
+              "code": "Entry point example: --model MODEL"
+            },
+            {
+              "title": "11. Mistral.rs",
+              "body": [
+                "Requirements: matching CPU / CUDA / Metal build",
+                "Executable to select: mistralrs",
+                "Model files: Supported GGUF or full checkpoint; check quantization and model architecture too",
+                "Requires launch/model/port bindings and an AioLM probe. Arguments below illustrate placement; replace MODEL/HOST/PORT with selected values.",
+                "Current verification: One pinned Linux CPU/model CLI lifecycle passed; not a general adapter release or all-device validation"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/EricLBuehler/mistral.rs",
+                  "label": "Official project · EricLBuehler/mistral.rs"
+                },
+                {
+                  "href": "/verification/mistralrs-cpu-2026-10-28.json",
+                  "label": "View execution evidence"
+                }
+              ],
+              "code": "Entry point example: serve"
+            },
+            {
+              "title": "12. KTransformers",
+              "body": [
+                "Requirements: supported CPU + accelerator combination",
+                "Executable to select: installed Python + SGLang/kt-kernel",
+                "Model files: Full SGLang model plus kt-kernel expert weights and configuration",
+                "Requires launch/model/port bindings and an AioLM probe. Arguments below illustrate placement; replace MODEL/HOST/PORT with selected values.",
+                "Current verification: Actual inference unverified here; not complete support"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/kvcache-ai/ktransformers",
+                  "label": "Official project · kvcache-ai/ktransformers"
+                }
+              ],
+              "code": "Entry point example: -m sglang.launch_server"
+            },
+            {
+              "title": "13. ik_llama.cpp",
+              "body": [
+                "Requirements: matching CPU / CUDA / Vulkan build",
+                "Executable to select: build/bin/llama-server",
+                "Model files: A GGUF file supported by that engine and any required companion files",
+                "Requires launch/model/port bindings and an AioLM probe. Arguments below illustrate placement; replace MODEL/HOST/PORT with selected values.",
+                "Current verification: Actual inference unverified here; not complete support"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/ikawrakow/ik_llama.cpp",
+                  "label": "Official project · ikawrakow/ik_llama.cpp"
+                }
+              ]
+            },
+            {
+              "title": "14. Mullama",
+              "body": [
+                "Requirements: matching CPU / GPU build",
+                "Executable to select: mullama",
+                "Model files: A GGUF file supported by that engine and any required companion files",
+                "Requires launch/model/port bindings and an AioLM probe. Arguments below illustrate placement; replace MODEL/HOST/PORT with selected values.",
+                "Current verification: Actual inference unverified here; not complete support"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/cognisoc/mullama",
+                  "label": "Official project · cognisoc/mullama"
+                }
+              ],
+              "code": "Entry point example: serve --model MODEL"
+            },
+            {
+              "title": "15. llama.cpp",
+              "body": [
+                "Requirements: matching Windows / macOS / Linux build",
+                "Executable to select: llama-server.exe / llama-server",
+                "Model files: A GGUF file supported by that engine and any required companion files",
+                "Requires launch/model/port bindings and an AioLM probe. Arguments below illustrate placement; replace MODEL/HOST/PORT with selected values.",
+                "Current verification: One pinned Linux CPU/model CLI lifecycle passed; not a general adapter release or all-device validation"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/ggml-org/llama.cpp",
+                  "label": "Official project · ggml-org/llama.cpp"
+                },
+                {
+                  "href": "/verification/external-cpu-2026-10-28.json",
+                  "label": "View execution evidence"
+                }
+              ]
+            },
+            {
+              "title": "16. Gufo",
+              "body": [
+                "Requirements: Strix Halo · Linux x86_64",
+                "Executable to select: gufo",
+                "Model files: A GGUF file supported by that engine and any required companion files",
+                "Requires launch/model/port bindings and an AioLM probe. Arguments below illustrate placement; replace MODEL/HOST/PORT with selected values.",
+                "Current verification: Actual inference unverified here; not complete support",
+                "Host/port belong to serve; model belongs to llm. A manifest or bridge must preserve that order."
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/gufo-org/gufo",
+                  "label": "Official project · gufo-org/gufo"
+                }
+              ],
+              "code": "Entry point example: serve --host HOST --port PORT llm --model MODEL"
+            }
+          ]
+        },
+        {
+          "id": "rules",
+          "title": "A listed engine is not automatically ready",
+          "body": [
+            "Executables, configurations and models have different roles. Do not select an arbitrary library or installer. Entries without a compatible adapter first need AioLM setup/probe programs, any required bridge, and validation."
+          ]
+        },
+        {
+          "id": "verification",
+          "title": "What counts as complete support?",
+          "body": [
+            "Check registration, actual help and exact arguments, the selected-model probe, real HTTP/SSE output and usage, cancellation followed by another question, stop/restart, removal/re-registration, and process/port cleanup. Dedicated GPU configurations that have not been executed stay unverified."
+          ]
+        }
+      ]
+    },
   },
 };
 export default content;

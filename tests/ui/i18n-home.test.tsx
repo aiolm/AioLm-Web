@@ -40,7 +40,8 @@ describe('localized static homepage', () => {
   });
   it('advertises the canonical sitemap and excludes API and private pages from crawling', () => {
     expect(robots()).toEqual({ rules: { userAgent: '*', allow: '/', disallow: ['/v1/', '/manage', '/verify/', ...locales.flatMap(locale => ['/' + locale + '/manage', '/' + locale + '/verify/'])] }, sitemap: ['https://example.invalid/sitemap.xml', 'https://example.invalid/benchmarks/sitemap.xml'] });
-    expect(sitemap()).toHaveLength(28);
+    expect(sitemap()).toHaveLength(32);
+    expect(sitemap().map(entry => entry.url)).toContain('https://example.invalid/ko/guides/external-engines');
     expect(sitemap().map(entry => entry.url)).toContain('https://example.invalid/zh/benchmarks');
     expect(sitemap().every(entry => Object.keys(entry.alternates?.languages ?? {}).length === 4)).toBe(true);
   });

@@ -1,0 +1,414 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-10-28",
+  "purpose": "Required engine connection targets, not installed adapters or a statement that all engines work. Upstream entry points and model formats require matching provider adapters and target-device validation.",
+  "acceptance": [
+    "register",
+    "help and exact argv",
+    "selected model probe",
+    "actual HTTP/SSE response with usage",
+    "cancel and continue",
+    "stop and restart",
+    "remove and re-register",
+    "process and port cleanup"
+  ],
+  "targets": [
+    {
+      "id": "halogen",
+      "name": "Halogen",
+      "sources": [
+        {
+          "repository": "peonist-ai/halogen-server",
+          "commit": "5a0f952c9e07794a0de0a617a377bae6a63ca56a",
+          "readme_blob": "2d2ab526b885a30eaadc93dd7c513af204d32ecb",
+          "description": "The fastest way to run Qwen3.8 27B on Strix Halo (gfx1151)",
+          "url": "https://github.com/peonist-ai/halogen-server"
+        },
+        {
+          "repository": "peonist-ai/halogen-flash-server",
+          "commit": "8634e5a4ceb15ef9a520b38ca6ea66867ba79788",
+          "readme_blob": "114abf3808be28f1473f42866acc135144cbe86d",
+          "description": "Local inference that behaves like a frontier API: Qwen3.8-Flash-Next on AMD Strix Halo plus small NPU models, over the OpenAI and Anthropic APIs on one port.",
+          "url": "https://github.com/peonist-ai/halogen-flash-server"
+        }
+      ],
+      "hardware": "Strix Halo · Linux · ROCm",
+      "program": "podman / docker + Halogen image",
+      "entrypoint": [],
+      "model_kind": "custom",
+      "route": "container",
+      "validation": "unrun",
+      "builtin_external_adapter": false
+    },
+    {
+      "id": "strixite",
+      "name": "Strixite",
+      "sources": [
+        {
+          "repository": "shawnshekari/strixite",
+          "commit": "b455955a89683a16d0b71db0fd20b9f369d524d9",
+          "readme_blob": "f493db4a92a65fb65c2f532a0bcbceb61854d5d8",
+          "description": "LLM inference engine written from scratch in HIP for AMD Strix Halo (gfx1151) and Qwen3.8-Flash-Next - ~50 tokens/s out to 492k context",
+          "url": "https://github.com/shawnshekari/strixite"
+        }
+      ],
+      "hardware": "Strix Halo · Linux",
+      "program": "build/strix/strix_server",
+      "entrypoint": [
+        "--config",
+        "DEDICATED_CONFIG"
+      ],
+      "model_kind": "custom",
+      "route": "process",
+      "validation": "unrun",
+      "builtin_external_adapter": false
+    },
+    {
+      "id": "mlx",
+      "name": "MLX (mlx-lm / MLX-VLM)",
+      "sources": [
+        {
+          "repository": "ml-explore/mlx-lm",
+          "commit": "f39c4aa2af5d61a5e85bd50cc3f4294fedaff116",
+          "readme_blob": "ab749b340175ea0fdc4c5b9f27253a8e291aa98d",
+          "description": "Run LLMs with MLX",
+          "url": "https://github.com/ml-explore/mlx-lm"
+        },
+        {
+          "repository": "Blaizzy/mlx-vlm",
+          "commit": "230fc308efb577d87446306bfb8a3e9f1a129558",
+          "readme_blob": "7ed2ded48a50647431dec87dbc41a0a284d8336c",
+          "description": "MLX-VLM is a package for inference and fine-tuning of Vision Language Models (VLMs) on your Mac using MLX.",
+          "url": "https://github.com/Blaizzy/mlx-vlm"
+        }
+      ],
+      "hardware": "Apple Silicon · macOS",
+      "program": "installed Python",
+      "entrypoint": [
+        "-m",
+        "mlx_lm.server / mlx_vlm.server"
+      ],
+      "model_kind": "hf",
+      "route": "process",
+      "validation": "unrun",
+      "builtin_external_adapter": false
+    },
+    {
+      "id": "exllama",
+      "name": "ExLlamaV3 (ExLlamaV2)",
+      "sources": [
+        {
+          "repository": "turboderp-org/exllamav3",
+          "commit": "cdc785db89e263e65e5849cb53e1ada156411414",
+          "readme_blob": "3930a06377d5e486714a8faa1e4de0ef5b09a402",
+          "description": "An optimized quantization and inference library for running LLMs locally on modern consumer-class GPUs ",
+          "url": "https://github.com/turboderp-org/exllamav3"
+        },
+        {
+          "repository": "turboderp-org/exllamav2",
+          "commit": "7dc12af3a81f34ac3f27cd7602ed539b638933ca",
+          "readme_blob": "de61d3c5e51a1922f5f59737fd87c9cd09c6633f",
+          "description": "A fast inference library for running LLMs locally on modern consumer-class GPUs",
+          "url": "https://github.com/turboderp-org/exllamav2"
+        },
+        {
+          "repository": "theroyallab/tabbyAPI",
+          "commit": "564f8fbb231a2d7e3b339574c85ae7d54ffd9618",
+          "readme_blob": "576ce6e7b2f94f490e128d8bb74d0e3fb7314385",
+          "url": "https://github.com/theroyallab/tabbyAPI"
+        }
+      ],
+      "hardware": "NVIDIA GPU · supported CUDA environment",
+      "program": "TabbyAPI environment Python + main.py",
+      "entrypoint": [
+        "main.py"
+      ],
+      "model_kind": "exl",
+      "route": "config",
+      "validation": "unrun",
+      "builtin_external_adapter": false
+    },
+    {
+      "id": "rulith",
+      "name": "Rulith Inference",
+      "sources": [
+        {
+          "repository": "rulith-dev/rulith-inference",
+          "commit": "4e0b9481aee9ba6891dc6ea00957d604f92ef3a3",
+          "readme_blob": "7949017ed709b2b92dd78395eb997df3bb1f761f",
+          "description": "Rulith Inference, formerly Strix Llama. Serving a 125B MoE model fast on one AMD Strix Halo machine, on Windows: a patched llama.cpp, a manager, and a desktop app.",
+          "url": "https://github.com/rulith-dev/rulith-inference"
+        }
+      ],
+      "hardware": "Strix Halo · Windows 11; Linux build is separate",
+      "program": "bin/hip/llama-server.exe",
+      "entrypoint": [],
+      "model_kind": "gguf",
+      "route": "config",
+      "validation": "unrun",
+      "builtin_external_adapter": false
+    },
+    {
+      "id": "sglang",
+      "name": "SGLang",
+      "sources": [
+        {
+          "repository": "sgl-project/sglang",
+          "commit": "610a74d6485539b07aa772e31199257ca3d7c1d0",
+          "readme_blob": "0c28df5e901bf8f1e1b0f8c0d5972ed0004b0529",
+          "description": "SGLang is a high-performance serving framework for large language models and multimodal models.",
+          "url": "https://github.com/sgl-project/sglang"
+        }
+      ],
+      "hardware": "supported SGLang device/build · Linux",
+      "program": "installed Python",
+      "entrypoint": [
+        "-m",
+        "sglang.launch_server"
+      ],
+      "model_kind": "hf",
+      "route": "process",
+      "validation": "unrun",
+      "builtin_external_adapter": false
+    },
+    {
+      "id": "vllm",
+      "name": "vLLM",
+      "sources": [
+        {
+          "repository": "vllm-project/vllm",
+          "commit": "6376fda7a95904abf8977011af526c693c4c3004",
+          "readme_blob": "ff92fface4421933f1056f53d736c0840eac4728",
+          "description": "A high-throughput and memory-efficient inference and serving engine for LLMs",
+          "url": "https://github.com/vllm-project/vllm"
+        }
+      ],
+      "hardware": "supported vLLM device/build · Linux; vllm-metal is separate",
+      "program": "vllm / installed Python",
+      "entrypoint": [
+        "serve",
+        "MODEL"
+      ],
+      "model_kind": "hf",
+      "route": "process",
+      "validation": "unrun",
+      "builtin_external_adapter": false
+    },
+    {
+      "id": "strata",
+      "name": "Strata",
+      "sources": [
+        {
+          "repository": "Niko1221/Strata",
+          "commit": "5e8a4cca7d690ac60ca37eb09e7d0e010099ad6d",
+          "readme_blob": "8e481234399e547db824d1956bd96876e0f49c10",
+          "description": "Qwen3.8-Flash-Next on any consumer hardware: one-click install for Windows / Linux. Strata inference engine, OpenAI/Anthropic API on localhost, optional image input.",
+          "url": "https://github.com/Niko1221/Strata"
+        }
+      ],
+      "hardware": "supported Windows/Linux engine build",
+      "program": "installed Python + matching adapter",
+      "entrypoint": [
+        "-m",
+        "serve.server"
+      ],
+      "model_kind": "config",
+      "route": "config",
+      "validation": "unrun",
+      "builtin_external_adapter": false,
+      "adapter_scope": "The existing SDK example is pinned to 296b59d2f73c8f04a805df29c2fa97655adace78; it is not a claim for current Strata launch CLI."
+    },
+    {
+      "id": "tensorfold",
+      "name": "TensorFold",
+      "sources": [
+        {
+          "repository": "ashhart/TensorFold",
+          "commit": "15a0b2a959c8c0936af3c5a4d2c0ac8fb002bf02",
+          "readme_blob": "c8cd89943a61494f2eaa1bf65a55010c081c0d6b",
+          "description": "LLM Inference Engine for Metal, CUDA and Vulkan.",
+          "url": "https://github.com/ashhart/TensorFold"
+        }
+      ],
+      "hardware": "supported Metal / CUDA / Vulkan build",
+      "program": "tensorfold",
+      "entrypoint": [
+        "serve",
+        "MODEL"
+      ],
+      "model_kind": "hf",
+      "route": "process",
+      "validation": "unrun",
+      "builtin_external_adapter": false
+    },
+    {
+      "id": "vllm-cpp",
+      "name": "vllm.cpp",
+      "sources": [
+        {
+          "repository": "localai-org/vllm.cpp",
+          "commit": "8189b3f544b7f54723baefc2e289f9e054ea245b",
+          "readme_blob": "d573b67a87390515ece5441c57a38c17c876284c",
+          "description": "a community oriented 1:1, vLLM-alike (Continuous batching, paged KV) engine in C++ with additional features (GGUF, RadixAttention, Cache-aware scheduling, ...)",
+          "url": "https://github.com/localai-org/vllm.cpp"
+        }
+      ],
+      "hardware": "matching CPU / CUDA / Metal / Vulkan / ROCm build",
+      "program": "bin/vllm-server",
+      "entrypoint": [
+        "--model",
+        "MODEL"
+      ],
+      "model_kind": "mixed",
+      "route": "process",
+      "validation": "cli_limited_pass",
+      "builtin_external_adapter": false,
+      "initial_model_failures": [
+        "Qwen2.5 Q4_K_M: unsupported GGML type 6",
+        "Qwen2.5 Q8_0: unsupported qwen2 architecture"
+      ],
+      "evidence": "/verification/vllm-cpp-cpu-2026-10-28.json",
+      "requires_explicit_chat_template": true
+    },
+    {
+      "id": "mistralrs",
+      "name": "Mistral.rs",
+      "sources": [
+        {
+          "repository": "EricLBuehler/mistral.rs",
+          "commit": "9459891e7697238225885518119682ac8209a612",
+          "readme_blob": "1cbd3948112d9999fb7609100c731775f0c81cbe",
+          "description": "Fast, flexible LLM inference",
+          "url": "https://github.com/EricLBuehler/mistral.rs"
+        }
+      ],
+      "hardware": "matching CPU / CUDA / Metal build",
+      "program": "mistralrs",
+      "entrypoint": [
+        "serve"
+      ],
+      "model_kind": "mixed",
+      "route": "process",
+      "validation": "cli_limited_pass",
+      "builtin_external_adapter": false,
+      "evidence": "/verification/mistralrs-cpu-2026-10-28.json"
+    },
+    {
+      "id": "ktransformers",
+      "name": "KTransformers",
+      "sources": [
+        {
+          "repository": "kvcache-ai/ktransformers",
+          "commit": "a694e718e8b3ec2e221277d674e369f3be38d2a4",
+          "readme_blob": "45e82a955b021163cd2e7743b0cc02e7de5d22b0",
+          "description": "A Flexible Framework for Experiencing Heterogeneous LLM Inference/Fine-tune Optimizations",
+          "url": "https://github.com/kvcache-ai/ktransformers"
+        }
+      ],
+      "hardware": "supported CPU + accelerator combination",
+      "program": "installed Python + SGLang/kt-kernel",
+      "entrypoint": [
+        "-m",
+        "sglang.launch_server"
+      ],
+      "model_kind": "kt",
+      "route": "process",
+      "validation": "unrun",
+      "builtin_external_adapter": false
+    },
+    {
+      "id": "ik-llama",
+      "name": "ik_llama.cpp",
+      "sources": [
+        {
+          "repository": "ikawrakow/ik_llama.cpp",
+          "commit": "84ae7ea6207a7b8b45b29777e90e6cc4e2cb0a4a",
+          "readme_blob": "03a070681ac9fc4951b3a89a2127d517847ed3ed",
+          "description": "llama.cpp fork with additional SOTA quants and improved performance",
+          "url": "https://github.com/ikawrakow/ik_llama.cpp"
+        }
+      ],
+      "hardware": "matching CPU / CUDA / Vulkan build",
+      "program": "build/bin/llama-server",
+      "entrypoint": [],
+      "model_kind": "gguf",
+      "route": "process",
+      "validation": "unrun",
+      "builtin_external_adapter": false
+    },
+    {
+      "id": "mullama",
+      "name": "Mullama",
+      "sources": [
+        {
+          "repository": "cognisoc/mullama",
+          "commit": "a0a58c85e99f32ffbe1bc98876b21a30ba8f17a9",
+          "readme_blob": "3c6b34c2f06d16592ca0d28abea6a0c7e2c10261",
+          "description": "Run any LLM locally. Use it from any language. Deploy anywhere.",
+          "url": "https://github.com/cognisoc/mullama"
+        }
+      ],
+      "hardware": "matching CPU / GPU build",
+      "program": "mullama",
+      "entrypoint": [
+        "serve",
+        "--model",
+        "MODEL"
+      ],
+      "model_kind": "gguf",
+      "route": "process",
+      "validation": "unrun",
+      "builtin_external_adapter": false
+    },
+    {
+      "id": "llama-cpp",
+      "name": "llama.cpp",
+      "sources": [
+        {
+          "repository": "ggml-org/llama.cpp",
+          "commit": "620d2225cc436ab0b001e3200e590e3b286ef9ab",
+          "reviewed_release": "b11669",
+          "description": "CPU runtime used for public CLI acceptance",
+          "url": "https://github.com/ggml-org/llama.cpp"
+        }
+      ],
+      "hardware": "matching Windows / macOS / Linux build",
+      "program": "llama-server.exe / llama-server",
+      "entrypoint": [],
+      "model_kind": "gguf",
+      "route": "process",
+      "validation": "cli_limited_pass",
+      "builtin_external_adapter": false,
+      "evidence": "/verification/external-cpu-2026-10-28.json"
+    },
+    {
+      "id": "gufo",
+      "name": "Gufo",
+      "sources": [
+        {
+          "repository": "gufo-org/gufo",
+          "commit": "c92b19c5dc7ec12f83d0c2a5603cda78cc200b3e",
+          "readme_blob": "db46e81a7d1ebb6a4e110d2103948fdbbbad697e",
+          "description": "The Open Source Strix Halo AI engine. Qwen 3.8  Flash Next Q4_K_XL: 1,801.01 pp, 73.17 tg single user, 194.37 tok/s 8 users; Qwen 3.8 27B Q4_K_XL: 656.33pp, 70.56tg tok/s single user with DFlash2",
+          "url": "https://github.com/gufo-org/gufo"
+        }
+      ],
+      "hardware": "Strix Halo · Linux x86_64",
+      "program": "gufo",
+      "entrypoint": [
+        "serve",
+        "--host",
+        "HOST",
+        "--port",
+        "PORT",
+        "llm",
+        "--model",
+        "MODEL"
+      ],
+      "model_kind": "gguf",
+      "route": "process",
+      "validation": "unrun",
+      "builtin_external_adapter": false
+    }
+  ]
+}

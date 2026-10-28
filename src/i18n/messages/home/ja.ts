@@ -49,7 +49,7 @@ const messages = {
   "home.caption": "AioLMデスクトップアプリのモデル実行画面：ローカルのGGUFライブラリ、読み込み中のモデル、llama.cppランタイムをひとつのウィンドウで確認できます。公開デモ用モデルで表示しています。",
   "home.enginesTitle": "基本エンジンと外部推論エンジン",
   "home.enginesBuiltin": "Windows・macOS・Linuxのllama.cpp、対応Linux環境またはApple Silicon Macのvllm-metal経由のvLLM、Apple Silicon MacのMLXを利用できます。",
-  "home.enginesExternal": "外部推論エンジンは、基本エンジンとは別に自分のコンピューターへインストールして接続するエンジンです。例としてStrata・TensorFoldや自分で開発したエンジンを互換アダプターで接続できます。ローカルのOpenAI互換APIを提供する実行ファイルかブリッジが必要です。",
+  "home.enginesExternal": "外部推論エンジンは、基本エンジンとは別に自分のコンピューターへインストールして接続するエンジンです。例としてStrata・TensorFoldや自分で開発したエンジンを互換アダプターで接続できます。ローカルのOpenAI互換HTTP/SSEとAioLM用モデル検査（probe）が必要です。実行ファイルの選択だけでは互換になりません。すべての外部エンジンに同じ条件を適用します。",
   "home.enginesHelp": "選択したエンジンのコマンドヘルプとアダプターのメタデータが共通のオプションエディターを構成します。チャット・プロジェクト・セッション・APIゲートウェイは、そのエンジンとモデルで確認された機能を使います。",
   "home.enginesGuide": "組み込みエンジンの互換性",
   "home.adaptersGuide": "外部推論エンジンの接続ガイド",

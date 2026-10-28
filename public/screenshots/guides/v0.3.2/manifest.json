@@ -178,11 +178,11 @@
       "file": "ko/adapter-setup.png",
       "width": 1200,
       "height": 850,
-      "sha256": "d2b7d76262b9856aa29dc3ee4d353bf4376598c261613723d0edc0289cd435ec",
+      "sha256": "ac8d89250981aaeec95fbc56351813c6abaef4559c24df7ef4a5e102f4841b99",
       "focus": {
-        "x": 20,
-        "y": 41.864,
-        "width": 9.099,
+        "x": 31.7826,
+        "y": 54.3346,
+        "width": 58.3047,
         "height": 3.7647
       }
     },
@@ -192,10 +192,10 @@
       "file": "ko/adapter-help.png",
       "width": 1200,
       "height": 850,
-      "sha256": "c1c0357f661d5e170ae3f5f4a5ee6bc08754c099ff96bf3a333630f7954b8330",
+      "sha256": "ce412c486692bf5417e9c3587c6b24fa6a5f68976ce628d5acd4dba9f31878c3",
       "focus": {
         "x": 20,
-        "y": 84.8768,
+        "y": 77.818,
         "width": 6.9544,
         "height": 3.7647
       }
@@ -206,11 +206,11 @@
       "file": "ko/adapter-check.png",
       "width": 1200,
       "height": 850,
-      "sha256": "4dcf51f04e70b01229ecff9a32570495385d43332d05d7b626835edb0d736b36",
+      "sha256": "4ea673c46e72d1323c6026f447e64455edb89b9c04b18a85cb9eef6372a8b93e",
       "focus": {
-        "x": 20,
-        "y": 50.807,
-        "width": 24.6107,
+        "x": 30.7214,
+        "y": 19.3952,
+        "width": 58.2826,
         "height": 3.7647
       }
     },
@@ -220,12 +220,12 @@
       "file": "ko/adapter-review.png",
       "width": 1200,
       "height": 850,
-      "sha256": "7595fc49c5dfe6fe95b92842eb4942c783219c00839a1ad1063f062664efbb16",
+      "sha256": "b4f6d4da8d8acde55b100cd84f78ced93da8ba91d87edfb7a31a46dff8bdb20f",
       "focus": {
         "x": 20,
-        "y": 41.7482,
+        "y": 0,
         "width": 76.5,
-        "height": 43.7647
+        "height": 96.2188
       }
     },
     {
@@ -402,11 +402,11 @@
       "file": "en/adapter-setup.png",
       "width": 1200,
       "height": 850,
-      "sha256": "d991f018d2eb691eee1b36cd710aa6715f69a2ec3e56ee73fde88cff15ab72d9",
+      "sha256": "a047b3bcafd89aca4f4ff4653e577839678778c4f9d7f028d725a2635361689d",
       "focus": {
-        "x": 20,
-        "y": 44.0515,
-        "width": 14.7227,
+        "x": 32.6497,
+        "y": 56.5221,
+        "width": 57.5781,
         "height": 3.7647
       }
     },
@@ -416,10 +416,10 @@
       "file": "en/adapter-help.png",
       "width": 1200,
       "height": 850,
-      "sha256": "f31da6ff52f8ac3915365f31b8873e8dda9e0c892971cbb7b270d5f4270a0b90",
+      "sha256": "7e1dfd82e7b2b3e0b3d38192d393effe7d30524459b8f8251b428c69c954e4fd",
       "focus": {
         "x": 20,
-        "y": 87.0643,
+        "y": 77.7702,
         "width": 8.5573,
         "height": 3.7647
       }
@@ -430,11 +430,11 @@
       "file": "en/adapter-check.png",
       "width": 1200,
       "height": 850,
-      "sha256": "6ce0bdb332859c2ac3247b7c45282ccf9c4ef04565b3e49e99c8a6ee96367874",
+      "sha256": "83943ae7ae569e06622ee113c9b2b8fdd4d5dbef02e84efb3b2400390fa9beb0",
       "focus": {
-        "x": 20,
-        "y": 50.8768,
-        "width": 24.6107,
+        "x": 35.6706,
+        "y": 19.3474,
+        "width": 53.474,
         "height": 3.7647
       }
     },
@@ -444,12 +444,12 @@
       "file": "en/adapter-review.png",
       "width": 1200,
       "height": 850,
-      "sha256": "95c9a497fc58566ff599e28b50a253d80f7fc0e1ea571c7ff8769e34404f150a",
+      "sha256": "df8e8be4bbd35209de995e349bb891da0af0b6b5bbd8e81ad388e37604a0e277",
       "focus": {
         "x": 20,
-        "y": 42.5239,
+        "y": 0,
         "width": 76.5,
-        "height": 43.7647
+        "height": 96.2886
       }
     },
     {
@@ -626,11 +626,11 @@
       "file": "ja/adapter-setup.png",
       "width": 1200,
       "height": 850,
-      "sha256": "45e2ece8d9a2ce6de3344aa831a80334644ca004ca4c2c3d08f2dedfd1d4aab4",
+      "sha256": "68724f258ef4bf3ef2cca77c86389116bef8d22a4a0ede5493ca3ff92e4e3144",
       "focus": {
-        "x": 20,
-        "y": 41.864,
-        "width": 12.4284,
+        "x": 38.069,
+        "y": 54.3346,
+        "width": 53.5964,
         "height": 3.7647
       }
     },
@@ -640,10 +640,10 @@
       "file": "ja/adapter-help.png",
       "width": 1200,
       "height": 850,
-      "sha256": "a2954cbedd3797cddb4816cc95a247fdba356a3addda58c309841f4ec3ba61cc",
+      "sha256": "dd8666ef809ea18fc77ba7d513c465a1b9ce23e279e6539441160c498ffdb59e",
       "focus": {
         "x": 20,
-        "y": 84.8768,
+        "y": 77.818,
         "width": 8.2305,
         "height": 3.7647
       }
@@ -654,11 +654,11 @@
       "file": "ja/adapter-check.png",
       "width": 1200,
       "height": 850,
-      "sha256": "fe5d88f304542af941f3e66fcc38c638964072097c374c33fb5dc7408e6295df",
+      "sha256": "bad128d64b9bac96aa56554ea4a9c658a65e1db8e33cb2ea256fda860c7c5860",
       "focus": {
-        "x": 20,
-        "y": 50.807,
-        "width": 24.6107,
+        "x": 32.2461,
+        "y": 19.3952,
+        "width": 58.3359,
         "height": 3.7647
       }
     },
@@ -668,12 +668,12 @@
       "file": "ja/adapter-review.png",
       "width": 1200,
       "height": 850,
-      "sha256": "ea31068ddde9702f208c841b5f3589f234251f91f83b8a76261e374cbd1a4700",
+      "sha256": "499b36c525b4705c5423e00fc39e299fb680c5ad218251a62eb0472ffc427dff",
       "focus": {
         "x": 20,
-        "y": 41.7482,
+        "y": 0,
         "width": 76.5,
-        "height": 43.7647
+        "height": 96.2188
       }
     },
     {
@@ -850,11 +850,11 @@
       "file": "zh/adapter-setup.png",
       "width": 1200,
       "height": 850,
-      "sha256": "5f95796a95eeeeb2228dc49404e06acd125fef727d840ec5e2d3ec8a7377a7f1",
+      "sha256": "d57cdd7557c8b2603b7832a24b216e1a87b0872f822f4709802a8172202aeec5",
       "focus": {
-        "x": 20,
-        "y": 41.864,
-        "width": 9.5846,
+        "x": 30.418,
+        "y": 54.3346,
+        "width": 61.2474,
         "height": 3.7647
       }
     },
@@ -864,10 +864,10 @@
       "file": "zh/adapter-help.png",
       "width": 1200,
       "height": 850,
-      "sha256": "ceeb8219b1fdad54e3de8a86866dad0135e1b03493be3c3084cf1df5bf317ca9",
+      "sha256": "f88d8e8e34dc9d535b22cf1a16f201cc66c759ab7dcfa71ae92f382a5427a1f0",
       "focus": {
         "x": 20,
-        "y": 84.8768,
+        "y": 77.818,
         "width": 6.3346,
         "height": 3.7647
       }
@@ -878,11 +878,11 @@
       "file": "zh/adapter-check.png",
       "width": 1200,
       "height": 850,
-      "sha256": "59a0ed671331206cb5268a673c656e2d06bbf529c6a4b51d4498327c08f4f8c6",
+      "sha256": "517e31f87b72ee0b5071b1825126e33282ab2c89e3e1ac84974b8078e28d5c05",
       "focus": {
-        "x": 20,
-        "y": 50.807,
-        "width": 24.6107,
+        "x": 29.3346,
+        "y": 19.3952,
+        "width": 61.2474,
         "height": 3.7647
       }
     },
@@ -892,12 +892,12 @@
       "file": "zh/adapter-review.png",
       "width": 1200,
       "height": 850,
-      "sha256": "a294bedf4f7325de934368b3e69dc98020ebdeeac7abdd301fec59ba521a771d",
+      "sha256": "5d9da98a3ac38f580741f307585d9ac43448f2175cd198001cd17387d8d73646",
       "focus": {
         "x": 20,
-        "y": 41.7482,
+        "y": 0,
         "width": 76.5,
-        "height": 43.7647
+        "height": 96.2188
       }
     }
   ]

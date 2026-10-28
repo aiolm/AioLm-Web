@@ -30,14 +30,511 @@ const content: GuideContent = {
       { id: 'models', title: '下载匹配格式的模型', body: ['llama.cpp 使用 GGUF 文件。vLLM 和 MLX 通常需要包含模型、配置和 tokenizer 的完整目录。不要只复制一个文件，请在搜索页面选择正确格式。', '内存不足时尝试更小的模型。需要图片或音频时，同时检查模型说明和应用显示的支持情况。'], image: 'discover', caption: '先在搜索页面顶部选择引擎和模型格式。', more: [{ title: 'vLLM 和 MLX 的详细条件', body: ['Linux 托管 vLLM 安装 CUDA 依赖。AMD ROCm 需要另外准备与驱动匹配的 Python 环境并注册。AioLM 不安装系统显卡驱动。', 'vllm-metal 需要 Apple 芯片、macOS 15+ 和原生 arm64 Python 3.12，不支持 Intel 和 Rosetta Python。MLX 也需要 Apple 芯片及兼容 Python 环境。', '原生 Windows vLLM、WSL 和远程服务器不是此应用的本地运行目标。Python 模型需要完整 safetensors 或受支持的 MLX 快照。vllm-metal 只支持部分 GGUF，不能等同于普通 GGUF 支持。'] }] },
       { id: 'limits', title: '仍需确认的地方', body: ['图片、音频、视频和工具需要模型与引擎同时支持。注册引擎不会自动启用所有功能。'], more: [{ title: 'v0.3.2 验证范围与已知问题', body: ['SmolVLM 图片、视频内容质量问题（F09）尚未解决。', '安装包构建通过，不表示所有设备上的推理都已验证。Linux 整体验证及真实的 v0.3.1 → v0.3.2 更新安装、UI 验收也尚未完成。', '基准、深度验证和便携包因引擎而异。外部推論エンジン custom.* 引擎目前不属于公开基准分享对象。'] }] },
     ] },
-    adapters: { title: "连接外部推理引擎", description: "外部推理引擎指 Strata、TensorFold 等内置引擎之外，单独安装在自己电脑上再连接的引擎。请先准备引擎及兼容适配器，再按下方步骤连接。", sections: [
-      { id: 'prepare', title: '开始前准备好', body: ['需要引擎程序和针对该引擎的连接设置。适配器是让 AioLM 能启动并与其他引擎交流的连接工具。', '先按照引擎提供方的说明完成安装。如果只有可执行文件，请向提供方获取 AioLM 兼容的适配器或设置文件。这些引擎并非全部内置。'], note: '只使用可信的程序和设置文件。检查连接信息的过程也会运行所选程序。' },
-      { id: 'add', title: '1. 添加推理引擎', body: ['停止正在运行的模型和任务。点击左侧推理引擎 → 添加推理引擎。'], image: 'adapter-add', caption: '在内置引擎所在的同一个列表中添加新引擎。' },
-      {"id": "setup", "title": "2. 加载提供的连接设置", "body": ["点击查看随附适配器，或选择导入适配器设置打开收到的文件。选择对应外部推理引擎的设置。", "按提供方说明填写程序、安装目录和配置文件，再点击检查安装并继续。不要照抄示例路径。"], "caption": "此处仅用Strata设置演示一种外部推理引擎连接方式。其他引擎请使用对应提供方的设置。", "more": [{"title": "查看连接示例", "body": ["例如，Strata可从随附列表选择。Installed Python executable选择Python程序，Installed SDK folder选择引擎目录，Dedicated deployment JSON选择提供的配置文件。Runtime ID填一个名称，如local-engine；其他提供的值保持不变。", "TensorFold也是外部推理引擎的一个示例。准备对应提供方的兼容适配器和设置文件，再按相同的连接步骤操作。不同引擎的安装要求和支持功能可能不同。"]}], "image": "adapter-setup"},
-      { id: 'help', title: '3. 点击发现帮助', body: ['应用会读取引擎可用的设置。如果失败，请检查文件和安装状态，不要跳过。完成后点击下一步。'], image: 'adapter-help', caption: '读取帮助前的界面。这些指南示例没有实际运行外部推理引擎。' },
-      { id: 'check', title: '4. 检查连接信息', body: ['将模型、端口和兼容性检查字段与提供方说明对照。保留设置自动填入的值，不要猜测空白或不认识的字段。', '准备好后点击检查注册内容。若必须手动输入而你不确定，请向提供方确认。'], image: 'adapter-check', caption: '示例用于说明输入框位置，实际值因引擎和适配器而异。' },
-      { id: 'review', title: '5. 注册后再选择模型', body: ['检查内容后点击注册。然后在模型选择与设置中选择新引擎、运行时和模型。', '通过应用的兼容性检查后再运行，并试试简短问题、取消、停止和重启。注册成功并不保证模型能运行。'], image: 'adapter-review', caption: '这是注册前的检查示例，不是注册完成或推理成功的结果。', more: [{ title: '手动连接需要哪些信息？', body: ['手动设置适合提供方和开发者。需要执行程序与启动参数、custom.* 引擎 ID、运行时 ID、模型和端口对应方式，以及兼容性 probe 程序。', '引擎若不提供 OpenAI 兼容 HTTP/SSE，需要 bridge 提供。凭据通过提供方指定的环境变量传递，不要用额外参数覆盖模型、主机、端口和认证。', '程序、启动方式或适配器改变后，请重新检查帮助和模型兼容性。移除注册不会删除外部文件。公开基准分享、深度验证和便携包需要单独支持。'] }] },
-    ] },
+    adapters: {
+      "title": "连接外部推理引擎",
+      "description": "外部推理引擎是自行安装并连接到AioLM的程序。Strata和TensorFold也是此类示例，与其他外部引擎需要相同的连接设置和兼容性检查。它们不是内置或自动安装的引擎。",
+      "sections": [
+        {
+          "id": "prepare",
+          "links": [{"href": "/zh/guides/external-engines", "label": "各引擎的连接文件"}],
+          "title": "先确认连接条件",
+          "body": [
+            "准备引擎和对应的AioLM适配器。适配器负责连接引擎启动、模型检查和消息收发。",
+            "引擎本身或bridge必须提供OpenAI兼容HTTP/SSE，并响应AioLM模型兼容性检查（probe）。满足此通用约定即可，无需预先将引擎名称加入应用。选择任意可执行文件不代表自动兼容。"
+          ]
+        },
+        {
+          "id": "files",
+          "title": "应该选择哪个文件？",
+          "table": {
+            "headers": [
+              "已有内容",
+              "选择文件与位置"
+            ],
+            "rows": [
+              [
+                "AioLM连接设置包",
+                "先解压整个文件夹，在导入设置中选择*.setup.json，并保留所有配套文件。"
+              ],
+              [
+                "服务器可执行程序",
+                "在手动注册中选择真正的服务器，如llama-server.exe或llama-server。不要选择安装程序或应用快捷方式。"
+              ],
+              [
+                "Python脚本或模块",
+                "选择安装引擎所用环境中的python.exe（Windows）或bin/python（Mac/Linux），再在下方添加脚本或模块参数。"
+              ],
+              [
+                "模型或普通配置",
+                ".gguf、.safetensors模型在注册后的模型选择中指定。deployment.json等普通配置仅在适配器单独要求时选择；它不是AioLM连接设置。"
+              ]
+            ]
+          },
+          "note": "*.setup.json只是文件命名示例，内容必须符合AioLM setup v1格式。给普通JSON改名无法完成转换。"
+        },
+        {
+          "id": "add",
+          "title": "1. 添加推理引擎",
+          "body": [
+            "停止正在运行的模型，选择左侧推理引擎 → 添加推理引擎。有设置文件时继续第2步，否则跳到第3步。"
+          ],
+          "image": "adapter-add",
+          "caption": "在此添加新的外部引擎，无需选择特定提供方。"
+        },
+        {
+          "id": "setup",
+          "title": "2. 有连接设置时导入",
+          "steps": [
+            "点击导入适配器设置，选择解压文件夹中的AioLM专用*.setup.json。",
+            "按提供方说明指定程序、文件夹和文件，检查命令后点击检查安装并继续，然后进入第4步。"
+          ],
+          "code": "解压后的适配器文件夹/\n  engine.setup.json  ← 导入时选择\n  prepare.py        ← 一起保留\n  probe.py          ← 一起保留",
+          "note": "v0.3.2的“查看随附适配器”只打开旧的Strata设置示例，不会搜索已安装引擎或安装引擎，也不是连接所必需的按钮。",
+          "more": [
+            {
+              "title": "没有收到设置文件怎么办？",
+              "body": [
+                "向提供方索取AioLM setup v1 JSON、配套设置/probe程序、支持的OS/Python/模型格式及应选择的可执行文件。没有适配器时，需要开发者按通用约定实现连接。Strata和TensorFold也遵循相同条件。"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "manual",
+          "title": "3. 没有设置时手动注册",
+          "body": [
+            "在可执行文件或解释器 → 浏览中按上表选择程序。Python脚本使用添加文件参数；模块使用添加参数，将-m和实际模块名称分别填入两个参数栏。",
+            "填写显示名称、引擎ID（custom.*格式，如custom.my-engine）和运行时ID（如local-1），然后点击下一步。不清楚模型/端口选项或probe时，请先向提供方确认。"
+          ],
+          "image": "adapter-setup",
+          "caption": "已发布v0.3.2的通用手动注册界面。Example Engine和路径仅作示例，请选择实际文件。",
+          "more": [
+            {
+              "title": "选择直接服务器还是bridge？",
+              "body": [
+                "引擎提供OpenAI兼容HTTP/SSE时选择直接提供，否则需要转换格式的bridge。选择独立bridge，并按提供方说明设置程序、参数和引擎JSON argv环境变量。普通控制台输入输出不会自动变成HTTP服务器。"
+              ]
+            },
+            {
+              "title": "Python模块启动示例",
+              "body": [
+                "若提供方命令为“python -m vendor_engine.serve”，选择对应Python，将参数分别填写。请将示例模块名替换为实际安装的模块。"
+              ],
+              "code": "可执行文件：环境中的python.exe或bin/python\n参数1：-m\n参数2：vendor_engine.serve"
+            }
+          ]
+        },
+        {
+          "id": "help",
+          "title": "4. 确认启动命令",
+          "body": [
+            "点击发现帮助以读取所选程序的选项。失败时检查文件、Python环境和必需依赖。帮助显示成功不等于模型推理成功。"
+          ],
+          "image": "adapter-help",
+          "caption": "检查所选命令的帮助。此截图不是运行成功的证据。"
+        },
+        {
+          "id": "check",
+          "title": "5. 确认模型连接和兼容性检查",
+          "body": [
+            "按提供方说明设置模型和端口选项，不要假设所有引擎都使用--model和--port。导入的值也应检查。",
+            "兼容性检查程序请选择AioLM专用probe。Python probe应选择Python，再将probe.py路径、{model}等分别添加为参数。普通引擎可执行文件不能代替probe。"
+          ],
+          "image": "adapter-check",
+          "caption": "上方是模型/端口连接，下方是probe、健康检查和模型格式。示例probe.py不是应用附带文件。",
+          "more": [
+            {
+              "title": "开发者需要满足的通用约定",
+              "body": [
+                "probe以JSON返回schema_version: 1、已注册的engine_id/runtime_id、模型路径、支持状态与能力。不支持的模型必须保持失败状态。HTTP/SSE、健康检查路径及模型/端口/认证传递方法须匹配实际服务器，不能通过显示名称或修改扩展名代替。"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "review",
+          "title": "6. 注册后运行实际模型",
+          "steps": [
+            "点击检查注册内容 → 注册，在模型选择中指定新引擎/运行时及支持的模型文件或完整模型文件夹。",
+            "通过模型兼容性检查后运行，确认能回答简短问题、取消生成后再次提问、停止及重启。"
+          ],
+          "image": "adapter-review",
+          "caption": "最后确认通用注册内容。注册成功和推理成功是两项不同的检查。"
+        },
+        {
+          "id": "trouble",
+          "title": "连接失败时",
+          "more": [
+            {
+              "title": "找不到Python或文件",
+              "body": [
+                "请选择安装引擎所用环境中的Python。保留包含配套文件的完整文件夹，不要只移动JSON。程序或适配器移动/更改后，请重新导入、检查帮助和兼容性并注册。"
+              ]
+            },
+            {
+              "title": "已注册但模型无法运行",
+              "body": [
+                "检查模型格式、完整文件、内存和引擎依赖，查看兼容性结果与服务器错误日志。注册不会自动增加未支持的图片、音频或工具能力。"
+              ]
+            },
+            {
+              "title": "移除注册会删除引擎或模型吗？",
+              "body": [
+                "不会删除外部程序或模型文件。密钥应通过提供方说明的环境变量传递。外部引擎的公开基准分享、深度验证和便携包需要单独支持。"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "verified",
+          "title": "实际验证范围",
+          "body": [
+            "2026-10-28：使用公开v0.3.2 CLI，将外部CPU llama-server b11669注册为custom.independent-cpu并运行固定的Qwen2.5-0.5B模型。验证了实际回答“5”、token用量、流式取消、重启、移除/重新注册，以及关闭后的端口释放。",
+            "此结果仅覆盖该Linux CPU组合的CLI，不证明Strata/TensorFold已实际推理成功或所有外部引擎均兼容。截图使用示例数据，本次检查未完成原生应用UI、实际更新安装或Linux整体验收。"
+          ],
+          "more": [
+            {
+              "title": "复现信息",
+              "report": {"href": "/verification/external-cpu-2026-10-28.json", "label": "查看运行验证结果 (JSON)"},
+              "body": [
+                "服务器：ggml-org/llama.cpp b11669。模型revision：9217f5db79a29953eb74d5343926648285ec7e67。检查了官方压缩包/模型SHA-256及41个模型/依赖文件，并确认外部原文件未变。在正常进程回收下A01–A09全部通过，首次容器回收失败单独保留记录。F09仍未解决。"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    'external-engines': {
+      "title": "各引擎的连接文件",
+      "description": "以下16个引擎是要求的连接目标，不表示已经安装或全部验证。展开自己的引擎，查看需要的程序和模型文件。",
+      "sections": [
+        {
+          "id": "choose",
+          "title": "选择自己的引擎",
+          "body": [
+            "这不是安装菜单。包括Strata和TensorFold在内，所有外部引擎必须满足相同连接约定和实际运行检查。"
+          ],
+          "more": [
+            {
+              "title": "1. Halogen",
+              "body": [
+                "条件: Strix Halo · Linux · ROCm",
+                "应选择的可执行文件: podman / docker + Halogen image",
+                "模型准备: 模型专用权重、tokenizer及附加文件包，不能假设兼容普通GGUF",
+                "普通主机文件选择器无法选择容器内的执行文件。需要管理镜像、GPU设备、模型挂载和容器关闭的适配器，目前尚未提供。",
+                "当前验证状态: 此环境中实际推理未验证，支持尚未完成"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/peonist-ai/halogen-server",
+                  "label": "官方项目 · peonist-ai/halogen-server"
+                },
+                {
+                  "href": "https://github.com/peonist-ai/halogen-flash-server",
+                  "label": "官方项目 · peonist-ai/halogen-flash-server"
+                }
+              ]
+            },
+            {
+              "title": "2. Strixite",
+              "body": [
+                "条件: Strix Halo · Linux",
+                "应选择的可执行文件: build/strix/strix_server",
+                "模型准备: 模型专用权重、tokenizer及附加文件包，不能假设兼容普通GGUF",
+                "需要启动/模型/端口连接及AioLM probe。参数仅示意位置，请将MODEL/HOST/PORT替换为实际值。",
+                "当前验证状态: 此环境中实际推理未验证，支持尚未完成"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/shawnshekari/strixite",
+                  "label": "官方项目 · shawnshekari/strixite"
+                }
+              ],
+              "code": "启动方式示例: --config DEDICATED_CONFIG"
+            },
+            {
+              "title": "3. MLX (mlx-lm / MLX-VLM)",
+              "body": [
+                "条件: Apple Silicon · macOS",
+                "应选择的可执行文件: installed Python",
+                "模型准备: 包含权重、配置和tokenizer的完整本地模型文件夹",
+                "需要启动/模型/端口连接及AioLM probe。参数仅示意位置，请将MODEL/HOST/PORT替换为实际值。",
+                "当前验证状态: 此环境中实际推理未验证，支持尚未完成",
+                "mlx-lm与MLX-VLM使用不同服务器模块，文本/图片支持也须按模型与模块确认。"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/ml-explore/mlx-lm",
+                  "label": "官方项目 · ml-explore/mlx-lm"
+                },
+                {
+                  "href": "https://github.com/Blaizzy/mlx-vlm",
+                  "label": "官方项目 · Blaizzy/mlx-vlm"
+                }
+              ],
+              "code": "启动方式示例: -m mlx_lm.server / mlx_vlm.server"
+            },
+            {
+              "title": "4. ExLlamaV3 (ExLlamaV2)",
+              "body": [
+                "条件: NVIDIA GPU · supported CUDA environment",
+                "应选择的可执行文件: TabbyAPI environment Python + main.py",
+                "模型准备: V3使用EXL3、V2使用EXL2等对应版本支持的完整模型文件夹",
+                "使用服务器而非桌面应用或库，需要连接配置、模型/端口及进程生命周期的适配器，目前尚未提供通用连接包。",
+                "当前验证状态: 此环境中实际推理未验证，支持尚未完成",
+                "官方推荐服务器为TabbyAPI，请勿选择exllamav3/exllamav2库文件或CUDA DLL本身。"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/turboderp-org/exllamav3",
+                  "label": "官方项目 · turboderp-org/exllamav3"
+                },
+                {
+                  "href": "https://github.com/turboderp-org/exllamav2",
+                  "label": "官方项目 · turboderp-org/exllamav2"
+                },
+                {
+                  "href": "https://github.com/theroyallab/tabbyAPI",
+                  "label": "官方项目 · theroyallab/tabbyAPI"
+                }
+              ],
+              "code": "启动方式示例: main.py"
+            },
+            {
+              "title": "5. Rulith Inference",
+              "body": [
+                "条件: Strix Halo · Windows 11; Linux build is separate",
+                "应选择的可执行文件: bin/hip/llama-server.exe",
+                "模型准备: 该引擎支持的GGUF及必要配套文件",
+                "使用服务器而非桌面应用或库，需要连接配置、模型/端口及进程生命周期的适配器，目前尚未提供通用连接包。",
+                "当前验证状态: 此环境中实际推理未验证，支持尚未完成",
+                "目标是专用补丁服务器，不是Rulith桌面EXE；ROCm DLL、环境和模型布局也须匹配。"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/rulith-dev/rulith-inference",
+                  "label": "官方项目 · rulith-dev/rulith-inference"
+                }
+              ]
+            },
+            {
+              "title": "6. SGLang",
+              "body": [
+                "条件: supported SGLang device/build · Linux",
+                "应选择的可执行文件: installed Python",
+                "模型准备: 包含权重、配置和tokenizer的完整本地模型文件夹",
+                "需要启动/模型/端口连接及AioLM probe。参数仅示意位置，请将MODEL/HOST/PORT替换为实际值。",
+                "当前验证状态: 此环境中实际推理未验证，支持尚未完成"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/sgl-project/sglang",
+                  "label": "官方项目 · sgl-project/sglang"
+                }
+              ],
+              "code": "启动方式示例: -m sglang.launch_server"
+            },
+            {
+              "title": "7. vLLM",
+              "body": [
+                "条件: supported vLLM device/build · Linux; vllm-metal is separate",
+                "应选择的可执行文件: vllm / installed Python",
+                "模型准备: 包含权重、配置和tokenizer的完整本地模型文件夹",
+                "需要启动/模型/端口连接及AioLM probe。参数仅示意位置，请将MODEL/HOST/PORT替换为实际值。",
+                "当前验证状态: 此环境中实际推理未验证，支持尚未完成"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/vllm-project/vllm",
+                  "label": "官方项目 · vllm-project/vllm"
+                }
+              ],
+              "code": "启动方式示例: serve MODEL"
+            },
+            {
+              "title": "8. Strata",
+              "body": [
+                "条件: supported Windows/Linux engine build",
+                "应选择的可执行文件: installed Python + matching adapter",
+                "模型准备: 所检查revision对应的专用deployment JSON及所有引用文件",
+                "使用服务器而非桌面应用或库，需要连接配置、模型/端口及进程生命周期的适配器，目前尚未提供通用连接包。",
+                "当前验证状态: 此环境中实际推理未验证，支持尚未完成",
+                "现有SDK示例仅适用于source 296b59d2f73c8f04a805df29c2fa97655adace78，不表示支持当前Strata launch命令。"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/Niko1221/Strata",
+                  "label": "官方项目 · Niko1221/Strata"
+                }
+              ],
+              "code": "启动方式示例: -m serve.server"
+            },
+            {
+              "title": "9. TensorFold",
+              "body": [
+                "条件: supported Metal / CUDA / Vulkan build",
+                "应选择的可执行文件: tensorfold",
+                "模型准备: 包含权重、配置和tokenizer的完整本地模型文件夹",
+                "需要启动/模型/端口连接及AioLM probe。参数仅示意位置，请将MODEL/HOST/PORT替换为实际值。",
+                "当前验证状态: 此环境中实际推理未验证，支持尚未完成"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/ashhart/TensorFold",
+                  "label": "官方项目 · ashhart/TensorFold"
+                }
+              ],
+              "code": "启动方式示例: serve MODEL"
+            },
+            {
+              "title": "10. vllm.cpp",
+              "body": [
+                "条件: matching CPU / CUDA / Metal / Vulkan / ROCm build",
+                "应选择的可执行文件: bin/vllm-server",
+                "模型准备: 支持的GGUF或完整模型文件夹，并确认量化和模型架构",
+                "需要启动/模型/端口连接及AioLM probe。参数仅示意位置，请将MODEL/HOST/PORT替换为实际值。",
+                "当前验证状态: 一个固定Linux CPU/模型的CLI检查通过，不等于发布通用适配器或完成所有设备验证",
+                "v0.0.2 CPU在指定Qwen3.5-0.8B Q8_0及官方tokenizer_config.json（--tokenizer-config）后通过。Qwen2.5加载失败保持失败，无模板时错误重复的回答也未计为成功。"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/localai-org/vllm.cpp",
+                  "label": "官方项目 · localai-org/vllm.cpp"
+                },
+                {
+                  "href": "/verification/vllm-cpp-cpu-2026-10-28.json",
+                  "label": "运行检查记录"
+                }
+              ],
+              "code": "启动方式示例: --model MODEL"
+            },
+            {
+              "title": "11. Mistral.rs",
+              "body": [
+                "条件: matching CPU / CUDA / Metal build",
+                "应选择的可执行文件: mistralrs",
+                "模型准备: 支持的GGUF或完整模型文件夹，并确认量化和模型架构",
+                "需要启动/模型/端口连接及AioLM probe。参数仅示意位置，请将MODEL/HOST/PORT替换为实际值。",
+                "当前验证状态: 一个固定Linux CPU/模型的CLI检查通过，不等于发布通用适配器或完成所有设备验证"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/EricLBuehler/mistral.rs",
+                  "label": "官方项目 · EricLBuehler/mistral.rs"
+                },
+                {
+                  "href": "/verification/mistralrs-cpu-2026-10-28.json",
+                  "label": "运行检查记录"
+                }
+              ],
+              "code": "启动方式示例: serve"
+            },
+            {
+              "title": "12. KTransformers",
+              "body": [
+                "条件: supported CPU + accelerator combination",
+                "应选择的可执行文件: installed Python + SGLang/kt-kernel",
+                "模型准备: 完整SGLang模型及kt-kernel所需expert权重和配置",
+                "需要启动/模型/端口连接及AioLM probe。参数仅示意位置，请将MODEL/HOST/PORT替换为实际值。",
+                "当前验证状态: 此环境中实际推理未验证，支持尚未完成"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/kvcache-ai/ktransformers",
+                  "label": "官方项目 · kvcache-ai/ktransformers"
+                }
+              ],
+              "code": "启动方式示例: -m sglang.launch_server"
+            },
+            {
+              "title": "13. ik_llama.cpp",
+              "body": [
+                "条件: matching CPU / CUDA / Vulkan build",
+                "应选择的可执行文件: build/bin/llama-server",
+                "模型准备: 该引擎支持的GGUF及必要配套文件",
+                "需要启动/模型/端口连接及AioLM probe。参数仅示意位置，请将MODEL/HOST/PORT替换为实际值。",
+                "当前验证状态: 此环境中实际推理未验证，支持尚未完成"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/ikawrakow/ik_llama.cpp",
+                  "label": "官方项目 · ikawrakow/ik_llama.cpp"
+                }
+              ]
+            },
+            {
+              "title": "14. Mullama",
+              "body": [
+                "条件: matching CPU / GPU build",
+                "应选择的可执行文件: mullama",
+                "模型准备: 该引擎支持的GGUF及必要配套文件",
+                "需要启动/模型/端口连接及AioLM probe。参数仅示意位置，请将MODEL/HOST/PORT替换为实际值。",
+                "当前验证状态: 此环境中实际推理未验证，支持尚未完成"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/cognisoc/mullama",
+                  "label": "官方项目 · cognisoc/mullama"
+                }
+              ],
+              "code": "启动方式示例: serve --model MODEL"
+            },
+            {
+              "title": "15. llama.cpp",
+              "body": [
+                "条件: matching Windows / macOS / Linux build",
+                "应选择的可执行文件: llama-server.exe / llama-server",
+                "模型准备: 该引擎支持的GGUF及必要配套文件",
+                "需要启动/模型/端口连接及AioLM probe。参数仅示意位置，请将MODEL/HOST/PORT替换为实际值。",
+                "当前验证状态: 一个固定Linux CPU/模型的CLI检查通过，不等于发布通用适配器或完成所有设备验证"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/ggml-org/llama.cpp",
+                  "label": "官方项目 · ggml-org/llama.cpp"
+                },
+                {
+                  "href": "/verification/external-cpu-2026-10-28.json",
+                  "label": "运行检查记录"
+                }
+              ]
+            },
+            {
+              "title": "16. Gufo",
+              "body": [
+                "条件: Strix Halo · Linux x86_64",
+                "应选择的可执行文件: gufo",
+                "模型准备: 该引擎支持的GGUF及必要配套文件",
+                "需要启动/模型/端口连接及AioLM probe。参数仅示意位置，请将MODEL/HOST/PORT替换为实际值。",
+                "当前验证状态: 此环境中实际推理未验证，支持尚未完成",
+                "host/port属于serve，model属于llm，需要保持此顺序的manifest或bridge。"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/gufo-org/gufo",
+                  "label": "官方项目 · gufo-org/gufo"
+                }
+              ],
+              "code": "启动方式示例: serve --host HOST --port PORT llm --model MODEL"
+            }
+          ]
+        },
+        {
+          "id": "rules",
+          "title": "列出不代表可直接运行",
+          "body": [
+            "可执行文件、配置和模型承担不同作用，请勿随意选择库文件或安装程序。没有兼容适配器的项目，须先实现并验证AioLM设置、probe及所需bridge。"
+          ]
+        },
+        {
+          "id": "verification",
+          "title": "什么才算完成支持？",
+          "body": [
+            "检查注册、实际帮助和参数、模型probe、HTTP/SSE真实回答及token用量、取消后重新提问、停止/重启、移除/重新注册，以及进程和端口清理。未在专用GPU设备上执行的项目保持未验证。"
+          ]
+        }
+      ]
+    },
   },
 };
 export default content;

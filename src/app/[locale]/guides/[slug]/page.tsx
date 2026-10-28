@@ -28,7 +28,7 @@ export default async function GuidePage({ params }: { params: Params }) {
         <h1>{guide.title}</h1><p>{guide.description}</p>
         {slug === 'install' && <a className="guide-download" href={`${GITHUB_REPOSITORY_URL}/releases/latest`}>{content.download} ↗</a>}
       </header>
-      <p className="guide-screen-notice">{content.screenshotNotice}</p>
+      {guide.sections.some(section => section.image) && <p className="guide-screen-notice">{content.screenshotNotice}</p>}
       <nav className="guide-toc" aria-label={content.onPage}>
         {guide.sections.map(section => <a key={section.id} href={`#${section.id}`}>{section.title}</a>)}
       </nav>
@@ -36,6 +36,7 @@ export default async function GuidePage({ params }: { params: Params }) {
         <h2 id={`title-${section.id}`}>{section.title}</h2>
         {section.downloads && <div className="guide-download-choices">{downloadFiles[section.downloads].map(({ file, label }) => <a key={file} href={`${GITHUB_REPOSITORY_URL}/releases/download/v0.3.2/${file}`}><span>{label} ↓</span><small>{file}</small></a>)}</div>}
         {section.body?.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
+        {section.links?.map(link => <p key={link.href}><Link href={link.href}>{link.label} →</Link></p>)}
         {section.steps && <ol>{section.steps.map(step => <li key={step}>{step}</li>)}</ol>}
         {section.table && <div className="guide-table-wrap"><table className="guide-table" aria-label={section.title}>
           <thead><tr>{section.table.headers.map(header => <th key={header} scope="col">{header}</th>)}</tr></thead>
@@ -47,6 +48,8 @@ export default async function GuidePage({ params }: { params: Params }) {
         {section.more?.map(detail => <details className="guide-more" key={detail.title}><summary>{detail.title}</summary>
           {detail.body.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
           {detail.code && <pre tabIndex={0}><code>{detail.code}</code></pre>}
+          {detail.report && <a href={detail.report.href}>{detail.report.label} ↗</a>}
+          {detail.links?.map(link => <p key={link.href}><a href={link.href}>{link.label} ↗</a></p>)}
           {section.id === 'verify' && <a href={`${GITHUB_REPOSITORY_URL}/releases/download/v0.3.2/checksums.txt`}>checksums.txt ↓</a>}
         </details>)}
       </section>)}

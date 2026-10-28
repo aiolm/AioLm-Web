@@ -49,7 +49,7 @@ const messages = {
   "home.caption": "AioLM 데스크톱 앱의 모델 실행 화면: 로컬 GGUF 라이브러리, 로드된 모델, llama.cpp 런타임을 하나의 창에서 확인할 수 있습니다. 공개 예시 모델로 표시했습니다.",
   "home.enginesTitle": "기본 제공 엔진과 외부 추론 엔진",
   "home.enginesBuiltin": "Windows·macOS·Linux의 llama.cpp, 지원 Linux 환경 또는 Apple Silicon Mac의 vllm-metal을 통한 vLLM, Apple Silicon Mac의 MLX를 사용할 수 있습니다.",
-  "home.enginesExternal": "외부 추론 엔진은 기본 제공 엔진 외에 내 컴퓨터에 별도로 설치해 연결하는 엔진입니다. 예를 들어 Strata·TensorFold나 직접 개발한 엔진을 호환 어댑터로 연결할 수 있습니다. 로컬 OpenAI 호환 API를 제공하는 실행 파일이나 브리지가 필요합니다.",
+  "home.enginesExternal": "외부 추론 엔진은 기본 제공 엔진 외에 내 컴퓨터에 별도로 설치해 연결하는 엔진입니다. 예를 들어 Strata·TensorFold나 직접 개발한 엔진을 호환 어댑터로 연결할 수 있습니다. 로컬 OpenAI 호환 HTTP/SSE와 AioLM용 모델 검사(probe)가 필요하며, 실행 파일 선택만으로 자동 호환되지는 않습니다. 모든 외부 엔진에 같은 조건을 적용합니다.",
   "home.enginesHelp": "선택한 엔진의 실제 명령어 도움말과 어댑터 메타데이터가 공통 옵션 편집기를 구성합니다. 채팅·프로젝트·세션·API 게이트웨이는 해당 엔진과 모델에서 확인된 능력을 사용합니다.",
   "home.enginesGuide": "기본 제공 엔진 호환성",
   "home.adaptersGuide": "외부 추론 엔진 연결 안내",

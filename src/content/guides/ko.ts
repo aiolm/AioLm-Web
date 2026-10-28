@@ -30,14 +30,511 @@ const content: GuideContent = {
       { id: 'models', title: '엔진에 맞는 모델을 받으세요', body: ['llama.cpp는 GGUF 파일을 사용합니다. vLLM·MLX는 보통 모델·설정·단어 처리 파일이 함께 들어 있는 전체 모델 폴더가 필요합니다. 파일 하나만 복사하지 말고 앱의 찾아보기에서 맞는 형식을 고르세요.', '메모리가 부족하면 작은 모델부터 사용하세요. 이미지나 음성이 필요하다면 모델 설명과 앱의 지원 안내를 함께 확인합니다.'], image: 'discover', caption: '찾아보기 위쪽의 추론 엔진·모델 형식을 먼저 고르세요.', more: [{ title: 'vLLM·MLX의 자세한 설치 조건', body: ['Linux 관리형 vLLM은 CUDA 의존성을 설치합니다. AMD ROCm은 드라이버와 맞는 Python 환경을 별도로 준비해 등록해야 합니다. 앱이 시스템 GPU 드라이버를 대신 설치하지는 않습니다.', 'vllm-metal은 Apple Silicon·macOS 15 이상·네이티브 arm64 Python 3.12가 필요합니다. Intel·Rosetta Python에서는 사용할 수 없습니다. MLX도 Apple Silicon과 호환 Python 환경이 필요합니다.', '이 앱에서는 네이티브 Windows vLLM·WSL·원격 서버를 로컬 런타임으로 실행하지 않습니다. Python 모델은 전체 safetensors 또는 지원 MLX 스냅샷을 사용하세요. vllm-metal은 GGUF의 일부 형식만 지원하므로 일반 GGUF 지원과 같지 않습니다.'] }] },
       { id: 'limits', title: '아직 확인이 필요한 부분', body: ['이미지·음성·영상·도구 기능은 모델과 엔진이 함께 지원해야 합니다. 엔진을 등록했다고 모든 기능이 생기지는 않습니다.'], more: [{ title: 'v0.3.2의 검증 범위와 알려진 문제', body: ['SmolVLM이 이미지·영상 내용을 제대로 설명하지 못한 품질 문제(F09)는 아직 해결되지 않았습니다.', '패키지 빌드 통과는 모든 기기에서 추론이 검증됐다는 뜻이 아닙니다. Linux 전체 검증과 실제 v0.3.1 → v0.3.2 업데이트 설치·UI 검증도 완료되지 않았습니다.', '벤치마크·심층 검증·런타임 이동용 묶음은 엔진마다 지원 범위가 다릅니다. 외부 추론 엔진(custom.*)은 현재 공개 벤치마크 공유 대상이 아닙니다.'] }] },
     ] },
-    adapters: { title: "외부 추론 엔진 연결하기", description: "외부 추론 엔진은 Strata·TensorFold처럼 기본 제공 엔진 외에 내 컴퓨터에 별도로 설치해 연결하는 엔진입니다. 설치한 엔진과 호환 어댑터를 준비한 뒤 아래 순서로 연결하세요.", sections: [
-      { id: 'prepare', title: '시작 전에 준비하세요', body: ['엔진 프로그램과 그 엔진에 맞는 연결 설정이 필요합니다. 어댑터는 AioLM이 다른 엔진을 실행하고 대화할 수 있게 해 주는 연결 도구입니다.', '엔진 제공자가 안내한 설치를 먼저 마치세요. 실행 파일만 있고 연결 설정이 없다면 제공자에게 AioLM용 어댑터·설정 파일을 요청하세요. 모든 엔진이 기본 설치되는 것은 아닙니다.'], note: '모르는 프로그램이나 출처가 불분명한 설정은 열지 마세요. 연결 정보를 확인하는 과정에서도 해당 프로그램이 실행됩니다.' },
-      { id: 'add', title: '1. 추론 엔진 추가를 누르세요', body: ['실행 중인 모델과 작업을 종료하고 왼쪽 추론 엔진 → 추론 엔진 추가를 누르세요.'], image: 'adapter-add', caption: '기본 제공 엔진 아래에 새 엔진을 추가할 수 있습니다.' },
-      {"id": "setup", "title": "2. 제공된 연결 설정을 불러오세요", "body": ["제공 어댑터 보기를 누르거나, 받은 파일이 있다면 어댑터 설정 가져오기를 누르세요. 사용할 외부 추론 엔진에 맞는 설정을 선택합니다.", "프로그램·설치 폴더·설정 파일 등 요청된 항목을 제공자의 설명대로 지정하고 설치 정보 확인하고 계속을 누르세요. 예시 경로를 그대로 입력하지 마세요."], "caption": "외부 추론 엔진 연결의 한 가지 예시로 Strata 설정을 보여줍니다. 다른 엔진은 해당 제공자가 안내한 항목을 사용하세요.", "more": [{"title": "연결 예시 보기", "body": ["예를 들어 Strata는 제공 목록에서 선택할 수 있습니다. Installed Python executable에는 실행 프로그램, Installed SDK folder에는 엔진 설치 폴더, Dedicated deployment JSON에는 제공받은 설정 파일을 선택하세요. Runtime ID에는 구분할 이름(예: local-engine)을 쓰고 나머지 제공 값은 유지합니다.", "TensorFold도 외부 추론 엔진의 한 예시입니다. 해당 제공자의 호환 어댑터·설정 파일을 준비해 같은 연결 절차를 따르세요. 모든 엔진의 설치 방법이나 지원 기능이 같은 것은 아닙니다."]}], "image": "adapter-setup"},
-      { id: 'help', title: '3. 도움말 탐색을 누르세요', body: ['앱이 해당 엔진의 사용 가능한 설정을 읽습니다. 오류가 나오면 건너뛰지 말고 선택한 파일과 설치 상태를 확인하세요. 읽기가 끝나면 다음을 누릅니다.'], image: 'adapter-help', caption: '도움말 탐색은 버튼을 누르기 전의 예시입니다. 이 안내에서는 실제 외부 추론 엔진을 실행하지 않았습니다.' },
-      { id: 'check', title: '4. 연결 정보를 확인하세요', body: ['모델·포트·호환성 확인 항목을 제공자의 설명과 비교하세요. 연결 설정이 자동으로 넣은 값은 그대로 두고, 비어 있거나 의미를 모르는 값은 임의로 채우지 마세요.', '확인이 끝나면 등록 내용 검토를 누릅니다. 직접 입력이 필요한데 방법을 모른다면 제공자에게 확인하세요.'], image: 'adapter-check', caption: '입력란의 위치를 보여주는 예시입니다. 실제 값은 엔진·어댑터마다 다릅니다.' },
-      { id: 'review', title: '5. 등록한 뒤 모델을 선택하세요', body: ['내용을 검토하고 등록을 누르세요. 이후 모델 선택·설정에서 새 엔진과 런타임, 사용할 모델을 선택합니다.', '앱의 호환성 확인을 통과한 뒤 실행하세요. 짧은 질문, 취소, 중지·재시작이 되는지도 직접 확인합니다. 등록 성공만으로 모델 실행이 보장되지는 않습니다.'], image: 'adapter-review', caption: '등록 직전의 검토 예시입니다. 등록 완료나 실제 추론 성공을 보여주는 화면은 아닙니다.', more: [{ title: '설정 파일 없이 직접 연결할 때 필요한 정보', body: ['이 방법은 엔진 제공자·개발자를 위한 고급 연결입니다. 실행 파일과 시작 인자, custom.* 엔진 ID·런타임 ID, 모델·포트 연결 방법, 모델 호환성 검사 프로그램이 필요합니다.', '엔진이 OpenAI 호환 HTTP/SSE를 제공하지 않으면 이를 제공하는 bridge도 필요합니다. 비밀번호·키는 제공자가 안내한 환경 변수로 전달합니다. 모델·호스트·포트·인증을 추가 인자로 덮어쓰지 마세요.', '실행 파일·시작 방식·어댑터가 바뀌면 도움말과 모델 호환성을 다시 확인하세요. 등록 제거는 외부 프로그램 파일을 삭제하지 않습니다. 공개 벤치마크 공유·심층 검증·포터블 묶음은 별도 지원이 필요합니다.'] }] },
-    ] },
+    adapters: {
+      "title": "외부 추론 엔진 연결하기",
+      "description": "외부 추론 엔진은 내 컴퓨터에 따로 설치해 AioLM과 연결하는 프로그램입니다. Strata·TensorFold도 그 예시이며, 다른 외부 엔진과 똑같이 연결 설정과 호환성 확인이 필요합니다. 기본 제공·자동 설치되는 엔진이 아닙니다.",
+      "sections": [
+        {
+          "id": "prepare",
+          "links": [{"href": "/ko/guides/external-engines", "label": "엔진별 연결 파일 확인"}],
+          "title": "먼저 연결에 필요한 것을 확인하세요",
+          "body": [
+            "엔진 프로그램과 AioLM용 연결 도구(어댑터)를 준비하세요. 어댑터는 AioLM이 엔진을 켜고, 모델을 확인하고, 대화를 주고받게 해 주는 연결 프로그램입니다.",
+            "엔진 자체 또는 연결 프로그램이 OpenAI 호환 HTTP/SSE를 제공하고, AioLM용 모델 호환성 검사(probe)에 응답해야 합니다. 이 조건을 맞추면 엔진 이름을 앱에 미리 추가할 필요가 없습니다. 실행 파일만 고른다고 모든 엔진이 자동 연결되지는 않습니다."
+          ]
+        },
+        {
+          "id": "files",
+          "title": "어떤 파일을 선택하나요?",
+          "table": {
+            "headers": [
+              "가지고 있는 것",
+              "선택할 파일·위치"
+            ],
+            "rows": [
+              [
+                "AioLM용 연결 설정 묶음",
+                "먼저 압축을 모두 푸세요. 설정 가져오기에서 *.setup.json을 선택합니다. 같은 폴더의 동반 파일도 보관하세요."
+              ],
+              [
+                "서버 실행 프로그램",
+                "직접 등록의 실행 파일에서 실제 서버(예: llama-server.exe 또는 llama-server)를 고릅니다. 설치용 EXE·앱 바로가기는 고르지 않습니다."
+              ],
+              [
+                "Python 스크립트·모듈",
+                "그 엔진을 설치한 Python 환경의 python.exe(Windows) 또는 bin/python(Mac·Linux)을 고릅니다. 스크립트·모듈은 아래 인자에 넣습니다."
+              ],
+              [
+                "모델·일반 설정 파일",
+                ".gguf·.safetensors는 등록 후 모델 선택에서 지정합니다. 엔진의 deployment.json 등은 어댑터가 별도 입력란에서 요청할 때만 고릅니다. AioLM 연결 설정과 다릅니다."
+              ]
+            ]
+          },
+          "note": "*.setup.json은 파일 이름의 예시입니다. 내용이 AioLM용 setup v1 형식이어야 합니다. 일반 JSON의 이름만 바꿔도 연결되지는 않습니다."
+        },
+        {
+          "id": "add",
+          "title": "1. 추론 엔진 추가를 누르세요",
+          "body": [
+            "실행 중인 모델을 중지하고 왼쪽 추론 엔진 → 추론 엔진 추가를 누르세요. 설정 파일이 있으면 2번, 없다면 3번으로 이동합니다."
+          ],
+          "image": "adapter-add",
+          "caption": "새 외부 엔진을 추가하는 위치입니다. 특정 업체를 선택할 필요가 없습니다."
+        },
+        {
+          "id": "setup",
+          "title": "2. 연결 설정이 있다면 가져오세요",
+          "steps": [
+            "어댑터 설정 가져오기를 누르고, 압축을 푼 폴더의 AioLM용 *.setup.json을 선택하세요.",
+            "설정이 요청하는 프로그램·폴더·파일을 제공자의 설명대로 지정합니다. 명령을 확인한 뒤 설치 정보 확인하고 계속을 누르세요. 이제 4번으로 이동합니다."
+          ],
+          "code": "받은 어댑터 폴더/\n  engine.setup.json  ← 가져오기에서 선택\n  prepare.py        ← 함께 보관\n  probe.py          ← 함께 보관",
+          "note": "v0.3.2의 「제공 어댑터 보기」는 Strata 예시 설정 하나를 여는 이전 메뉴입니다. 설치된 엔진을 찾거나 엔진을 설치하는 기능이 아니며, 연결에 필수인 버튼도 아닙니다.",
+          "more": [
+            {
+              "title": "설정 파일을 받지 못했다면",
+              "body": [
+                "제공자에게 “AioLM용 setup v1 JSON, 동반 실행·probe 파일, 지원 OS·Python·모델 형식, 선택할 실행 파일”을 요청하세요. 준비된 어댑터가 없다면 개발자가 공통 연결 규격에 맞는 어댑터를 만들어야 합니다. Strata·TensorFold에도 같은 조건이 적용됩니다."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "manual",
+          "title": "3. 설정 파일이 없다면 직접 등록하세요",
+          "body": [
+            "실행 파일 또는 인터프리터 → 찾아보기에서 위 표에 맞는 프로그램을 선택합니다. Python 스크립트는 파일 인자 추가로 넣고, 모듈이라면 인자 추가로 -m과 제공자가 안내한 모듈명을 각각 넣으세요.",
+            "표시 이름은 알아보기 쉽게, 엔진 ID는 custom.* 형식으로, 예를 들어 custom.my-engine, 런타임 ID는 local-1로 적으세요. 다음을 누릅니다. 모델·포트 옵션과 probe 정보를 모른다면 먼저 제공자에게 확인해야 합니다."
+          ],
+          "image": "adapter-setup",
+          "caption": "출시된 v0.3.2의 공통 직접 등록 화면입니다. Example Engine과 경로는 설명용입니다. 내 컴퓨터의 실제 파일을 선택하세요.",
+          "more": [
+            {
+              "title": "직접 서버와 bridge 중 무엇을 고르나요?",
+              "body": [
+                "엔진 자체가 OpenAI 호환 HTTP/SSE를 제공하면 직접 제공을 선택합니다. 제공하지 않으면 그 형식으로 바꿔 주는 bridge 프로그램이 필요합니다. 제공 방식에서 별도 bridge를 고르고 제공자가 안내한 실행 프로그램·인자·엔진 JSON argv 환경 변수를 넣습니다. 일반 콘솔 입출력 프로그램이 자동으로 HTTP 서버가 되지는 않습니다."
+              ]
+            },
+            {
+              "title": "Python 모듈을 시작하는 예시",
+              "body": [
+                "제공자의 실행 명령이 “python -m vendor_engine.serve”라면 실행 파일은 해당 Python, 아래 인자는 두 칸에 나눠 넣습니다. vendor_engine.serve는 예시이며 설치한 엔진의 실제 모듈명으로 바꿔야 합니다."
+              ],
+              "code": "실행 파일: 설치한 환경의 python.exe 또는 bin/python\n인자 1: -m\n인자 2: vendor_engine.serve"
+            }
+          ]
+        },
+        {
+          "id": "help",
+          "title": "4. 실행 방법을 확인하세요",
+          "body": [
+            "도움말 탐색을 눌러 선택한 프로그램의 옵션을 읽습니다. 오류가 나면 파일·Python 환경·필수 라이브러리를 확인하세요. 도움말이 보이는 것만으로 모델 실행이 검증되지는 않습니다."
+          ],
+          "image": "adapter-help",
+          "caption": "선택한 명령의 도움말을 확인하는 화면입니다. 이 스크린샷은 실행 성공의 증거가 아닙니다."
+        },
+        {
+          "id": "check",
+          "title": "5. 모델 연결과 호환성 검사를 확인하세요",
+          "body": [
+            "다음 화면에서 모델·포트 옵션을 제공자의 설명과 맞춥니다. 엔진마다 다르므로 무조건 --model·--port라고 입력하지 마세요. 가져온 설정이 채운 값도 확인합니다.",
+            "호환성 확인 프로그램에는 AioLM용 probe 실행 파일을 넣습니다. Python probe라면 Python을 고르고 인자에 probe.py 경로와 제공자가 안내한 {model} 등을 각각 넣습니다. 일반 엔진 실행 파일을 probe 대신 넣으면 안 됩니다."
+          ],
+          "image": "adapter-check",
+          "caption": "위쪽에는 모델·포트 연결이, 아래에는 probe·상태 확인·모델 형식이 있습니다. 예시 probe.py는 함께 배포되는 파일이 아닙니다.",
+          "more": [
+            {
+              "title": "개발자가 맞춰야 할 공통 조건",
+              "body": [
+                "probe는 schema_version: 1과 등록한 engine_id·runtime_id·모델 경로, 지원 여부와 기능을 JSON으로 보고해야 합니다. 지원하지 않는 모델은 실패로 남겨야 합니다. HTTP/SSE, 상태 확인 경로, 모델·포트·인증 전달 방법도 실제 서버와 일치해야 합니다. 화면에 이름을 추가하거나 확장자를 바꾸는 것으로 이 계약을 대신할 수 없습니다."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "review",
+          "title": "6. 등록한 뒤 실제 모델을 실행하세요",
+          "steps": [
+            "등록 내용 검토 → 등록을 누릅니다. 모델 선택에서 새 엔진·런타임과 지원 모델 파일 또는 전체 모델 폴더를 고르세요.",
+            "모델 호환성 확인을 통과한 뒤 실행합니다. 짧은 질문에 답하는지, 생성 취소 후 다시 질문할 수 있는지, 중지·재시작되는지 확인하세요."
+          ],
+          "image": "adapter-review",
+          "caption": "공통 등록 내용의 최종 확인입니다. 등록 성공과 실제 추론 성공은 별개입니다."
+        },
+        {
+          "id": "trouble",
+          "title": "연결이 안 될 때",
+          "more": [
+            {
+              "title": "Python이나 파일을 찾을 수 없다고 나와요",
+              "body": [
+                "엔진 설치에 사용한 가상환경의 Python을 선택했는지 확인하세요. 설정 JSON만 옮기지 말고 동반 파일이 들어 있는 폴더 전체를 유지합니다. 실행 프로그램·어댑터를 옮기거나 바꿨다면 다시 가져와 도움말·호환성을 확인하고 등록하세요."
+              ]
+            },
+            {
+              "title": "등록됐지만 모델이 실행되지 않아요",
+              "body": [
+                "모델 형식·전체 모델 파일·메모리·엔진 라이브러리를 확인하세요. 모델 호환성 검사와 서버 로그의 오류를 확인해야 합니다. 어댑터가 지원하지 않는 이미지·음성·도구 기능은 등록만으로 생기지 않습니다."
+              ]
+            },
+            {
+              "title": "삭제하면 엔진이나 모델도 지워지나요?",
+              "body": [
+                "등록 제거는 외부 프로그램·모델 파일을 삭제하지 않습니다. 비밀번호·키는 제공자가 안내한 환경 변수로 전달합니다. 외부 엔진의 공개 벤치마크 공유·심층 검증·이동용 묶음은 별도 지원이 필요합니다."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "verified",
+          "title": "실제로 확인한 범위",
+          "body": [
+            "2026-10-28: 공개 v0.3.2 CLI에 외부 CPU llama-server b11669를 custom.independent-cpu로 등록해 고정 Qwen2.5-0.5B 모델을 실행했습니다. 실제 응답 “5”, 토큰 사용량, 스트리밍 취소, 재시작, 등록 제거·재등록과 종료 후 포트 정리를 확인했습니다.",
+            "이 결과는 해당 Linux CPU 조합의 CLI 검증입니다. Strata·TensorFold의 실제 추론 성공이나 모든 외부 엔진의 호환성을 보장하지 않습니다. 위 화면들은 예시 데이터이며, 이번 검사에서 네이티브 앱 UI·실제 업데이트 설치·Linux 전체 검증을 완료한 것은 아닙니다."
+          ],
+          "more": [
+            {
+              "title": "재현·검증 정보",
+              "report": {"href": "/verification/external-cpu-2026-10-28.json", "label": "실행 검증 결과 보기 (JSON)"},
+              "body": [
+                "서버는 ggml-org/llama.cpp b11669, 모델 revision은 9217f5db79a29953eb74d5343926648285ec7e67입니다. 공식 서버 압축 파일·모델의 SHA-256과 동반 파일 41개를 검사했고 원본 파일이 바뀌지 않았는지도 확인했습니다. 정상적인 프로세스 회수 환경에서 A01–A09를 통과했습니다. 첫 컨테이너 종료 확인 실패는 별도 기록으로 보존했습니다. F09는 여전히 미해결입니다."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    'external-engines': {
+      "title": "엔진별 연결 파일 확인",
+      "description": "연결 대상으로 요구된 16개 엔진입니다. 모두 설치되거나 검증됐다는 뜻은 아닙니다. 내 엔진을 펼쳐 어떤 프로그램과 모델 파일이 필요한지 확인하세요.",
+      "sections": [
+        {
+          "id": "choose",
+          "title": "내 엔진에서 선택할 파일",
+          "body": [
+            "아래 목록은 설치 메뉴가 아닙니다. 모든 외부 엔진은 동일한 연결 규격과 실제 실행 검사를 통과해야 하며, Strata·TensorFold에도 예외를 두지 않습니다."
+          ],
+          "more": [
+            {
+              "title": "1. Halogen",
+              "body": [
+                "연결 조건: Strix Halo · Linux · ROCm",
+                "선택할 실행 파일: podman / docker + Halogen 컨테이너 이미지",
+                "모델 준비: 해당 모델 전용 weight·tokenizer·추가 파일 묶음. 일반 GGUF와 같다고 가정하지 마세요.",
+                "컨테이너 내부 실행 파일은 일반 파일 선택기로 고를 수 없습니다. 이미지·GPU 장치·모델 경로와 컨테이너 종료까지 관리하는 연결 프로그램이 필요하며 아직 제공하지 않습니다.",
+                "현재 검증 상태: 이 환경에서 실제 추론 미검증 · 연결 지원 완료 아님"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/peonist-ai/halogen-server",
+                  "label": "공식 프로젝트 보기 · peonist-ai/halogen-server"
+                },
+                {
+                  "href": "https://github.com/peonist-ai/halogen-flash-server",
+                  "label": "공식 프로젝트 보기 · peonist-ai/halogen-flash-server"
+                }
+              ]
+            },
+            {
+              "title": "2. Strixite",
+              "body": [
+                "연결 조건: Strix Halo · Linux",
+                "선택할 실행 파일: build/strix/strix_server",
+                "모델 준비: 해당 모델 전용 weight·tokenizer·추가 파일 묶음. 일반 GGUF와 같다고 가정하지 마세요.",
+                "엔진 실행 방법·모델/포트 연결·AioLM용 probe가 필요합니다. 아래 인자는 위치 설명용이며 MODEL·HOST·PORT는 실제 선택값으로 바꿉니다.",
+                "현재 검증 상태: 이 환경에서 실제 추론 미검증 · 연결 지원 완료 아님"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/shawnshekari/strixite",
+                  "label": "공식 프로젝트 보기 · shawnshekari/strixite"
+                }
+              ],
+              "code": "실행 방식 예시: --config DEDICATED_CONFIG"
+            },
+            {
+              "title": "3. MLX (mlx-lm / MLX-VLM)",
+              "body": [
+                "연결 조건: Apple Silicon · macOS",
+                "선택할 실행 파일: 엔진을 설치한 환경의 Python",
+                "모델 준비: 모델·설정·tokenizer가 모두 들어 있는 로컬 체크포인트 폴더",
+                "엔진 실행 방법·모델/포트 연결·AioLM용 probe가 필요합니다. 아래 인자는 위치 설명용이며 MODEL·HOST·PORT는 실제 선택값으로 바꿉니다.",
+                "현재 검증 상태: 이 환경에서 실제 추론 미검증 · 연결 지원 완료 아님",
+                "mlx-lm과 MLX-VLM은 다른 서버 모듈입니다. 텍스트·이미지 지원도 모델과 모듈별로 확인해야 합니다."
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/ml-explore/mlx-lm",
+                  "label": "공식 프로젝트 보기 · ml-explore/mlx-lm"
+                },
+                {
+                  "href": "https://github.com/Blaizzy/mlx-vlm",
+                  "label": "공식 프로젝트 보기 · Blaizzy/mlx-vlm"
+                }
+              ],
+              "code": "실행 방식 예시: -m mlx_lm.server / mlx_vlm.server"
+            },
+            {
+              "title": "4. ExLlamaV3 (ExLlamaV2)",
+              "body": [
+                "연결 조건: NVIDIA GPU · 호환 CUDA 환경",
+                "선택할 실행 파일: TabbyAPI 환경의 Python + main.py",
+                "모델 준비: ExLlamaV3는 EXL3, V2는 EXL2 등 해당 버전이 지원하는 전체 모델 폴더",
+                "일반 앱·라이브러리 대신 서버를 사용해야 합니다. 전용 설정과 모델·포트·프로세스 수명을 연결하는 어댑터가 필요하며 현재 범용 연결 패키지는 제공하지 않습니다.",
+                "현재 검증 상태: 이 환경에서 실제 추론 미검증 · 연결 지원 완료 아님",
+                "공식 권장 서버는 TabbyAPI입니다. exllamav3/exllamav2 라이브러리 파일이나 CUDA DLL 자체를 실행 파일로 고르지 마세요."
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/turboderp-org/exllamav3",
+                  "label": "공식 프로젝트 보기 · turboderp-org/exllamav3"
+                },
+                {
+                  "href": "https://github.com/turboderp-org/exllamav2",
+                  "label": "공식 프로젝트 보기 · turboderp-org/exllamav2"
+                },
+                {
+                  "href": "https://github.com/theroyallab/tabbyAPI",
+                  "label": "공식 프로젝트 보기 · theroyallab/tabbyAPI"
+                }
+              ],
+              "code": "실행 방식 예시: main.py"
+            },
+            {
+              "title": "5. Rulith Inference",
+              "body": [
+                "연결 조건: Strix Halo · Windows 11; Linux 빌드는 별도 확인 필요",
+                "선택할 실행 파일: bin/hip/llama-server.exe",
+                "모델 준비: 엔진이 지원하는 GGUF 파일과 필요한 부속 파일",
+                "일반 앱·라이브러리 대신 서버를 사용해야 합니다. 전용 설정과 모델·포트·프로세스 수명을 연결하는 어댑터가 필요하며 현재 범용 연결 패키지는 제공하지 않습니다.",
+                "현재 검증 상태: 이 환경에서 실제 추론 미검증 · 연결 지원 완료 아님",
+                "Rulith의 데스크톱 앱 EXE가 아니라 전용 패치 서버가 대상입니다. ROCm DLL·환경·모델 배치가 함께 맞아야 합니다."
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/rulith-dev/rulith-inference",
+                  "label": "공식 프로젝트 보기 · rulith-dev/rulith-inference"
+                }
+              ]
+            },
+            {
+              "title": "6. SGLang",
+              "body": [
+                "연결 조건: SGLang이 지원하는 장치·실행본 · Linux",
+                "선택할 실행 파일: 엔진을 설치한 환경의 Python",
+                "모델 준비: 모델·설정·tokenizer가 모두 들어 있는 로컬 체크포인트 폴더",
+                "엔진 실행 방법·모델/포트 연결·AioLM용 probe가 필요합니다. 아래 인자는 위치 설명용이며 MODEL·HOST·PORT는 실제 선택값으로 바꿉니다.",
+                "현재 검증 상태: 이 환경에서 실제 추론 미검증 · 연결 지원 완료 아님"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/sgl-project/sglang",
+                  "label": "공식 프로젝트 보기 · sgl-project/sglang"
+                }
+              ],
+              "code": "실행 방식 예시: -m sglang.launch_server"
+            },
+            {
+              "title": "7. vLLM",
+              "body": [
+                "연결 조건: vLLM이 지원하는 장치·실행본 · Linux; vllm-metal은 별도 경로",
+                "선택할 실행 파일: vllm / 엔진을 설치한 환경의 Python",
+                "모델 준비: 모델·설정·tokenizer가 모두 들어 있는 로컬 체크포인트 폴더",
+                "엔진 실행 방법·모델/포트 연결·AioLM용 probe가 필요합니다. 아래 인자는 위치 설명용이며 MODEL·HOST·PORT는 실제 선택값으로 바꿉니다.",
+                "현재 검증 상태: 이 환경에서 실제 추론 미검증 · 연결 지원 완료 아님"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/vllm-project/vllm",
+                  "label": "공식 프로젝트 보기 · vllm-project/vllm"
+                }
+              ],
+              "code": "실행 방식 예시: serve MODEL"
+            },
+            {
+              "title": "8. Strata",
+              "body": [
+                "연결 조건: 해당 엔진이 지원하는 Windows/Linux 실행본",
+                "선택할 실행 파일: 엔진을 설치한 환경의 Python + 해당 버전용 어댑터",
+                "모델 준비: 검토한 버전에 맞는 전용 deployment JSON과 그 JSON이 가리키는 전체 파일",
+                "일반 앱·라이브러리 대신 서버를 사용해야 합니다. 전용 설정과 모델·포트·프로세스 수명을 연결하는 어댑터가 필요하며 현재 범용 연결 패키지는 제공하지 않습니다.",
+                "현재 검증 상태: 이 환경에서 실제 추론 미검증 · 연결 지원 완료 아님",
+                "SDK의 기존 예시는 source 296b59d2f73c8f04a805df29c2fa97655adace78에만 한정합니다. 최신 Strata의 launch 명령을 지원한다고 확대하지 않습니다."
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/Niko1221/Strata",
+                  "label": "공식 프로젝트 보기 · Niko1221/Strata"
+                }
+              ],
+              "code": "실행 방식 예시: -m serve.server"
+            },
+            {
+              "title": "9. TensorFold",
+              "body": [
+                "연결 조건: 지원되는 Metal·CUDA·Vulkan 실행본",
+                "선택할 실행 파일: tensorfold",
+                "모델 준비: 모델·설정·tokenizer가 모두 들어 있는 로컬 체크포인트 폴더",
+                "엔진 실행 방법·모델/포트 연결·AioLM용 probe가 필요합니다. 아래 인자는 위치 설명용이며 MODEL·HOST·PORT는 실제 선택값으로 바꿉니다.",
+                "현재 검증 상태: 이 환경에서 실제 추론 미검증 · 연결 지원 완료 아님"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/ashhart/TensorFold",
+                  "label": "공식 프로젝트 보기 · ashhart/TensorFold"
+                }
+              ],
+              "code": "실행 방식 예시: serve MODEL"
+            },
+            {
+              "title": "10. vllm.cpp",
+              "body": [
+                "연결 조건: CPU·CUDA·Metal·Vulkan·ROCm 중 해당 기기용 실행본",
+                "선택할 실행 파일: bin/vllm-server",
+                "모델 준비: 엔진 버전이 지원하는 GGUF 또는 전체 체크포인트 폴더. 양자화·모델 계열도 확인하세요.",
+                "엔진 실행 방법·모델/포트 연결·AioLM용 probe가 필요합니다. 아래 인자는 위치 설명용이며 MODEL·HOST·PORT는 실제 선택값으로 바꿉니다.",
+                "현재 검증 상태: 한 Linux CPU 빌드·고정 모델의 CLI 수명 주기 통과 · 범용 어댑터 배포/전체 기기 검증 아님",
+                "v0.0.2 CPU에서 Qwen3.5-0.8B Q8_0와 공식 tokenizer_config.json을 --tokenizer-config로 지정해 통과했습니다. 시험한 Qwen2.5 파일의 로드 실패는 유지합니다. 템플릿 없이 나온 잘못된 반복 답변도 성공으로 처리하지 않았습니다."
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/localai-org/vllm.cpp",
+                  "label": "공식 프로젝트 보기 · localai-org/vllm.cpp"
+                },
+                {
+                  "href": "/verification/vllm-cpp-cpu-2026-10-28.json",
+                  "label": "실행 검사 기록 보기"
+                }
+              ],
+              "code": "실행 방식 예시: --model MODEL"
+            },
+            {
+              "title": "11. Mistral.rs",
+              "body": [
+                "연결 조건: CPU·CUDA·Metal 중 해당 기기용 실행본",
+                "선택할 실행 파일: mistralrs",
+                "모델 준비: 엔진 버전이 지원하는 GGUF 또는 전체 체크포인트 폴더. 양자화·모델 계열도 확인하세요.",
+                "엔진 실행 방법·모델/포트 연결·AioLM용 probe가 필요합니다. 아래 인자는 위치 설명용이며 MODEL·HOST·PORT는 실제 선택값으로 바꿉니다.",
+                "현재 검증 상태: 한 Linux CPU 빌드·고정 모델의 CLI 수명 주기 통과 · 범용 어댑터 배포/전체 기기 검증 아님"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/EricLBuehler/mistral.rs",
+                  "label": "공식 프로젝트 보기 · EricLBuehler/mistral.rs"
+                },
+                {
+                  "href": "/verification/mistralrs-cpu-2026-10-28.json",
+                  "label": "실행 검사 기록 보기"
+                }
+              ],
+              "code": "실행 방식 예시: serve"
+            },
+            {
+              "title": "12. KTransformers",
+              "body": [
+                "연결 조건: 지원되는 CPU·가속기 조합",
+                "선택할 실행 파일: 엔진을 설치한 환경의 Python + SGLang/kt-kernel",
+                "모델 준비: SGLang용 전체 모델 폴더와 kt-kernel에 맞는 expert weight·설정",
+                "엔진 실행 방법·모델/포트 연결·AioLM용 probe가 필요합니다. 아래 인자는 위치 설명용이며 MODEL·HOST·PORT는 실제 선택값으로 바꿉니다.",
+                "현재 검증 상태: 이 환경에서 실제 추론 미검증 · 연결 지원 완료 아님"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/kvcache-ai/ktransformers",
+                  "label": "공식 프로젝트 보기 · kvcache-ai/ktransformers"
+                }
+              ],
+              "code": "실행 방식 예시: -m sglang.launch_server"
+            },
+            {
+              "title": "13. ik_llama.cpp",
+              "body": [
+                "연결 조건: CPU·CUDA·Vulkan 중 해당 기기용 실행본",
+                "선택할 실행 파일: build/bin/llama-server",
+                "모델 준비: 엔진이 지원하는 GGUF 파일과 필요한 부속 파일",
+                "엔진 실행 방법·모델/포트 연결·AioLM용 probe가 필요합니다. 아래 인자는 위치 설명용이며 MODEL·HOST·PORT는 실제 선택값으로 바꿉니다.",
+                "현재 검증 상태: 이 환경에서 실제 추론 미검증 · 연결 지원 완료 아님"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/ikawrakow/ik_llama.cpp",
+                  "label": "공식 프로젝트 보기 · ikawrakow/ik_llama.cpp"
+                }
+              ]
+            },
+            {
+              "title": "14. Mullama",
+              "body": [
+                "연결 조건: 운영체제와 CPU·GPU에 맞게 설치한 실행본",
+                "선택할 실행 파일: mullama",
+                "모델 준비: 엔진이 지원하는 GGUF 파일과 필요한 부속 파일",
+                "엔진 실행 방법·모델/포트 연결·AioLM용 probe가 필요합니다. 아래 인자는 위치 설명용이며 MODEL·HOST·PORT는 실제 선택값으로 바꿉니다.",
+                "현재 검증 상태: 이 환경에서 실제 추론 미검증 · 연결 지원 완료 아님"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/cognisoc/mullama",
+                  "label": "공식 프로젝트 보기 · cognisoc/mullama"
+                }
+              ],
+              "code": "실행 방식 예시: serve --model MODEL"
+            },
+            {
+              "title": "15. llama.cpp",
+              "body": [
+                "연결 조건: Windows·macOS·Linux 중 해당 운영체제용 실행본",
+                "선택할 실행 파일: llama-server.exe / llama-server",
+                "모델 준비: 엔진이 지원하는 GGUF 파일과 필요한 부속 파일",
+                "엔진 실행 방법·모델/포트 연결·AioLM용 probe가 필요합니다. 아래 인자는 위치 설명용이며 MODEL·HOST·PORT는 실제 선택값으로 바꿉니다.",
+                "현재 검증 상태: 한 Linux CPU 빌드·고정 모델의 CLI 수명 주기 통과 · 범용 어댑터 배포/전체 기기 검증 아님"
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/ggml-org/llama.cpp",
+                  "label": "공식 프로젝트 보기 · ggml-org/llama.cpp"
+                },
+                {
+                  "href": "/verification/external-cpu-2026-10-28.json",
+                  "label": "실행 검사 기록 보기"
+                }
+              ]
+            },
+            {
+              "title": "16. Gufo",
+              "body": [
+                "연결 조건: Strix Halo · Linux x86_64",
+                "선택할 실행 파일: gufo",
+                "모델 준비: 엔진이 지원하는 GGUF 파일과 필요한 부속 파일",
+                "엔진 실행 방법·모델/포트 연결·AioLM용 probe가 필요합니다. 아래 인자는 위치 설명용이며 MODEL·HOST·PORT는 실제 선택값으로 바꿉니다.",
+                "현재 검증 상태: 이 환경에서 실제 추론 미검증 · 연결 지원 완료 아님",
+                "host·port는 serve의 옵션, model은 llm의 옵션입니다. 이 순서를 유지하는 manifest 또는 bridge가 필요합니다."
+              ],
+              "links": [
+                {
+                  "href": "https://github.com/gufo-org/gufo",
+                  "label": "공식 프로젝트 보기 · gufo-org/gufo"
+                }
+              ],
+              "code": "실행 방식 예시: serve --host HOST --port PORT llm --model MODEL"
+            }
+          ]
+        },
+        {
+          "id": "rules",
+          "title": "목록에 있어도 바로 실행되는 것은 아닙니다",
+          "body": [
+            "실행 파일·설정·모델은 각각 다른 역할입니다. 위 이름의 라이브러리나 설치 파일을 임의로 고르지 마세요. 호환 어댑터가 준비되지 않은 항목은 AioLM용 설정·probe·필요한 bridge 구현과 검증이 먼저 필요합니다."
+          ]
+        },
+        {
+          "id": "verification",
+          "title": "무엇을 통과해야 지원 완료인가요?",
+          "body": [
+            "등록과 실제 도움말·실행 인자, 모델 검사, HTTP/SSE 답변과 토큰 사용량, 취소 후 재질문, 중지·재시작, 제거·재등록, 종료 후 프로세스·포트 정리를 확인합니다. 전용 GPU 기기가 없어 실제 확인하지 못한 항목은 미검증으로 남깁니다."
+          ]
+        }
+      ]
+    },
   },
 };
 export default content;

@@ -29,7 +29,7 @@ describe('public product guides', () => {
       const html = renderToStaticMarkup(await GuidePage({ params }));
       expect(html).toContain(content.guides[slug].title);
       expect(html).toContain('aria-current="page"');
-      expect(html).toContain(content.screenshotNotice);
+      if (content.guides[slug].sections.some(section => section.image)) expect(html).toContain(content.screenshotNotice);
       expect(html).not.toMatch(/href="[^"]*github[^\"]*(?:\.md|\/docs)/);
       const sections = content.guides[slug].sections;
       expect(new Set(sections.map(section => section.id)).size).toBe(sections.length);

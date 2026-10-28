@@ -49,7 +49,7 @@ const messages = {
   "home.caption": "AioLM 桌面应用的运行模型页面：在一个窗口中查看本地 GGUF 模型库、已加载的模型及其 llama.cpp 运行时。图中使用的是公开演示模型。",
   "home.enginesTitle": "内置引擎与外部推理引擎",
   "home.enginesBuiltin": "支持 Windows、macOS 和 Linux 上的 llama.cpp；受支持的 Linux 环境或通过 Apple Silicon Mac 上的 vllm-metal 使用 vLLM；以及 Apple Silicon Mac 上的 MLX。",
-  "home.enginesExternal": "外部推理引擎指内置引擎之外，单独安装在自己电脑上并连接到 AioLM 的引擎。例如，可通过兼容适配器连接 Strata、TensorFold 或自己开发的引擎。执行程序或桥接程序需要提供本地 OpenAI 兼容 API。",
+  "home.enginesExternal": "外部推理引擎指内置引擎之外，单独安装在自己电脑上并连接到 AioLM 的引擎。例如，可通过兼容适配器连接 Strata、TensorFold 或自己开发的引擎。执行程序或桥接程序须提供本地OpenAI兼容HTTP/SSE及AioLM模型检查（probe）；选择可执行文件不会自动兼容。所有外部引擎适用相同条件。",
   "home.enginesHelp": "所选引擎的实际命令帮助和适配器元数据构成统一的选项编辑器。聊天、项目、会话和 API 网关使用该引擎与模型已验证的能力。",
   "home.enginesGuide": "内置引擎兼容性",
   "home.adaptersGuide": "连接外部推理引擎",
