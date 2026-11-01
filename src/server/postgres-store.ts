@@ -1,6 +1,6 @@
 import type postgres from "postgres";
 import { encodeDiscoveryCursor, type ListCursor } from "../lib/pagination";
-import { sortValue, withRuntimeBuild, type OptionField, type BenchmarkOptions } from "../lib/benchmark-discovery";
+import { sortValue, withRuntimeBuild, type OptionField, type BenchmarkOptions, type SettingDescriptor } from "../lib/benchmark-discovery";
 import { listSql, optionsSql } from "./benchmark-discovery-sql";
 import { permitExpiryForSession, verifyUploadPermit } from "../lib/permits";import { quotaKeyForIp, quotaWindowDay, quotaWindowHour } from "../lib/ip";
 import type { BenchmarkFilters } from "../lib/summary";
@@ -261,8 +261,8 @@ export class PostgresBenchmarkStore implements BenchmarkStore {
     return { items: page, next_cursor: rows.length > limit && last ? encodeDiscoveryCursor(last.created_at, last.public_id, filters, sortValue(last.summary, filters)) : null };
   }
 
-  async listOptions(field: OptionField, query: string, filters: BenchmarkFilters): Promise<BenchmarkOptions> {
-    const statement = optionsSql(field, query, filters);
+  async listOptions(field: OptionField, query: string, filters: BenchmarkFilters, setting?: SettingDescriptor): Promise<BenchmarkOptions> {
+    const statement = optionsSql(field, query, filters, setting);
     const options = await this.sql.unsafe<Array<{ value: string; count: number }>>(statement.query, statement.values);
     return { options: options.slice(0, 30), has_more: options.length > 30 };
   }

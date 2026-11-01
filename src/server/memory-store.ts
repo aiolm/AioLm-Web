@@ -1,6 +1,7 @@
 import { encodeDiscoveryCursor, comparePosition, type ListCursor } from "../lib/pagination";
-import { POINT_OPTION_FIELD, TEXT_FILTER_MAX_LENGTH, matchesFilters, textValues, sortValue, withRuntimeBuild, type BenchmarkOptions, type OptionField } from "../lib/benchmark-discovery";
-import { pointId, readPoints } from "../lib/benchmark-points";
+import { DEFAULT_MEASUREMENT, POINT_OPTION_FIELD, TEXT_FILTER_MAX_LENGTH, matchesFilters, textValues, sortValue, withRuntimeBuild, canonicalSettingDescriptor, compareCanonical, selectedExecutionGpus, type BenchmarkOptions, type OptionField, type SettingDescriptor } from "../lib/benchmark-discovery";
+import { pointId, readPoints, readServingPoints, servingPointId } from "../lib/benchmark-points";
+import { withCanonicalIdentity } from "../lib/summary";
 import { UPLOAD_PERMIT_TTL_MS, permitExpiryForSession, verifyUploadPermit } from "../lib/permits";
 import { quotaKeyForIp, quotaWindowDay, quotaWindowHour } from "../lib/ip";
 import type { BenchmarkFilters } from "../lib/summary";
@@ -231,8 +232,8 @@ export class InMemoryBenchmarkStore implements BenchmarkStore {
     const sort = filters.sort ?? "newest";
     const position = (r: StoredRun): ListCursor => ({ createdAt: r.created_at, publicId: r.public_id, value: sortValue(r.summary, filters) });
     // A legacy summary gets its build before filtering, so q finds it exactly as the SQL store does.
-    const rows = [...this.runs.values()].filter(r => !r.deleted && !r.hidden).map(r => withRuntimeBuild(r, r.benchmark.runtime.build))
-      .filter(r => matchesFilters(r.summary, filters))
+    const rows = [...this.runs.values()].filter(r => !r.deleted && !r.hidden).map(r => withCanonicalIdentity(withRuntimeBuild(r, r.benchmark.runtime.build), r.benchmark))
+      .filter(r => matchesFilters(r.summary, filters, r.benchmark.workload))
       .filter(r => !cursor || comparePosition(position(r), cursor, sort) > 0)
       .sort((a, b) => comparePosition(position(a), position(b), sort));
     const page = rows.slice(0, limit), last = page.at(-1);
@@ -240,37 +241,50 @@ export class InMemoryBenchmarkStore implements BenchmarkStore {
       next_cursor: rows.length > limit && last ? encodeDiscoveryCursor(last.created_at, last.public_id, filters, sortValue(last.summary, filters)) : null };
   }
 
-  async listOptions(field: OptionField, query: string, filters: BenchmarkFilters): Promise<BenchmarkOptions> {
+  async listOptions(field: OptionField, query: string, filters: BenchmarkFilters, setting?: SettingDescriptor): Promise<BenchmarkOptions> {
     const remaining = { ...filters };
-    if (field === POINT_OPTION_FIELD) { delete remaining.point_tokens; delete remaining.point_concurrency; delete remaining.point_only; }
-    else delete remaining[field];
+    if (field === POINT_OPTION_FIELD) {
+      delete remaining.point_tokens; delete remaining.point_bytes; delete remaining.point_concurrency; delete remaining.point_max_tokens; delete remaining.point_only;
+    } else if (field !== "setting" && field !== "setting_value") delete remaining[field];
     const counts = new Map<string, number>();
-    const order = new Map<string, [number, number]>();
+    const order = new Map<string, number[]>();
     for (const r of this.runs.values()) {
-      if (r.deleted || r.hidden || !matchesFilters(withRuntimeBuild(r, r.benchmark.runtime.build).summary, remaining)) continue;
+      if (r.deleted || r.hidden) continue;
+      const summary = withCanonicalIdentity(withRuntimeBuild(r, r.benchmark.runtime.build), r.benchmark).summary;
+      if (!matchesFilters(summary, remaining, r.benchmark.workload)) continue;
       let candidates: string[];
       if (field === POINT_OPTION_FIELD) {
-        const points = readPoints(r.summary.points);
-        for (const point of points) order.set(pointId(point.prompt_tokens, point.concurrency), [point.prompt_tokens, point.concurrency]);
-        candidates = points.map((point) => pointId(point.prompt_tokens, point.concurrency));
+        if ((remaining.measurement ?? DEFAULT_MEASUREMENT) === "legacy") {
+          const points = readPoints(summary.points);
+          for (const p of points) order.set(pointId(p.prompt_tokens, p.concurrency), [p.prompt_tokens, p.concurrency]);
+          candidates = points.map(p => pointId(p.prompt_tokens, p.concurrency));
+        } else {
+          const points = readServingPoints(summary.serving_points);
+          for (const p of points) order.set(servingPointId(p.input_bytes, p.concurrency, p.max_output_tokens), [p.input_bytes, p.concurrency, p.max_output_tokens]);
+          candidates = points.map(p => servingPointId(p.input_bytes, p.concurrency, p.max_output_tokens));
+        }
+      } else if (field === "setting" || field === "setting_value") {
+        candidates = [];
+        const descriptor = setting ? canonicalSettingDescriptor(setting) : null;
+        for (const entry of summary.setup?.setting_facets ?? []) {
+          if (field === "setting") candidates.push(entry.descriptor);
+          else if (entry.descriptor === descriptor && entry.value !== null) candidates.push(entry.value);
+        }
       } else if (field === "gpu" && remaining.vendor) {
-        candidates = (r.benchmark.environment?.execution.selected_gpus ?? []).filter(g => g.vendor?.toLowerCase().includes(remaining.vendor!.toLowerCase())).flatMap(g => g.name ? [g.name] : []);
+        candidates = selectedExecutionGpus(r.benchmark).filter(g => g.vendor?.toLowerCase().includes(remaining.vendor!.toLowerCase())).flatMap(g => g.name ? [g.name] : []);
       } else {
-        candidates = textValues(r.summary, field);
-        // A model_query value longer than a filter may be would be rejected once chosen, so it is not offered.
-        if (field === "model_query") candidates = candidates.filter(v => v.length <= TEXT_FILTER_MAX_LENGTH);
+        candidates = textValues(summary, field).filter(v => [...v].length <= TEXT_FILTER_MAX_LENGTH);
       }
       for (const value of new Set(candidates)) {
         if (value && value.toLowerCase().includes(query.toLowerCase())) counts.set(value, (counts.get(value) ?? 0) + 1);
       }
     }
-    // Points order by what they measure; every other field orders by its text.
     const options = [...counts].map(([value, count]) => ({ value, count })).sort((a, b) => {
       if (field === "weight_bits") return Number(a.value) - Number(b.value);
-      if (field !== POINT_OPTION_FIELD) return a.value < b.value ? -1 : a.value > b.value ? 1 : 0;
-      const [at, ac] = order.get(a.value) ?? [0, 0];
-      const [bt, bc] = order.get(b.value) ?? [0, 0];
-      return at - bt || ac - bc;
+      if (field !== POINT_OPTION_FIELD) return compareCanonical(a.value, b.value);
+      const av = order.get(a.value) ?? [], bv = order.get(b.value) ?? [];
+      for (let i = 0; i < av.length; i++) if (av[i] !== bv[i]) return av[i] - bv[i];
+      return 0;
     });
     return { options: options.slice(0, 30), has_more: options.length > 30 };
   }

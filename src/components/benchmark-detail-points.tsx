@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { ColumnHeading } from "./benchmark-i18n";
 import type { BenchmarkPoint } from "@/lib/benchmark-points";
+import { SERVING_METRIC_KEYS, type ServingBenchmarkPoint, type ServingMetricKey } from "@aiolm/benchmark-contracts";
+import { servingMetricColumns } from "./benchmark-detail-rows";
 import {
   formatDuration,
   formatPointLabel,
@@ -190,4 +192,58 @@ function MeasuredCell({ value, spread }: { value: string; spread: string | null 
       {spread === null ? null : <span className="detail-point-spread">{spread}</span>}
     </td>
   );
+}
+
+/** Schema3 keeps the shared metric-specific sample counts and byte operating points. */
+export function ServingBenchmarkPointsPanel({ points, memoryScope }: {
+  points: readonly ServingBenchmarkPoint[];
+  memoryScope: unknown;
+}): React.JSX.Element {
+  const { t } = useI18n();
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  if (points.length === 0) return <p className="muted detail-points-empty">{t("benchmark.This result published no measurement that names an operating point, so there is no speed to report.")}</p>;
+  const selected = points[Math.min(selectedIndex, points.length - 1)]!;
+  const columns = servingMetricColumns(t);
+  const label = (point: ServingBenchmarkPoint): string => `${point.input_bytes} B / c${point.concurrency} / max ${point.max_output_tokens} tok`;
+  const spread = (point: ServingBenchmarkPoint, key: ServingMetricKey, format: (value: unknown) => string): string | null => {
+    const stat = point[key];
+    return stat ? t("benchmark.{range} · n={samples}", { range: `${format(stat.min)}–${format(stat.max)}`, samples: stat.samples }) : null;
+  };
+  return <div className="detail-points">
+    <fieldset className="detail-chip-set">
+      <legend className="detail-chip-legend">{t("benchmark.Measured operating points")}</legend>
+      <div className="detail-chip-row">{points.map((point, index) => <button type="button" className={point === selected ? "detail-chip detail-chip-on" : "detail-chip"} aria-pressed={point === selected} key={`${point.input_bytes}/${point.concurrency}/${point.max_output_tokens}`} onClick={() => setSelectedIndex(index)}>{label(point)}</button>)}</div>
+    </fieldset>
+    <p className="muted detail-point-reading" role="status">{t("benchmark.Reading {point} over {samples} repetitions; output tokens are a requested maximum.", { point: label(selected), samples: selected.samples })}</p>
+    <p className="muted">{t("benchmark.Client-observed text and reasoning bytes are not tokens. First output is the first observed text or reasoning; reported token and cache counts may be unknown.")}</p>
+    {selected.output_bytes?.max === 0 ? <p className="muted">{t("benchmark.No output was observed. Zero bytes is known; first-output latency is unknown.")}</p> : null}
+    <p className="muted">{t("benchmark.Memory scope")}: {typeof memoryScope === "string" ? memoryScope : t("benchmark.Unknown")}. {t("benchmark.Memory is attributed only to the recorded owned process scope; attached upstream memory is unavailable.")}</p>
+    <div className="detail-performance-grid">
+      {columns.map((column) => {
+        const key = column.key as ServingMetricKey;
+        const stat = selected[key];
+        return <div className="detail-metric-card" key={key}>
+          <span className="detail-metric-label">{column.label}</span>
+          <strong className="detail-metric-value">{column.format(stat?.median)} <small>{column.unit}</small></strong>
+          <span className="detail-metric-spread">{spread(selected, key, column.format) ?? t("benchmark.Unknown")}</span>
+        </div>;
+      })}
+    </div>
+    <div className="detail-points-scroll" tabIndex={0} role="region" aria-label={t("benchmark.Measured operating points")}>
+      <table className="data detail-points-table">
+        <caption className="detail-points-caption">{t("benchmark.Every operating point this result measured. Each value is the median of that point's repetitions, with the range they covered below it.")}</caption>
+        <thead><tr>
+          <th scope="col">{t("benchmark.Input UTF-8 bytes")}</th><th scope="col">{t("benchmark.Concurrency")}</th><th scope="col">{t("benchmark.Maximum output token request")}</th><th scope="col">{t("benchmark.Repetitions")}</th>
+          {columns.map((column) => <th scope="col" key={column.key}><ColumnHeading label={column.label} unit={column.unit} /></th>)}
+        </tr></thead>
+        <tbody>{points.map((point, index) => <tr key={`${point.input_bytes}/${point.concurrency}/${point.max_output_tokens}`} className={point === selected ? "detail-point-row detail-point-row-on" : "detail-point-row"}>
+          <th scope="row"><button type="button" className="detail-point-select" aria-pressed={point === selected} onClick={() => setSelectedIndex(index)}>{point.input_bytes} B</button></th><td>{point.concurrency}</td><td>{point.max_output_tokens}</td><td>{point.samples}</td>
+          {SERVING_METRIC_KEYS.map((key, metricIndex) => {
+            const column = columns[metricIndex]!;
+            return <MeasuredCell key={key} value={column.format(point[key]?.median)} spread={spread(point, key, column.format)} />;
+          })}
+        </tr>)}</tbody>
+      </table>
+    </div>
+  </div>;
 }

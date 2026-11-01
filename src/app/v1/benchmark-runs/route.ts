@@ -84,7 +84,7 @@ export async function POST(request: Request): Promise<Response> {
 
     const store = getStore();
     const summary = summarizeBenchmark(parsed.benchmark);
-    const benchmarkMeta = { ...parsed.benchmark, measurements: { ...parsed.benchmark.measurements, rows: [] } };
+    const benchmarkMeta = { ...parsed.benchmark, measurements: { status: "complete" as const, rows: [] } };
     const outcome = await store.acceptRunAtomic({
       submission_id: submissionId,
       public_id: randomPublicId(),

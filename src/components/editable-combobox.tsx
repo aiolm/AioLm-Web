@@ -5,11 +5,11 @@ import "./ui-controls.css";
 interface Option { value: string; count: number }
 interface Props {
   name: string; label: string; value: string; placeholder: string; hint?: string;
-  optionsUrl: string; onChange: (value: string) => void;
+  optionsUrl: string; requestError?: string; onChange: (value: string) => void;
   messages: { toggle: string; loading: string; empty: string; error: string; more: string };
 }
 /** Suggestions are optional: only an explicit selection replaces typed text. */
-export function EditableCombobox({ name, label, value, placeholder, hint, optionsUrl, onChange, messages }: Props): React.JSX.Element {
+export function EditableCombobox({ name, label, value, placeholder, hint, optionsUrl, requestError, onChange, messages }: Props): React.JSX.Element {
   const id = useId();
   const [open, setOpen] = useState(false);
   const [composing, setComposing] = useState(false);
@@ -18,9 +18,9 @@ export function EditableCombobox({ name, label, value, placeholder, hint, option
   const input = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLUListElement>(null);
   const current = result?.url === optionsUrl ? result : null;
-  const options = current?.options ?? [];
+  const options = requestError ? [] : current?.options ?? [];
   useEffect(() => {
-    if (!open || composing) return;
+    if (!open || composing || requestError) return;
     const controller = new AbortController();
     const timeout = setTimeout(() => {
       fetch(optionsUrl, { signal: controller.signal, cache: "no-store" })
@@ -32,7 +32,7 @@ export function EditableCombobox({ name, label, value, placeholder, hint, option
         .catch(() => { if (!controller.signal.aborted) setResult({ url: optionsUrl, options: [], more: false, error: true }); });
     }, 250);
     return () => { clearTimeout(timeout); controller.abort(); };
-  }, [open, composing, optionsUrl]);
+  }, [open, composing, optionsUrl, requestError]);
   useEffect(() => {
     if (open && active >= 0) list.current?.children[active]?.scrollIntoView({ block: "nearest" });
   }, [active, open]);
@@ -72,7 +72,7 @@ export function EditableCombobox({ name, label, value, placeholder, hint, option
           <span className="explorer-option-count">{option.count}</span>
         </li>)}
       </ul>
-      <p className="explorer-option-status" role="status">{!current ? messages.loading : current.error ? messages.error : !options.length ? messages.empty : current.more ? messages.more : null}</p>
+      <p className="explorer-option-status" role="status">{requestError ?? (!current ? messages.loading : current.error ? messages.error : !options.length ? messages.empty : current.more ? messages.more : null)}</p>
     </div> : null}
   </div>;
 }

@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { syntheticSubmission } from "@/lib/fixtures";
+import { syntheticServingSubmission, syntheticSubmission } from "@/lib/fixtures";
 import { matchesFilters, parseFilters, parseOptionsQuery, sortValue } from "@/lib/benchmark-discovery";
-import { POINT_LIMIT, defaultPoint, findPoint, median, parsePointId, pointId, summarizePoints } from "@/lib/benchmark-points";
+import { POINT_LIMIT, defaultPoint, findPoint, median, parsePointId, pointId, summarizePoints,
+  defaultServingPoint, findServingPoint, parseServingPointId, readServingPoints,
+  servingMetricValues, servingPointId, servingPointMedian, summarizeServingPoints } from "@/lib/benchmark-points";
 import { summarizeBenchmark } from "@/lib/summary";
 import { InMemoryBenchmarkStore } from "@/server/memory-store";
 import { freshStore, setupTestEnv } from "./helpers";
@@ -140,10 +142,10 @@ describe("ranking at one operating point", () => {
     const wideSummary = wide().summary;
     // The retained mixed mean would put the result that only measured 512 on top.
     expect(narrowSummary.mean_tg_tps!).toBeGreaterThan(wideSummary.mean_tg_tps!);
-    const at512 = { sort: "throughput_desc", point_tokens: 512, point_concurrency: 1 } as const;
+    const at512 = { measurement: "legacy", sort: "throughput_desc", point_tokens: 512, point_concurrency: 1 } as const;
     expect(sortValue(narrowSummary, at512)).toBe(90);
     expect(sortValue(wideSummary, at512)).toBe(85);
-    const at4k = { sort: "throughput_desc", point_tokens: 4096, point_concurrency: 1 } as const;
+    const at4k = { measurement: "legacy", sort: "throughput_desc", point_tokens: 4096, point_concurrency: 1 } as const;
     expect(sortValue(narrowSummary, at4k)).toBeNull();
     expect(sortValue(wideSummary, at4k)).toBe(45);
   });
@@ -151,7 +153,7 @@ describe("ranking at one operating point", () => {
   it("orders a page by the selected point and sorts an unmeasured point last", async () => {
     store.runs.set("narrow", narrow());
     store.runs.set("wide", wide());
-    const at = (point_tokens: number) => ({ sort: "duration_asc", point_tokens, point_concurrency: 1 } as const);
+    const at = (point_tokens: number) => ({ measurement: "legacy", sort: "duration_asc", point_tokens, point_concurrency: 1 } as const);
     expect((await store.listRuns(at(512), 10, null)).items.map((item) => item.public_id)).toEqual(["narrow", "wide"]);
     // At 4K only one result measured anything, so the other has no value and sorts last.
     expect((await store.listRuns(at(4096), 10, null)).items.map((item) => item.public_id)).toEqual(["wide", "narrow"]);
@@ -160,7 +162,7 @@ describe("ranking at one operating point", () => {
   it("shows every result at the selected point unless point_only is asked for", async () => {
     store.runs.set("narrow", narrow());
     store.runs.set("wide", wide());
-    const selection = { point_tokens: 4096, point_concurrency: 1 } as const;
+    const selection = { measurement: "legacy", point_tokens: 4096, point_concurrency: 1 } as const;
     expect((await store.listRuns(selection, 10, null)).items.map((item) => item.public_id).sort()).toEqual(["narrow", "wide"]);
     expect((await store.listRuns({ ...selection, point_only: true }, 10, null)).items.map((item) => item.public_id)).toEqual(["wide"]);
     expect(matchesFilters(narrow().summary, { ...selection, point_only: true })).toBe(false);
@@ -170,17 +172,17 @@ describe("ranking at one operating point", () => {
   it("suggests the points that were measured, ordered by what they measure", async () => {
     store.runs.set("narrow", narrow());
     store.runs.set("wide", wide());
-    const { options } = await store.listOptions("point", "", {});
+    const { options } = await store.listOptions("point", "", { measurement: "legacy" });
     expect(options).toEqual([{ value: "512/1", count: 2 }, { value: "4096/1", count: 1 }]);
   });
 });
 
 describe("naming an operating point", () => {
-  const filters = (search: string) => parseFilters(new URLSearchParams(search));
+  const filters = (search: string) => parseFilters(new URLSearchParams(`measurement=legacy&${search}`));
 
   it("takes a point as a pair and rejects half of one", () => {
     expect(filters("point_tokens=4096&point_concurrency=1")).toMatchObject({ point_tokens: 4096, point_concurrency: 1 });
-    expect(filters("")).toEqual({});
+    expect(filters("")).toEqual({ measurement: "legacy" });
     for (const half of ["point_tokens=4096", "point_concurrency=1"]) {
       expect(() => filters(half)).toThrow();
     }
@@ -195,7 +197,7 @@ describe("naming an operating point", () => {
       expect(filters(`sort=${sort}&point_tokens=512&point_concurrency=1`)).toMatchObject({ sort });
     }
     // Sorts that read configuration rather than measured speed are unaffected.
-    expect(filters("sort=context_desc")).toEqual({ sort: "context_desc" });
+    expect(filters("sort=context_desc")).toEqual({ measurement: "legacy", sort: "context_desc" });
   });
 
   it("only narrows the list when point_only is asked for, and needs a point to narrow to", () => {
@@ -206,8 +208,52 @@ describe("naming an operating point", () => {
   });
 
   it("excludes the selected point from its own suggestions", () => {
-    const query = parseOptionsQuery(new URLSearchParams("field=point&point_tokens=512&point_concurrency=1&point_only=1&os=linux"));
+    const query = parseOptionsQuery(new URLSearchParams("measurement=legacy&field=point&point_tokens=512&point_concurrency=1&point_only=1&os=linux"));
     expect(query.field).toBe("point");
-    expect(query.filters).toEqual({ os: "linux" });
+    expect(query.filters).toEqual({ measurement: "legacy", os: "linux" });
+  });
+});
+
+describe("shared API serving points", () => {
+  const base = () => syntheticServingSubmission().measurements.rows[0]!;
+
+  it("retains the shared per-metric medians and sample counts without averaging unknowns", () => {
+    const points = summarizeServingPoints([
+      { ...base(), output_bytes: 2, content_bytes: 2, reasoning_bytes: 0, e2e_ms: 200 },
+      { ...base(), output_bytes: 4, content_bytes: 4, reasoning_bytes: 0, e2e_ms: 0 },
+      { ...base(), output_bytes: 6, content_bytes: 6, reasoning_bytes: 0, e2e_ms: 200 },
+      { ...base(), output_bytes: 100, failed: true },
+      { ...base(), output_bytes: 100, error: "failed request" },
+    ]);
+    expect(points).toHaveLength(1);
+    expect(points[0]!.samples).toBe(3);
+    expect(points[0]!.output_bytes_per_second).toEqual({ median: 20, min: 10, max: 30, samples: 2 });
+    expect(points[0]!.reported_tokens_per_second).toBeNull();
+    expect(points[0]!.reported_cached_tokens).toBeNull();
+  });
+
+  it("keeps nonfinite derived rates unknown, while observed positive-duration zero is zero", () => {
+    const overflow = { ...base(), output_bytes: 1, content_bytes: 1, reasoning_bytes: 0, e2e_ms: 1e-320 };
+    expect(servingMetricValues(overflow).output_bytes_per_second).toBeNull();
+    expect(summarizeServingPoints([overflow])[0]!.output_bytes_per_second).toBeNull();
+    const empty = { ...base(), content_bytes: 0, reasoning_bytes: 0, output_bytes: 0 };
+    expect(servingMetricValues(empty).output_bytes_per_second).toBe(0);
+    expect(summarizeServingPoints([empty])[0]!.output_bytes_per_second).toEqual({ median: 0, min: 0, max: 0, samples: 1 });
+  });
+
+  it("names all three dimensions, including output cap, and never parses a legacy pair as bytes", () => {
+    const points = summarizeServingPoints([base(), { ...base(), max_output_tokens: 256 }]);
+    expect(servingPointId(4096, 1, 128)).toBe("b4096/c1/o128");
+    expect(parseServingPointId("b4096/c1/o128")).toEqual({ input_bytes: 4096, concurrency: 1, max_output_tokens: 128 });
+    for (const id of ["4096/1", "b4096/c1", "b4096/c0/o128", "b0/c1/o128", "b4096/c1/o0", "b04096/c1/o128", "b9007199254740992/c1/o128"]) {
+      expect(parseServingPointId(id)).toBeNull();
+    }
+    expect(defaultServingPoint(points)).toBe(points[0]);
+    expect(findServingPoint(points, 4096, 1, 256)).toBe(points[1]);
+    expect(findServingPoint(points, 4096, 1, 512)).toBeNull();
+    expect(servingPointMedian(points[0]!, "output_bytes_per_second")).toBe(60);
+    expect(readServingPoints(points)).toEqual(points);
+    expect(readServingPoints([{ ...points[0], samples: 0 }, { ...points[0], output_bytes_per_second: { median: Infinity, min: 0, max: Infinity, samples: 1 } }])).toEqual([]);
+    expect(readServingPoints(summarizePoints(rows([{}])).points)).toEqual([]);
   });
 });

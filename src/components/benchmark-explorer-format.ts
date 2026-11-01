@@ -3,7 +3,7 @@ import { formatGpuLabels } from "@/lib/gpu-labels";
 import { formatRuntimeVersionLabel } from "@aiolm/benchmark-contracts";
 import type { Translator } from "@/i18n/types";
 import type { BenchmarkSetup } from "@/lib/benchmark-discovery";
-import type { BenchmarkPoint, MetricStat } from "@/lib/benchmark-points";
+import type { BenchmarkPoint, MetricStat, ServingMetricKey } from "@/lib/benchmark-points";
 import { benchmarkFallback } from "./benchmark-i18n";
 /**
  * Cell formatting for the explorer. Values are locale independent so a shared
@@ -64,6 +64,24 @@ export function formatPromptLengths(values: readonly number[] | null | undefined
  */
 export function formatPointLabel(promptTokens: number, concurrency: number): string {
   return `${formatPromptLength(promptTokens)} / c${concurrency}`;
+}
+
+export function formatServingPointLabel(inputBytes: number, concurrency: number, maxTokens: number): string {
+  return `${inputBytes} B / c${concurrency} / max${maxTokens} tok`;
+}
+export const SERVING_METRIC_LABELS: Record<ServingMetricKey, string> = {
+  first_output_ms: "First output", first_content_ms: "First content", first_reasoning_ms: "First reasoning",
+  e2e_ms: "End-to-end batch duration", content_bytes: "Content bytes", reasoning_bytes: "Reasoning bytes", output_bytes: "Observed output bytes",
+  output_bytes_per_second: "Observed output B/s", reported_prompt_tokens: "Reported prompt tokens", reported_completion_tokens: "Reported completion tokens",
+  reported_cached_tokens: "Reported cached tokens", reported_tokens_per_second: "Reported tok/s", peak_memory_bytes: "Observed engine memory",
+};
+export function formatServingMetric(key: ServingMetricKey, value: number | null | undefined, t: Translator = benchmarkFallback): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return t("benchmark.Unknown");
+  if (key === "peak_memory_bytes") return formatCompactBytes(value, t);
+  if (key.endsWith("_ms")) return `${formatLatency(value)} ms`;
+  if (key === "output_bytes_per_second") return `${formatThroughput(value)} B/s`;
+  if (key === "reported_tokens_per_second") return `${formatThroughput(value)} tok/s`;
+  return `${value}${key.endsWith("_bytes") ? " B" : ""}`;
 }
 
 /** Every point a result measured, compactly, with a count when the grid is wider than the line. */

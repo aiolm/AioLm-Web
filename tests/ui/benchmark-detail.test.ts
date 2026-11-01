@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { syntheticSubmission } from "@/lib/fixtures";
-import { pythonBenchmark } from "../inference-benchmarks";
+import { pythonBenchmark, servingBenchmark, sourcedServingBenchmark } from "../inference-benchmarks";
 import {
   describeGpu,
   describeGpuList,
@@ -117,6 +117,48 @@ describe("setup groups", () => {
       }
     }
     expect(valueOf(groups, "App version")).toBe('{"name":"aiolm"}');
+  });
+});
+
+describe("engine-neutral serving setup and measurements", () => {
+  it.each(["sglang", "llama.cpp", "vllm", "mlx-vlm", null])("shows frozen identity and byte workload for %s", (engine) => {
+    const benchmark = sourcedServingBenchmark(engine);
+    benchmark.runtime.variant = "arbitrary-safe-variant";
+    const groups = buildSetupGroups(publicSetup(benchmark));
+    expect(valueOf(groups, "Runtime")).toBe(engine ?? "Unknown");
+    expect(valueOf(groups, "Runtime variant")).toBe("arbitrary-safe-variant");
+    expect(valueOf(groups, "Source revision")).toBe("b".repeat(40));
+    expect(valueOf(groups, "Model checksum")).toBe("Unknown");
+    expect(valueOf(groups, "Repository")).toBe("synthetic-org/example-model");
+    expect(valueOf(groups, "Environment scope")).toBe("aiolm_host");
+    expect(labelsOf(groups)).toContain("Input UTF-8 bytes and SHA256");
+    expect(labelsOf(groups)).not.toContain("Prompt lengths (tokens)");
+    expect(labelsOf(groups)).not.toContain("llama-server options");
+  });
+
+  it("preserves typed false, zero, array order and nullable setting values with exact scopes", () => {
+    const benchmark = servingBenchmark();
+    benchmark.execution.settings = [
+      { target: "launch", scope: [], name: "flag", unit: null, role: null, value: false },
+      { target: "launch", scope: ["serve"], name: "zero", unit: "count", role: null, value: 0 },
+      { target: "launch", scope: [], name: "array", unit: "ratio", role: null, value: [2, 1] },
+      { target: "launch", scope: [], name: "redacted", unit: null, role: null, value: null },
+    ];
+    const group = buildSetupGroups(publicSetup(benchmark)).find(group => group.id === "detail-setup-execution")!;
+    expect(group.fields.map(field => field.value)).toEqual([benchmark.execution.topology, benchmark.execution.memory_scope, "false", "0", "[2,1]", "Unknown"]);
+    expect(group.fields[3]!.label).toContain('["serve"]');
+  });
+
+  it("uses all13 serving metrics with honest byte and reported-token units, never legacy timing columns", () => {
+    const rows = servingBenchmark().measurements.rows;
+    const columns = buildRowColumns(rows as unknown as Record<string, unknown>[], undefined, true, 3);
+    const keys = columns.map(column => column.key);
+    expect(keys).toContain("first_reasoning_ms");
+    expect(keys).toContain("reasoning_bytes");
+    expect(keys).toContain("reported_tokens_per_second");
+    for (const key of ["ttft_ms", "tg_tps", "pp_tps", "tpot_ms", "prompt_tokens"]) expect(keys).not.toContain(key);
+    expect(columns.find(column => column.key === "output_bytes")?.format(0)).toBe("0");
+    expect(columns.find(column => column.key === "reported_completion_tokens")?.format(null)).toBe(DETAIL_MISSING);
   });
 });
 

@@ -12,6 +12,8 @@ import {
   type ExplorerItem,
 } from "@/components/benchmark-explorer-state";
 import type { BenchmarkPoint } from "@/lib/benchmark-points";
+import { summarizeBenchmark } from "@/lib/summary";
+import { syntheticServingSubmission } from "@/lib/fixtures";
 
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams("") }));
 
@@ -85,7 +87,7 @@ describe("reading a list at one operating point", () => {
 });
 
 describe("naming the basis in the address", () => {
-  const at = (search: string) => explorerStateFromSearch(search).applied;
+  const at = (search: string) => explorerStateFromSearch(`measurement=legacy&${search}`).applied;
 
   it("keeps a whole basis point and drops half of one", () => {
     expect(basisPointOf(at("point_tokens=4096&point_concurrency=1"))).toEqual({ prompt_tokens: 4096, concurrency: 1 });
@@ -106,7 +108,7 @@ describe("naming the basis in the address", () => {
   });
 
   it("drops what the basis carried when the basis is cleared", () => {
-    const selected = explorerStateFromSearch("point_tokens=512&point_concurrency=1&point_only=1&sort=duration_asc");
+    const selected = explorerStateFromSearch("measurement=legacy&point_tokens=512&point_concurrency=1&point_only=1&sort=duration_asc");
     const cleared = explorerReducer(selected, { type: "basisPoint", value: "" });
     expect(cleared.applied.point_tokens).toBe("");
     expect(cleared.applied.point_only).toBe("");
@@ -150,5 +152,40 @@ describe("the points a result measured", () => {
   it("says when the stored points were cut", () => {
     expect(render(<BenchmarkPointsPanel points={points} truncated />)).toContain("more points than are stored");
     expect(render(<BenchmarkPointsPanel points={points} />)).not.toContain("more points than are stored");
+  });
+});
+
+describe("reading engine-neutral serving points", () => {
+  const benchmark = syntheticServingSubmission();
+  const row = benchmark.measurements.rows[0]!;
+  const summary = summarizeBenchmark({ ...benchmark, workload: { ...benchmark.workload, repetitions: 2 }, measurements: { status: "complete", rows: [
+    { ...row, repetition: 1, output_bytes: 2, content_bytes: 2, reasoning_bytes: 0 },
+    { ...row, repetition: 2, output_bytes: 6, content_bytes: 6, reasoning_bytes: 0 },
+  ] } });
+  const serving: ExplorerItem = { public_id: "serving", revision: 1, created_at: "2026-01-02T03:04:05.000Z", summary };
+  it("reads shared metric medians, ranges and metric sample counts without averaging points or inventing token counters", () => {
+    const html = render(<BenchmarkExplorerTable items={[serving]} compare={[]} onToggleComparison={() => {}} />);
+    expect(html).toContain("20.0 B/s");
+    expect(html).toContain("10.0 B/s–30.0 B/s · n=2");
+    expect(html).toContain("4096 B / c1 / max128 tok");
+    expect(html).toContain("50.0 ms");
+    expect(html).not.toContain("NaN");
+    expect(html).not.toContain("Infinity");
+    expect(html).not.toContain(">0.0 tok/s<");
+    expect(html).toContain("sglang");
+  });
+  it("keeps caps distinct rather than reading a different serving point", () => {
+    const html = render(<BenchmarkExplorerTable items={[serving]} compare={[]} basis={{ input_bytes: 4096, concurrency: 1, max_output_tokens: 256 }} onToggleComparison={() => {}} />);
+    expect(html).not.toContain("20.0 B/s");
+    expect(html).not.toContain("50.0 ms");
+  });
+  it("keeps a known zero rate and a missing non-finite rate distinct", () => {
+    const empty = summarizeBenchmark({ ...benchmark, measurements: { status: "complete", rows: [{ ...row, output_bytes: 0, content_bytes: 0, reasoning_bytes: 0 }] } });
+    const tiny = summarizeBenchmark({ ...benchmark, measurements: { status: "complete", rows: [{ ...row, e2e_ms: 1e-320 }] } });
+    expect(render(<BenchmarkExplorerTable items={[{ ...serving, summary: empty }]} compare={[]} onToggleComparison={() => {}} />)).toContain("0.0 B/s");
+    const html = render(<BenchmarkExplorerTable items={[{ ...serving, summary: tiny }]} compare={[]} onToggleComparison={() => {}} />);
+    expect(html).not.toContain("Infinity");
+    expect(html).not.toContain("NaN");
+    expect(html).not.toContain(">0.0 B/s<");
   });
 });

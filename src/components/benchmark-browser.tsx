@@ -16,11 +16,13 @@ import {
   EXPLORER_PAGE_PATH,
   activeExplorerFilters,
   basisPointOf,
-  invalidExplorerRanges,
+  invalidExplorerDraft,
   isPointSort,
   EXPLORER_SORTS,
   buildExplorerPointOptionsPath,
   buildExplorerRequestPath,
+  isExplorerRequestWithinBounds,
+  EXPLORER_QUERY_LIMIT_MESSAGE,
   buildExplorerSearch,
   canAddToComparison,
   explorerHistoryState,
@@ -33,6 +35,8 @@ import {
   type ExplorerAction,
   type ExplorerListResponse,
 } from "./benchmark-explorer-state";
+import { settingConditionLabel } from "./benchmark-setting-editor";
+import { servingPointId } from "@/lib/benchmark-points";
 
 
 /**
@@ -49,6 +53,7 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
   const [observedSearch, setObservedSearch] = useState(routeSearch);
   const [ready, setReady] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [requestLimitDenied, setRequestLimitDenied] = useState(false);
 
   // Next Link navigation does not emit popstate. Reconcile its query before
   // committing a render, so neither the form nor the fetch sees the old view.
@@ -91,6 +96,11 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
     const next = explorerReducer(state, action);
     const search = buildExplorerSearch({ filters: next.applied, cursor: next.cursor });
     const previous = buildExplorerSearch({ filters: state.applied, cursor: state.cursor });
+    if (search !== previous && !isExplorerRequestWithinBounds(buildExplorerRequestPath({ filters: next.applied, cursor: next.cursor }))) {
+      setRequestLimitDenied(true);
+      return;
+    }
+    setRequestLimitDenied(false);
     if (search !== previous) {
       window.history.pushState(
         explorerHistoryState(next.history),
@@ -107,12 +117,21 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
   );
   // A changed request aborts the one in flight, and a late response for an earlier
   // request is dropped instead of replacing the current page.
-  const { data, error, reload } = useJsonFetch<ExplorerListResponse>(ready ? requestPath : null);
+  const requestBlocked = !isExplorerRequestWithinBounds(requestPath);
+  const { data, error, reload } = useJsonFetch<ExplorerListResponse>(ready && !requestBlocked ? requestPath : null);
+  useEffect(() => {
+    if (state.cursor && error === t("error.invalidRequest")) {
+      const search = buildExplorerSearch({ filters: state.applied, cursor: null });
+      window.history.replaceState(explorerHistoryState([]), "", window.location.pathname + search + window.location.hash);
+      reduce({ type: "firstPage" });
+    }
+  }, [error, state.cursor, state.applied, t]);
 
   const applyFilters = useCallback(
     (event: React.FormEvent<HTMLFormElement>): void => {
       event.preventDefault();
-      if (invalidExplorerRanges(state.draft).length) return;
+      if (invalidExplorerDraft(state.draft)) return;
+      if (!isExplorerRequestWithinBounds(buildExplorerRequestPath({ filters: normalizeExplorerFilters(state.draft), cursor: null }))) return;
       if (sameExplorerFilters(normalizeExplorerFilters(state.draft), state.applied)) reload();
       dispatch({ type: "apply" });
       // Keep desktop sections in place; free the result area after a mobile apply.
@@ -134,11 +153,13 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
 
   const items = data?.items ?? [];
   const basis = basisPointOf(state.applied);
-  const basisValue = basis ? `${basis.prompt_tokens}/${basis.concurrency}` : "";
+  const basisValue = basis ? "input_bytes" in basis ? servingPointId(basis.input_bytes, basis.concurrency, basis.max_output_tokens) : `${basis.prompt_tokens}/${basis.concurrency}` : "";
   const active = activeExplorerFilters(state.applied);
   const filtered = hasActiveExplorerFilters(state.applied);
   const clearable = filtered || hasActiveExplorerFilters(state.draft);
-  const invalidDraft = invalidExplorerRanges(state.draft).length > 0;
+  const invalidDraft = invalidExplorerDraft(state.draft);
+  const draftRequestBlocked = !isExplorerRequestWithinBounds(buildExplorerRequestPath({ filters: normalizeExplorerFilters(state.draft), cursor: null }));
+  const nextRequestBlocked = !!data?.next_cursor && !isExplorerRequestWithinBounds(buildExplorerRequestPath({ filters: state.applied, cursor: data.next_cursor }));
   const comparisonFull = !canAddToComparison(state.compare);
   const canPage = data !== null && (data.next_cursor !== null || state.cursor !== null || state.history.length > 0);
 
@@ -162,10 +183,12 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
                   onClick={() => dispatch({ type: "reset" })}>{t("benchmark.Clear filters")}</button>
               </div>
               <BenchmarkExplorerFilters draft={state.draft} onChange={(key, value) => dispatch({ type: "draft", key, value })}
+                onSettingsChange={value => dispatch({ type: "settings", value })}
                 actions={<>
                   <p className="explorer-draft-status" role="status">{!sameExplorerFilters(normalizeExplorerFilters(state.draft), state.applied)
                     ? t("benchmark.Changes not applied. Apply filters to update results.") : null}</p>
-                  <button type="submit" disabled={invalidDraft} className="explorer-button explorer-button-primary">{t("benchmark.Apply filters")}</button>
+                  {draftRequestBlocked ? <p className="explorer-validation" role="alert">{t(`benchmark.${EXPLORER_QUERY_LIMIT_MESSAGE}`)}</p> : null}
+                  <button type="submit" disabled={invalidDraft || draftRequestBlocked} className="explorer-button explorer-button-primary">{t("benchmark.Apply filters")}</button>
                 </>}
               />
             </fieldset>
@@ -174,14 +197,14 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
         </aside>
 
         <div className="explorer-main-column">
-          {active.length > 0 ? (
+          {active.length > 0 || state.applied.setting.length > 0 ? (
             <div className="explorer-active-filters">
               <h3 className="explorer-active-filters-title">{t("benchmark.Active filters")}</h3>
               <ul className="explorer-active-filter-list">
                 {active.map((filter) => (
                   <li className="explorer-active-filter" key={filter.key}>
                     <span className="explorer-active-filter-text">
-                      <span className="explorer-active-filter-key">{t(`benchmark.${filter.label}`)}:</span> {filter.key === "sort" ? t(`benchmark.${EXPLORER_SORTS[filter.value as keyof typeof EXPLORER_SORTS]}`) : filter.value}
+                      <span className="explorer-active-filter-key">{t(`benchmark.${filter.label}`)}{filter.key.endsWith("_min") ? ` · ${t("benchmark.Minimum")}` : filter.key.endsWith("_max") ? ` · ${t("benchmark.Maximum")}` : ""}:</span> {filter.key === "sort" ? t(`benchmark.${EXPLORER_SORTS[filter.value as keyof typeof EXPLORER_SORTS]}`) : filter.value}
                     </span>
                     <button type="button" className="explorer-active-filter-remove"
                       onClick={() => dispatch({ type: "removeFilter", key: filter.key })}
@@ -189,6 +212,10 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
                     ><span aria-hidden="true">×</span></button>
                   </li>
                 ))}
+                {state.applied.setting.map((condition, index) => <li className="explorer-active-filter" key={condition}>
+                  <span className="explorer-active-filter-text">{settingConditionLabel(condition)}</span>
+                  <button type="button" className="explorer-active-filter-remove" onClick={() => dispatch({ type: "removeSetting", index })} aria-label={t("benchmark.Remove condition")}><span aria-hidden="true">×</span></button>
+                </li>)}
               </ul>
             </div>
           ) : null}
@@ -205,6 +232,7 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
             <div className="explorer-result-actions">
               <BenchmarkBasisPoint
                 value={basisValue}
+                legacy={state.applied.measurement === "legacy"}
                 only={state.applied.point_only === "1"}
                 optionsPath={ready ? buildExplorerPointOptionsPath(state.applied) : ""}
                 onSelect={(value) => dispatch({ type: "basisPoint", value })}
@@ -213,14 +241,15 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
               <div className="explorer-field explorer-sort"><label className="explorer-field-label" id="explorer-sort-label" htmlFor="explorer-sort">{t("benchmark.Sort")}</label>
                 {/* Ranking measured speed needs a point to rank at, so those orders wait for one. */}
                 <UiSelect id="explorer-sort" form="explorer-filter-form" name="sort" labelledBy="explorer-sort-label" value={state.applied.sort || "newest"}
-                  options={Object.entries(EXPLORER_SORTS).map(([value, label]) => ({ value, label: t(`benchmark.${label}`), disabled: isPointSort(value) && basis === null }))}
+                  options={Object.entries(EXPLORER_SORTS).filter(([value]) => state.applied.measurement === "legacy" ? !value.startsWith("input_bytes") && value !== "output_rate_desc" : !value.startsWith("context") && value !== "throughput_desc").map(([value, label]) => ({ value, label: t(`benchmark.${label}`), disabled: isPointSort(value) && basis === null }))}
                   onChange={value => dispatch({ type: "sort", value })} />
               </div>
             </div>
           </div>
 
-          {!ready || (!data && !error) ? <Loading label={t("benchmark.Loading published benchmarks…")} /> : null}
+          {!ready || (!requestBlocked && !data && !error) ? <Loading label={t("benchmark.Loading published benchmarks…")} /> : null}
           {error ? <ErrorState message={error} onRetry={reload} /> : null}
+          {requestBlocked || requestLimitDenied || nextRequestBlocked ? <p className="explorer-validation" role="alert">{t(`benchmark.${EXPLORER_QUERY_LIMIT_MESSAGE}`)}</p> : null}
           {data && items.length === 0 ? (
             <EmptyState
               title={filtered ? t("benchmark.No results match these filters.") : t("benchmark.No public benchmarks yet.")}
@@ -270,7 +299,7 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
                 className="explorer-button explorer-page-next"
                 data-action-glyph="next"
                 onClick={goNext}
-                disabled={!data?.next_cursor}
+                disabled={!data?.next_cursor || nextRequestBlocked}
               >{t("benchmark.Next page")}</button>
             </nav>
           ) : null}
@@ -279,9 +308,9 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
         <details className="explorer-guide">
         <summary><span id="explorer-guide-title" className="explorer-guide-title">{t("benchmark.Compare like for like")}</span></summary>
         <p className="explorer-guide-text">{t("benchmark.Match the model fingerprint, hardware, workload and measurement method before reading anything into a difference. Results published with a different method or workload measured different work.")}</p>
-        <p className="explorer-guide-text">{t("benchmark.Every speed here is read at one operating point: one input length at one concurrency. Decode (tok/s) is the generation rate, so higher is faster, and Duration (s) is the end-to-end time of one measurement, so lower is faster. The two answer different questions and do not convert into each other.")}</p>
-        <p className="explorer-guide-text">{t("benchmark.Prefill (tok/s) is how fast a result consumed its prompt at that point. Each value is the median of that point's repetitions, with the range they covered beside it. Speeds are never averaged across different input lengths or concurrencies, because such an average describes no configuration that ran.")}</p>
-        <p className="explorer-guide-text">{t("benchmark.Choose a basis point to read every result at the same input length and concurrency; that is also what the two speed orders rank at. Input context lists the input lengths a result was configured with, and the input length filter and its sorts read the largest of them. The total context the server allocated is a different number and appears on the result page.")}</p>
+        <p className="explorer-guide-text">{t("benchmark.Common API measurements use client-observed timing and UTF-8 output bytes, including reasoning. Reported token counters are optional and are not decode timing. Cache is as configured.")}</p>
+        <p className="explorer-guide-text">{t("benchmark.Each metric shows the shared point median, range and observed sample count. Missing measurements stay unknown; neither bytes nor missing token counters are converted to tokens.")}</p>
+        <p className="explorer-guide-text">{t("benchmark.Serving points require input UTF-8 bytes, concurrency and output token cap together. Legacy token points remain in the explicit legacy scope. Configured input filters do not claim that every point completed.")}</p>
         <p className="explorer-guide-text">{t("benchmark.A missing measurement is shown as an em dash (—), never as a zero. Sorting does not make different setups directly comparable.")}</p>
         </details>
         </div>

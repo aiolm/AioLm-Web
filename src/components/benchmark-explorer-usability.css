@@ -288,3 +288,16 @@
   :is(.explorer-row-details, .explorer-secondary-filters, .explorer-guide) > summary::after,
   .explorer-secondary-filters > summary::before { transition: none; }
 }
+
+.explorer-setting-editor,
+.explorer-setting-row,
+.explorer-setting-grid { display: grid; gap: 12px; min-width: 0; }
+.explorer-setting-row { margin: 0; padding: 12px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-sm); }
+.explorer-setting-row legend { padding-inline: 4px; font-size: var(--fs-control); line-height: var(--lh-control); font-weight: var(--fw-medium); }
+.explorer-setting-row :is(input, select) { width: 100%; min-width: 0; max-width: 100%; }
+.explorer-setting-row .explorer-button { white-space: normal; overflow-wrap: anywhere; }
+.explorer-setting-row .explorer-field-label { overflow-wrap: anywhere; }
+.explorer-compact :is(.explorer-fact-value, .explorer-active-filter-text) { overflow-wrap: anywhere; }
+@media (min-width: 701px) and (max-width: 900px) {
+  .explorer-setting-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

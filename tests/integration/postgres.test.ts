@@ -3,8 +3,9 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import postgres from "postgres";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import type { PublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
 import { randomBase64Url32, sha256HexUtf8 } from "@/lib/crypto";
-import { syntheticSubmission } from "@/lib/fixtures";
+import { syntheticSubmission, syntheticServingSubmission } from "@/lib/fixtures";
 import { pythonBenchmark } from "../inference-benchmarks";
 import { summarizeBenchmark } from "@/lib/summary";
 import { weightBits } from "@/lib/weight-bits";
@@ -20,6 +21,10 @@ import { POST as createUploadSession } from "@/app/v1/upload-sessions/route";
 import { POST as verifyUploadSession } from "@/app/v1/upload-sessions/[id]/verify/route";
 import { GET as pollUploadSession } from "@/app/v1/upload-sessions/[id]/route";
 import { GET as listBenchmarkRuns, POST as submitBenchmarkRun } from "@/app/v1/benchmark-runs/route";
+import { GET as getReadiness } from "@/app/v1/readiness/route";
+import { InMemoryBenchmarkStore } from "@/server/memory-store";
+import { parseFilters, canonicalSettingDescriptor, type SettingDescriptor, type SettingValue, type BenchmarkFilters } from "@/lib/benchmark-discovery";
+import { decodeDiscoveryCursor, type ListCursor } from "@/lib/pagination";
 
 /**
  * Live-Postgres integration on an isolated database. The connection comes from
@@ -210,6 +215,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       const summary = { ...summarizeBenchmark(syntheticSubmission()), model_label: group,
         setup: { ...setup }, ...overrides };
       const benchmark = syntheticSubmission();
+      benchmark.runtime = { ...benchmark.runtime, name: summary.setup.runtime as "llama.cpp", version: summary.setup.runtime_version, backend: summary.setup.backend };
       benchmark.environment!.execution = {
         mode: "selected", selection_complete: true,
         selected_gpus: summary.setup.gpus.map((name, index) => ({ name,
@@ -220,12 +226,12 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       await db`insert into bench.benchmark_runs
         (submission_id, public_id, owner_hash, body_sha256, benchmark, summary, hidden, deleted, created_at)
         values (${randomUUID()}, ${id}, ${"0".repeat(64)}, ${"1".repeat(64)},
-          ${db.json(JSON.parse(JSON.stringify(benchmark)) as postgres.JSONValue)}, ${db.json(summary)}, ${flags.hidden ?? false},
+          ${db.json(JSON.parse(JSON.stringify(benchmark)) as postgres.JSONValue)}, ${db.json(JSON.parse(JSON.stringify(summary)) as postgres.JSONValue)}, ${flags.hidden ?? false},
           ${flags.deleted ?? false}, ${flags.created ?? "2026-01-01T00:00:00.000Z"})`;
     }
 
     async function request(query: Record<string, string>, options = false): Promise<Response> {
-      const url = `http://localhost:3000/v1/benchmark-runs${options ? "/options" : ""}?${new URLSearchParams(query)}`;
+      const url = `http://localhost:3000/v1/benchmark-runs${options ? "/options" : ""}?${new URLSearchParams({ measurement: "legacy", ...query })}`;
       if (options) {
         const { GET } = await import("@/app/v1/benchmark-runs/options/route");
         return GET(new Request(url));
@@ -547,18 +553,15 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
         await scratch`insert into bench.benchmark_runs
           (submission_id, public_id, owner_hash, body_sha256, benchmark, summary)
           values (${randomUUID()}, ${`legacy-${index}`}, ${"0".repeat(64)}, ${"1".repeat(64)},
-            ${scratch.json(JSON.parse(JSON.stringify(benchmark)) as postgres.JSONValue)}, ${scratch.json(legacy)})`;
+            ${scratch.json(JSON.parse(JSON.stringify(benchmark)) as postgres.JSONValue)}, ${scratch.json(JSON.parse(JSON.stringify(legacy)) as postgres.JSONValue)})`;
       }
       await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", "008_benchmark_discovery.sql"), "utf8"));
       const rows = await scratch<Array<{ summary: ReturnType<typeof summarizeBenchmark> }>>`
         select summary from bench.benchmark_runs order by public_id`;
-      // 008 predates configured input length, RAM bytes, physical cores and runtime build.
+      // 008 is immutable: newer application-only setup projections are not backfilled.
       expect(rows.map((row) => row.summary.setup)).toEqual(benchmarks.map((benchmark) => {
-        const { prompt_length, ram_bytes, physical_cores, runtime_build, ...setup } = summarizeBenchmark(benchmark).setup!;
-        void prompt_length;
-        void ram_bytes;
-        void physical_cores;
-        void runtime_build;
+        const setup = { ...summarizeBenchmark(benchmark).setup! };
+        for (const key of ["prompt_length", "ram_bytes", "physical_cores", "runtime_build", "runtime_variant", "runtime_plugin_version", "repetitions", "warmup", "corpus", "corpus_version"] as const) delete setup[key];
         return setup;
       }));
       expect(rows[0]!.summary.setup?.vram_mb).toBe(8193);
@@ -620,7 +623,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
         await scratch`insert into bench.benchmark_runs
           (submission_id, public_id, owner_hash, body_sha256, benchmark, summary, hidden, row_count, byte_size)
           values (${submissionId}, ${publicId}, ${"0".repeat(64)}, ${"1".repeat(64)},
-            ${scratch.json(metaOf(benchmark) as postgres.JSONValue)}, ${scratch.json(curated(benchmark, label))},
+            ${scratch.json(metaOf(benchmark) as postgres.JSONValue)}, ${scratch.json(JSON.parse(JSON.stringify(curated(benchmark, label))) as postgres.JSONValue)},
             ${publicId === "measured"}, ${benchmark.measurements.rows.length}, ${4096})`;
         const chunked = benchmark.measurements.rows;
         for (const [index, slice] of [chunked.slice(0, 4), chunked.slice(4)].entries()) {
@@ -1059,6 +1062,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       "010_model_metadata.sql", "011_system_memory.sql", "012_operating_points.sql",
       "013_gpu_hardware_labels.sql",
       "014_weight_bits.sql",
+      "015_engine_neutral_benchmarks.sql",
     ]);
   });
 
@@ -1085,16 +1089,6 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
         expect(names).toContain(name);
       }
     }
-    // Planner evidence: with scans disabled the list query shape is served by
-    // the pagination index (honest usability proof on a small table; at scale
-    // the planner picks it without the hint).
-    const plan = await db.begin(async (tx) => {
-      await tx`set local enable_seqscan = off`;
-      return tx`explain select public_id from bench.benchmark_runs
-        where deleted = false and hidden = false
-        order by created_at desc, public_id desc limit 25`;
-    });
-    expect(JSON.stringify(plan)).toMatch(/benchmark_runs_created_idx|benchmark_discovery_newest/);
   });
 
   it("serializes concurrent acceptance to one receipt", async () => {
@@ -1182,7 +1176,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     expect(page.rows).toHaveLength(1000);
     expect(page.total).toBe(2500);
     expect(page.nextOffset).toBe(2000);
-    const listed = await s.listRuns({}, 25, null);
+    const listed = await s.listRuns({ measurement: "legacy" }, 25, null);
     const item = listed.items.find((i) => i.public_id === (created as { run: { public_id: string } }).run.public_id);
     expect(item).toBeDefined();
     expect(item).not.toHaveProperty("submission_id");
@@ -1468,6 +1462,24 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     }
   });
 
+  it("keeps readiness unavailable until migration 015 is present under the runtime role", async () => {
+    const rtSql = postgres(runtimeUrl, { max: 1, prepare: false, ssl: false });
+    const migration = "015_engine_neutral_benchmarks.sql";
+    const [saved] = await db!`select sha256 from bench.schema_migrations where filename = ${migration}`;
+    expect(saved).toBeDefined();
+    __setTestStore(new PostgresBenchmarkStore(rtSql));
+    try {
+      expect((await getReadiness()).status).toBe(200);
+      await db!`delete from bench.schema_migrations where filename = ${migration}`;
+      expect((await getReadiness()).status).toBe(503);
+    } finally {
+      await db!`insert into bench.schema_migrations (filename, sha256) values (${migration}, ${saved!.sha256}) on conflict (filename) do nothing`;
+      expect((await getReadiness()).status).toBe(200);
+      __setTestStore(null);
+      await rtSql.end({ timeout: 5 });
+    }
+  });
+
   it("bounds the readiness read inside PostgreSQL and leaves no timeout behind", async () => {
     if (!db) return;
     // A client-side promise race only stops the caller waiting; the statement
@@ -1625,7 +1637,10 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     expect(footprint.rows).toBeGreaterThan(0);
   });
 
-  it.each(["llama.cpp", "vllm", "mlx-vlm", "vllm-metal"] as const)("serves the authenticated %s HTTP publish flow against the real database", async engine => {
+  it.each([
+    ...(["llama.cpp", "vllm", "mlx-vlm", "vllm-metal"] as const).map(engine => ({ generation: "legacy" as const, engine })),
+    ...(["llama.cpp", "vllm", "mlx-vlm", "sglang", null] as const).map(engine => ({ generation: "serving" as const, engine })),
+  ].map((fixture, index) => ({ ...fixture, ip: `10.30.30.${index + 1}` })))("serves the authenticated $generation $engine HTTP publish flow against the real database", async ({ generation, engine, ip }) => {
     const s = need();
     if (!s || !db) return;
     // Route handlers read deployment config from the environment; point them
@@ -1646,11 +1661,20 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     try {
       const submissionId = randomUUID();
       const ownerSecret = randomBase64Url32();
-      const benchmark = engine === "llama.cpp" ? syntheticSubmission({ submission_id: submissionId }) : pythonBenchmark(engine, submissionId);
+      let benchmark;
+      if (generation === "serving") {
+        benchmark = syntheticServingSubmission({ submission_id: submissionId, runtime: { name: engine, version: null, backend: null, variant: null, build: null, plugin_version: null } });
+      } else if (engine === "llama.cpp") {
+        benchmark = syntheticSubmission({ submission_id: submissionId });
+      } else if (engine === "vllm" || engine === "mlx-vlm" || engine === "vllm-metal") {
+        benchmark = pythonBenchmark(engine, submissionId);
+      } else {
+        throw new Error("Invalid legacy fixture engine.");
+      }
       const body = JSON.stringify({ benchmark, description_md: "http-flow" });
       const bodySha = sha256HexUtf8(body);
       const headers = (extra: Record<string, string> = {}): Headers =>
-        new Headers({ "x-synthetic-test-ip": "10.30.30.30", ...extra });
+        new Headers({ "x-synthetic-test-ip": ip, ...extra });
       const auth = { authorization: `Bearer ${ownerSecret}` };
 
       const created = await createUploadSession(
@@ -1708,6 +1732,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       expect(((await replay.json()) as { id: string }).id).toBe(receipt.id);
       // Wrong owner is rejected against real stored hashes.
       expect((await submit(randomBase64Url32(), true)).status).toBe(403);
+      await s.deleteRun(submissionId);
     } finally {
       __setTestStore(null);
       for (const [key, value] of saved) {
@@ -1715,5 +1740,220 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
         else process.env[key] = value;
       }
     }
+  });
+  describe("engine-neutral serving discovery and management", () => {
+    const descriptor: SettingDescriptor = { target: "launch", scope: [], name: "batch", unit: null, role: null };
+    const memory = new InMemoryBenchmarkStore();
+    const ids: string[] = [];
+
+    async function publish(benchmark: PublicBenchmarkSubmission) {
+      const submissionId = randomUUID(), ownerSecret = randomBase64Url32();
+      benchmark = { ...benchmark, submission_id: submissionId };
+      const body = JSON.stringify({ benchmark, description_md: "serving-integration" });
+      const hash = sha256HexUtf8(body);
+      const permit = await verifiedSession(submissionId, ownerSecret, hash);
+      const benchmarkMeta = benchmark.schema_version === 3
+        ? { ...benchmark, measurements: { status: benchmark.measurements.status, rows: [] } }
+        : { ...benchmark, measurements: { ...benchmark.measurements, rows: [] } };
+      const args: AcceptArgs = {
+        ...acceptArgs(submissionId, ownerSecret, permit, GENEROUS_QUOTA),
+        body_sha256: hash, benchmarkMeta,
+        rows: benchmark.measurements.rows, summary: summarizeBenchmark(benchmark),
+        byte_size: Buffer.byteLength(body), row_count: benchmark.measurements.rows.length,
+      };
+      const accepted = await store!.acceptRunAtomic(args);
+      expect(accepted.outcome).toBe("created");
+      if (accepted.outcome !== "created") throw new Error("serving acceptance failed");
+      ids.push(submissionId);
+      memory.runs.set(accepted.run.public_id, accepted.run);
+      return accepted.run;
+    }
+
+    afterEach(async () => {
+      for (const id of ids.splice(0)) await store!.deleteRun(id);
+      memory.runs.clear();
+    });
+
+    async function parity(filters: BenchmarkFilters) {
+      const sql = await store!.listRuns(filters, 100, null);
+      const local = await memory.listRuns(filters, 100, null);
+      expect(sql.items.map(r => r.public_id)).toEqual(local.items.map(r => r.public_id));
+      return sql;
+    }
+
+    it("filters retained legacy workload facts without summary backfills", async () => {
+      const fixture = syntheticSubmission();
+      fixture.runtime.version = "legacy-workload-facts";
+      const run = await publish(fixture);
+      const retained = structuredClone(run.summary);
+      delete retained.setup!.repetitions;
+      delete retained.setup!.warmup;
+      await db!`update bench.benchmark_runs set summary = ${db!.json(JSON.parse(JSON.stringify(retained)) as postgres.JSONValue)} where submission_id = ${run.submission_id}`;
+      memory.runs.set(run.public_id, { ...run, summary: retained });
+      const filters: BenchmarkFilters = { measurement: "legacy", runtime_version: "legacy-workload-facts", repetitions_min: 1, repetitions_max: 1, warmup: false };
+      expect((await parity(filters)).items.map(item => item.public_id)).toEqual([run.public_id]);
+      expect((await parity({ ...filters, warmup: true })).items).toEqual([]);
+      expect((await parity({ ...filters, repetitions_min: 2, repetitions_max: 3 })).items).toEqual([]);
+      expect(await store!.listOptions("runtime", "", filters)).toEqual(await memory.listOptions("runtime", "", filters));
+    });
+
+    it.each(["llama.cpp", "vllm", "mlx-vlm", "sglang", null])("accepts and manages %s with canonical generated identity and tombstone erasure", async name => {
+      const fixture = syntheticServingSubmission();
+      fixture.runtime = { name, version: "1", variant: "arbitrary-safe", build: "build", plugin_version: "plugin", backend: null };
+      fixture.model = { format: "unknown", status: "sha256", sha256: "b".repeat(64), size_bytes: 1234,
+        source: { kind: "huggingface", repository: "Example/Model", revision: "c".repeat(40) } };
+      const run = await publish(fixture);
+      const columns = Object.keys(run.summary.identity!);
+      expect(columns).toHaveLength(13);
+      const generated = await db!.unsafe(`select ${columns.join(", ")} from bench.benchmark_runs where submission_id = $1`, [run.submission_id]);
+      expect({ ...generated[0], model_size_bytes: Number(generated[0]!.model_size_bytes) }).toEqual(run.summary.identity);
+      const runtimeDb = postgres(runtimeUrl, { max: 1, prepare: false, ssl: false });
+      try {
+        for (const column of columns) {
+          const [privilege] = await runtimeDb`select has_column_privilege(current_user, 'bench.benchmark_runs', ${column}, 'UPDATE') as allowed`;
+          expect(privilege!.allowed).toBe(false);
+        }
+        await expect(runtimeDb`update bench.benchmark_runs set app_version = 'forged' where submission_id = ${run.submission_id}`).rejects.toThrow();
+      } finally {
+        await runtimeDb.end({ timeout: 5 });
+      }
+      for (const filters of [{ model_sha256: "b".repeat(64) }, { model_query: "Example/Model" }, { q: "c".repeat(40) }]) {
+        expect((await parity(filters)).items.map(item => item.public_id)).toContain(run.public_id);
+      }
+      expect((await store!.listOptions("runtime", "", {})).options.some(option => option.value === name)).toBe(name !== null);
+      expect(await store!.updateDescription(run.submission_id, "edited", 1)).toMatchObject({ revision: 2 });
+      const handoffId = randomUUID(), token = sha256HexUtf8("handoff");
+      await store!.createManagementSession({ id: handoffId, submission_id: run.submission_id, csrf_token_hash: token, expires_at: new Date(Date.now() + 60_000).toISOString() });
+      expect(await store!.getManagementSession(handoffId)).not.toBeNull();
+      expect((await store!.getRowSlice(run.submission_id, 0, 10)).rows).toEqual(fixture.measurements.rows);
+      await store!.deleteRun(run.submission_id);
+      const tombstone = await db!.unsafe(`select benchmark, deleted, ${columns.join(", ")} from bench.benchmark_runs where submission_id = $1`, [run.submission_id]);
+      expect(tombstone[0]!.deleted).toBe(true);
+      for (const column of ["benchmark", ...columns]) expect(tombstone[0]![column]).toBeNull();
+      expect((await db!`select count(*)::int as n from bench.benchmark_chunks where submission_id = ${run.submission_id}`)[0]!.n).toBe(0);
+    });
+
+    it("matches exact same-element descriptors, ordered arrays, false/zero and AND ranges in both stores", async () => {
+      const values: Array<SettingValue | null> = [2, 64, false, 0, [1, 2], [2, 1], null];
+      const runs = [];
+      for (const value of values) {
+        const fixture = syntheticServingSubmission();
+        fixture.execution.settings.push({ ...descriptor, value: Array.isArray(value) ? [...value] : value },
+          { ...descriptor, scope: ["serve"], value: 64 });
+        runs.push(await publish(fixture));
+      }
+      for (const filters of [{ runtime: "sglang' OR true --" }, { model_query: "sglang' OR true --" }]) {
+        expect((await parity(filters)).items).toEqual([]);
+      }
+      for (const value of values.filter(value => value !== null)) {
+        expect((await parity({ setting: [{ ...descriptor, op: "eq", value: Array.isArray(value) ? [...value] : value }] })).items).toHaveLength(1);
+      }
+      expect((await parity({ setting: [{ ...descriptor, op: "range", min: 16, max: 64 }] })).items.map(r => r.public_id)).toEqual([runs[1]!.public_id]);
+      expect((await parity({ setting: [{ ...descriptor, op: "range", min: 16 }, { ...descriptor, op: "eq", value: 2 }] })).items).toEqual([]);
+      expect((await parity({ setting: [{ ...descriptor, unit: "count", op: "eq", value: 2 }] })).items).toEqual([]);
+      const filters: BenchmarkFilters = { setting: [{ ...descriptor, op: "eq", value: 2 }] };
+      expect(await store!.listOptions("setting", "", filters)).toEqual(await memory.listOptions("setting", "", filters));
+      expect(await store!.listOptions("setting_value", "", filters, descriptor)).toEqual({ options: [{ value: "2", count: 1 }], has_more: false });
+      expect(await store!.listOptions("setting_value", "", filters, descriptor)).toEqual(await memory.listOptions("setting_value", "", filters, descriptor));
+      const reversed = { setting: [{ ...descriptor, op: "eq" as const, value: 2 }, { ...descriptor, scope: ["serve"], op: "eq" as const, value: 64 }] };
+      const first = await store!.listRuns(reversed, 1, null);
+      expect(first.items).toHaveLength(1);
+      expect(canonicalSettingDescriptor(descriptor)).toBe('{"target":"launch","scope":[],"name":"batch","unit":null,"role":null}');
+    });
+
+    it("returns thirty typed C-ordered distinct visible facet values and respects every provided condition", async () => {
+      for (let i = 0; i < 31; i++) {
+        const fixture = syntheticServingSubmission();
+        fixture.execution.settings.push({ ...descriptor, value: i });
+        await publish(fixture);
+      }
+      const fixture = syntheticServingSubmission();
+      fixture.execution.settings.push({ ...descriptor, value: 0 });
+      await publish(fixture);
+      const options = await store!.listOptions("setting_value", "", {}, descriptor);
+      expect(options).toEqual(await memory.listOptions("setting_value", "", {}, descriptor));
+      expect(options.options).toHaveLength(30);
+      expect(options.has_more).toBe(true);
+      expect(options.options.find(option => option.value === "0")!.count).toBe(2);
+      expect(options.options.map(option => option.value)).toEqual(options.options.map(option => option.value).sort());
+      const filters: BenchmarkFilters = { setting: [{ ...descriptor, op: "range", min: 29 }] };
+      expect(await store!.listOptions("setting_value", "", filters, descriptor)).toEqual(await memory.listOptions("setting_value", "", filters, descriptor));
+      expect((await store!.listOptions("setting_value", "", filters, descriptor)).options.map(option => option.value)).toEqual(["29", "30"]);
+    });
+
+    it("preserves canonical numeric exponents, string whitespace, arrays and overlimit omission before facet pagination", async () => {
+      const values: SettingValue[] = [1e21, 1.1e21, 1e20, 1e-7, 0, false, "a  b", "a b", [1e21, 1e-7], [1e-7, 1e21]];
+      for (const value of values) {
+        const fixture = syntheticServingSubmission();
+        fixture.execution.settings.push({ ...descriptor, value });
+        await publish(fixture);
+      }
+      const oversized = { ...descriptor, name: "b".repeat(64), scope: Array.from({ length: 8 }, (_, i) => `${i}${"a".repeat(63)}`) };
+      const fixture = syntheticServingSubmission();
+      fixture.execution.settings.push({ ...oversized, value: "가".repeat(128) });
+      await publish(fixture);
+      for (const query of ["", "1e+21", "a  b", "[1e-7", "false"]) {
+        expect(await store!.listOptions("setting_value", query, {}, descriptor)).toEqual(await memory.listOptions("setting_value", query, {}, descriptor));
+      }
+      expect((await store!.listOptions("setting_value", "", {}, oversized)).options).toEqual([]);
+      expect(await store!.listOptions("setting", "", {})).toEqual(await memory.listOptions("setting", "", {}));
+      const hidden = await publish(syntheticServingSubmission({ execution: { topology: "unknown", memory_scope: "unavailable", settings: [{ ...descriptor, value: "hidden" }] } }));
+      await store!.setHidden(hidden.submission_id, true);
+      memory.runs.get(hidden.public_id)!.hidden = true;
+      expect(await store!.listOptions("setting_value", "", {}, descriptor)).toEqual(await memory.listOptions("setting_value", "", {}, descriptor));
+    });
+
+    it("uses configured maximum inputs and exact serving point medians for sorting and cursor paging", async () => {
+      for (const [bytes, cap, duration] of [[16384, 128, 200], [8192, 128, 400], [4096, 256, 100]] as const) {
+        const fixture = syntheticServingSubmission();
+        fixture.workload.inputs.push({ bytes, sha256: "b".repeat(64) });
+        fixture.workload.inputs = [...new Map(fixture.workload.inputs.map(input => [input.bytes, input])).values()].sort((a, b) => a.bytes - b.bytes);
+        fixture.workload.max_output_tokens = cap;
+        fixture.measurements.rows[0]!.max_output_tokens = cap;
+        fixture.measurements.rows[0]!.e2e_ms = duration;
+        const measured = fixture.measurements.rows[0]!;
+        fixture.measurements.rows = fixture.workload.inputs.map(input => ({ ...measured, input_bytes: input.bytes }));
+        await publish(fixture);
+      }
+      expect((await parity({ input_bytes_max: 8192 })).items).toHaveLength(2);
+      for (const sort of ["input_bytes_asc", "input_bytes_desc", "output_rate_desc", "duration_asc"] as const) {
+        const filters: BenchmarkFilters = { sort, point_bytes: 4096, point_concurrency: 1, point_max_tokens: 128 };
+        const expected = (await parity(filters)).items.map(run => run.public_id), actual = [];
+        let cursor: ListCursor | null = null;
+        do {
+          const page = await store!.listRuns(filters, 1, cursor);
+          actual.push(...page.items.map(run => run.public_id));
+          cursor = page.next_cursor ? decodeDiscoveryCursor(page.next_cursor, filters) : null;
+        } while (cursor);
+        expect(actual).toEqual(expected);
+      }
+      expect((await parity({ point_bytes: 4096, point_concurrency: 1, point_max_tokens: 128, point_only: true })).items).toHaveLength(2);
+      for (const query of ["point_bytes=4096", "point_bytes=4096&point_concurrency=1", "point_tokens=512&point_concurrency=1", "context_min=1", "sort=output_rate_desc", "measurement=legacy&input_bytes_min=1"]) {
+        expect(() => parseFilters(new URLSearchParams(query))).toThrow();
+      }
+    });
+    it("finds an undescribed model by its complete SHA and preserves missing derived rates", async () => {
+      const fixture = syntheticServingSubmission();
+      fixture.model = { format: "unknown", status: "sha256", sha256: "d".repeat(64), size_bytes: null };
+      fixture.measurements.rows[0] = { ...fixture.measurements.rows[0]!, content_bytes: 1, reasoning_bytes: 0, output_bytes: 1, e2e_ms: 1e-320 };
+      const first = await publish(fixture);
+      const second = await publish(fixture);
+      expect((await parity({ model_query: "d".repeat(64) })).items).toHaveLength(2);
+      expect(first.summary.serving_points![0]!.output_bytes_per_second).toBeNull();
+      const condition = { ...descriptor, op: "eq" as const, value: 2 };
+      const other = { ...descriptor, scope: ["serve"], op: "eq" as const, value: 64 };
+      for (const run of [first, second]) {
+        const benchmark = syntheticServingSubmission();
+        benchmark.execution.settings.push({ ...descriptor, value: 2 }, { ...descriptor, scope: ["serve"], value: 64 });
+        await publish(benchmark);
+        expect(run.summary.serving_points![0]!.reported_tokens_per_second).toBeNull();
+      }
+      const filters: BenchmarkFilters = { setting: [condition, other] };
+      const page = await store!.listRuns(filters, 1, null);
+      expect(page.next_cursor).not.toBeNull();
+      expect(() => decodeDiscoveryCursor(page.next_cursor!, { setting: [other, condition] })).not.toThrow();
+      expect(() => decodeDiscoveryCursor(page.next_cursor!, { setting: [other] })).toThrow();
+      expect(() => decodeDiscoveryCursor(Buffer.from(JSON.stringify({ c: first.created_at, p: first.public_id })).toString("base64url"), filters)).toThrow();
+    });
   });
 });

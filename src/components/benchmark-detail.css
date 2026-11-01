@@ -67,6 +67,10 @@
 .benchmark-detail .detail-rows { font-size: var(--fs-table); line-height: var(--lh-table); }
 .benchmark-detail .detail-rows tbody tr:hover { background: var(--ui-panel-raised); }
 .benchmark-detail :is(.detail-points-scroll, .detail-rows-scroll):focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
+.benchmark-detail .detail-points-scroll { max-width: 100%; overflow-x: auto; }
+.benchmark-detail .detail-points-table { min-width: 100%; }
+.benchmark-detail .detail-metric-card { min-width: 0; }
+.benchmark-detail .detail-chip-row { display: flex; flex-wrap: wrap; }
 .benchmark-detail .detail-points-truncated,
 .benchmark-detail .detail-points-empty { font-size: var(--fs-body); line-height: var(--lh-body); }
 

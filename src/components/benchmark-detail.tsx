@@ -16,9 +16,10 @@ import { asRecord } from "@/components/benchmark-detail-format";
 import { buildSetupGroups, type BenchmarkSetup, type SetupField } from "@/components/benchmark-detail-fields";
 import { formatWeightQuantization, modelPublisher, modelValue, type BenchmarkModelInfo } from "@/components/benchmark-model-identity";
 import { buildRowColumns, isFailedRow } from "@/components/benchmark-detail-rows";
-import { BenchmarkPointsPanel } from "@/components/benchmark-detail-points";
+import { BenchmarkPointsPanel, ServingBenchmarkPointsPanel } from "@/components/benchmark-detail-points";
 import { formatMethodName, formatPromptLengths, formatWorkloadName } from "@/components/benchmark-explorer-format";
 import type { BenchmarkPoint } from "@/lib/benchmark-points";
+import { servingMetricValues, type ServingBenchmarkPoint, type ServingBenchmarkRow } from "@aiolm/benchmark-contracts";
 import { ColumnHeading } from "./benchmark-i18n";
 
 interface Detail {
@@ -34,6 +35,8 @@ interface Detail {
      * ran, so they are stored but never shown. Absent before migration 012.
      */
     points?: BenchmarkPoint[];
+    serving_points?: ServingBenchmarkPoint[];
+    input_unit?: "utf8_bytes";
     points_truncated?: boolean;
     /** Published model metadata, absent on older results and null when none was sent. */
     model_info?: BenchmarkModelInfo | null;
@@ -206,6 +209,8 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
   const { start, end } = getRowsSliceIndices(clampedPage, ROWS_VISIBLE_PAGE_SIZE, loadedCount);
   const retryCursor = rows === null ? null : rowsCursor;
   const { summary } = data;
+  const serving = data.benchmark.schema_version === 3;
+  const workload = asRecord(data.benchmark.workload);
 
 
   return (
@@ -225,11 +230,13 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
         </div>
         {/* What ran on which machine comes before any number read from it. */}
         <BenchmarkHardwareOverview benchmark={data.benchmark} />
-        <BenchmarkPointsPanel points={summary.points ?? []} truncated={summary.points_truncated ?? false} />
+        {serving
+          ? <ServingBenchmarkPointsPanel points={summary.serving_points ?? []} memoryScope={asRecord(data.benchmark.execution)?.memory_scope} />
+          : <BenchmarkPointsPanel points={summary.points ?? []} truncated={summary.points_truncated ?? false} />}
         <div className="detail-context-grid">
           <div className="detail-fact">
-            <span className="detail-fact-label">{t("benchmark.Input context")}</span>
-            <span className="detail-fact-value">{formatPromptLengths(summary.prompt_lengths) ?? t("benchmark.Unknown")}</span>
+            <span className="detail-fact-label">{t(serving ? "benchmark.Input UTF-8 bytes" : "benchmark.Input context")}</span>
+            <span className="detail-fact-value">{serving ? (Array.isArray(workload?.inputs) ? workload.inputs.map((input) => `${asRecord(input)?.bytes} B`).join(", ") : t("benchmark.Unknown")) : formatPromptLengths(summary.prompt_lengths) ?? t("benchmark.Unknown")}</span>
           </div>
           <div className="detail-fact">
             <span className="detail-fact-label">{t("benchmark.Workload")}</span>
@@ -271,6 +278,7 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
             page={clampedPage}
             pageCount={pageCount}
             onPage={setVisiblePage}
+            schemaVersion={data.benchmark.schema_version}
           />
         ) : null}
         {rows && rowsCursor && !rowsError ? (
@@ -301,6 +309,10 @@ function SetupSection({ benchmark }: { benchmark: BenchmarkSetup }): React.JSX.E
       <h2 id="env-title">{t("benchmark.Test setup (as reported)")}</h2>
       <p className="muted">{t("benchmark.These values were sent with the publication and are shown as reported. They are not independently verified.")}</p>
       <p className="muted">{t("benchmark.The publisher is the namespace of the repository the file came from; whoever quantized the weights is listed separately and is often someone else. Quantization describes the weights in the published file, not the KV cache, and it is not a statement about output quality.")}</p>
+      {benchmark.schema_version === 3 ? <>
+        <p className="muted">{t("benchmark.Source repository and revision describe provenance, not the weights SHA256 or proof of unmodified weights.")}</p>
+        <p className="muted">{t("benchmark.Host resources describe the AioLM host, not the attached engine or container allocation.")}</p>
+      </> : null}
       {groups.map((group) => (
         <details className="detail-group" key={group.id}>
           <summary className="detail-group-title" id={group.id}>{group.title}</summary>
@@ -364,6 +376,7 @@ function RowsPreview({
   page,
   pageCount,
   onPage,
+  schemaVersion,
 }: {
   rows: unknown[];
   start: number;
@@ -371,15 +384,19 @@ function RowsPreview({
   page: number;
   pageCount: number;
   onPage: (page: number) => void;
+  schemaVersion: unknown;
 }): React.JSX.Element {
   const { t } = useI18n();
   const [showDetailed, setShowDetailed] = useState(false);
   // A row that is not an object still takes its place in the table, as gaps. Failures are defensively excluded.
   const filtered = rows.filter((row) => !isFailedRow(asRecord(row) ?? {}));
-  const visible = filtered.slice(start, end).map((row) => asRecord(row) ?? {});
+  const visible = filtered.slice(start, end).map((row) => {
+    const record = asRecord(row) ?? {};
+    return schemaVersion === 3 ? { ...record, ...servingMetricValues(record as unknown as ServingBenchmarkRow) } : record;
+  });
   if (rows.length === 0 || filtered.length === 0) return <p className="muted">{t("benchmark.No rows.")}</p>;
   if (visible.length === 0) return <p className="muted">{t("benchmark.No rows on this page.")}</p>;
-  const columns = buildRowColumns(visible, t, showDetailed);
+  const columns = buildRowColumns(visible, t, showDetailed, schemaVersion);
   return (
     <div>
       <div className="detail-rows-toolbar">

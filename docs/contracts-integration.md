@@ -1,6 +1,6 @@
 # Contracts integration
 
-`@aiolm/benchmark-contracts` 0.8.0 owns the shared data contract: DTOs,
+`@aiolm/benchmark-contracts` 0.9.0 owns the shared data contract: DTOs,
 validation, JSON Schema/OpenAPI, publication bounds, recovery encoding, receipt
 shape. The website consumes that package directly — it does not carry its own
 copy of the rules and never imports app sources at runtime.
@@ -10,7 +10,7 @@ copy of the rules and never imports app sources at runtime.
 The versioned tarball is committed to this repository and installed from there:
 
 ```json
-"@aiolm/benchmark-contracts": "file:vendor/aiolm-benchmark-contracts-0.8.0.tgz"
+"@aiolm/benchmark-contracts": "file:vendor/aiolm-benchmark-contracts-0.9.0.tgz"
 ```
 
 `package-lock.json` pins its `integrity` (`sha512-…`), so `npm ci` fails if the
@@ -37,29 +37,34 @@ one-argument API allows the HTTP debug loopback.
 
 ## Schema and API surface
 
-The website's `weight_bits` discovery filter derives a nominal family from
-existing declared GGUF metadata. It adds no field to a publication and does not
-guess AWQ/GPTQ precision. Contract 0.8.0 accepts legacy schema-1 llama.cpp runs
-and schema-2 llama.cpp, vLLM and MLX runs. Standard vLLM uses HF safetensors;
-MLX uses HF/MLX snapshots; the explicit vllm-metal variant also permits the
-model formats declared by that contract, including GGUF. Python records retain
-null llama.cpp settings, method version 2 and their per-sequence context
-allocation. The website shows the recorded model format without fabricating
-GGUF metadata or weight bits. Plugin/core identity survives storage and display.
+Contract 0.9.0 accepts unchanged legacy schema1/2 snapshots and schema3
+`openai-chat-serving@1` snapshots through the same `/v1/**` routes. OpenAPI
+`info.version` is 2.0.0. New results use exact UTF-8 input byte sizes/hashes,
+client-observed content/reasoning timing and output bytes, and nullable
+engine-reported token/cache counters. Unknown engine identity, model format or
+launch settings does not disqualify a complete serving workload.
 
-The archive is built from desktop v0.3.2, commit
-`e439b52038142439c8c85b112d2949687fa273f2`, using the package's build and pack
-scripts, including its LICENSE. The lockfile pins the exact packed bytes.
-Existing accepted snapshots and receipts are not rewritten. No database
-migration is required: benchmark and summary JSON carry the additional fields.
+Public runtime identity has six required nullable fields and no fixed engine
+enum. Model format is engine-independent; declared GGUF metadata is permitted
+only for GGUF. Optional HF repository/revision is provenance, not a weight
+digest or proof of unmodified weights. Local provider IDs and reference-file
+hashes/sizes are not substituted for missing public identity.
 
-External `custom.*` engines remain outside this publication schema. Never
-rename them to a built-in engine to bypass validation, and never extend the
-website validator independently of the shared package. Weight bits remain
-separate from activation/KV precision and unknown when not declared.
+Schema3 execution records typed, bounded public settings and explicit compute
+topology/memory scope. Environment scope is `aiolm_host`, not an upstream or
+container allocation. Optional usage requests and as-configured caches are
+measurement conditions, not token-count/cold-cache guarantees. Repeated rows
+use the package's per-metric median/min/max/sample count. Unobserved metrics and
+non-finite derived rates stay null, never zero or Infinity.
+
+The archive is produced by the desktop workspace's build/pack scripts and
+includes LICENSE. Its exact bytes are pinned by the web lockfile; no source
+checkout is imported. Migration `015_engine_neutral_benchmarks.sql` is required
+before the new web deployment is ready. Existing accepted snapshots, request
+bytes, hashes and receipts are not rewritten or backfilled.
 
 The current desktop explorer's profile importer reads the existing public
-`GET /v1/benchmark-runs/<id>` projection: `id`, `benchmark.runtime` and
+`GET /v1/benchmark-runs/<id>` projection: `id`, the actual `benchmark.schema_version`, `benchmark.runtime` and
 `benchmark.execution`. The app validates that projection and creates local
 profiles; the website neither imports desktop code nor accepts local profile
 settings. The app supplies its own toolbar in its unprivileged website window;
@@ -109,5 +114,5 @@ Set `CONTRACTS_TARBALL_PATH` to additionally compare a candidate archive
 against the vendored one before adopting a new version:
 
 ```sh
-CONTRACTS_TARBALL_PATH=./aiolm-benchmark-contracts-0.8.0.tgz npm run contracts:check
+CONTRACTS_TARBALL_PATH=./vendor/aiolm-benchmark-contracts-0.9.0.tgz npm run contracts:check
 ```

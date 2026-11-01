@@ -3,11 +3,14 @@ import {
   EXPLORER_COMPARE_LIMIT,
   EMPTY_EXPLORER_FILTERS,
   invalidExplorerRanges,
+  invalidExplorerDraft,
   buildExplorerOptionsPath,
   EXPLORER_FILTER_MAX_LENGTH,
   EXPLORER_HISTORY_LIMIT,
   EXPLORER_PAGE_PATH,
   buildExplorerRequestPath,
+  isExplorerRequestWithinBounds,
+  type ExplorerFilters,
   buildExplorerSearch,
   comparisonCompatibility,
   explorerDetailHref,
@@ -124,12 +127,12 @@ describe("shareable filter links", () => {
     expect(sanitizeExplorerCursor(null)).toBeNull();
   });
 
-  it("caps a filter at the length the list API accepts", () => {
+  it("rejects overlong filters without silently changing the requested identity", () => {
     const long = "x".repeat(EXPLORER_FILTER_MAX_LENGTH + 40);
-    expect(parseExplorerLocation(`?model=${long}`).filters.model).toHaveLength(EXPLORER_FILTER_MAX_LENGTH);
-    expect(normalizeExplorerFilters({ ...EMPTY_EXPLORER_FILTERS, model: `  ${long}  `, hardware: "", method: "", workload: "" }).model).toHaveLength(
-      EXPLORER_FILTER_MAX_LENGTH,
-    );
+    const state = explorerStateFromSearch(`?model=${long}`);
+    expect(state.draft.model).toBe(long);
+    expect(invalidExplorerDraft(state.draft)).toBe(true);
+    expect(explorerReducer(state, { type: "apply" })).toBe(state);
   });
 
   it("links to a detail page by public id only, under the explorer page", () => {
@@ -392,7 +395,7 @@ describe("result cell formatting", () => {
 
 describe("discovery filters and sorting", () => {
   it("round-trips arbitrary text, numeric bounds and sorting and restores them on back", () => {
-    const link = "?q=synthetic+search&vendor=unlisted+vendor&gpu=new+device&os=custom+os&runtime=engine&context_min=0&context_max=8192&gpu_layers_min=-1&sort=context_desc";
+    const link = "?measurement=legacy&q=synthetic+search&vendor=unlisted+vendor&gpu=new+device&os=custom+os&runtime=engine&context_min=0&context_max=8192&gpu_layers_min=-1&sort=context_desc";
     const original = explorerStateFromSearch(link);
     expect(buildExplorerRequestPath({ filters: original.applied, cursor: null })).toContain("vendor=unlisted+vendor");
     expect(parseExplorerLocation(buildExplorerSearch({ filters: original.applied, cursor: null })).filters).toEqual(original.applied);
@@ -405,7 +408,7 @@ describe("discovery filters and sorting", () => {
     expect(buildExplorerSearch({ filters: explorerReducer(next, { type: "reset" }).applied, cursor: null })).toBe("");
   });
   it.each(["NaN", "Infinity", "1.5", "1e3", "9007199254740992", "-1"])("refuses invalid context bounds %s without changing results", value => {
-    const state = explorerReducer(explorerStateFromSearch("?model=synthetic"), { type: "draft", key: "context_min", value });
+    const state = explorerReducer(explorerStateFromSearch("?measurement=legacy&model=synthetic"), { type: "draft", key: "context_min", value });
     expect(invalidExplorerRanges(state.draft)).toContain("context");
     expect(explorerReducer(state, { type: "apply" })).toBe(state);
   });
@@ -414,15 +417,15 @@ describe("discovery filters and sorting", () => {
     expect(invalidExplorerRanges({ ...EMPTY_EXPLORER_FILTERS, context_min: "0", gpu_layers_min: "-1" })).toEqual([]);
   });
   it("suggestions honor other filters and use a separate query without paging or own filter", () => {
-    const filters = { ...EMPTY_EXPLORER_FILTERS, q: "global", vendor: "synthetic vendor", gpu: "typed", sort: "oldest", context_min: "128" };
+    const filters = { ...EMPTY_EXPLORER_FILTERS, measurement: "legacy", q: "global", vendor: "synthetic vendor", gpu: "typed", sort: "oldest", context_min: "128" };
     const params = new URLSearchParams(buildExplorerOptionsPath("gpu", "new text", filters).split("?")[1]);
-    expect(Object.fromEntries(params)).toEqual({ q: "global", vendor: "synthetic vendor", context_min: "128", field: "gpu", option_query: "new text" });
+    expect(Object.fromEntries(params)).toEqual({ measurement: "legacy", q: "global", vendor: "synthetic vendor", context_min: "128", field: "gpu", option_query: "new text" });
   });
 });
 
 describe("immediate result sorting", () => {
   it("sorts applied results without submitting unfinished text or invalid ranges", () => {
-    let state = explorerStateFromSearch("?vendor=synthetic&cursor=page2", [""]);
+    let state = explorerStateFromSearch("?measurement=legacy&vendor=synthetic&cursor=page2", [""]);
     state = explorerReducer(state, { type: "draft", key: "q", value: "unfinished query" });
     state = explorerReducer(state, { type: "draft", key: "context_min", value: "invalid" });
     const sorted = explorerReducer(state, { type: "sort", value: "context_desc" });
@@ -436,7 +439,7 @@ describe("immediate result sorting", () => {
     expect(sorted.cursor).toBeNull();
     expect(sorted.history).toEqual([]);
     expect(buildExplorerSearch({ filters: sorted.applied, cursor: null })).toContain("sort=context_desc");
-    const restored = explorerReducer(sorted, { type: "location", search: "?vendor=synthetic&cursor=page2", history: [""] });
+    const restored = explorerReducer(sorted, { type: "location", search: "?measurement=legacy&vendor=synthetic&cursor=page2", history: [""] });
     expect(restored.applied.sort).toBe("");
     expect(restored.cursor).toBe("page2");
   });
@@ -470,4 +473,79 @@ describe("configured input lengths", () => {
     expect(formatPromptLengths([0, -1, Number.NaN, 1.5] as number[])).toBeNull();
   });
 
+});
+
+describe("serving point and condition links", () => {
+  const descriptor = { target: "launch", scope: [], name: "batch", unit: "count", role: null };
+  it("round-trips repeated typed conditions, canonicalizes order and deduplicates exact duplicates", () => {
+    const a = JSON.stringify({ ...descriptor, op: "eq", value: false });
+    const b = JSON.stringify({ ...descriptor, name: "split", op: "eq", value: [2, 1] });
+    const params = new URLSearchParams();
+    for (const value of [b, a, a]) params.append("setting", value);
+    const location = parseExplorerLocation(params.toString());
+    expect(location.filters.setting).toHaveLength(2);
+    const canonical = buildExplorerSearch(location);
+    const reverse = new URLSearchParams();
+    for (const value of [a, b]) reverse.append("setting", value);
+    expect(buildExplorerSearch(parseExplorerLocation(reverse.toString()))).toBe(canonical);
+    expect(parseExplorerLocation(canonical)).toEqual(location);
+  });
+  it("keeps a complete byte/concurrency/cap tuple and requires it before ranking output rate", () => {
+    let state = explorerStateFromSearch("runtime=sglang");
+    expect(explorerReducer(state, { type: "sort", value: "output_rate_desc" })).toBe(state);
+    state = explorerReducer(state, { type: "basisPoint", value: "b4096/c4/o128" });
+    state = explorerReducer(state, { type: "sort", value: "output_rate_desc" });
+    expect(state.applied).toMatchObject({ point_bytes: "4096", point_concurrency: "4", point_max_tokens: "128", point_tokens: "", sort: "output_rate_desc" });
+    expect(parseExplorerLocation(buildExplorerSearch({ filters: state.applied, cursor: null })).filters).toEqual(state.applied);
+    expect(explorerReducer(state, { type: "basisPoint", value: "" }).applied.sort).toBe("");
+  });
+  it("refuses byte/token mixing and never uses an old token value as input bytes", () => {
+    const serving = explorerStateFromSearch("context_min=128");
+    expect(invalidExplorerDraft(serving.draft)).toBe(true);
+    expect(explorerReducer(serving, { type: "apply" })).toBe(serving);
+    const legacy = explorerStateFromSearch("measurement=legacy&input_bytes_min=4096");
+    expect(invalidExplorerDraft(legacy.draft)).toBe(true);
+    const stale = explorerStateFromSearch("point_tokens=4096&point_concurrency=4");
+    expect(stale.applied.point_bytes).toBe("");
+    expect(stale.applied.point_concurrency).toBe("");
+  });
+  it("keeps pending option drafts when immediately changing the basis", () => {
+    let state = explorerStateFromSearch("runtime=sglang");
+    const pending = JSON.stringify({ _draft: { name: "batch", text: "-" } });
+    state = explorerReducer(state, { type: "settings", value: [pending] });
+    state = explorerReducer(state, { type: "basisPoint", value: "b4096/c4/o128" });
+    expect(state.draft.setting).toEqual([pending]);
+    expect(state.applied.setting).toEqual([]);
+  });
+});
+
+describe("whole encoded query boundaries", () => {
+  it("keeps a valid near-limit first page, but refuses an oversized next page or facet without clearing the view", () => {
+    const filters: ExplorerFilters = { ...EMPTY_EXPLORER_FILTERS, setting: Array.from({ length: 8 }, (_, index) => JSON.stringify({
+      target: "launch", scope: [], name: `option${index}`, unit: null, role: null, op: "eq", value: "é".repeat(128),
+    })) };
+    // Fill ordinary, independently bounded text fields up to a real wire query
+    // near 8192. The cursor and facet metadata must not get a separate allowance.
+    for (const key of ["q", "model", "model_query", "publisher", "base_model", "model_repository", "model_revision", "gpu"] as const) {
+      const size = buildExplorerRequestPath({ filters, cursor: null }).split("?")[1]!.length;
+      const remaining = 8180 - size - key.length - 2;
+      if (remaining > 0) filters[key] = "x".repeat(Math.min(120, remaining));
+    }
+    const first = buildExplorerRequestPath({ filters, cursor: null });
+    expect(first.split("?")[1]!.length).toBeGreaterThan(8160);
+    expect(isExplorerRequestWithinBounds(first)).toBe(true);
+    expect(invalidExplorerDraft(filters)).toBe(false);
+    const initial = explorerStateFromSearch("");
+    const state = { ...initial, applied: filters, draft: filters, compare: [result("chosen")] };
+    const cursor = "a".repeat(256);
+    expect(isExplorerRequestWithinBounds(buildExplorerRequestPath({ filters, cursor }))).toBe(false);
+    const next = explorerReducer(state, { type: "nextPage", cursor });
+    expect(next).toBe(state);
+    expect(next.cursor).toBeNull();
+    expect(next.applied.setting).toHaveLength(8);
+    expect(next.compare[0]?.public_id).toBe("chosen");
+    expect(isExplorerRequestWithinBounds(buildExplorerOptionsPath("runtime", "suggestions".repeat(10), filters))).toBe(false);
+    expect(isExplorerRequestWithinBounds(`/v1/benchmark-runs?${"a".repeat(8192)}`)).toBe(true);
+    expect(isExplorerRequestWithinBounds(`/v1/benchmark-runs?${"a".repeat(8193)}`)).toBe(false);
+  });
 });

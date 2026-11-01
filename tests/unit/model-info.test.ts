@@ -1,18 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { syntheticSubmission } from "@/lib/fixtures";
+import { syntheticServingSubmission, syntheticSubmission } from "@/lib/fixtures";
 import { modelLabelFor, normalizeModelInfo } from "@/lib/model-info";
 import { summarizeBenchmark } from "@/lib/summary";
-import type { PublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
+import type { LegacyPublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
+import { validatePublicBenchmark } from "@aiolm/benchmark-contracts";
+import { sourcedServingBenchmark } from "../inference-benchmarks";
 
-/**
- * model.metadata is optional in contract 0.3.0 and absent from the vendored
- * 0.2.0 types, so these fixtures attach the block directly. Rejecting a payload
- * that does not match the schema is the contracts package's job; what is
- * asserted here is what the website publishes from a block it was handed.
- */
-function described(metadata: unknown, identity: Partial<PublicBenchmarkSubmission["model"]> = {}): PublicBenchmarkSubmission {
+/** Invalid metadata fixtures exercise defensive display projection, not public acceptance. */
+function described(metadata: unknown, identity: Partial<LegacyPublicBenchmarkSubmission["model"]> = {}): LegacyPublicBenchmarkSubmission {
   const benchmark = syntheticSubmission();
-  benchmark.model = { ...benchmark.model, ...identity, metadata } as PublicBenchmarkSubmission["model"];
+  benchmark.model = { ...benchmark.model, ...identity, metadata } as LegacyPublicBenchmarkSubmission["model"];
   return benchmark;
 }
 
@@ -128,5 +125,55 @@ describe("model names and the weight encoding stay independent", () => {
   it("keeps fine-tune identity and arbitrary model names", () => {
     expect(summarizeBenchmark(described({ ...COMPLETE, name: "Example-Custom-Instruct-8B", base_models: ["org/Example-8B"] })).model_label).toBe("Example-Custom-Instruct-8B");
     expect(summarizeBenchmark(described({ ...COMPLETE, name: "Q4_K_M" })).model_label).toBe("Q4_K_M");
+  });
+});
+
+describe("engine-neutral model source", () => {
+  it("preserves repository and revision even with no GGUF metadata or weight hash", () => {
+    const benchmark = sourcedServingBenchmark(null);
+    validatePublicBenchmark(benchmark);
+    expect(normalizeModelInfo(benchmark)).toMatchObject({
+      format: "hf-safetensors", repository: "synthetic-org/example-model", revision: "b".repeat(40),
+      publisher: "synthetic-org", source: "huggingface", sha256: null, identity_status: "multipart",
+      name: null, quantization: null, artifact: null, base_models: [],
+    });
+    expect(summarizeBenchmark(benchmark).model_label).toBe("synthetic-org/example-model");
+    expect(summarizeBenchmark(benchmark).identity).toMatchObject({
+      model_sha256: null, model_repository: "synthetic-org/example-model", model_revision: "b".repeat(40),
+    });
+  });
+
+  it.each(["llama.cpp", "vllm", "mlx-vlm", "sglang", null])("keeps GGUF metadata for %s based only on model format", (name) => {
+    const benchmark = syntheticServingSubmission();
+    benchmark.runtime.name = name;
+    benchmark.model = { format: "gguf", status: "sha256", sha256: "a".repeat(64), size_bytes: 1024,
+      metadata: { ...COMPLETE, format: "GGUF", source: "gguf+huggingface" } };
+    validatePublicBenchmark(benchmark);
+    expect(normalizeModelInfo(benchmark)).toMatchObject({
+      format: "GGUF", quantization: "Q4_K_M", file_type: 15,
+      repository: COMPLETE.repository, sha256: "a".repeat(64), revision: null,
+    });
+  });
+
+  it("does not infer GGUF fields from another format, and a source revision is not a weight hash", () => {
+    const benchmark = sourcedServingBenchmark();
+    // Defensive projection still refuses misplaced GGUF fields from a malformed stored body.
+    benchmark.model.metadata = { ...COMPLETE, format: "GGUF", source: "gguf+huggingface" };
+    expect(normalizeModelInfo(benchmark)).toMatchObject({
+      format: "hf-safetensors", name: null, quantization: null, file_type: null,
+      repository: "synthetic-org/example-model", revision: "b".repeat(40), sha256: null,
+    });
+  });
+
+  it("leaves unsafe source repositories and noncanonical revisions unknown", () => {
+    for (const source of [
+      { kind: "huggingface" as const, repository: "org/../model", revision: "b".repeat(40) },
+      { kind: "huggingface" as const, repository: "org/model", revision: "B".repeat(40) },
+      { kind: "huggingface" as const, repository: "org/model", revision: "main" },
+    ]) {
+      const benchmark = syntheticServingSubmission();
+      benchmark.model.source = source;
+      expect(normalizeModelInfo(benchmark)).toBeNull();
+    }
   });
 });

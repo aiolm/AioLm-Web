@@ -6,53 +6,38 @@
  * resets and comparison bounds are verified directly instead of through a DOM.
  */
 
-import type { BenchmarkSetup } from "@/lib/benchmark-discovery";
-import { parsePointId, type BenchmarkPoint } from "@/lib/benchmark-points";
+import { FILTER_DEFINITIONS, TEXT_FILTER_KEYS, TEXT_FILTER_MAX_LENGTH, RANGE_FILTER_KEYS, BOOLEAN_FILTER_KEYS, DISCOVERY_MAX_QUERY_BYTES, compareCanonical, parseFilters, parseOptionsQuery, parseSettingCondition, canonicalSettingCondition, canonicalSettingDescriptor, type SettingDescriptor, type BenchmarkSetup } from "@/lib/benchmark-discovery";
+import { parsePointId, parseServingPointId, type BenchmarkPoint, type ServingBenchmarkPoint } from "@/lib/benchmark-points";
 import type { BenchmarkModelInfo } from "./benchmark-model-identity";
+import type { BenchmarkIdentity } from "@/lib/summary";
 
-export const EXPLORER_TEXT_KEYS = ["q", "model", "model_query", "publisher", "weight_bits", "quantization", "base_model", "hardware", "vendor", "gpu", "cpu", "os", "arch", "runtime", "backend", "mode", "method", "workload", "flash_attention", "cache_type_k", "cache_type_v", "split_mode"] as const;
-export const EXPLORER_RANGES = ["context", "vram", "cores", "parallel", "threads", "gpu_layers"] as const;
-export const EXPLORER_NUMERIC_KEYS = ["context_min", "context_max", "vram_min", "vram_max", "cores_min", "cores_max", "parallel_min", "parallel_max", "threads_min", "threads_max", "gpu_layers_min", "gpu_layers_max"] as const;
-export const EXPLORER_SORTS = { newest: "Newest first", oldest: "Oldest first", context_asc: "Input length: low to high", context_desc: "Input length: high to low", vram_asc: "VRAM: low to high", vram_desc: "VRAM: high to low", throughput_desc: "Decode at the basis point: fastest first", duration_asc: "Duration at the basis point: shortest first" } as const;
-/**
- * The two sorts that rank measured speed read one operating point, so they are
- * only offered once one is chosen. Ranking on a value averaged across input
- * lengths and concurrencies would put whoever measured the narrowest grid on top.
- */
-export const EXPLORER_POINT_SORTS = ["throughput_desc", "duration_asc"] as const;
-/**
- * The basis point is the reading and ranking basis, not a filter: naming it
- * changes which number each row reports, not which rows are listed. point_only
- * is the separate opt-in that does narrow the list, so it stays an ordinary filter.
- */
-export const EXPLORER_BASIS_KEYS = ["point_tokens", "point_concurrency"] as const;
-export const EXPLORER_FILTER_KEYS = [...EXPLORER_TEXT_KEYS, ...EXPLORER_NUMERIC_KEYS, ...EXPLORER_BASIS_KEYS, "point_only", "sort"] as const;
+export const EXPLORER_NUMERIC_KEYS = RANGE_FILTER_KEYS.flatMap(key => [`${key}_min`, `${key}_max`] as const);
+export const EXPLORER_SORTS = { newest: "Newest first", oldest: "Oldest first", input_bytes_asc: "Input bytes: low to high", input_bytes_desc: "Input bytes: high to low", context_asc: "Input length: low to high", context_desc: "Input length: high to low", vram_asc: "VRAM: low to high", vram_desc: "VRAM: high to low", output_rate_desc: "Observed output: fastest first", throughput_desc: "Decode at the basis point: fastest first", duration_asc: "Duration at the basis point: shortest first" } as const;
+export const EXPLORER_POINT_SORTS = ["output_rate_desc", "throughput_desc", "duration_asc"] as const;
+export const EXPLORER_BASIS_KEYS = ["point_tokens", "point_bytes", "point_concurrency", "point_max_tokens"] as const;
+export const EXPLORER_FILTER_KEYS = [...TEXT_FILTER_KEYS, ...EXPLORER_NUMERIC_KEYS, ...BOOLEAN_FILTER_KEYS, ...EXPLORER_BASIS_KEYS, "measurement", "point_only", "sort"] as const;
 export type ExplorerFilterKey = (typeof EXPLORER_FILTER_KEYS)[number];
-export type ExplorerFilters = Record<ExplorerFilterKey, string>;
-export const EXPLORER_RANGE_LABELS = { context: "Max input length (tokens)", vram: "Selected GPU VRAM (MiB)", cores: "Logical cores", parallel: "Parallel sequences", threads: "Threads", gpu_layers: "GPU layers (-1 = all)" } as const;
-export const EXPLORER_FILTER_LABELS: Record<ExplorerFilterKey, string> = {
-  q: "All-fields keyword", model: "Model label", model_query: "Model", publisher: "Publisher", weight_bits: "Weight bits", quantization: "Quantization format / method", base_model: "Base model", hardware: "Hardware", vendor: "GPU vendor", gpu: "GPU model", cpu: "CPU", os: "Operating system", arch: "Architecture", runtime: "Runtime", backend: "Backend", mode: "Execution mode", method: "Measurement method", workload: "Workload", flash_attention: "Flash attention", cache_type_k: "Key cache type", cache_type_v: "Value cache type", split_mode: "Split mode", sort: "Sort",
-  context_min: "Minimum input length", context_max: "Maximum input length", vram_min: "Minimum VRAM", vram_max: "Maximum VRAM", cores_min: "Minimum cores", cores_max: "Maximum cores", parallel_min: "Minimum parallel sequences", parallel_max: "Maximum parallel sequences", threads_min: "Minimum threads", threads_max: "Maximum threads", gpu_layers_min: "Minimum GPU layers", gpu_layers_max: "Maximum GPU layers",
-  point_tokens: "Basis input length", point_concurrency: "Basis concurrency", point_only: "Only results measured at the basis point",
-};
-/**
- * The context range and its sorts read the largest input length a result was
- * configured with, which is not the total context the server allocated. The
- * address keys stay `context_*`, so a link shared before this wording still
- * opens the same view.
- */
-export const EXPLORER_RANGE_HINTS = { context: "Matches the largest input length a result was configured with, not the total context the server allocated." } as const;
-export const EXPLORER_FILTER_PLACEHOLDERS = { model: "sha256: or unidentified", model_query: "Model name, repository or file", publisher: "Hugging Face namespace", quantization: "Q4_K_M, Q8_0", base_model: "namespace/repo", hardware: "GPU name or vendor", method: "cold-prompt-serving@1", workload: "code_python, novel_en" };
+export type ExplorerFilters = Record<ExplorerFilterKey, string> & { setting: string[] };
+export type ExplorerBasis = { prompt_tokens: number; concurrency: number } | { input_bytes: number; concurrency: number; max_output_tokens: number };
+export const EXPLORER_FILTER_LABELS: Record<ExplorerFilterKey, string> = Object.fromEntries([
+  ...Object.entries(FILTER_DEFINITIONS).flatMap(([key, definition]) => definition.kind === "range"
+    ? [[`${key}_min`, definition.label], [`${key}_max`, definition.label]]
+    : [[key, definition.label]]),
+  ["measurement", "Measurement"], ["sort", "Sort"], ["point_tokens", "Basis input length"], ["point_bytes", "Input UTF-8 bytes"],
+  ["point_concurrency", "Basis concurrency"], ["point_max_tokens", "Maximum output token request"], ["point_only", "Only results measured at the basis point"],
+]) as Record<ExplorerFilterKey, string>;
 
 export function invalidExplorerRanges(filters: ExplorerFilters): string[] {
-  return EXPLORER_RANGES.filter(range => {
-    const low = filters[`${range}_min`].trim();
-    const high = filters[`${range}_max`].trim();
+  return RANGE_FILTER_KEYS.filter(range => {
+    const low = filters[`${range}_min`].trim(), high = filters[`${range}_max`].trim();
     const invalid = (value: string) => value !== "" && (!/^-?\d+$/.test(value) || !Number.isSafeInteger(Number(value)) || Number(value) < (range === "gpu_layers" ? -1 : 0));
     return invalid(low) || invalid(high) || (low !== "" && high !== "" && Number(low) > Number(high));
   });
 }
-
+export function invalidExplorerDraft(filters: ExplorerFilters): boolean {
+  if (invalidExplorerRanges(filters).length) return true;
+  try { parseFilters(new URLSearchParams(buildExplorerSearch({ filters, cursor: null }))); return false; } catch { return true; }
+}
 export function buildExplorerOptionsPath(field: string, value: string, filters: ExplorerFilters): string {
   const params = new URLSearchParams(buildExplorerSearch({ filters, cursor: null }));
   params.delete(field);
@@ -61,12 +46,14 @@ export function buildExplorerOptionsPath(field: string, value: string, filters: 
   params.set("option_query", value.trim().slice(0, 120));
   return `/v1/benchmark-runs/options?${params}`;
 }
-
-/**
- * Suggestions for the basis point: every point the other conditions still
- * allow. The basis itself is excluded, so the list does not collapse to the
- * point already chosen, and sorting is irrelevant to a set of suggestions.
- */
+export function buildExplorerSettingOptionsPath(field: "setting" | "setting_value", filters: ExplorerFilters, editingIndex: number, descriptor?: SettingDescriptor): string {
+  const remaining = { ...filters, setting: filters.setting.filter((_, index) => index !== editingIndex) };
+  const params = new URLSearchParams(buildExplorerSearch({ filters: remaining, cursor: null }));
+  params.delete("sort");
+  params.set("field", field);
+  if (descriptor) params.set("option_setting", canonicalSettingDescriptor(descriptor));
+  return `/v1/benchmark-runs/options?${params}`;
+}
 export function buildExplorerPointOptionsPath(filters: ExplorerFilters): string {
   const params = new URLSearchParams(buildExplorerSearch({ filters, cursor: null }));
   for (const key of [...EXPLORER_BASIS_KEYS, "point_only", "sort"]) params.delete(key);
@@ -75,7 +62,7 @@ export function buildExplorerPointOptionsPath(filters: ExplorerFilters): string 
 }
 
 /** The list API accepts at most 120 characters per text filter. */
-export const EXPLORER_FILTER_MAX_LENGTH = 120;
+export const EXPLORER_FILTER_MAX_LENGTH = TEXT_FILTER_MAX_LENGTH;
 
 /** Page size requested from the list API, whose own default is 25 and maximum 100. */
 export const EXPLORER_PAGE_SIZE = 25;
@@ -89,24 +76,21 @@ export const EXPLORER_COMPARE_LIMIT = 3;
 /** Cursors are opaque base64url strings; anything else is treated as absent. */
 export const EXPLORER_CURSOR_MAX_LENGTH = 2048;
 
-export const EMPTY_EXPLORER_FILTERS = Object.fromEntries(EXPLORER_FILTER_KEYS.map(key => [key, ""])) as ExplorerFilters;
-
-function normalizeValue(value: string): string {
-  return value.trim().slice(0, EXPLORER_FILTER_MAX_LENGTH);
+export const EMPTY_EXPLORER_FILTERS = { ...Object.fromEntries(EXPLORER_FILTER_KEYS.map(key => [key, ""])), setting: [] } as unknown as ExplorerFilters;
+function normalizeValue(value: string): string { return value.trim(); }
+function normalizeSettings(settings: string[]): string[] {
+  return [...new Set(settings.map(value => { try { return canonicalSettingCondition(parseSettingCondition(value)); } catch { return value; } }))].sort(compareCanonical);
 }
-
 export function normalizeExplorerFilters(filters: ExplorerFilters): ExplorerFilters {
-  return Object.fromEntries(EXPLORER_FILTER_KEYS.map(key => [key, normalizeValue(filters[key] ?? "")])) as ExplorerFilters;
+  return { ...Object.fromEntries(EXPLORER_FILTER_KEYS.map(key => [key, normalizeValue(filters[key] ?? "")])), setting: normalizeSettings(filters.setting ?? []) } as ExplorerFilters;
 }
-
 export function sameExplorerFilters(a: ExplorerFilters, b: ExplorerFilters): boolean {
-  return EXPLORER_FILTER_KEYS.every((key) => a[key] === b[key]);
+  return EXPLORER_FILTER_KEYS.every(key => a[key] === b[key]) && JSON.stringify(normalizeSettings(a.setting)) === JSON.stringify(normalizeSettings(b.setting));
 }
-
-/** The named basis point, or null when the reader has not named one. */
-export function basisPointOf(filters: ExplorerFilters): { prompt_tokens: number; concurrency: number } | null {
-  if (!filters.point_tokens || !filters.point_concurrency) return null;
-  return parsePointId(`${filters.point_tokens}/${filters.point_concurrency}`);
+export function basisPointOf(filters: ExplorerFilters): ExplorerBasis | null {
+  return filters.measurement === "legacy"
+    ? parsePointId(`${filters.point_tokens}/${filters.point_concurrency}`)
+    : parseServingPointId(`b${filters.point_bytes}/c${filters.point_concurrency}/o${filters.point_max_tokens}`);
 }
 
 export function isPointSort(sort: string): boolean {
@@ -122,31 +106,16 @@ function narrowingKeys(): readonly ExplorerFilterKey[] {
 }
 
 export function hasActiveExplorerFilters(filters: ExplorerFilters): boolean {
-  return narrowingKeys().some((key) => filters[key] !== "");
+  return narrowingKeys().some(key => filters[key] !== "") || filters.setting.length > 0;
 }
-
-export interface ActiveExplorerFilter {
-  key: ExplorerFilterKey;
-  label: string;
-  value: string;
-}
-
-/**
- * Applied filters rendered as removable chips, in a stable field order. The two
- * halves of the basis point are left out: they name one point together, so
- * removing one would leave half a point behind, and the control that chose it
- * is where it is changed.
- */
+export interface ActiveExplorerFilter { key: ExplorerFilterKey; label: string; value: string }
 export function activeExplorerFilters(filters: ExplorerFilters): ActiveExplorerFilter[] {
-  return narrowingKeys().filter((key) => filters[key] !== "").map((key) => ({
-    key,
-    label: EXPLORER_FILTER_LABELS[key],
-    value: key === "weight_bits" ? `${filters[key]} bit` : filters[key],
+  return narrowingKeys().filter(key => filters[key] !== "").map(key => ({
+    key, label: EXPLORER_FILTER_LABELS[key], value: key === "weight_bits" ? `${filters[key]} bit` : filters[key],
   }));
 }
-
 export function clearExplorerFilter(filters: ExplorerFilters, key: ExplorerFilterKey): ExplorerFilters {
-  return { ...filters, [key]: "" };
+  return repairBasis({ ...filters, [key]: "" });
 }
 
 const CURSOR_PATTERN = /^[A-Za-z0-9_-]+$/;
@@ -165,28 +134,27 @@ export interface ExplorerLocation {
 }
 
 /**
- * A basis point is a pair or it is nothing. A hand-edited or stale address that
- * carries half of one, an unreadable one, or a point-ranked sort with no point
- * to rank at, is repaired here rather than forwarded to an API that would
- * reject the whole request and leave the page with nothing to show.
+ * Serving points require bytes, concurrency and cap; legacy points require
+ * tokens and concurrency. Repair incomplete or unreadable tuples without ever
+ * reinterpreting a token length as bytes. Point-ranked sorts need a whole tuple.
  */
 function repairBasis(filters: ExplorerFilters): ExplorerFilters {
   const repaired = { ...filters };
   if (basisPointOf(repaired) === null) {
-    repaired.point_tokens = "";
-    repaired.point_concurrency = "";
+    for (const key of EXPLORER_BASIS_KEYS) repaired[key] = "";
+    repaired.point_only = "";
+    if (isPointSort(repaired.sort)) repaired.sort = "";
   }
-  if (!repaired.point_tokens) repaired.point_only = "";
   if (repaired.point_only !== "1") repaired.point_only = "";
-  if (!repaired.point_tokens && isPointSort(repaired.sort)) repaired.sort = "";
   return repaired;
 }
 
 /** Read a shared or bookmarked address back into filters and a page cursor. */
 export function parseExplorerLocation(search: string): ExplorerLocation {
   const params = new URLSearchParams(search);
-  const filters: ExplorerFilters = { ...EMPTY_EXPLORER_FILTERS };
+  const filters: ExplorerFilters = { ...EMPTY_EXPLORER_FILTERS, setting: params.getAll("setting") };
   for (const key of EXPLORER_FILTER_KEYS) filters[key] = normalizeValue(params.get(key) ?? "");
+  filters.setting = normalizeSettings(filters.setting);
   if (!(filters.sort in EXPLORER_SORTS) || filters.sort === "newest") filters.sort = "";
   return { filters: repairBasis(filters), cursor: sanitizeExplorerCursor(params.get("cursor")) };
 }
@@ -198,6 +166,7 @@ export function buildExplorerSearch(location: ExplorerLocation): string {
     const value = normalizeValue(location.filters[key] ?? "");
     if (value) params.set(key, value);
   }
+  for (const condition of normalizeSettings(location.filters.setting)) params.append("setting", condition);
   const cursor = sanitizeExplorerCursor(location.cursor);
   if (cursor) params.set("cursor", cursor);
   const query = params.toString();
@@ -207,13 +176,24 @@ export function buildExplorerSearch(location: ExplorerLocation): string {
 /** List request for the current view. Summary fields only; measurement rows are never fetched here. */
 export function buildExplorerRequestPath(location: ExplorerLocation, limit: number = EXPLORER_PAGE_SIZE): string {
   const params = new URLSearchParams({ limit: String(limit) });
-  for (const key of EXPLORER_FILTER_KEYS) {
-    const value = normalizeValue(location.filters[key] ?? "");
-    if (value) params.set(key, value);
-  }
-  const cursor = sanitizeExplorerCursor(location.cursor);
-  if (cursor) params.set("cursor", cursor);
+  new URLSearchParams(buildExplorerSearch(location)).forEach((value, key) => params.append(key, value));
   return `/v1/benchmark-runs?${params.toString()}`;
+}
+
+/** All builders percent-encode their query. The wire bound includes cursor/facet metadata. */
+export function isExplorerRequestWithinBounds(path: string): boolean {
+  return path.slice(path.indexOf("?") + 1).length <= DISCOVERY_MAX_QUERY_BYTES;
+}
+export const EXPLORER_QUERY_LIMIT_MESSAGE = "Shorten or remove conditions to page or request suggestions: the complete query exceeds the URL limit.";
+export const EXPLORER_INCOMPLETE_MESSAGE = "Complete the other conditions before requesting suggestions.";
+export function explorerOptionsRequestError(path: string): string | undefined {
+  if (!isExplorerRequestWithinBounds(path)) return EXPLORER_QUERY_LIMIT_MESSAGE;
+  try {
+    parseOptionsQuery(new URLSearchParams(path.slice(path.indexOf("?") + 1)));
+    return undefined;
+  } catch {
+    return EXPLORER_INCOMPLETE_MESSAGE;
+  }
 }
 
 /** Page hosting the client-side explorer. */
@@ -253,6 +233,7 @@ export function readExplorerHistory(historyState: unknown): string[] {
 
 /** Public list fields used by the explorer. The list API exposes no submission ids and no local file paths; the repository-relative artifact filename is public when reported. */
 export interface ExplorerSummary {
+  schema_version?: 1 | 2 | 3;
   model_label: string;
   hardware_label: string;
   method_label: string;
@@ -280,6 +261,9 @@ export interface ExplorerSummary {
    */
   model_info?: BenchmarkModelInfo | null;
   setup?: BenchmarkSetup;
+  identity?: BenchmarkIdentity;
+  input_unit?: "utf8_bytes";
+  serving_points?: ServingBenchmarkPoint[];
 }
 
 export interface ExplorerItem {
@@ -332,6 +316,8 @@ export type ExplorerAction =
   | { type: "route"; search: string; history?: string[] }
   | { type: "location"; search: string; history?: string[] }
   | { type: "draft"; key: ExplorerFilterKey; value: string }
+  | { type: "settings"; value: string[] }
+  | { type: "removeSetting"; index: number }
   | { type: "sort"; value: string }
   | { type: "basisPoint"; value: string }
   | { type: "pointOnly"; value: boolean }
@@ -370,10 +356,25 @@ export function explorerReducer(state: ExplorerState, action: ExplorerAction): E
         compare: state.compare,
       };
     }
-    case "draft":
-      return { ...state, draft: { ...state.draft, [action.key]: action.value } };
+    case "draft": {
+      const draft = { ...state.draft, [action.key]: action.value };
+      if (action.key === "measurement") {
+        for (const key of EXPLORER_BASIS_KEYS) draft[key] = "";
+        draft.point_only = "";
+        draft.sort = "";
+      }
+      return { ...state, draft };
+    }
+    case "settings":
+      return { ...state, draft: { ...state.draft, setting: action.value } };
+    case "removeSetting": {
+      const value = state.applied.setting[action.index];
+      return { ...state, applied: { ...state.applied, setting: state.applied.setting.filter((_, index) => index !== action.index) },
+        draft: { ...state.draft, setting: state.draft.setting.filter(condition => condition !== value) }, cursor: null, history: [] };
+    }
     case "sort": {
       const sort = action.value !== "newest" && Object.hasOwn(EXPLORER_SORTS, action.value) ? action.value : "";
+      if (state.applied.measurement === "legacy" ? sort.startsWith("input_bytes") || sort === "output_rate_desc" : sort.startsWith("context") || sort === "throughput_desc") return state;
       // Ranking measured speed needs a point to rank at; without one the order is refused.
       if (isPointSort(sort) && basisPointOf(state.applied) === null) return state;
       if (sort === state.applied.sort) return state;
@@ -383,10 +384,13 @@ export function explorerReducer(state: ExplorerState, action: ExplorerAction): E
     case "basisPoint": {
       // The basis decides which measurement every row reports, so it applies at
       // once like sorting does, without submitting unfinished filter edits.
-      const point = parsePointId(action.value);
+      const legacy = state.applied.measurement === "legacy";
+      const point = legacy ? parsePointId(action.value) : parseServingPointId(action.value);
       const next: ExplorerFilters = {
         ...state.applied,
-        point_tokens: point ? String(point.prompt_tokens) : "",
+        point_tokens: point && "prompt_tokens" in point ? String(point.prompt_tokens) : "",
+        point_bytes: point && "input_bytes" in point ? String(point.input_bytes) : "",
+        point_max_tokens: point && "max_output_tokens" in point ? String(point.max_output_tokens) : "",
         point_concurrency: point ? String(point.concurrency) : "",
       };
       // Dropping the basis drops what point_only narrowed to and what the two
@@ -396,16 +400,16 @@ export function explorerReducer(state: ExplorerState, action: ExplorerAction): E
         if (isPointSort(next.sort)) next.sort = "";
       }
       if (sameExplorerFilters(next, state.applied)) return state;
-      return { ...state, applied: next, draft: { ...state.draft, ...next }, cursor: null, history: [] };
+      return { ...state, applied: next, draft: { ...state.draft, ...Object.fromEntries(EXPLORER_BASIS_KEYS.map(key => [key, next[key]])), point_only: next.point_only, sort: next.sort }, cursor: null, history: [] };
     }
     case "pointOnly": {
-      const value = action.value && state.applied.point_tokens ? "1" : "";
+      const value = action.value && basisPointOf(state.applied) ? "1" : "";
       if (value === state.applied.point_only) return state;
       const next = { ...state.applied, point_only: value };
       return { ...state, applied: next, draft: { ...state.draft, point_only: value }, cursor: null, history: [] };
     }
     case "apply": {
-      if (invalidExplorerRanges(state.draft).length) return state;
+      if (invalidExplorerDraft(state.draft)) return state;
       const next = normalizeExplorerFilters(state.draft);
       // An unchanged filter set keeps the current page; the caller re-requests it.
       if (sameExplorerFilters(next, state.applied)) return { ...state, draft: next };
@@ -433,6 +437,7 @@ export function explorerReducer(state: ExplorerState, action: ExplorerAction): E
     case "nextPage": {
       const cursor = sanitizeExplorerCursor(action.cursor);
       if (!cursor) return state;
+      if (!isExplorerRequestWithinBounds(buildExplorerRequestPath({ filters: state.applied, cursor }))) return state;
       return { ...state, history: pushExplorerHistory(state.history, state.cursor), cursor };
     }
     case "firstPage":

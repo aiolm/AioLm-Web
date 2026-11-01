@@ -10,7 +10,7 @@ export const getPublicBenchmark = cache(async (id: string) => {
   const b = run.benchmark;
   return { state: 'public' as const, data: {
     id: run.public_id,
-    benchmark: { model: b.model, runtime: b.runtime, workload: b.workload, environment: b.environment, execution: b.execution, method: b.method, app_version: b.app_version, status: b.measurements?.status ?? null },
+    benchmark: { schema_version: b.schema_version, model: b.model, runtime: b.runtime, workload: b.workload, environment: b.environment, execution: b.execution, method: b.method, app_version: b.app_version, status: b.measurements?.status ?? null },
     summary: run.summary, description_md: run.description_md, revision: run.revision,
     created_at: run.created_at, updated_at: run.updated_at,
   } };

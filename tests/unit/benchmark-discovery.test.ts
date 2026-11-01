@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import type { LegacyPublicBenchmarkSubmission, PublicBenchmarkRow } from "@aiolm/benchmark-contracts";
 import { beforeEach, describe, expect, it } from "vitest";
 import { syntheticSubmission } from "@/lib/fixtures";
 import { matchesFilters, normalizeSetup, withRuntimeBuild, numericValue, parseFilters, parseOptionsQuery, sortValue, SORT_VALUES, TEXT_FILTER_MAX_LENGTH, textValues } from "@/lib/benchmark-discovery";
@@ -6,8 +7,8 @@ import { summarizeBenchmark } from "@/lib/summary";
 import { decodeDiscoveryCursor, encodeDiscoveryCursor } from "@/lib/pagination";
 import { listSql, literalPattern, optionsSql } from "@/server/benchmark-discovery-sql";
 import { InMemoryBenchmarkStore } from "@/server/memory-store";
-import { GET as list } from "@/app/v1/benchmark-runs/route";
-import { GET as options } from "@/app/v1/benchmark-runs/options/route";
+import { GET as listRequest } from "@/app/v1/benchmark-runs/route";
+import { GET as optionsRequest } from "@/app/v1/benchmark-runs/options/route";
 import { freshStore, setupTestEnv } from "./helpers";
 import type { StoredRun } from "@/server/repository";
 import type { BenchmarkFilters, BenchmarkSetup } from "@/lib/benchmark-discovery";
@@ -15,9 +16,19 @@ import type { BenchmarkFilters, BenchmarkSetup } from "@/lib/benchmark-discovery
 setupTestEnv();
 let store: InMemoryBenchmarkStore;
 beforeEach(() => { store = freshStore(); });
+// This suite's original fixtures are legacy token measurements; API requests
+// must explicitly select that scope just like direct store calls below.
+function list(request: Request) {
+  const url = new URL(request.url); url.searchParams.set("measurement", "legacy");
+  return listRequest(new Request(url, request));
+}
+function options(request: Request) {
+  const url = new URL(request.url); url.searchParams.set("measurement", "legacy");
+  return optionsRequest(new Request(url, request));
+}
 // The second argument drives the context condition, which reads the largest
 // configured input length. The raw allocation keeps the fixture's 2048 throughout.
-function run(id: string, promptLength: number | null = 512): StoredRun {
+function run(id: string, promptLength: number | null = 512): StoredRun & { benchmark: LegacyPublicBenchmarkSubmission } {
   const benchmark = syntheticSubmission();
   const summary = summarizeBenchmark(benchmark);
   summary.setup!.prompt_length = promptLength;
@@ -38,8 +49,8 @@ describe("discovery setup", () => {
     const summary = summarizeBenchmark(b);
     expect(summary.hardware_label).toBe(label);
     expect(summary.setup!.gpus).toEqual([...new Set(names)]);
-    expect(matchesFilters(summary, { hardware: label })).toBe(true);
-    expect(matchesFilters(summary, { q: label })).toBe(true);
+    expect(matchesFilters(summary, { measurement: 'legacy', hardware: label })).toBe(true);
+    expect(matchesFilters(summary, { measurement: 'legacy', q: label })).toBe(true);
   });
   it("counts vendor and unknown fallbacks without using installed GPUs", () => {
     const b = syntheticSubmission();
@@ -55,8 +66,8 @@ describe("discovery setup", () => {
     r.benchmark.environment!.execution = { mode: "selected", selection_complete: true, selected_gpus: [gpu("R9700", "AMD", 32768), gpu("R9700", "AMD", 32768)] };
     r.summary = summarizeBenchmark(r.benchmark);
     store.runs.set(r.public_id, r);
-    expect(await store.listOptions("hardware", "R9700", {})).toEqual({ options: [{ value: "R9700 x 2", count: 1 }], has_more: false });
-    expect((await store.listRuns({ hardware: "R9700 x 2" }, 25, null)).items.map(item => item.public_id)).toEqual([r.public_id]);
+    expect(await store.listOptions("hardware", "R9700", { measurement: 'legacy',  })).toEqual({ options: [{ value: "R9700 x 2", count: 1 }], has_more: false });
+    expect((await store.listRuns({ measurement: 'legacy', hardware: "R9700 x 2" }, 25, null)).items.map(item => item.public_id)).toEqual([r.public_id]);
   });
   it("keeps runtime/settings without environment and never substitutes installed GPUs", () => {
     const b = syntheticSubmission({ environment: null });
@@ -69,7 +80,7 @@ describe("discovery setup", () => {
     expect(normalizeSetup(b)).toMatchObject({ vendors: ["V"], gpus: ["A", "B"], vram_mb: 12288 });
     b.environment!.execution.selection_complete = false; expect(normalizeSetup(b).vram_mb).toBeNull();
     b.environment!.execution.selection_complete = true; b.environment!.execution.selected_gpus[0].vram_mb = null; expect(normalizeSetup(b).vram_mb).toBeNull();
-    expect(matchesFilters(summarizeBenchmark(b), { vram_min: 0 })).toBe(false);
+    expect(matchesFilters(summarizeBenchmark(b), { measurement: 'legacy', vram_min: 0 })).toBe(false);
   });
 });
 
@@ -98,16 +109,16 @@ describe("runtime build", () => {
   });
   it("lists legacy and current summaries with the build their submission recorded", async () => {
     for (const r of [legacy("old", "b10638"), built("new", "b10640"), legacy("unrecorded", null)]) store.runs.set(r.public_id, r);
-    const listed = new Map((await store.listRuns({}, 10, null)).items.map((i) => [i.public_id, i.summary.setup?.runtime_build]));
+    const listed = new Map((await store.listRuns({ measurement: 'legacy',  }, 10, null)).items.map((i) => [i.public_id, i.summary.setup?.runtime_build]));
     expect(Object.fromEntries(listed)).toEqual({ old: "b10638", new: "b10640", unrecorded: null });
-    expect((await store.listRuns({ q: "10640" }, 10, null)).items.map((i) => i.public_id)).toEqual(["new"]);
+    expect((await store.listRuns({ measurement: 'legacy', q: "10640" }, 10, null)).items.map((i) => i.public_id)).toEqual(["new"]);
   });
   it("searches a legacy summary by the build its benchmark recorded", async () => {
     // An explicit null is the summary's own answer; only a missing key falls back to the benchmark.
     const explicit = built("explicit", null); explicit.benchmark.runtime.build = "b10638";
     for (const r of [legacy("old", "b10638"), explicit, built("other", "b20000")]) store.runs.set(r.public_id, r);
-    expect((await store.listRuns({ q: "10638" }, 10, null)).items.map((i) => i.public_id)).toEqual(["old"]);
-    expect((await store.listOptions("os", "", { q: "10638" })).options).toEqual([{ value: "synthetic", count: 1 }]);
+    expect((await store.listRuns({ measurement: 'legacy', q: "10638" }, 10, null)).items.map((i) => i.public_id)).toEqual(["old"]);
+    expect((await store.listOptions("os", "", { measurement: 'legacy', q: "10638" })).options).toEqual([{ value: "synthetic", count: 1 }]);
   });
   it("leaves a corrupt setup alone instead of failing the list", () => {
     const corrupt = { summary: { ...built("corrupt", "b1").summary, setup: "corrupt" as unknown as BenchmarkSetup } };
@@ -118,7 +129,7 @@ describe("runtime build", () => {
 describe("discovery query validation", () => {
   it.each(["context_min=NaN", "vram_min=1.2", "cores_min=-1", "threads_min=9007199254740992", "parallel_min=5&parallel_max=4", "gpu_layers_min=-2", "sort=random", `q=${"x".repeat(121)}`])("rejects %s", query => expect(() => parseFilters(new URLSearchParams(query))).toThrow());
   it("normalizes sentinel, free text and literal wildcard text", () => {
-    expect(parseFilters(new URLSearchParams("gpu_layers_min=-1&gpu=Other%25_%5C&sort=newest"))).toEqual({ gpu_layers_min: -1, gpu: "Other%_\\" });
+    expect(parseFilters(new URLSearchParams("measurement=legacy&gpu_layers_min=-1&gpu=Other%25_%5C&sort=newest"))).toEqual({ measurement: "legacy", gpu_layers_min: -1, gpu: "Other%_\\" });
     expect(literalPattern("a%_\\")).toBe("%a\\%\\_\\\\%");
     expect(parseOptionsQuery(new URLSearchParams("field=gpu&gpu=old&vendor=V&option_query=new"))).toEqual({ field: "gpu", query: "new", filters: { vendor: "V" } });
   });
@@ -131,30 +142,30 @@ describe("discovery query validation", () => {
 });
 
 describe("discovery API and memory queries", () => {
-  it.each(SORT_VALUES)("pages %s without gaps, repeats or hidden records", async sort => {
+  it.each(SORT_VALUES.filter(s => !s.startsWith("input_bytes_") && s !== "output_rate_desc"))("pages %s without gaps, repeats or hidden records", async sort => {
     for (let i = 0; i < 7; i++) { const r = run(`id${i}`, i === 0 ? null : i % 3); r.summary.setup!.vram_mb = i === 0 ? null : i % 3; r.summary.mean_tg_tps = i === 0 ? null : i % 3; r.summary.mean_e2e_ms = i === 0 ? null : i % 3; store.runs.set(r.public_id, r); }
     const hidden = run("hidden"); hidden.hidden = true; store.runs.set("hidden", hidden);
     const deleted = run("deleted"); deleted.deleted = true; store.runs.set("deleted", deleted);
-    const filters: BenchmarkFilters = { sort };
-    const expected = (await store.listRuns(filters, 100, null)).items.map(r => r.public_id);
+    const filters: BenchmarkFilters = { sort, measurement: "legacy" };
+    const expected = (await store.listRuns({ ...filters, measurement: 'legacy' }, 100, null)).items.map(r => r.public_id);
     const ids: string[] = []; let cursor = null;
-    do { const page = await store.listRuns(filters, 2, cursor); ids.push(...page.items.map(r => r.public_id)); cursor = decodeDiscoveryCursor(page.next_cursor, filters); } while (cursor);
+    do { const page = await store.listRuns({ ...filters, measurement: 'legacy' }, 2, cursor); ids.push(...page.items.map(r => r.public_id)); cursor = decodeDiscoveryCursor(page.next_cursor, filters); } while (cursor);
     expect(ids).toEqual(expected); expect(new Set(ids).size).toBe(7);
     if (sort !== "newest" && sort !== "oldest") expect(ids.at(-1)).toBe("id0");
     if (sort === "context_asc") expect(ids).toEqual(["id6", "id3", "id4", "id1", "id5", "id2", "id0"]);
   });
   it("searches all options, ignores own filter, counts runs and honors visibility", async () => {
     for (let i = 0; i < 40; i++) { const r = run(`id${i}`); r.summary.setup!.os = `OS${String(i).padStart(2,"0")}`; store.runs.set(r.public_id, r); }
-    expect(await store.listOptions("os", "", { os: "absent" })).toMatchObject({ has_more: true, options: expect.any(Array) });
-    expect((await store.listOptions("os", "", {})).options).toHaveLength(30);
-    expect(await store.listOptions("os", "OS39", {})).toEqual({ options: [{ value: "OS39", count: 1 }], has_more: false });
-    store.runs.get("id39")!.hidden = true; expect((await store.listOptions("os", "OS39", {})).options).toEqual([]);
-    store.runs.get("id38")!.deleted = true; expect((await store.listOptions("os", "OS38", {})).options).toEqual([]);
-    expect((await store.listOptions("os", "", { cores_min: 8 })).options).toEqual([]);
+    expect(await store.listOptions("os", "", { measurement: 'legacy', os: "absent" })).toMatchObject({ has_more: true, options: expect.any(Array) });
+    expect((await store.listOptions("os", "", { measurement: 'legacy',  })).options).toHaveLength(30);
+    expect(await store.listOptions("os", "OS39", { measurement: 'legacy',  })).toEqual({ options: [{ value: "OS39", count: 1 }], has_more: false });
+    store.runs.get("id39")!.hidden = true; expect((await store.listOptions("os", "OS39", { measurement: 'legacy',  })).options).toEqual([]);
+    store.runs.get("id38")!.deleted = true; expect((await store.listOptions("os", "OS38", { measurement: 'legacy',  })).options).toEqual([]);
+    expect((await store.listOptions("os", "", { measurement: 'legacy', cores_min: 8 })).options).toEqual([]);
   });
   it("pairs vendor options with selected devices and counts duplicate devices once per run", async () => {
     const r = run("multi"); r.benchmark.environment!.execution.mode = "selected"; r.benchmark.environment!.execution.selected_gpus = [gpu("A", "Alpha", 1), gpu("B", "Beta", 2), gpu("A", "Alpha", 1)]; r.summary = summarizeBenchmark(r.benchmark); store.runs.set("multi", r);
-    expect(await store.listOptions("gpu", "", { vendor: "Alpha" })).toEqual({ options: [{ value: "A", count: 1 }], has_more: false });
+    expect(await store.listOptions("gpu", "", { measurement: 'legacy', vendor: "Alpha" })).toEqual({ options: [{ value: "A", count: 1 }], has_more: false });
   });
   it.each(["context_min=bad", "context_min=9&context_max=1", "sort=invalid", "cursor=broken"])("returns API 400 for %s", async query => expect((await list(new Request(`http://localhost/v1/benchmark-runs?${query}`))).status).toBe(400));
   it("returns no-store public summaries and validates option fields", async () => {
@@ -168,10 +179,10 @@ describe("discovery API and memory queries", () => {
 
 it("parameterizes SQL with literal search patterns", () => {
   const text = "x%' OR true --";
-  const statement = listSql({ gpu: text, sort: "context_asc" }, 25, { createdAt: "2026-01-01", publicId: "id", value: 2048 });
+  const statement = listSql({ measurement: 'legacy', gpu: text, sort: "context_asc" }, 25, { createdAt: "2026-01-01", publicId: "id", value: 2048 });
   expect(statement.query).not.toContain(text);
   expect(statement.values).toContain(literalPattern(text));
-  expect(optionsSql("os", "beyond", { os: "ignored" }).values).toEqual(["%beyond%"]);
+  expect(optionsSql("os", "beyond", { measurement: 'legacy', os: "ignored" }).values).toEqual(["%beyond%"]);
 });
 
 it("matches all supported setup strings and numeric ranges without invented defaults", () => {
@@ -180,17 +191,17 @@ it("matches all supported setup strings and numeric ranges without invented defa
   b.execution.settings = { threads: 3, threads_batch: null, gpu_layers: -1, flash_attention: "on", cache_type_k: "q8_0", cache_type_v: "f16", split_mode: "layer", tensor_split: null };
   const summary = summarizeBenchmark(b);
   const filters: BenchmarkFilters = { q: "revision-example", model: "identified", hardware: "_%\\", vendor: "example", gpu: "gpu_", cpu: "synthetic", os: "SYNTHETIC", arch: "x64", runtime: "llama", backend: "vulkan", mode: "selected", method: "cold-prompt", workload: "python", flash_attention: "on", cache_type_k: "q8", cache_type_v: "f16", split_mode: "layer", context_min: 512, context_max: 512, vram_min: 8192, cores_max: 4, parallel_min: 1, threads_min: 3, gpu_layers_min: -1, gpu_layers_max: -1 };
-  expect(matchesFilters(summary, filters)).toBe(true);
-  expect(matchesFilters(summary, { gpu: "missing%" })).toBe(false);
-  expect(matchesFilters(summary, { context_min: 2048, context_max: 2048 })).toBe(false);
-  expect(matchesFilters(summary, { threads_min: 4 })).toBe(false);
-  expect(matchesFilters(summary, { q: "complete" })).toBe(true);
+  expect(matchesFilters(summary, { ...filters, measurement: 'legacy' })).toBe(true);
+  expect(matchesFilters(summary, { measurement: 'legacy', gpu: "missing%" })).toBe(false);
+  expect(matchesFilters(summary, { measurement: 'legacy', context_min: 2048, context_max: 2048 })).toBe(false);
+  expect(matchesFilters(summary, { measurement: 'legacy', threads_min: 4 })).toBe(false);
+  expect(matchesFilters(summary, { measurement: 'legacy', q: "complete" })).toBe(true);
 });
 
 it("orders timestamps consistently and rejects using an API cursor after filters change", async () => {
   const early = run("early"), late = run("late"); late.created_at = "2026-01-02T00:00:00Z";
   store.runs.set("early", early); store.runs.set("late", late);
-  expect((await store.listRuns({ sort: "oldest" }, 10, null)).items.map(r => r.public_id)).toEqual(["early", "late"]);
+  expect((await store.listRuns({ measurement: 'legacy', sort: "oldest" }, 10, null)).items.map(r => r.public_id)).toEqual(["early", "late"]);
   const page = await (await list(new Request("http://localhost/v1/benchmark-runs?limit=1"))).json();
   expect(page.items[0].public_id).toBe("late");
   const changed = await list(new Request(`http://localhost/v1/benchmark-runs?os=other&cursor=${page.next_cursor}`));
@@ -232,7 +243,7 @@ describe("configured input context", () => {
     expect(summary.setup!.prompt_length).toBeNull();
     expect(sortValue(summary, { sort: "context_asc" })).toBeNull();
     for (const filters of [{ context_min: 0 }, { context_max: 8704 }, { context_min: 8704, context_max: 8704 }]) {
-      expect(matchesFilters(summary, filters)).toBe(false);
+      expect(matchesFilters(summary, { ...filters, measurement: 'legacy' })).toBe(false);
     }
   });
 
@@ -243,22 +254,22 @@ describe("configured input context", () => {
     const summary = summarizeBenchmark(b);
     expect(numericValue(summary, "context")).toBe(4096);
     expect(sortValue(summary, { sort: "context_desc" })).toBe(4096);
-    expect(matchesFilters(summary, { context_min: 4096, context_max: 4096 })).toBe(true);
-    expect(matchesFilters(summary, { context_min: 8192 })).toBe(false);
-    expect(matchesFilters(summary, { context_min: 16896, context_max: 16896 })).toBe(false);
+    expect(matchesFilters(summary, { measurement: 'legacy', context_min: 4096, context_max: 4096 })).toBe(true);
+    expect(matchesFilters(summary, { measurement: 'legacy', context_min: 8192 })).toBe(false);
+    expect(matchesFilters(summary, { measurement: 'legacy', context_min: 16896, context_max: 16896 })).toBe(false);
   });
 
   it("orders a page by the configured input length while allocations disagree", async () => {
     for (const [id, promptLength, context] of [["small", 512, 16896], ["large", 4096, 2048]] as const) {
       const r = run(id, promptLength); r.summary.setup!.context_size = context; store.runs.set(id, r);
     }
-    expect((await store.listRuns({ sort: "context_asc" }, 10, null)).items.map(r => r.public_id)).toEqual(["small", "large"]);
-    expect((await store.listRuns({ context_min: 4096 }, 10, null)).items.map(r => r.public_id)).toEqual(["large"]);
+    expect((await store.listRuns({ measurement: 'legacy', sort: "context_asc" }, 10, null)).items.map(r => r.public_id)).toEqual(["small", "large"]);
+    expect((await store.listRuns({ measurement: 'legacy', context_min: 4096 }, 10, null)).items.map(r => r.public_id)).toEqual(["large"]);
   });
 });
 
 describe("prefill average", () => {
-  const rowsWith = (overrides: Array<Partial<ReturnType<typeof syntheticSubmission>["measurements"]["rows"][number]>>) => {
+  const rowsWith = (overrides: Array<Partial<PublicBenchmarkRow>>) => {
     const base = syntheticSubmission().measurements.rows[0]!;
     return overrides.map(o => ({ ...base, ...o }));
   };
@@ -315,13 +326,13 @@ describe("context cursor meaning", () => {
     }
   });
 
-  it("keeps cursors for every query that does not read context", () => {
+  it("retires every old binding globally, including queries that never read context", () => {
     const unaffected: BenchmarkFilters[] = [
       {}, { sort: "oldest" }, { sort: "vram_desc" }, { sort: "throughput_desc" },
       { sort: "duration_asc" }, { os: "linux" }, { vram_min: 1024 }, { cores_min: 4, sort: "newest" },
     ];
     for (const filters of unaffected) {
-      expect(decodeDiscoveryCursor(legacyCursor(filters, 1024), filters)?.value).toBe(1024);
+      expect(() => decodeDiscoveryCursor(legacyCursor(filters, 1024), filters)).toThrow();
     }
   });
 });
@@ -345,16 +356,16 @@ describe("model metadata discovery", () => {
     "filters on %s and leaves a run that recorded no metadata out", async (key, value) => {
       store.runs.set("described", described("described"));
       store.runs.set("undescribed", run("undescribed"));
-      expect((await store.listRuns({ [key]: value }, 10, null)).items.map(i => i.public_id)).toEqual(["described"]);
+      expect((await store.listRuns({ measurement: 'legacy', [key]: value }, 10, null)).items.map(i => i.public_id)).toEqual(["described"]);
     });
 
   it("never reads the quantizer as a publisher and never matches across two base models", () => {
     const summary = described("described").summary;
-    expect(matchesFilters(summary, { publisher: "Publisher-Org" })).toBe(true);
-    expect(matchesFilters(summary, { publisher: "Quantizer" })).toBe(false);
-    expect(matchesFilters(summary, { base_model: "example-8B" })).toBe(true);
-    expect(matchesFilters(summary, { base_model: "example-8BOther-Org" })).toBe(false);
-    expect(matchesFilters(run("undescribed").summary, { publisher: "Publisher-Org" })).toBe(false);
+    expect(matchesFilters(summary, { measurement: 'legacy', publisher: "Publisher-Org" })).toBe(true);
+    expect(matchesFilters(summary, { measurement: 'legacy', publisher: "Quantizer" })).toBe(false);
+    expect(matchesFilters(summary, { measurement: 'legacy', base_model: "example-8B" })).toBe(true);
+    expect(matchesFilters(summary, { measurement: 'legacy', base_model: "example-8BOther-Org" })).toBe(false);
+    expect(matchesFilters(run("undescribed").summary, { measurement: 'legacy', publisher: "Publisher-Org" })).toBe(false);
   });
 
   it("searches every precise model identifier from the global query", async () => {
@@ -362,18 +373,18 @@ describe("model metadata discovery", () => {
     store.runs.set("undescribed", run("undescribed"));
     for (const q of ["example 8b", "publisher-org/example-8b-gguf", "q4/example-8B-Q4_K_M.gguf", "qwen2",
       "8B", "quantizer org", "upstream-org/example-8B", "c".repeat(64)]) {
-      expect((await store.listRuns({ q }, 10, null)).items.map(i => i.public_id)).toEqual(["described"]);
+      expect((await store.listRuns({ measurement: 'legacy', q }, 10, null)).items.map(i => i.public_id)).toEqual(["described"]);
     }
   });
 
   it("suggests editable options for every model filter, counting visible runs", async () => {
     store.runs.set("a", described("a"));
     store.runs.set("b", described("b", { repository: "Other-Org/example-8B-GGUF" }));
-    expect(await store.listOptions("publisher", "", {}))
+    expect(await store.listOptions("publisher", "", { measurement: 'legacy',  }))
       .toEqual({ options: [{ value: "Other-Org", count: 1 }, { value: "Publisher-Org", count: 1 }], has_more: false });
-    expect((await store.listOptions("base_model", "upstream", {})).options)
+    expect((await store.listOptions("base_model", "upstream", { measurement: 'legacy',  })).options)
       .toEqual([{ value: "Upstream-Org/example-8B", count: 2 }]);
-    expect((await store.listOptions("quantization", "", { publisher: "other" })).options)
+    expect((await store.listOptions("quantization", "", { measurement: 'legacy', publisher: "other" })).options)
       .toEqual([{ value: "Q4_K_M", count: 1 }]);
   });
 
@@ -383,19 +394,19 @@ describe("model metadata discovery", () => {
     (summary.model_info as unknown as Record<string, unknown>).quantization = 4;
     (summary.model_info as unknown as Record<string, unknown>).base_models = "Upstream-Org/example-8B";
     (summary.model_info as unknown as Record<string, unknown>).sha256 = false;
-    expect(matchesFilters(summary, { publisher: "true" })).toBe(false);
-    expect(matchesFilters(summary, { quantization: "4" })).toBe(false);
-    expect(matchesFilters(summary, { base_model: "upstream" })).toBe(false);
-    expect(matchesFilters(summary, { q: "true" })).toBe(false);
-    expect(matchesFilters(summary, { q: "Example 8B" })).toBe(true);
+    expect(matchesFilters(summary, { measurement: 'legacy', publisher: "true" })).toBe(false);
+    expect(matchesFilters(summary, { measurement: 'legacy', quantization: "4" })).toBe(false);
+    expect(matchesFilters(summary, { measurement: 'legacy', base_model: "upstream" })).toBe(false);
+    expect(matchesFilters(summary, { measurement: 'legacy', q: "true" })).toBe(false);
+    expect(matchesFilters(summary, { measurement: 'legacy', q: "Example 8B" })).toBe(true);
   });
 
   it("binds model metadata conditions as literal parameters", () => {
     const text = "x%' OR true --";
-    const statement = listSql({ q: text, publisher: text, base_model: text }, 25, null);
+    const statement = listSql({ measurement: 'legacy', q: text, publisher: text, base_model: text }, 25, null);
     expect(statement.query).not.toContain(text);
     expect(statement.values.filter(v => v === literalPattern(text))).toHaveLength(3);
-    expect(optionsSql("publisher", "org", {}).values).toEqual(["%org%"]);
+    expect(optionsSql("publisher", "org", { measurement: 'legacy',  }).values).toEqual(["%org%"]);
   });
 
   // model_query is the narrow model search: the label plus name, repository,
@@ -409,8 +420,8 @@ describe("model metadata discovery", () => {
       return stored;
     }
     const ALPHA = { name: "Alpha Model", repository: "Alpha-Org/alpha-GGUF", artifact: "alpha/alpha-Q8_0.gguf" };
-    const ids = async (filters: BenchmarkFilters) => (await store.listRuns(filters, 100, null)).items.map(i => i.public_id).sort();
-    const suggestions = async (query: string, filters: BenchmarkFilters = {}) => (await store.listOptions("model_query", query, filters)).options;
+    const ids = async (filters: BenchmarkFilters) => (await store.listRuns({ ...filters, measurement: 'legacy' }, 100, null)).items.map(i => i.public_id).sort();
+    const suggestions = async (query: string, filters: BenchmarkFilters = {}) => (await store.listOptions("model_query", query, { ...filters, measurement: 'legacy' })).options;
 
     it("parses beside q and model, trims, and shares the text length limit", () => {
       expect(parseFilters(new URLSearchParams({ q: "gpu", model: "8b", model_query: "  Example 8B " }))).toEqual({ q: "gpu", model: "8b", model_query: "Example 8B" });
@@ -448,8 +459,8 @@ describe("model metadata discovery", () => {
       store.runs.set("gpu-run", stored);
       for (const text of ["RTX Fixture", "GPUVendor", "runtime-rev-7", "vulkan", "synthetic", "complete", "llama.cpp", "cold-prompt",
         "code_python", "qwen2", "Quantizer Org", "Upstream-Org/example-8B"]) {
-        expect(matchesFilters(stored.summary, { model_query: text }), `model_query ${text}`).toBe(false);
-        expect(matchesFilters(stored.summary, { q: text }), `q ${text}`).toBe(true);
+        expect(matchesFilters(stored.summary, { measurement: 'legacy', model_query: text }), `model_query ${text}`).toBe(false);
+        expect(matchesFilters(stored.summary, { measurement: 'legacy', q: text }), `q ${text}`).toBe(true);
       }
       expect(await ids({ model_query: "RTX" })).toEqual([]);
       expect(await ids({ q: "RTX" })).toEqual(["gpu-run"]);
@@ -485,8 +496,8 @@ describe("model metadata discovery", () => {
     it("reads corrupted model metadata as unknown instead of crashing", () => {
       const summary = described("corrupt").summary;
       Object.assign(summary.model_info as unknown as Record<string, unknown>, { name: 42, repository: true, artifact: { path: "x" }, sha256: false });
-      expect(textValues(summary, "model_query")).toEqual(["Example 8B"]);
-      for (const model_query of ["42", "true", "false", "path"]) expect(matchesFilters(summary, { model_query })).toBe(false);
+      expect(textValues(summary, "model_query")).toEqual(["Example 8B", "c".repeat(64), "Publisher-Org/example-8B-GGUF"]);
+      for (const model_query of ["42", "true", "false", "path"]) expect(matchesFilters(summary, { measurement: 'legacy', model_query })).toBe(false);
     });
 
     it("suggests only model values, once per run, and never hardware or runtime text", async () => {
@@ -568,10 +579,10 @@ describe("model metadata discovery", () => {
 
     it("binds model queries as literal patterns", () => {
       const text = "x%' OR true --";
-      const statement = listSql({ model_query: text }, 25, null);
+      const statement = listSql({ measurement: 'legacy', model_query: text }, 25, null);
       expect(statement.query).not.toContain(text);
       expect(statement.values).toEqual([literalPattern(text), 26]);
-      expect(listSql({ model_query: "a%_\\" }, 25, null).values[0]).toBe(literalPattern("a%_\\"));
+      expect(listSql({ measurement: 'legacy', model_query: "a%_\\" }, 25, null).values[0]).toBe(literalPattern("a%_\\"));
     });
   });
 });

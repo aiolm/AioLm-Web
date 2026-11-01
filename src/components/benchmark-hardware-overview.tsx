@@ -49,11 +49,12 @@ export function BenchmarkHardwareOverview({ benchmark }: { benchmark: BenchmarkS
   const rawGpus = execution?.mode === "cpu" ? [] : Array.isArray(execution?.selected_gpus) ? execution.selected_gpus.map(asRecord).filter((gpu): gpu is Record<string, unknown> => gpu !== null) : [];
   const gpus = aggregateGpus(rawGpus);
   const osArch = [env?.os, env?.arch].filter(value => typeof value === "string").join(" · ");
-  const runtimeVersion = runtimeVersionLabel(runtime);
+  const runtimeVersion = benchmark.schema_version === 3 ? (typeof runtime?.version === "string" ? runtime.version : null) : runtimeVersionLabel(runtime);
 
   return (
     <section className="card detail-environment" aria-labelledby="hardware-overview-title">
       <h2 id="hardware-overview-title">{t("benchmark.Environment")}</h2>
+      {benchmark.schema_version === 3 ? <p className="muted">{t("benchmark.Host resources describe the AioLM host, not the attached engine or container allocation.")} {t("benchmark.Environment scope")}: {displayText(env?.scope, t)}</p> : null}
       <div className="detail-hardware-grid">
         <article className="detail-hardware-card">
           <ColumnHeading label={t("benchmark.Selected graphics")} />
@@ -108,15 +109,13 @@ export function BenchmarkHardwareOverview({ benchmark }: { benchmark: BenchmarkS
         <article className="detail-hardware-card">
           <ColumnHeading label={t("benchmark.Runtime and backend")} />
           <div className="detail-hardware-facts">
-            {runtime?.name ? (
-              <div className="detail-fact">
-                <span className="detail-fact-label">{t("benchmark.Runtime")}</span>
-                <span className="detail-fact-value">
-                  {displayText(runtime.name, t)}
-                  {runtimeVersion ? ` ${runtimeVersion}` : ""}
-                </span>
-              </div>
-            ) : null}
+            <div className="detail-fact">
+              <span className="detail-fact-label">{t("benchmark.Runtime")}</span>
+              <span className="detail-fact-value">
+                {displayText(runtime?.name, t)}
+                {runtimeVersion ? ` ${runtimeVersion}` : ""}
+              </span>
+            </div>
             {runtime?.backend ? (
               <div className="detail-fact">
                 <span className="detail-fact-label">{t("benchmark.Backend")}</span>

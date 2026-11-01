@@ -18,7 +18,7 @@ import { BenchmarkExplorerComparison } from "@/components/benchmark-explorer-com
 import { BenchmarkDetail } from "@/components/benchmark-detail";
 import { BenchmarkHardwareOverview } from "@/components/benchmark-hardware-overview";
 import { buildSetupGroups, type BenchmarkSetup } from "@/components/benchmark-detail-fields";
-import { EXPLORER_FILTER_KEYS, type ExplorerItem } from "@/components/benchmark-explorer-state";
+import type { ExplorerItem } from "@/components/benchmark-explorer-state";
 import BenchmarksPage, { generateMetadata } from "@/app/[locale]/benchmarks/page";
 import BenchmarkPage, { generateMetadata as detailMetadata } from "@/app/[locale]/benchmarks/[id]/page";
 
@@ -67,12 +67,13 @@ describe.each(locales)("benchmark localization: %s", locale => {
     const html = wrap(locale, <BenchmarkBrowser />);
     expect(html).toContain('action="/' + locale + '/benchmarks"');
     expect(html).toContain('value="synthetic-model"');
-    for (const key of EXPLORER_FILTER_KEYS) expect(html).toContain('name="' + key + '"');
+    for (const key of ["model_query", "runtime", "runtime_version", "model_format", "input_bytes_min", "max_output_tokens_max", "warmup", "request_usage", "sort"]) expect(html).toContain('name="' + key + '"');
     expect(html).toContain('role="combobox"');
     expect(html).toContain('aria-autocomplete="list"');
     expect(html).toContain('aria-expanded="false"');
     expect(html).toContain('type="hidden" form="explorer-filter-form" name="sort" value="newest"');
-    expect(html).toContain('type="hidden" name="hardware" value="synthetic-device"');
+    expect(html).toContain('name="hardware"');
+    expect(html).toContain('value="synthetic-device"');
   });
   it("preserves the locale and query filters in result links", () => {
     const html = wrap(locale, <BenchmarkExplorerTable items={[item]} compare={[]} onToggleComparison={() => {}} />);

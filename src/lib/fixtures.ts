@@ -1,4 +1,4 @@
-import type { PublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
+import type { LegacyPublicBenchmarkSubmission, ServingPublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
 import { RECOVERY_FIXTURE } from "@aiolm/benchmark-contracts";
 
 /**
@@ -6,7 +6,7 @@ import { RECOVERY_FIXTURE } from "@aiolm/benchmark-contracts";
  * never derived from real user data. Guarded by SYNTHETIC_TEST_MODE=1 + NODE_ENV=test.
  */
 
-export function syntheticSubmission(overrides: Partial<PublicBenchmarkSubmission> = {}): PublicBenchmarkSubmission {
+export function syntheticSubmission(overrides: Partial<LegacyPublicBenchmarkSubmission> = {}): LegacyPublicBenchmarkSubmission {
   return {
     schema_version: 1,
     submission_id: "00000000-0000-4000-8000-000000000001",
@@ -53,6 +53,51 @@ export function syntheticSubmission(overrides: Partial<PublicBenchmarkSubmission
           failed: false,
         },
       ],
+    },
+    ...overrides,
+  };
+}
+
+/** Contract-valid schema3 fixture for isolated tests, with optional usage intentionally missing. */
+export function syntheticServingSubmission(overrides: Partial<ServingPublicBenchmarkSubmission> = {}): ServingPublicBenchmarkSubmission {
+  return {
+    schema_version: 3,
+    submission_id: "00000000-0000-4000-8000-000000000003",
+    app_version: "0.0.0-synthetic",
+    method: { id: "openai-chat-serving", version: 1 },
+    runtime: { name: "sglang", version: "0.5.0", backend: null, build: null, variant: "custom-safe-variant", plugin_version: null },
+    model: { format: "unknown", status: "unidentified", sha256: null, size_bytes: null },
+    workload: {
+      corpus: "code_python", corpus_version: 1,
+      inputs: [{ bytes: 4096, sha256: "a".repeat(64) }],
+      max_output_tokens: 128, concurrencies: [1], repetitions: 1,
+      warmup: false, request_usage: false, cache_policy: "as_configured",
+    },
+    environment: {
+      scope: "aiolm_host", os: "synthetic", arch: "arm64",
+      cpu: { name: "synthetic-cpu", logical_cores: 8, physical_cores: 4 },
+      system_memory_bytes: 16 * 1024 ** 3,
+      installed_gpus: [],
+      execution: { mode: "cpu", selected_gpus: [], selection_complete: true },
+    },
+    execution: {
+      topology: "attached", memory_scope: "unavailable",
+      settings: [
+        { target: "request", scope: [], name: "max_tokens", value: 128, unit: "tokens", role: null },
+        { target: "request", scope: [], name: "stream", value: true, unit: null, role: null },
+        { target: "request", scope: [], name: "temperature", value: 0, unit: null, role: null },
+      ],
+    },
+    measurements: {
+      status: "complete",
+      rows: [{
+        input_bytes: 4096, max_output_tokens: 128, concurrency: 1, repetition: 1,
+        first_output_ms: 50, first_content_ms: 100, first_reasoning_ms: 50,
+        e2e_ms: 200, content_bytes: 6, reasoning_bytes: 6, output_bytes: 12,
+        reported_prompt_tokens: null, reported_completion_tokens: null, reported_cached_tokens: null,
+        usage_status: "missing", finish_reasons: ["not_reported"],
+        peak_memory_bytes: null, timing_source: "client", failed: false,
+      }],
     },
     ...overrides,
   };

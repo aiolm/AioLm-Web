@@ -16,10 +16,14 @@ import {
   type BenchmarkModelInfo,
 } from "@/components/benchmark-model-identity";
 import { buildSetupGroups } from "@/components/benchmark-detail-fields";
-import { BenchmarkExplorerComparison } from "@/components/benchmark-explorer-comparison";
+import { BenchmarkExplorerComparison, servingComparisonSignature } from "@/components/benchmark-explorer-comparison";
 import { formatComparisonCpu, formatComparisonExecution, formatComparisonOs, formatComparisonRuntime, formatComparisonVram } from "@/components/benchmark-explorer-format";
 import { type ExplorerItem, type ExplorerSummary } from "@/components/benchmark-explorer-state";
 import { BenchmarkDetail } from "@/components/benchmark-detail";
+import { ServingBenchmarkPointsPanel } from "@/components/benchmark-detail-points";
+import { summarizeBenchmark } from "@/lib/summary";
+import { summarizeServingPoints } from "@/lib/benchmark-points";
+import { servingBenchmark, sourcedServingBenchmark } from "../inference-benchmarks";
 
 const fetched = vi.hoisted(() => ({ data: null as unknown }));
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams("") }));
@@ -287,5 +291,45 @@ describe("the result page header", () => {
     expect(html).toContain('href="https://huggingface.co/synthetic-org/synthetic-repo"');
     expect(html).toContain('rel="noreferrer noopener"');
     fetched.data = null;
+  });
+});
+
+describe("serving detail and comparison", () => {
+  it("renders shared metric sample counts, byte channels, empty output and memory attribution", () => {
+    const benchmark = servingBenchmark(null);
+    const row = benchmark.measurements.rows[0]!;
+    const points = summarizeServingPoints([
+      { ...row, repetition: 0, output_bytes: 0, content_bytes: 0, reasoning_bytes: 0, first_output_ms: null, first_content_ms: null, first_reasoning_ms: null, reported_prompt_tokens: null, reported_completion_tokens: null, reported_cached_tokens: null },
+      { ...row, repetition: 1, output_bytes: 0, content_bytes: 0, reasoning_bytes: 0, first_output_ms: null, first_content_ms: null, first_reasoning_ms: null, reported_prompt_tokens: 10, reported_completion_tokens: 0, reported_cached_tokens: null },
+    ]);
+    const html = render(<ServingBenchmarkPointsPanel points={points} memoryScope="unavailable" />);
+    expect(html).toContain("No output was observed");
+    expect(html).toContain("attached upstream memory is unavailable");
+    expect(html).toContain("Observed reasoning");
+    expect(html).toContain("Reported completion tokens");
+    expect(html).toContain("n=1");
+    expect(html).toContain("n=2");
+    for (const legacy of ["TTFT", "Prefill", "Decode"]) expect(html).not.toContain(legacy);
+  });
+
+  it("compares actual workload facts, ignores engine identity, and includes cap in basis matching", () => {
+    const a = sourcedServingBenchmark("sglang");
+    const b = sourcedServingBenchmark(null);
+    const makeItem = (id: string, benchmark: typeof a): ExplorerItem => ({ public_id: id, revision: 1, created_at: "2026-01-02T03:04:05.000Z", summary: summarizeBenchmark(benchmark) });
+    const left = makeItem("left", a), right = makeItem("right", b);
+    expect(servingComparisonSignature(left)).toBe(servingComparisonSignature(right));
+    const first = left.summary.serving_points![0]!;
+    const exact = render(<BenchmarkExplorerComparison items={[left, right]} basis={{ input_bytes: first.input_bytes, concurrency: first.concurrency, max_output_tokens: first.max_output_tokens }} onClear={() => {}} onRemove={() => {}} />);
+    expect(exact).toContain("Reported token rate");
+    expect(exact).toContain("b".repeat(40));
+    expect(exact).toContain(a.workload.inputs[0]!.sha256);
+    expect(exact).not.toContain("Selected results differ in method");
+    const missing = render(<BenchmarkExplorerComparison items={[left]} basis={{ input_bytes: first.input_bytes, concurrency: first.concurrency, max_output_tokens: first.max_output_tokens + 1 }} onClear={() => {}} onRemove={() => {}} />);
+    expect(missing).toContain("Not measured at this point");
+    b.workload.inputs[0]!.sha256 = "c".repeat(64);
+    const different = makeItem("different", b);
+    expect(servingComparisonSignature(left)).not.toBe(servingComparisonSignature(different));
+    const html = render(<BenchmarkExplorerComparison items={[left, different]} onClear={() => {}} onRemove={() => {}} />);
+    expect(html).toContain("Selected results differ in method");
   });
 });

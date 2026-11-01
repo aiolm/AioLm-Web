@@ -27,6 +27,8 @@ export interface BenchmarkModelInfo {
   quantized_by: string | null;
   /** Hugging Face `namespace/repo`, never a URL and never a local path. */
   repository: string | null;
+  /** Source revision is provenance, not a checksum of the weights. */
+  revision?: string | null;
   base_models: string[];
   /** Repository-relative `.gguf` path from a file-matched public origin. */
   artifact: string | null;
@@ -66,6 +68,7 @@ export function readModelInfo(value: unknown): BenchmarkModelInfo | null {
     file_type: wholeNumber(info["file_type"]),
     quantized_by: text(info["quantized_by"]),
     repository: text(info["repository"]),
+    revision: text(info["revision"]),
     base_models: (Array.isArray(info["base_models"]) ? info["base_models"] : [])
       .map(text)
       .filter((entry): entry is string => entry !== null)

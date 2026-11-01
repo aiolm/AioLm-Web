@@ -33,13 +33,14 @@ export async function GET(request: Request, ctx: Ctx): Promise<Response> {
     if (!allowed) return serviceError(404, "not_found", "Benchmark not found.");
   }
   const benchmark = run.benchmark as {
-    environment?: unknown; measurements?: { status?: unknown };
+    schema_version?: unknown; environment?: unknown; measurements?: { status?: unknown };
     model?: unknown; runtime?: unknown; workload?: unknown; execution?: unknown; app_version?: unknown; method?: unknown;
   };
   return Response.json(
     {
       id: run.public_id,
       benchmark: {
+        schema_version: benchmark.schema_version,
         model: benchmark.model,
         runtime: benchmark.runtime,
         workload: benchmark.workload,

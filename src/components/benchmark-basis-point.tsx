@@ -1,9 +1,10 @@
 "use client";
 import { useI18n } from "@/i18n/client";
 import { useJsonFetch } from "./ui";
-import { parsePointId } from "@/lib/benchmark-points";
-import { formatPointLabel } from "./benchmark-explorer-format";
+import { parsePointId, parseServingPointId } from "@/lib/benchmark-points";
+import { formatPointLabel, formatServingPointLabel } from "./benchmark-explorer-format";
 import { UiSelect } from "./ui-select";
+import { EXPLORER_QUERY_LIMIT_MESSAGE, isExplorerRequestWithinBounds } from "./benchmark-explorer-state";
 
 /**
  * The basis point: the one operating point every listed result is read at.
@@ -13,10 +14,9 @@ import { UiSelect } from "./ui-select";
  * same point. Naming one here is what turns the table into a comparison, and it
  * is also what the two speed sorts rank at.
  *
- * The options are the points that were really measured under the other
- * conditions, offered as whole pairs: a reader cannot ask for an input length
- * at a concurrency nobody ran. Leaving it unset is a valid view - each result
- * then reports its own leading point, which is stated per row.
+ * The options are points measured under the other conditions, offered as complete
+ * tuples: bytes/concurrency/cap for serving or tokens/concurrency for legacy.
+ * A restored selection remains available even when other filters contradict it.
  */
 
 export interface BasisPointOption {
@@ -26,20 +26,24 @@ export interface BasisPointOption {
 
 export function BenchmarkBasisPoint({
   value,
+  legacy = false,
   only,
   optionsPath,
   onSelect,
   onOnlyChange,
 }: {
   value: string;
+  legacy?: boolean;
   only: boolean;
   optionsPath: string;
   onSelect: (value: string) => void;
   onOnlyChange: (value: boolean) => void;
 }): React.JSX.Element {
   const { t } = useI18n();
-  const { data, error } = useJsonFetch<{ options: BasisPointOption[]; has_more: boolean }>(optionsPath);
-  const options = (data?.options ?? []).filter((option) => parsePointId(option.value) !== null);
+  const requestBlocked = !isExplorerRequestWithinBounds(optionsPath);
+  const { data, error } = useJsonFetch<{ options: BasisPointOption[]; has_more: boolean }>(requestBlocked ? null : optionsPath);
+  const parse = legacy ? parsePointId : parseServingPointId;
+  const options = (data?.options ?? []).filter(option => parse(option.value) !== null);
   // A selection restored from a shared link stays selectable even if the
   // current conditions no longer offer it, so the address keeps describing the view.
   const selectable = value && !options.some((option) => option.value === value)
@@ -61,7 +65,7 @@ export function BenchmarkBasisPoint({
               ? t("benchmark.No measured points to choose from. Each result reports its own leading point.")
               : value
                 ? t("benchmark.Every row reports this point, so the speed columns answer the same question.")
-                : t("benchmark.Pick a point to read every result at the same input length and concurrency.")}
+                : t(legacy ? "benchmark.Pick a point to read every result at the same input length and concurrency." : "benchmark.Pick input UTF-8 bytes, concurrency and output token cap to read every result at the same serving point.")}
           </p>
         </details>
         </div>
@@ -75,8 +79,8 @@ export function BenchmarkBasisPoint({
           options={[
             { value: "", label: t("benchmark.Each result's own leading point") },
             ...selectable.map((option) => {
-              const point = parsePointId(option.value)!;
-              const label = formatPointLabel(point.prompt_tokens, point.concurrency);
+              const point = parse(option.value)!;
+              const label = "input_bytes" in point ? formatServingPointLabel(point.input_bytes, point.concurrency, point.max_output_tokens) : formatPointLabel(point.prompt_tokens, point.concurrency);
               return { value: option.value, label: option.count > 0 ? t("benchmark.{point} ({count} results)", { point: label, count: String(option.count) }) : label };
             }),
           ]}
@@ -91,7 +95,7 @@ export function BenchmarkBasisPoint({
         />
         <span>{t("benchmark.Only results measured at this point")}</span>
       </label>
-      {unavailable ? <p className="explorer-basis-unavailable" role="status">{t("benchmark.No measured points to choose from. Each result reports its own leading point.")}</p> : null}
+      {requestBlocked ? <p className="explorer-validation" role="status">{t(`benchmark.${EXPLORER_QUERY_LIMIT_MESSAGE}`)}</p> : unavailable ? <p className="explorer-basis-unavailable" role="status">{t("benchmark.No measured points to choose from. Each result reports its own leading point.")}</p> : null}
     </div>
   );
 }

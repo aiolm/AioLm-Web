@@ -23,6 +23,7 @@ import {
   formatWeightQuantization,
   huggingFaceLinks,
   huggingFaceUrl,
+  isRepositoryId,
   modelDisplayName,
   modelPublisher,
   modelValue,
@@ -31,6 +32,7 @@ import {
 
 /** The public `benchmark` object of GET /v1/benchmark-runs/<id>. Every member is unverified input. */
 export interface BenchmarkSetup {
+  schema_version?: unknown;
   model: unknown;
   runtime: unknown;
   workload: unknown;
@@ -72,6 +74,8 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
   const workload = asRecord(benchmark.workload);
   const environment = asRecord(benchmark.environment);
   const execution = asRecord(benchmark.execution);
+  const serving = benchmark.schema_version === 3;
+  const source = asRecord(model?.["source"]);
   const envExecution = asRecord(environment?.["execution"]);
   const cpu = asRecord(environment?.["cpu"]);
   const settings = asRecord(execution?.["settings"]);
@@ -79,19 +83,20 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
   const pythonEngine = runtime?.name === "vllm" || runtime?.name === "mlx-vlm";
   const formats: Record<string, string> = { gguf: "GGUF", "hf-safetensors": "safetensors", mlx: "MLX", unknown: t("benchmark.Unknown") };
   const modelFormat = info?.format ?? (typeof model?.format === "string" ? formats[model.format] : undefined);
-  const repositoryUrl = huggingFaceUrl(info?.repository);
+  const repository = typeof source?.repository === "string" ? source.repository : info?.repository;
+  const repositoryUrl = huggingFaceUrl(repository);
 
   // Model group: key fields shown once; empty optional metadata fields omitted.
   const modelFields: SetupField[] = [
     { label: t("benchmark.Model name"), value: info?.name ? modelDisplayName(info, info.name) : modelValue(null, t) },
-    { label: t("benchmark.Publisher"), value: modelValue(modelPublisher(info), t) },
+    { label: t("benchmark.Publisher"), value: modelValue(isRepositoryId(repository) ? repository.split("/")[0] : modelPublisher(info), t) },
     { label: t("benchmark.Weight quantization"), value: formatWeightQuantization(info, t) },
   ];
-  if (info?.repository) {
+  if (repository) {
     modelFields.push({
       label: t("benchmark.Repository"),
-      value: info.repository,
-      ...(repositoryUrl ? { links: { [info.repository]: repositoryUrl } } : {}),
+      value: repository,
+      ...(repositoryUrl ? { links: { [repository]: repositoryUrl } } : {}),
     });
   }
   if (info?.quantized_by) {
@@ -127,11 +132,15 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
     { label: t("benchmark.Model checksum"), value: displayText(model?.["sha256"], t) },
     { label: t("benchmark.Model size"), value: formatByteSize(model?.["size_bytes"], t) },
   );
+  if (serving) {
+    modelFields.push({ label: t("benchmark.Source revision"), value: displayText(source?.revision, t) });
+  }
 
   // Hardware group: Selected GPU only; no installed GPU list. System RAM when reported.
   const physicalCores = typeof cpu?.["physical_cores"] === "number" && cpu["physical_cores"] > 0 ? cpu["physical_cores"] : null;
   const logicalCores = cpu?.["logical_cores"];
   const hardwareFields: SetupField[] = [
+    ...(serving ? [{ label: t("benchmark.Environment scope"), value: displayText(environment?.scope, t) }] : []),
     { label: t("benchmark.CPU"), value: displayText(cpu?.["name"], t) },
     { label: t("benchmark.CPU cores"), value: typeof logicalCores === "number"
       ? formatCpuCores({ logical_cores: logicalCores, physical_cores: physicalCores })
@@ -173,8 +182,12 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
       title: t("benchmark.Runtime and backend"),
       fields: [
         { label: t("benchmark.Runtime"), value: displayText(runtime?.["name"], t) },
-        // The build is part of the version label, version(build), not a row of its own.
-        { label: t("benchmark.Runtime version"), value: displayText(runtimeVersionLabel(runtime), t) },
+        { label: t("benchmark.Runtime version"), value: displayText(serving ? runtime?.version : runtimeVersionLabel(runtime), t) },
+        ...(serving ? [
+          { label: t("benchmark.Runtime variant"), value: displayText(runtime?.variant, t) },
+          { label: t("benchmark.Runtime build"), value: displayText(runtime?.build, t) },
+          { label: t("benchmark.Runtime plugin version"), value: displayText(runtime?.plugin_version, t) },
+        ] : []),
         { label: t("benchmark.Runtime backend"), value: displayText(runtime?.["backend"], t) },
         { label: t("benchmark.App version"), value: displayText(benchmark.app_version, t) },
       ],
@@ -182,7 +195,22 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
     {
       id: "detail-setup-workload",
       title: t("benchmark.Workload and method"),
-      fields: [
+      fields: serving ? [
+        { label: t("benchmark.Method"), value: displayText(method?.id, t) },
+        { label: t("benchmark.Method version"), value: displayText(method?.version, t) },
+        { label: t("benchmark.Corpus"), value: displayText(workload?.corpus, t) },
+        { label: t("benchmark.Corpus version"), value: displayText(workload?.corpus_version, t) },
+        { label: t("benchmark.Input UTF-8 bytes and SHA256"), value: Array.isArray(workload?.inputs) ? workload.inputs.map((input) => {
+          const item = asRecord(input);
+          return `${displayText(item?.bytes, t)} B · ${displayText(item?.sha256, t)}`;
+        }) : displayText(null, t) },
+        { label: t("benchmark.Maximum output token request"), unit: t("benchmark.tokens"), value: displayText(workload?.max_output_tokens, t) },
+        { label: t("benchmark.Concurrency"), value: joinList(workload?.concurrencies, t) },
+        { label: t("benchmark.Repetitions"), value: displayText(workload?.repetitions, t) },
+        { label: t("benchmark.Warmup"), value: displayText(workload?.warmup, t) },
+        { label: t("benchmark.Request usage"), value: displayText(workload?.request_usage, t) },
+        { label: t("benchmark.Cache policy"), value: displayText(workload?.cache_policy, t) },
+      ] : [
         { label: t("benchmark.Method"), value: displayText(method?.["id"], t) },
         { label: t("benchmark.Method version"), value: displayText(method?.["version"], t) },
         { label: t("benchmark.Corpus"), value: displayText(workload?.["corpus"], t) },
@@ -198,7 +226,11 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
     {
       id: "detail-setup-execution",
       title: t("benchmark.Execution settings"),
-      fields: [
+      fields: serving ? [
+        { label: t("benchmark.Execution topology"), value: displayText(execution?.topology, t) },
+        { label: t("benchmark.Memory scope"), value: displayText(execution?.memory_scope, t) },
+        ...recordedSettingFields(execution?.settings, t),
+      ] : [
         { label: t(pythonEngine ? "benchmark.Per-sequence context allocation" : "benchmark.Allocated context size"), unit: t("benchmark.tokens"), value: displayText(execution?.["context_size"], t) },
         { label: t("benchmark.Parallel requests"), value: displayText(execution?.["parallel"], t) },
         { label: t("benchmark.Threads"), value: displayText(settings?.["threads"], t) },
@@ -216,4 +248,22 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
       ],
     },
   ];
+}
+
+/** Typed values preserve false, zero and array order; nullable values stay unknown. */
+function recordedSettingFields(value: unknown, t: Translator): SetupField[] {
+  if (!Array.isArray(value) || value.length === 0) return [{ label: t("benchmark.Recorded settings"), value: t("benchmark.None reported") }];
+  return value.map((entry) => {
+    const setting = asRecord(entry);
+    const scope = Array.isArray(setting?.scope) ? JSON.stringify(setting.scope) : t("benchmark.Unknown");
+    const target = setting?.target === "request" ? t("benchmark.Request") : t("benchmark.Launch");
+    const name = [scope, displayText(setting?.name, t)].filter(Boolean).join(".");
+    const role = setting?.role == null ? t("benchmark.Unknown") : displayText(setting.role, t);
+    const typed = setting?.value == null ? t("benchmark.Unknown") : JSON.stringify(setting.value);
+    return {
+      label: `${target} · ${name} · ${t("benchmark.Role")}: ${role}`,
+      unit: typeof setting?.unit === "string" ? setting.unit : t("benchmark.Unknown"),
+      value: typed,
+    };
+  });
 }

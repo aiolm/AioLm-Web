@@ -1,5 +1,6 @@
 import type { Translator } from "@/i18n/types";
 import { benchmarkFallback } from "./benchmark-i18n";
+import type { ServingMetricKey } from "@aiolm/benchmark-contracts";
 /**
  * Column contract for the measurement table. The published row shape is fixed
  * by `@aiolm/benchmark-contracts` (`$defs/row`), so columns are declared here in
@@ -50,6 +51,41 @@ function measurementColumns(t: Translator): readonly RowColumn[] {
   ];
 }
 
+/** Shared metric presentation for serving rows, points and comparison. */
+export function servingMetricColumns(t: Translator = benchmarkFallback): RowColumn[] {
+  const metrics: { key: ServingMetricKey; label: string; unit: string; format: (value: unknown) => string }[] = [
+    { key: "first_output_ms", label: "First observed output", unit: "ms", format: formatMilliseconds },
+    { key: "first_content_ms", label: "First observed content", unit: "ms", format: formatMilliseconds },
+    { key: "first_reasoning_ms", label: "First observed reasoning", unit: "ms", format: formatMilliseconds },
+    { key: "e2e_ms", label: "End-to-end duration", unit: "s", format: formatSeconds },
+    { key: "content_bytes", label: "Observed content", unit: "B", format: formatCount },
+    { key: "reasoning_bytes", label: "Observed reasoning", unit: "B", format: formatCount },
+    { key: "output_bytes", label: "Observed output", unit: "B", format: formatCount },
+    { key: "output_bytes_per_second", label: "Observed output rate", unit: "B/s", format: throughput },
+    { key: "reported_prompt_tokens", label: "Reported prompt tokens", unit: "tok", format: formatCount },
+    { key: "reported_completion_tokens", label: "Reported completion tokens", unit: "tok", format: formatCount },
+    { key: "reported_cached_tokens", label: "Reported cached tokens", unit: "tok", format: formatCount },
+    { key: "reported_tokens_per_second", label: "Reported token rate", unit: "tok/s", format: throughput },
+    { key: "peak_memory_bytes", label: "Peak process memory", unit: "B", format: formatCount },
+  ];
+  return metrics.map((metric) => ({ ...metric, label: t(`benchmark.${metric.label}`), numeric: true }));
+}
+
+function servingColumns(t: Translator): RowColumn[] {
+  return [
+    { key: "input_bytes", label: t("benchmark.Input UTF-8 bytes"), unit: "B", numeric: true, format: formatCount },
+    { key: "concurrency", label: t("benchmark.Concurrency"), numeric: true, format: formatCount },
+    { key: "max_output_tokens", label: t("benchmark.Maximum output token request"), unit: "tok", numeric: true, format: formatCount },
+    { key: "repetition", label: t("benchmark.Repetition"), numeric: true, format: formatCount },
+    ...servingMetricColumns(t),
+    { key: "usage_status", label: t("benchmark.Usage status"), numeric: false, format: (value) => formatCellValue(value, t) },
+    { key: "finish_reasons", label: t("benchmark.Finish reasons (request order)"), numeric: false, format: (value) => Array.isArray(value) ? value.join(", ") : formatCellValue(value, t) },
+    { key: "timing_source", label: t("benchmark.Timing source"), numeric: false, format: (value) => formatCellValue(value, t) },
+  ];
+}
+
+const SERVING_CORE_KEYS: Record<string, true> = { input_bytes: true, concurrency: true, max_output_tokens: true, repetition: true, first_output_ms: true, e2e_ms: true, output_bytes: true, output_bytes_per_second: true, reported_tokens_per_second: true, peak_memory_bytes: true };
+
 const CONTRACT_KEYS = new Set(measurementColumns(benchmarkFallback).map((column) => column.key));
 
 export const CORE_ROW_KEYS = new Set([
@@ -74,14 +110,19 @@ export function buildRowColumns(
   rows: ReadonlyArray<Record<string, unknown>>,
   tOrDetailed?: Translator | boolean,
   maybeDetailed?: boolean,
+  schemaVersion?: unknown,
 ): RowColumn[] {
   let t: Translator = benchmarkFallback;
-  let detailed = false;
+  let detailed = !!maybeDetailed;
   if (typeof tOrDetailed === "boolean") {
     detailed = tOrDetailed;
   } else if (typeof tOrDetailed === "function") {
     t = tOrDetailed;
     detailed = !!maybeDetailed;
+  }
+  if (schemaVersion === 3) {
+    const columns = servingColumns(t);
+    return detailed ? columns : columns.filter((column) => SERVING_CORE_KEYS[column.key]);
   }
   const seen = new Set<string>();
   const extras: string[] = [];

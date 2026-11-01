@@ -94,7 +94,7 @@ describe("benchmark publish flow", () => {
     expect(saved.benchmark.execution).toEqual(benchmark.execution);
     expect(saved.summary.model_info).toBeNull();
     expect(saved.summary.points[0].pp_tps).toBeNull();
-    const listed = await (await listRuns(new Request(`${ORIGIN}/v1/benchmark-runs?runtime=${benchmark.runtime.name}`, { headers: testHeaders() }))).json();
+    const listed = await (await listRuns(new Request(`${ORIGIN}/v1/benchmark-runs?measurement=legacy&runtime=${benchmark.runtime.name}`, { headers: testHeaders() }))).json();
     expect(listed.items).toHaveLength(1);
     expect(listed.items[0].summary.setup.runtime).toBe(benchmark.runtime.name);
     if (engine === "vllm-metal") expect(listed.items[0].summary.setup).toMatchObject({ runtime_variant: "vllm-metal", runtime_plugin_version: "0.30.0" });
@@ -158,7 +158,7 @@ describe("benchmark publish flow", () => {
     expect(((await rows.json()) as { total: number }).total).toBe(1);
 
     // List carries public fields only, with filters + pagination.
-    const list = await listRuns(new Request(`${ORIGIN}/v1/benchmark-runs?limit=25&workload=code_python`));
+    const list = await listRuns(new Request(`${ORIGIN}/v1/benchmark-runs?measurement=legacy&limit=25&workload=code_python`));
     expect(list.status).toBe(200);
     const listJson = (await list.json()) as { items: Array<Record<string, unknown>> };
     expect(listJson.items.length).toBe(1);

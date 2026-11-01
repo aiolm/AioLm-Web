@@ -19,7 +19,7 @@ accounts in v1.
   desktop app can open the page with a single-use handoff
   ([management handoff](docs/management-handoff.md)).
 - API: the wire contract is the OpenAPI document shipped by
-  `@aiolm/benchmark-contracts` 0.8.0
+  `@aiolm/benchmark-contracts` 0.9.0
   (`node_modules/@aiolm/benchmark-contracts/schema/openapi.json`). Routes:
   `POST /v1/upload-sessions`, `POST .../verify`, `GET ...`, `POST /v1/benchmark-runs`,
   `GET /v1/benchmark-runs`, `GET /v1/benchmark-runs/<id>`, `GET .../measurements`,
@@ -145,18 +145,23 @@ See `docs/deployment.md` and `docs/operations.md`.
 ## Contracts
 
 Validation, recovery encoding, and the schema/OpenAPI surface come from
-`@aiolm/benchmark-contracts` 0.8.0, installed from the vendored archive
-`vendor/aiolm-benchmark-contracts-0.8.0.tgz` and integrity-pinned in
+`@aiolm/benchmark-contracts` 0.9.0, installed from the vendored archive
+`vendor/aiolm-benchmark-contracts-0.9.0.tgz` and integrity-pinned in
 `package-lock.json`. The website re-exports that package rather than keeping a
 second copy of the rules, and never imports app sources at runtime. Details and
 the upgrade procedure in `docs/contracts-integration.md`.
 
-Contract 0.8.0, built from desktop v0.3.2 (`e439b52038142439c8c85b112d2949687fa273f2`),
-retains schema-1 llama.cpp results and accepts schema-2 vLLM/MLX records. It
-preserves vllm-metal plugin and core versions, explicit model formats and
-per-sequence Python context allocation. External `custom.*` engine publication
-is not part of this shared contract; registration support in the desktop app
-must not be confused with public benchmark upload support.
+Contract 0.9.0 preserves legacy schema1/2 and accepts schema3
+`openai-chat-serving@1` results from any connected streaming text-chat engine,
+including an unknown public identity. New measurements distinguish exact input
+UTF-8 bytes, client-observed content/reasoning timing and optional reported
+token/cache counts. They do not claim cold cache or forced output length.
+Public runtime identity and typed settings never derive from local connection
+IDs, process names or reference-file hashes/sizes. Discovery defaults to the
+new method; token-based results require explicit `measurement=legacy`.
+Apply migration015 with the dedicated migration owner before deploying; it
+adds 13 generated identity columns without rewriting payloads or broadening
+runtime permissions.
 
 ## Moderation
 

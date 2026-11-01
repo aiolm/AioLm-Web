@@ -2,10 +2,154 @@
 
 The website extends the shared publication API with discovery queries. Publication,
 ownership, verification, deletion, and measurement-row protocols remain unchanged.
-Run the numbered SQL migrations before deploying code that requires migration 014.
+Run the numbered SQL migrations through 015 before deploying this code.
 The readiness probe checks that every required migration is present.
 
-## List queries
+## Common API serving queries
+
+`measurement=openai-chat-serving@1` is the default list scope. It selects only
+schema3 and the exact method/version, not a list of supported engine names.
+`measurement=legacy` explicitly selects schema1/2, including null old methods.
+Byte parameters and legacy token parameters cannot be mixed; invalid combinations
+return 400 rather than silently reinterpreting units.
+
+The list endpoint retains `{items,next_cursor}`, with 25 items by default and a
+maximum of 100. Cursor binding includes `engine-neutral-serving-v1`, method scope,
+canonical conditions and sort. Old, changed-filter or changed-scope cursors return
+400; clients recover by requesting the first page. Missing values sort last,
+with creation time/public ID as deterministic tie-breakers.
+
+### Identity and workload filters
+
+Engine names are editable, data-driven `runtime` values, including newly connected
+engines. Null identity remains visible without a filter. Core version, variant,
+build, plugin version and app version have independent filters. Model format
+(`unknown` included), full SHA-256, repository and revision are recorded facts;
+`q` and `model_query` also search the full SHA/source identity. Weight bits come
+only from declared GGUF weight metadata, not names or runtime/KV settings.
+
+Scalar metadata is defined once in browser-safe `FILTER_DEFINITIONS`. The same
+definitions drive parsing and explorer controls; engine selection never clears
+generic conditions or disables another engine's fields.
+
+| Range key (`_min` / `_max`) | Recorded meaning |
+| --- | --- |
+| `input_bytes` | Maximum configured `workload.inputs[].bytes`, not the largest completed point |
+| `max_output_tokens` | Requested output-token cap |
+| `max_concurrency` | Maximum configured client concurrency |
+| `repetitions` | Configured repetitions |
+| `model_size` | Recorded weight size in bytes |
+| `ram` | AioLM-host system RAM in bytes |
+| `physical_cores` / `cores` | Physical / logical host CPU cores |
+| `vram` | Selected GPU capacity in MiB |
+
+`warmup` and `request_usage` accept 0/1. Missing metadata is not false or zero.
+For configured inputs 4096/16384, `input_bytes_max=8192` does not match, even if
+only the 4096 point was completed in a local partial record.
+Warmup and repetitions are read from the recorded workload in both stores,
+including legacy summaries that predate those setup projection keys; no
+summary backfill is required.
+
+### Serving points and sorting
+
+Supply all of `point_bytes`, `point_concurrency`, `point_max_tokens`, or none.
+`point_only=1` requires all three. Facet point IDs are `b4096/c4/o128`.
+The cap is part of point identity; bytes are never treated as prompt tokens.
+
+Serving sorts are `newest`, `oldest`, `input_bytes_asc`, `input_bytes_desc`,
+`vram_asc`, `vram_desc`, `output_rate_desc`, and `duration_asc`. The last two
+require the complete point triple and read its median `output_bytes_per_second`
+or `e2e_ms`. Input sorts read the maximum configured input, exactly like its
+range filters and cursor values. They do not rank independent hardware/engine
+quality or average across different workloads.
+
+`summary.serving_points` uses the shared package's 13 metric keys and
+`{median,min,max,samples}` statistics. Unknown observations are excluded per
+metric, not replaced by zero. Zero duration or non-finite derived rates remain
+null; positive-duration zero output has a known zero byte rate. Legacy points
+remain exclusively in `summary.points`.
+
+### Typed execution-option conditions
+
+Repeat `setting` at most eight times. Each is strict JSON, at most 1024 UTF-8
+bytes, and the complete encoded query is limited to 8192 bytes:
+
+```ts
+type Descriptor = {
+  target: 'launch' | 'request'; scope: string[]; name: string;
+  unit: RecordedSetting['unit']; role: RecordedSetting['role'];
+};
+type Condition =
+  | (Descriptor & { op: 'eq'; value: boolean | number | string | number[] })
+  | (Descriptor & { op: 'range'; min?: number; max?: number });
+```
+
+Nullable unit/role are required, unknown keys are rejected, numbers must be
+finite, and range requires a bound with minimum no greater than maximum.
+Descriptor/value bounds match recorded settings. Null settings never satisfy a
+condition. Conditions are AND-ed, canonical duplicates collapse, and reordered
+conditions bind the same cursor.
+
+Equality requires one actual setting with exactly the same target, scope,
+name, unit, role and value. Scope `[]` is not `[\"serve\"]`; numeric array `[1,2]`
+is not `[2,1]`. SQL uses the settings GIN containment prefilter and then exact
+same-element equality. Ranges inspect numeric scalar values only. User keys
+are bound data, never SQL identifiers. Arbitrary numeric-option ranges and all
+point sorts are not claimed to be index-backed.
+
+The GUI offers equality/range and string/number/boolean/numeric-list controls;
+users need not write JSON. Incomplete drafts block Apply with an actionable
+condition error. Each condition/chip can be cleared independently.
+
+### Generic facets
+
+`field=setting` returns canonical fixed-order descriptor JSON strings.
+`field=setting_value` requires strict `option_setting` descriptor JSON and
+returns typed scalar/array values as canonical JSON strings. Both retain
+`{options:[{value,count}],has_more}`, distinct visible-run counts, C-order,
+30 options and a 31st-candidate `has_more` check. Null or unapplicable overlimit
+values are not recommendations.
+
+When editing a condition, the client excludes only that one row from facet
+requests; other conditions, including the same descriptor, remain. The server
+does not implicitly remove generic conditions. Scalar own-field exclusion
+retains its existing behavior.
+
+Suggestion requests pause while remaining draft conditions are incomplete;
+private `_draft` editor state is never sent as a setting condition. The whole
+query bound includes cursor and facet metadata. If a next-page or suggestion
+request would exceed it, the client keeps the current results/conditions and
+asks the user to shorten them rather than dropping conditions or looping back
+to the first page.
+
+Acceptance computes a bounded `setup.setting_facets` canonical-text projection
+alongside the actual settings. This preserves JavaScript number serialization,
+array order and string whitespace for database-side C-order/limits without
+fetching unbounded distinct values into server memory. Matching still inspects
+the actual settings. No public payload or frozen request bytes are rewritten.
+
+### Canonical storage and attribution
+
+`summary.identity` is the pure 13-field payload projection also exposed as
+stored generated columns by migration015. It never parses display labels.
+The migration adds visibility-partial method/size/trigram and bounded-settings
+indexes, changes no runtime grants, and performs no data deletion or manual
+backfill. Tombstoning `benchmark` nulls all generated identity columns.
+Engine-name and variant substring searches are not promised to be index-backed;
+the fixed trigram set remains the seven columns specified by this migration.
+
+Schema3 host hardware is scoped `aiolm_host`; attached/unknown compute has
+unavailable engine memory, never proxy RSS. Detail/comparison views show method,
+exact input hashes/bytes, cap, corpus, warmup and usage-request differences.
+Repository/revision is provenance, not a content digest or proof of unchanged
+weights. Existing receipts, hashes, chunking and management flows are unchanged.
+
+## Legacy token-method reference
+
+The sections below describe only `measurement=legacy` and unchanged schema1/2.
+Their token, TTFT, PP/TG and context semantics are not serving-byte parameters.
+
+### List queries
 
 GET /v1/benchmark-runs returns the existing items/next_cursor envelope. Pages default
 to 25 items and are capped at 100. Each item includes a small public summary; full
@@ -82,7 +226,7 @@ context are affected; cursors for newest, oldest, VRAM, throughput and duration
 keep working. A shared link carrying a retired cursor reports an invalid query;
 select Search to restart at the first page while retaining its filters.
 
-## Searchable suggestions
+### Searchable suggestions
 
 GET /v1/benchmark-runs/options accepts field (one text filter other than q, model_query
 included, or point), option_query (optional literal search within that field), and the other list
@@ -109,7 +253,7 @@ to that vendor's selected devices, including within a run with mixed GPU vendors
 The UI fetches suggestions only for the open control, debounces typing, and aborts
 superseded requests. Empty or unavailable suggestions never prevent free-text search.
 
-## Summary metadata and storage
+### Summary metadata and storage
 
 The additive summary.setup object contains OS, architecture, CPU/core count,
 selected GPU names/vendors and memory, runtime/version/backend, execution mode,
@@ -133,7 +277,7 @@ available. The helper function stays in the private bench schema with restricted
 execution grants. List and suggestion responses use no-store so visibility changes
 are reflected on the next request.
 
-## Input context and prefill
+### Input context and prefill
 
 Two different numbers describe context, and the summary keeps both:
 
@@ -172,7 +316,7 @@ and descending partial indexes on the configured input length expression and dro
 the two 008 indexes on the raw allocation, which no query orders or filters on any
 more.
 
-## Operating points
+### Operating points
 
 A run's measurement rows are a grid: the configured input lengths against the
 configured batch sizes, repeated `workload.repetitions` times at one generation
@@ -227,7 +371,7 @@ stops being fast enough, the points belong in their own table with
 (prompt_tokens, concurrency) indexed and the list query joining it laterally;
 nothing about the stored shape or the query parameters has to change for readers.
 
-## Model metadata
+### Model metadata
 
 Contract 0.3.0 added an OPTIONAL model.metadata block, and schema_version stays 1.
 The block describes GGUF weights: name, architecture, size label, quantization, file type,
@@ -274,7 +418,7 @@ metadata are not written at all, and raw benchmark metadata, measurement rows,
 hashes, capacity counters, and tombstones are left untouched. It also adds
 trigram indexes for the three new filters where pg_trgm is available.
 
-## Sidebar explorer controls
+### Sidebar explorer controls
 
 On screens wider than 1100px, a 300px filter sidebar sits beside the page title,
 active-filter chips, and results. The comparison guide follows the results inside

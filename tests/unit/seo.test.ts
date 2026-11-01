@@ -3,6 +3,10 @@ import { serializeJsonLd, publicMetadata } from '@/lib/seo';
 import { getPublicBenchmark } from '@/server/public-benchmark';
 import { __setTestStore } from '@/server/store';
 import type { BenchmarkStore, StoredRun } from '@/server/repository';
+import { GET as getDetail } from '@/app/v1/benchmark-runs/[id]/route';
+import { syntheticSubmission } from '@/lib/fixtures';
+import { servingBenchmark } from '../inference-benchmarks';
+import { validateBenchmarkConfiguration } from '@aiolm/benchmark-contracts';
 
 afterEach(() => { __setTestStore(null); vi.unstubAllEnvs(); });
 describe('search publication safety', () => {
@@ -27,6 +31,24 @@ describe('search publication safety', () => {
     expect(result.state).toBe('public');
     expect(JSON.stringify(result)).not.toMatch(/private-|large-private-row/);
     expect(result.state === 'public' && result.data.summary.model_label).toBe('Model');
+  });
+  it.each([syntheticSubmission(), servingBenchmark(null)])('preserves actual schema version for desktop configuration import in both public projections', async benchmark => {
+    useRun({ ...run, benchmark });
+    const page = await getPublicBenchmark('public-id');
+    expect(page.state).toBe('public');
+    if (page.state !== 'public') throw new Error('Expected public detail');
+    const response = await getDetail(new Request('http://localhost/v1/benchmark-runs/public-id'), { params: Promise.resolve({ id: 'public-id' }) });
+    const api = await response.json();
+    for (const detail of [page.data, api]) {
+      expect(detail.benchmark.schema_version).toBe(benchmark.schema_version);
+      expect(detail.benchmark.runtime).toEqual(benchmark.runtime);
+      expect(detail.benchmark.execution).toEqual(benchmark.execution);
+      expect(detail.benchmark).not.toHaveProperty('measurements');
+      expect(JSON.stringify(detail)).not.toMatch(/private-owner|private-submission|private-hash/);
+      if (benchmark.schema_version === 3) expect(validateBenchmarkConfiguration({
+        runtime: detail.benchmark.runtime, execution: detail.benchmark.execution,
+      })).toEqual({ runtime: benchmark.runtime, execution: benchmark.execution });
+    }
   });
   it.each([null, { ...run, deleted: true }])('treats missing or deleted results as missing', async value => {
     useRun(value);

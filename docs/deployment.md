@@ -209,7 +209,7 @@ platform logs. Point an uptime monitor at it; read `config:check` when it turns 
   `REQUIRED_MIGRATIONS`). The sole uploaded script is
   `scripts/check-design-system.mjs`, required by the build; operator scripts
   and the theme generator remain excluded. `package-lock.json` and
-  `vendor/aiolm-benchmark-contracts-0.8.0.tgz` stay in the upload — the build
+  `vendor/aiolm-benchmark-contracts-0.9.0.tgz` stays in the upload — the build
   installs the contracts package from that archive, and the checker uses the
   explicitly declared PostCSS development dependency.
 

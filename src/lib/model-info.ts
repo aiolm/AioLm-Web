@@ -14,7 +14,7 @@ import type { BenchmarkModelMetadata, PublicBenchmarkSubmission } from "@aiolm/b
  * the KV cache (setup.cache_type_k/v) and are not a quality claim.
  */
 export type BenchmarkModelInfo = {
-  format: "GGUF";
+  format: "GGUF" | "hf-safetensors" | "mlx" | "unknown";
   name: string | null;
   architecture: string | null;
   size_label: string | null;
@@ -23,6 +23,8 @@ export type BenchmarkModelInfo = {
   quantized_by: string | null;
   /** Hugging Face namespace/repo only, never a URL or a local path. */
   repository: string | null;
+  /** Inspected source revision, never a replacement for the weight SHA. */
+  revision?: string | null;
   base_models: string[];
   /** Repo-relative .gguf artifact from a file-matched public origin. */
   artifact: string | null;
@@ -66,6 +68,15 @@ function baseModels(value: unknown): string[] {
   return Array.isArray(value) ? [...new Set(value.map(repository).filter((v): v is string => v !== null))].slice(0, 8) : [];
 }
 
+function modelSource(value: unknown): { repository: string; revision: string } | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+  const source = value as { kind?: unknown; repository?: unknown; revision?: unknown };
+  const repo = repository(source.repository);
+  return source.kind === "huggingface" && repo !== null &&
+    typeof source.revision === "string" && /^[a-f0-9]{40}$/.test(source.revision)
+    ? { repository: repo, revision: source.revision } : null;
+}
+
 /**
  * Summary model metadata for a submission, or null when it carries none that
  * survives validation. Callers treat null as unknown: a run whose weights were
@@ -73,31 +84,32 @@ function baseModels(value: unknown): string[] {
  */
 export function normalizeModelInfo(benchmark: PublicBenchmarkSubmission): BenchmarkModelInfo | null {
   const model = benchmark.model;
+  const source = benchmark.schema_version === 3 ? modelSource(benchmark.model.source) : null;
+  const format = benchmark.schema_version === 1 ? "gguf" : model.format;
   const meta: unknown = model.metadata;
-  if (typeof meta !== "object" || meta === null || Array.isArray(meta)) return null;
-  const m = meta as Partial<BenchmarkModelMetadata>;
-  // Only GGUF weights are described by this block; anything else is a payload we
-  // cannot attribute, so none of its fields are published.
-  if (m.format !== "GGUF") return null;
-  const repo = repository(m.repository);
-  const source = SOURCES.find((known) => known === m.source) ?? null;
-  // An artifact is a file-matched Hugging Face download origin: the contract
-  // publishes one only with a usable repository and a source that names the
-  // registry. A bare filename, a local path, or a GGUF-only source proves no
-  // origin, so it stays unknown rather than looking linkable.
-  const origin = repo !== null && (source === "huggingface" || source === "gguf+huggingface");
+  const m = format === "gguf" && typeof meta === "object" && meta !== null &&
+    !Array.isArray(meta) && (meta as Partial<BenchmarkModelMetadata>).format === "GGUF"
+    ? meta as Partial<BenchmarkModelMetadata> : null;
+  if (!m && !source) return null;
+  const repo = source?.repository ?? repository(m?.repository);
+  const metadataSource = SOURCES.find((known) => known === m?.source) ?? null;
+  const provenanceSource = source ? (m ? "gguf+huggingface" : "huggingface") : metadataSource;
+  // An artifact remains evidence from the GGUF metadata block, not a source-repo guess.
+  const metadataOrigin = repo !== null && repository(m?.repository) === repo &&
+    (metadataSource === "huggingface" || metadataSource === "gguf+huggingface");
   return {
-    format: "GGUF",
-    name: label(m.name),
-    architecture: label(m.architecture),
-    size_label: label(m.size_label),
-    quantization: label(m.quantization),
-    file_type: fileType(m.file_type),
-    quantized_by: label(m.quantized_by),
+    format: format === "gguf" ? "GGUF" : format ?? "unknown",
+    name: label(m?.name),
+    architecture: label(m?.architecture),
+    size_label: label(m?.size_label),
+    quantization: label(m?.quantization),
+    file_type: fileType(m?.file_type),
+    quantized_by: label(m?.quantized_by),
     repository: repo,
-    base_models: baseModels(m.base_models),
-    artifact: origin ? artifact(m.artifact) : null,
-    source,
+    ...(benchmark.schema_version === 3 ? { revision: source?.revision ?? null } : {}),
+    base_models: baseModels(m?.base_models),
+    artifact: metadataOrigin ? artifact(m?.artifact) : null,
+    source: provenanceSource,
     publisher: repo === null ? null : repo.split("/")[0],
     // Identity is not metadata: the contract schema already constrains status to
     // its enum and sha256 to lowercase hex, so both are echoed exactly as recorded.
