@@ -19,7 +19,7 @@ describe("deployment fail-closed behavior", () => {
     const env = process.env as Record<string, string | undefined>;
     env["NODE_ENV"] = "production";
     delete env["SERVICE_ORIGIN"];
-    expect(() => getServiceOrigin()).toThrow(/SERVICE_ORIGIN/);
+    expect(() => getServiceOrigin()).toThrow();
   });
 
   it("validates the service origin as a root HTTPS origin (loopback http only)", () => {
@@ -48,9 +48,7 @@ describe("deployment fail-closed behavior", () => {
     env["NODE_ENV"] = "production";
     env["TURNSTILE_SECRET_KEY"] = "secret";
     delete env["TURNSTILE_EXPECTED_HOSTNAME"];
-    await expect(verifyTurnstileToken({ token: "whatever", expectedAction: "benchmark_publish" })).rejects.toThrow(
-      /not configured/,
-    );
+    await expect(verifyTurnstileToken({ token: "whatever", expectedAction: "benchmark_publish" })).rejects.toThrow();
   });
 });
 

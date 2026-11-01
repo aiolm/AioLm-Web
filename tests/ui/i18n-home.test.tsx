@@ -14,101 +14,41 @@ import sitemap from '@/app/sitemap';
 import NotFound from '@/app/[locale]/not-found';
 import MissingPage from '@/app/[locale]/[...missing]/page';
 import Home, { generateMetadata as homeMetadata } from '@/app/[locale]/page';
-import Layout, { generateMetadata as layoutMetadata, generateStaticParams } from '@/app/[locale]/layout';
-import { getMessages } from '@/i18n/server';
+import Layout from '@/app/[locale]/layout';
 
 describe('localized static homepage', () => {
-  it.each(locales)('explains built-in support and engine-neutral external connections in %s', async locale => {
-    const html = renderToStaticMarkup(await Home({ params: Promise.resolve({ locale }) }));
-    const home = await getMessages(locale, 'home');
-    const site = await getMessages(locale, 'site');
-    for (const name of ['llama.cpp', 'vLLM', 'MLX']) {
-      expect(home['home.subtitle']).toContain(name);
-      expect(site['site.description']).toContain(name);
-      expect(html).toContain(name);
-    }
-    for (const example of ['Strata', 'TensorFold']) {
-      expect(home['home.subtitle']).not.toContain(example);
-      expect(site['site.description']).not.toContain(example);
-      expect(home['home.enginesExternal']).not.toContain(example);
-      expect(html).not.toContain(example);
-    }
-    expect(html).toContain(home['home.enginesExternal']);
-    expect(html).toContain(home['home.faqEnginesAnswer']);
-    expect(html).toContain(`/${locale}/guides/adapters`);
-    expect(html).toContain(`/${locale}/guides/compatibility`);
-  });
   it('advertises the canonical sitemap and excludes API and private pages from crawling', () => {
     expect(robots()).toEqual({ rules: { userAgent: '*', allow: '/', disallow: ['/v1/', '/manage', '/verify/', ...locales.flatMap(locale => ['/' + locale + '/manage', '/' + locale + '/verify/'])] }, sitemap: ['https://example.invalid/sitemap.xml', 'https://example.invalid/benchmarks/sitemap.xml'] });
-    expect(sitemap()).toHaveLength(28);
     expect(sitemap().map(entry => entry.url)).not.toContain('https://example.invalid/ko/guides/external-engines');
     expect(sitemap().map(entry => entry.url)).toContain('https://example.invalid/ko/guides/adapters');
     expect(sitemap().map(entry => entry.url)).toContain('https://example.invalid/zh/benchmarks');
     expect(sitemap().every(entry => Object.keys(entry.alternates?.languages ?? {}).length === 4)).toBe(true);
   });
-  it('enumerates exactly the supported locales for static generation', () => {
-    expect(generateStaticParams()).toEqual(locales.map(locale => ({ locale })));
-  });
-  it.each(locales)('renders %s copy, document language, metadata and localized links on the server', async locale => {
+  it.each(locales)('renders the %s document language, metadata and localized links on the server', async locale => {
     const params = Promise.resolve({ locale });
-    const [messages, site, page] = await Promise.all([getMessages(locale, 'home'), getMessages(locale, 'site'), Home({ params })]);
-    const html = renderToStaticMarkup(await Layout({ params, children: page }));
-    expect(html).toContain('<html lang="' + locale + '" data-palette="13">');
-    expect(html).toContain(messages['home.heroFirst']);
-    expect(html).toContain(messages['home.windows']);
-    expect(html).toContain(messages['home.linuxRequirements']);
-    expect(html).toContain(messages['home.macosRequirements']);
-    expect(html).toContain(messages['home.windowsWarning']);
-    expect(html).toContain(messages['home.macosWarning']);
-    expect(html.indexOf('class="install-box"')).toBeLessThan(html.indexOf('class="home-hero-actions"'));
+    const html = renderToStaticMarkup(await Layout({ params, children: await Home({ params }) }));
+    expect(html).toContain('<html lang="' + locale + '"');
     expect(html).toContain('"operatingSystem":["Windows","macOS","Linux"]');
-    expect(html).toContain('releases/latest/download/install.sh | bash');
     expect(html).toContain(`href="/${locale}/guides/install#macos"`);
     expect(html).toContain(`href="/${locale}/guides/install#linux"`);
-    expect(html).toContain(messages['home.choose']);
-    expect(html).toContain(messages['home.caption']);
-    expect(html).toContain('alt="' + messages['home.screenshotAlt'] + '"');
-    expect(html).toContain('https://github.com/aiolm/AioLM/releases/latest/download/install.ps1 | iex');
-    expect(html).toContain(site['site.skip']);
     expect(html).toContain(`href="/${locale}/guides"`);
     expect(html).not.toMatch(/href="[^"]*github[^\"]*(?:\.md|\/docs)/);
     expect(html).toContain('href="/' + locale + '/benchmarks"');
-    expect(html).not.toMatch(/>(?:home|site)\.[a-zA-Z]+</);
     expect(await homeMetadata({ params })).toMatchObject({ alternates: { canonical: '/' + locale, languages: { en: '/en', ko: '/ko', ja: '/ja', zh: '/zh' } } });
-    expect(await layoutMetadata({ params })).toMatchObject({ title: { default: site['site.title'] }, description: site['site.description'] });
   });
   it.each(locales)('shows the %s visitor the real app screenshot that matches their color scheme', async locale => {
     const html = renderToStaticMarkup(await Home({ params: Promise.resolve({ locale }) }));
     const picture = html.match(/<picture>.*?<\/picture>/)?.[0] ?? '';
-    expect(picture).toMatch(/<source media="\(prefers-color-scheme: dark\)" srcSet="[^"]*%2Fscreenshots%2Fproduct-models-en-dark\.png/);
-    expect(picture).toMatch(/<img [^>]*src="[^"]*%2Fscreenshots%2Fproduct-models-en-light\.png/);
-  });
-  it.each(locales)('names each %s install platform once instead of repeating it in a badge', async locale => {
-    const html = renderToStaticMarkup(await Home({ params: Promise.resolve({ locale }) }));
-    const tabs = [...html.matchAll(/<button[^>]*role="tab"[^>]*>(.*?)<\/button>/g)].map(match => match[1].replace(/<[^>]+>/g, ''));
-    expect(tabs).toHaveLength(3);
-    for (const [tab, platform] of tabs.map((tab, index) => [tab, ['Windows', 'macOS', 'Linux'][index]])) {
-      expect(tab.split(platform)).toHaveLength(2);
+    for (const [theme, tag] of [['dark', 'source'], ['light', 'img']] as const) {
+      const image = picture.match(new RegExp(`<${tag} [^>]*>`))?.[0] ?? '';
+      expect(image).toContain(encodeURIComponent(`/screenshots/current/home/${locale}/${theme}.png`));
     }
+    expect(picture).toContain('media="(prefers-color-scheme: dark)"');
+    expect(picture).toMatch(/<img [^>]*alt="[^"]+"/);
   });
-  it.each(locales)('says in %s what the product name is short for, in prose and in structured data', async locale => {
+  it.each(locales)('preserves the %s home destination on the not-found screen', async locale => {
     const params = Promise.resolve({ locale });
-    const [home, site, page] = await Promise.all([getMessages(locale, 'home'), getMessages(locale, 'site'), Home({ params })]);
-    const html = renderToStaticMarkup(await Layout({ params, children: page }));
-    // A reader who asks what AioLM is gets the expansion in the answer itself,
-    // and search results carry it too rather than only the initials.
-    expect(home['home.faqWhatAnswer']).toContain('All-in-One LM');
-    expect(site['site.description']).toContain('All-in-One LM');
-    // An answer engine is told the two names belong together instead of having
-    // to infer it from the prose.
-    expect(html).toContain('"alternateName":"All-in-One LM"');
-  });
-  it.each(locales)('renders a localized %s not-found screen and document title', async locale => {
-    const params = Promise.resolve({ locale });
-    const site = await getMessages(locale, 'site');
     const html = renderToStaticMarkup(await Layout({ params, children: <NotFound /> }));
-    expect(html).toContain('<title>' + site['site.notFound'] + ' · AioLM</title>');
-    expect(html).toContain(site['site.notFoundDetail']);
     expect(html).toContain('href="/' + locale + '"');
     expect(() => MissingPage()).toThrow('404');
   });

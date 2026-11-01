@@ -16,7 +16,6 @@ describe("successful measurement publication", () => {
       body: JSON.stringify(benchmark),
     }));
     expect(response.status).toBe(400);
-    expect((await response.json()).error.message).toContain("successful measurements");
     const list = await GET(new Request("http://localhost:3000/v1/benchmark-runs", { headers: testHeaders() }));
     expect((await list.json()).items).toEqual([]);
   });

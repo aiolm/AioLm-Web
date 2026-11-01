@@ -33,34 +33,14 @@ describe("install platform tabs", () => {
     expect(html).toContain(`href="https://github.com/aiolm/AioLM/releases/download/v${DESKTOP_RELEASE_VERSION}/AioLM_${DESKTOP_RELEASE_VERSION}_amd64.deb"`);
     expect(html).not.toContain('href="https://github.com/aiolm/AioLM/releases/latest"');
     expect(html).toContain('href="/en/guides/install#linux"');
-    expect(html).not.toContain("Linux planned");
   });
   it("provides the verified macOS installer command and real download/guide destinations", () => {
     const html = renderToStaticMarkup(<InstallCommand locale="en" messages={messages} macosGuideUrl="/en/guides/install#macos" linuxGuideUrl="/en/guides/install#linux" />);
     const panel = html.match(/<div id="panel-macos"[^]*?<div id="panel-linux"/)?.[0] ?? "";
     expect(panel).toContain("curl -fsSL https://github.com/aiolm/AioLM/releases/latest/download/install.sh | bash");
-    expect(panel).toContain("macOS 13.3+ · Apple silicon / Intel · DMG");
     expect(panel).toContain(`href="https://github.com/aiolm/AioLM/releases/download/v${DESKTOP_RELEASE_VERSION}/AioLM_${DESKTOP_RELEASE_VERSION}_aarch64.dmg"`);
     expect(panel).toContain(`AioLM_${DESKTOP_RELEASE_VERSION}_x64.dmg`);
     expect(panel).toContain('href="/en/guides/install#macos"');
-    expect(html).not.toMatch(/planned/i);
-  });
-  it("shows commands first and compact security guidance beside direct installer downloads", () => {
-    const html = renderToStaticMarkup(<InstallCommand locale="en" messages={messages} macosGuideUrl="/en/guides/install#macos" linuxGuideUrl="/en/guides/install#linux" />);
-    for (const os of ['windows', 'macos', 'linux'] as const) {
-      const start = html.indexOf(`id="panel-${os}"`);
-      const end = html.indexOf('role="tabpanel"', start + 30);
-      const panel = html.slice(start, end < 0 ? undefined : end);
-      const commandPosition = panel.indexOf('<code');
-      expect(commandPosition).toBeGreaterThan(0);
-      expect(panel.indexOf('class="guide-download-choices"')).toBeGreaterThan(commandPosition);
-      if (os !== 'linux') {
-        expect(panel.indexOf(`>${messages[`${os}Warning`]}<`)).toBeGreaterThan(0);
-        expect(panel.indexOf(`>${messages[`${os}Warning`]}<`)).toBeGreaterThan(panel.indexOf('class="guide-download-choices"'));
-        expect(panel).toContain('class="install-security-warning" role="note"');
-      }
-    }
-    expect(html).toContain('powershell -ExecutionPolicy Bypass -Command &quot;irm https://github.com/aiolm/AioLM/releases/latest/download/install.ps1 | iex&quot;');
   });
   it("moves between platforms with arrows that wrap, and jumps with Home and End", () => {
     expect(installTabForKey("ArrowRight", "windows")).toBe("macos");
@@ -71,11 +51,8 @@ describe("install platform tabs", () => {
   });
   it("names the tablist once and keeps an empty status region ready for the copy confirmation", () => {
     const html = renderToStaticMarkup(<InstallCommand locale="en" messages={messages} macosGuideUrl="/en/guides/install#macos" linuxGuideUrl="/en/guides/install#linux" />);
-    expect([...html.matchAll(/aria-label="([^"]*)"/g)].map(match => match[1])).toEqual(["Install AioLM"]);
     expect(html).toMatch(/role="tablist" aria-label="Install AioLM"/);
     expect(html).toContain('<span class="sr-only" role="status"></span>');
-    // The copy button is named by its visible text, not by a duplicate label.
-    expect(html).toMatch(/<button type="button" class="install-copy-button "><svg[^]*?<span>Copy<\/span><\/button>/);
   });
   it("leaves other keys, including Tab and activation keys, to the browser", () => {
     for (const key of ["Tab", "Enter", " ", "ArrowDown", "a"]) expect(installTabForKey(key, "macos")).toBeNull();

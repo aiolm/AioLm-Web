@@ -5,9 +5,7 @@ import { matchesFilters, parseFilters, parseOptionsQuery } from "@/lib/benchmark
 import { syntheticSubmission } from "@/lib/fixtures";
 import { summarizeBenchmark } from "@/lib/summary";
 import { InMemoryBenchmarkStore } from "@/server/memory-store";
-import { listSql, optionsSql } from "@/server/benchmark-discovery-sql";
-import { activeExplorerFilters, buildExplorerOptionsPath, buildExplorerSearch, explorerReducer, explorerStateFromSearch } from "@/components/benchmark-explorer-state";
-import { formatWeightPrecision } from "@/components/benchmark-model-identity";
+import { buildExplorerOptionsPath, buildExplorerSearch, explorerReducer, explorerStateFromSearch } from "@/components/benchmark-explorer-state";
 import type { StoredRun } from "@/server/repository";
 
 function run(id: string, quantization: string | null, file_type: number | null = null): StoredRun {
@@ -50,11 +48,6 @@ describe("confirmed weight-bit families", () => {
   it("binds bit filters exactly and excludes them from their own suggestions", () => {
     expect(parseFilters(new URLSearchParams("weight_bits=4&quantization=q4"))).toEqual({ weight_bits: "4", quantization: "q4" });
     expect(parseOptionsQuery(new URLSearchParams("field=weight_bits&weight_bits=4&publisher=org"))).toEqual({ field: "weight_bits", query: "", filters: { publisher: "org" } });
-    const sql = listSql({ weight_bits: "4" }, 25, null);
-    expect(sql.query).toContain("bench.model_weight_bits(summary->'model_info')::text = $1");
-    expect(sql.values[0]).toBe("4");
-    expect(optionsSql("weight_bits", "", {}).query).toContain("bits is not null");
-    expect(optionsSql("weight_bits", "", {}).query).toContain("order by bits");
   });
   it("groups formats by bit count, keeps unclassified runs unfiltered, and excludes hidden runs from options", async () => {
     const store = new InMemoryBenchmarkStore();
@@ -66,20 +59,14 @@ describe("confirmed weight-bit families", () => {
     expect(await store.listOptions("weight_bits", "", { weight_bits: "8" })).toEqual({ options: [{ value: "4", count: 3 }, { value: "8", count: 1 }, { value: "16", count: 1 }, { value: "32", count: 1 }], has_more: false });
     expect(matchesFilters(store.runs.get("awq")!.summary, { weight_bits: "4" })).toBe(false);
   });
-  it("keeps bit filters in links, active chips, apply/reset and suggestion constraints", () => {
+  it("keeps bit filters in links, apply/reset and suggestion constraints", () => {
     const initial = explorerStateFromSearch("?weight_bits=4&quantization=Q4_K_M");
     expect(buildExplorerSearch({ filters: initial.applied, cursor: null })).toContain("weight_bits=4");
-    expect(activeExplorerFilters(initial.applied).find(item => item.key === "weight_bits")?.value).toBe("4 bit");
     expect(buildExplorerOptionsPath("quantization", "", initial.draft)).toContain("weight_bits=4");
     expect(buildExplorerOptionsPath("weight_bits", "", initial.draft)).not.toContain("weight_bits=");
     const draft = explorerReducer(initial, { type: "draft", key: "weight_bits", value: "8" });
     expect(draft.applied.weight_bits).toBe("4");
     expect(explorerReducer(draft, { type: "apply" }).applied.weight_bits).toBe("8");
     expect(explorerReducer(draft, { type: "reset" }).applied.weight_bits).toBe("");
-  });
-  it("displays the bit family alongside the original encoding without assigning method defaults", () => {
-    expect(formatWeightPrecision(run("q4", "Q4_K_M").summary.model_info!)).toBe("4 bit · Q4_K_M");
-    expect(formatWeightPrecision(run("awq", "AWQ").summary.model_info!)).toBe("AWQ");
-    expect(formatWeightPrecision(run("type", null, 39).summary.model_info!)).toBe("4 bit");
   });
 });

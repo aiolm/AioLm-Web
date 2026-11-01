@@ -12,6 +12,7 @@ export function GET() {
       <div style={{ fontSize: 76, fontWeight: 700 }}>Many engines.</div>
       <div style={{ fontSize: 76, fontWeight: 700 }}>One workspace.</div>
       <div style={{ fontSize: 28, marginTop: 40, color: '#5E5E5E' }}>llama.cpp · vLLM · MLX · External inference engines</div>
+      <div style={{ fontSize: 26, marginTop: 16, color: '#5E5E5E' }}>Model search · Loaded models · Personalized chat · Local API</div>
     </div>, { width: 1200, height: 630 },
   );
 }

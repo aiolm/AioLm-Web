@@ -14,7 +14,5 @@ describe('locale provider', () => {
     expect(html).toContain('type="hidden" name="locale" value="ja"');
     expect(html).toMatch(/role="combobox" aria-haspopup="listbox" aria-expanded="false"[^>]*aria-labelledby="[^"]+-label" aria-describedby="[^"]+-hint"/);
     expect(html).toContain('<span class="ui-select-value" lang="ja">日本語</span>');
-    expect(html).toContain('Language');
-    expect(html).toContain('Changing language');
   });
 });

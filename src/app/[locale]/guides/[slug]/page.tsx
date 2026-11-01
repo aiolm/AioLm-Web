@@ -59,8 +59,6 @@ export default async function GuidePage({ params }: { params: Params }) {
           {detail.steps && <ol>{detail.steps.map(step => <li key={step}>{step}</li>)}</ol>}
           {detail.code && <pre tabIndex={0}><code>{detail.code}</code></pre>}
           {detail.image && <GuideScreenshot locale={locale} id={detail.image} caption={detail.caption ?? detail.title} content={content} />}
-          {detail.report && <a href={detail.report.href}>{detail.report.label} ↗</a>}
-          {detail.links?.map(link => <p key={link.href}><a href={link.href}>{link.label} ↗</a></p>)}
           {section.id === 'verify' && <a href={`${GITHUB_REPOSITORY_URL}/releases/download/v${DESKTOP_RELEASE_VERSION}/checksums.txt`}>checksums.txt ↓</a>}
         </details>)}
       </section>)}

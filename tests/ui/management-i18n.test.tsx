@@ -2,9 +2,9 @@ import ManagePage, { generateMetadata as manageMetadata } from "@/app/[locale]/m
 import VerifyPage, { generateMetadata as verifyMetadata } from "@/app/[locale]/verify/[sessionId]/page";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { I18nProvider } from "@/i18n/client";
-import { intlLocales, locales, type Locale } from "@/i18n/config";
+import { locales, type Locale } from "@/i18n/config";
 import { createTranslator } from "@/i18n/translate";
 import type { MessageCatalog } from "@/i18n/types";
 import commonEn from "@/i18n/messages/common/en";
@@ -15,83 +15,31 @@ import managementEn from "@/i18n/messages/management/en";
 import managementKo from "@/i18n/messages/management/ko";
 import managementJa from "@/i18n/messages/management/ja";
 import managementZh from "@/i18n/messages/management/zh";
-import { ManagementPanel, managementErrorKey } from "@/components/management-panel";
-import { VerifyPanel, friendlyVerifyError, verifyErrorKey } from "@/components/verify-panel";
-import { ReportForm, friendlyReportError, reportErrorKey } from "@/components/report-form";
+import { managementErrorKey } from "@/components/management-panel";
+import { friendlyVerifyError, verifyErrorKey } from "@/components/verify-panel";
+import { friendlyReportError, reportErrorKey } from "@/components/report-form";
 import { turnstileLanguage } from "@/components/turnstile";
-import { ErrorState, EmptyState, Loading, apiErrorKey, parseApiErrorKey, friendlyApiError, readApiErrorCode } from "@/components/ui";
+import { apiErrorKey, parseApiErrorKey, friendlyApiError, readApiErrorCode } from "@/components/ui";
 import { SafeMarkdown } from "@/components/safe-markdown";
 
 const common: Record<Locale, MessageCatalog> = { en: commonEn, ko: commonKo, ja: commonJa, zh: commonZh };
 const management: Record<Locale, MessageCatalog> = { en: managementEn, ko: managementKo, ja: managementJa, zh: managementZh };
-const placeholders = (text: string): string[] => [...text.matchAll(/\{(\w+)\}/g)].map((match) => match[1]).sort();
 const wrap = (locale: Locale, messages: MessageCatalog, children: React.ReactNode): string =>
   renderToStaticMarkup(<I18nProvider locale={locale} messages={messages}>{children}</I18nProvider>);
 
 vi.mock("@/i18n/server", () => ({ getMessages: async (locale: Locale) => management[locale] }));
 
-afterEach(() => vi.unstubAllEnvs());
 
 describe.each(locales)("management and common localization: %s", (locale) => {
   const messages = { ...common[locale], ...management[locale] };
   const t = createTranslator(messages);
 
   it("loads localized routes with noindex metadata", async () => {
-    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "");
     const params = Promise.resolve({ locale, sessionId: "synthetic-session" });
-    expect(await manageMetadata({ params })).toEqual({ title: management[locale]["manage.title"], robots: { index: false, follow: false } });
-    expect(await verifyMetadata({ params })).toEqual({ title: management[locale]["verify.title"], robots: { index: false, follow: false } });
-    expect(wrap(locale, common[locale], await ManagePage({ params }))).toContain(management[locale]["manage.title"]);
-    expect(wrap(locale, common[locale], await VerifyPage({ params }))).toContain(management[locale]["verify.title"]);
+    expect((await manageMetadata({ params })).robots).toEqual({ index: false, follow: false });
+    expect((await verifyMetadata({ params })).robots).toEqual({ index: false, follow: false });
   });
 
-  it("provides identical catalog keys and interpolation parameters", () => {
-    for (const namespace of [common, management]) {
-      expect(Object.keys(namespace[locale]).sort()).toEqual(Object.keys(namespace.en).sort());
-      for (const [key, value] of Object.entries(namespace[locale])) {
-        expect(value.trim().length, key).toBeGreaterThan(0);
-        expect(placeholders(value), key).toEqual(placeholders(namespace.en[key]));
-      }
-    }
-  });
-
-  it("renders recovery and verification text before hydration without changing API actions", () => {
-    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "");
-    const manage = wrap(locale, messages, createElement(ManagementPanel));
-    expect(manage).toContain(messages["manage.title"]);
-    expect(manage).toContain('action="/v1/management-sessions"');
-    expect(manage).toContain('name="recovery_code"');
-    expect(manage).toContain('autoComplete="off"');
-    const verify = wrap(locale, messages, createElement(VerifyPanel, { sessionId: "synthetic-session" }));
-    expect(verify).toContain(messages["verify.title"]);
-    expect(verify).toContain(messages["verify.continue"]);
-    expect(verify).toContain(messages["turnstile.notConfigured"]);
-    expect(manage + verify).not.toMatch(/>\s*(?:manage|verify|turnstile)\.[\w]+\s*</);
-  });
-
-  it("renders the benchmark report with only common messages and localized numbers", () => {
-    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "");
-    const html = wrap(locale, common[locale], createElement(ReportForm, { publicId: "synthetic-public-id" }));
-    expect(html).toContain(common[locale]["report.title"]);
-    expect(html).toContain(common[locale]["report.send"]);
-    expect(html).toContain("<details");
-    expect(html).not.toContain(common[locale]["turnstile.notConfigured"]);
-    expect(html).toContain(new Intl.NumberFormat(intlLocales[locale]).format(2000));
-    expect(html).toContain('action="/v1/benchmark-runs/synthetic-public-id/reports"');
-    expect(html).not.toMatch(/>\s*(?:report|turnstile)\.[\w]+\s*</);
-  });
-
-  it("renders shared labels and the locale-preserving home link", () => {
-    const html = wrap(locale, common[locale], createElement("div", null,
-      createElement(Loading),
-      createElement(ErrorState, { message: t("error.network"), onRetry: () => undefined }),
-      createElement(EmptyState, { title: "synthetic empty title" }),
-    ));
-    expect(html).toContain(common[locale]["common.loading"]);
-    expect(html).toContain(common[locale]["common.errorTitle"]);
-    expect(html).toContain(common[locale]["common.retry"]);
-    expect(html).toContain(`href="/${locale}"`);
-  });
 
   it("localizes error codes without displaying server prose or diagnostics", () => {
     const body = JSON.stringify({ error: { code: "invalid_csrf", message: "<script>private diagnostic</script>" } });

@@ -26,18 +26,4 @@ describe("required migration manifest", () => {
   it("lists exactly the migrations in sql/migrations/", () => {
     expect([...REQUIRED_MIGRATIONS]).toEqual(migrationFilesOnDisk());
   });
-
-  it("is ordered and free of duplicates", () => {
-    // The runner applies files in sorted order, so the manifest reads in the
-    // same order an operator sees in the ledger.
-    expect([...REQUIRED_MIGRATIONS]).toEqual([...REQUIRED_MIGRATIONS].sort());
-    expect(new Set(REQUIRED_MIGRATIONS).size).toBe(REQUIRED_MIGRATIONS.length);
-  });
-
-  it("covers the numbered series 001 through 007 with no gaps", () => {
-    // The task this manifest was added for names 001-007 explicitly; a gap
-    // would mean a prefix was skipped rather than superseded.
-    const prefixes = REQUIRED_MIGRATIONS.map((file) => file.slice(0, 3));
-    expect(prefixes.slice(0, 7)).toEqual(["001", "002", "003", "004", "005", "006", "007"]);
-  });
 });

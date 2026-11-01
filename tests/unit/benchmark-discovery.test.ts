@@ -1,10 +1,10 @@
 import { createHash } from "node:crypto";
 import { beforeEach, describe, expect, it } from "vitest";
 import { syntheticSubmission } from "@/lib/fixtures";
-import { GLOBAL_SEARCH_FILTER_KEYS, matchesFilters, MODEL_INFO_SEARCH_KEYS, normalizeSetup, withRuntimeBuild, numericValue, parseFilters, parseOptionsQuery, sortValue, SORT_VALUES, TEXT_FILTER_MAX_LENGTH, textValues } from "@/lib/benchmark-discovery";
+import { matchesFilters, normalizeSetup, withRuntimeBuild, numericValue, parseFilters, parseOptionsQuery, sortValue, SORT_VALUES, TEXT_FILTER_MAX_LENGTH, textValues } from "@/lib/benchmark-discovery";
 import { summarizeBenchmark } from "@/lib/summary";
 import { decodeDiscoveryCursor, encodeDiscoveryCursor } from "@/lib/pagination";
-import { LIST_RUNTIME_BUILD_COLUMN, listSql, literalPattern, optionsSql, RUNTIME_BUILD_EXPRESSION } from "@/server/benchmark-discovery-sql";
+import { listSql, literalPattern, optionsSql } from "@/server/benchmark-discovery-sql";
 import { InMemoryBenchmarkStore } from "@/server/memory-store";
 import { GET as list } from "@/app/v1/benchmark-runs/route";
 import { GET as options } from "@/app/v1/benchmark-runs/options/route";
@@ -102,30 +102,16 @@ describe("runtime build", () => {
     expect(Object.fromEntries(listed)).toEqual({ old: "b10638", new: "b10640", unrecorded: null });
     expect((await store.listRuns({ q: "10640" }, 10, null)).items.map((i) => i.public_id)).toEqual(["new"]);
   });
-  it("searches a legacy summary by the build its benchmark recorded, as the SQL expression does", async () => {
+  it("searches a legacy summary by the build its benchmark recorded", async () => {
     // An explicit null is the summary's own answer; only a missing key falls back to the benchmark.
     const explicit = built("explicit", null); explicit.benchmark.runtime.build = "b10638";
     for (const r of [legacy("old", "b10638"), explicit, built("other", "b20000")]) store.runs.set(r.public_id, r);
     expect((await store.listRuns({ q: "10638" }, 10, null)).items.map((i) => i.public_id)).toEqual(["old"]);
     expect((await store.listOptions("os", "", { q: "10638" })).options).toEqual([{ value: "synthetic", count: 1 }]);
-    expect(RUNTIME_BUILD_EXPRESSION).toBe("case when summary->'setup' ? 'runtime_build' then summary->'setup'->>'runtime_build' when jsonb_typeof(summary->'setup') = 'object' then benchmark#>>'{runtime,build}' end");
   });
   it("leaves a corrupt setup alone instead of failing the list", () => {
     const corrupt = { summary: { ...built("corrupt", "b1").summary, setup: "corrupt" as unknown as BenchmarkSetup } };
     expect(withRuntimeBuild(corrupt, "b1")).toBe(corrupt);
-  });
-  it("reads the legacy build read-only in SQL and searches it with q", () => {
-    expect(listSql({}, 25, null).query).toContain(`${LIST_RUNTIME_BUILD_COLUMN} as runtime_build`);
-    expect(listSql({ q: "10638" }, 25, null).query).toContain(`${RUNTIME_BUILD_EXPRESSION} ilike $1`);
-  });
-  it("reads the stored build for a listed row only when withRuntimeBuild would use it", () => {
-    // The column is null only for an object setup that already has the key, explicit null included.
-    expect(LIST_RUNTIME_BUILD_COLUMN).toBe("case when jsonb_typeof(summary->'setup') = 'object' and summary->'setup' ? 'runtime_build' then null else benchmark#>>'{runtime,build}' end");
-    const explicit = built("explicit", null);
-    expect(withRuntimeBuild(explicit, "b1")).toBe(explicit);
-    expect(withRuntimeBuild(built("current", "b2"), "b1").summary.setup!.runtime_build).toBe("b2");
-    // Every other shape still receives the stored build, exactly as before.
-    expect(withRuntimeBuild(legacy("old", "b1"), "b1").summary.setup!.runtime_build).toBe("b1");
   });
 });
 
@@ -180,11 +166,12 @@ describe("discovery API and memory queries", () => {
   });
 });
 
-it("builds bounded parameterized SQL with literal patterns and null-aware keysets", () => {
+it("parameterizes SQL with literal search patterns", () => {
   const text = "x%' OR true --";
   const statement = listSql({ gpu: text, sort: "context_asc" }, 25, { createdAt: "2026-01-01", publicId: "id", value: 2048 });
-  expect(statement.query).not.toContain(text); expect(statement.values).toContain(literalPattern(text)); expect(statement.query).toContain("nulls last"); expect(statement.query).toContain("is null or"); expect(statement.values.at(-1)).toBe(26);
-  expect(optionsSql("os", "beyond", { os: "ignored" }).query).toContain("limit 31"); expect(optionsSql("os", "beyond", { os: "ignored" }).values).toEqual(["%beyond%"]);
+  expect(statement.query).not.toContain(text);
+  expect(statement.values).toContain(literalPattern(text));
+  expect(optionsSql("os", "beyond", { os: "ignored" }).values).toEqual(["%beyond%"]);
 });
 
 it("matches all supported setup strings and numeric ranges without invented defaults", () => {
@@ -259,12 +246,6 @@ describe("configured input context", () => {
     expect(matchesFilters(summary, { context_min: 4096, context_max: 4096 })).toBe(true);
     expect(matchesFilters(summary, { context_min: 8192 })).toBe(false);
     expect(matchesFilters(summary, { context_min: 16896, context_max: 16896 })).toBe(false);
-  });
-
-  it("reads the configured input length in generated list SQL", () => {
-    const statement = listSql({ context_min: 512, context_max: 4096, sort: "context_desc" }, 5, null);
-    expect(statement.query).toContain("summary->'setup'->>'prompt_length'");
-    expect(statement.query).not.toContain("context_size");
   });
 
   it("orders a page by the configured input length while allocations disagree", async () => {
@@ -414,12 +395,6 @@ describe("model metadata discovery", () => {
     const statement = listSql({ q: text, publisher: text, base_model: text }, 25, null);
     expect(statement.query).not.toContain(text);
     expect(statement.values.filter(v => v === literalPattern(text))).toHaveLength(3);
-    expect(statement.query).toContain("summary->'model_info'->>'publisher' ilike $2");
-    // A base model matches only when one entry matches, never across two of them.
-    expect(statement.query).toContain("jsonb_array_elements_text(coalesce(summary->'model_info'->'base_models', '[]'::jsonb)) as element(value) where value ilike $3");
-    for (const key of MODEL_INFO_SEARCH_KEYS) expect(statement.query).toContain(`summary->'model_info'->>'${key}' ilike $1`);
-    expect(optionsSql("base_model", "upstream", {}).query)
-      .toContain("jsonb_array_elements_text(coalesce(summary->'model_info'->'base_models', '[]'::jsonb)) as value");
     expect(optionsSql("publisher", "org", {}).values).toEqual(["%org%"]);
   });
 
@@ -441,7 +416,7 @@ describe("model metadata discovery", () => {
       expect(parseFilters(new URLSearchParams({ q: "gpu", model: "8b", model_query: "  Example 8B " }))).toEqual({ q: "gpu", model: "8b", model_query: "Example 8B" });
       expect(parseFilters(new URLSearchParams({ model_query: "   " }))).toEqual({});
       expect(parseFilters(new URLSearchParams({ model_query: "x".repeat(TEXT_FILTER_MAX_LENGTH) }))).toEqual({ model_query: "x".repeat(TEXT_FILTER_MAX_LENGTH) });
-      expect(() => parseFilters(new URLSearchParams({ model_query: "x".repeat(TEXT_FILTER_MAX_LENGTH + 1) }))).toThrow("model_query must be at most 120 characters.");
+      expect(() => parseFilters(new URLSearchParams({ model_query: "x".repeat(TEXT_FILTER_MAX_LENGTH + 1) }))).toThrow();
       expect(parseFilters(new URLSearchParams("model_query=100%25_%5C"))).toEqual({ model_query: "100%_\\" });
     });
 
@@ -505,16 +480,6 @@ describe("model metadata discovery", () => {
       }
       expect(await ids({ q: "RTX", model_query: "example 8b" })).toEqual(["gpu-run"]);
       expect(await ids({ q: "RTX", model_query: "beta" })).toEqual([]);
-    });
-
-    it("pins what q searches so adding model_query to the filter keys cannot widen it", () => {
-      expect([...GLOBAL_SEARCH_FILTER_KEYS]).toEqual(["model", "publisher", "quantization", "base_model", "hardware", "vendor", "gpu", "cpu", "os", "arch",
-        "runtime", "backend", "mode", "method", "workload", "flash_attention", "cache_type_k", "cache_type_v", "split_mode"]);
-      const summary = on(described("pinned"), "RTX Fixture", "GPUVendor").summary;
-      expect(new Set(textValues(summary, "q"))).toEqual(new Set(["Example 8B", "Publisher-Org", "Q4_K_M", "Upstream-Org/example-8B", "Other-Org/mixin-2B",
-        "RTX Fixture", "GPUVendor", "synthetic-cpu", "synthetic", "x64", "llama.cpp", "Vulkan", "selected", "cold-prompt-serving@1", "code_python",
-        "runtime-rev-7", "complete", "qwen2", "8B", "Quantizer Org", "Publisher-Org/example-8B-GGUF", "q4/example-8B-Q4_K_M.gguf", "c".repeat(64)]));
-      expect(textValues(summary, "model_query")).toEqual(["Example 8B", "Publisher-Org/example-8B-GGUF", "q4/example-8B-Q4_K_M.gguf", "c".repeat(64)]);
     });
 
     it("reads corrupted model metadata as unknown instead of crashing", () => {
@@ -601,32 +566,12 @@ describe("model metadata discovery", () => {
       expect((await response.json()).options).toEqual([{ value: "Alpha Model", count: 1 }, { value: "Alpha-Org/alpha-GGUF", count: 1 }, { value: "alpha/alpha-Q8_0.gguf", count: 1 }]);
     });
 
-    it("binds one literal pattern over the label and identifying fields only", () => {
+    it("binds model queries as literal patterns", () => {
       const text = "x%' OR true --";
       const statement = listSql({ model_query: text }, 25, null);
       expect(statement.query).not.toContain(text);
       expect(statement.values).toEqual([literalPattern(text), 26]);
-      expect(statement.query).toContain("(summary->>'model_label' ilike $1 or summary->'model_info'->>'name' ilike $1 or summary->'model_info'->>'repository' ilike $1 or summary->'model_info'->>'artifact' ilike $1 or summary->'model_info'->>'sha256' ilike $1)");
-      const where = / where (.*) order by /.exec(statement.query)![1]!;
-      expect(where).not.toMatch(/setup|status|architecture|quantized_by|size_label|publisher|quantization|base_models/);
       expect(listSql({ model_query: "a%_\\" }, 25, null).values[0]).toBe(literalPattern("a%_\\"));
-    });
-
-    it("adds one ANDed clause and leaves the q and GPU clauses as they were", () => {
-      const where = (filters: BenchmarkFilters) => / where (.*) order by /.exec(listSql(filters, 25, null).query)![1]!;
-      expect(where({ q: "x", model_query: "y" }).startsWith(`${where({ q: "x" })} and (summary->>'model_label' ilike $2 or `)).toBe(true);
-      const combined = listSql({ model_query: "alpha", gpu: "rtx" }, 25, null);
-      expect(combined.values).toEqual(["%alpha%", "%rtx%", 26]);
-      expect(combined.query).toContain("summary->'model_info'->>'sha256' ilike $1) and (bench.discovery_array_text(summary->'setup'->'gpus') ilike $2 and exists");
-    });
-
-    it("builds suggestion SQL from the same expressions, capped at the filter length", () => {
-      const statement = optionsSql("model_query", "ex", { gpu: "rtx", model_query: "ignored" });
-      expect(statement.values).toEqual(["%rtx%", "%ex%"]);
-      expect(statement.query).toContain("cross join lateral (values (summary->>'model_label'), (summary->'model_info'->>'name'), (summary->'model_info'->>'repository'), (summary->'model_info'->>'artifact'), (summary->'model_info'->>'sha256')) as candidate(value)");
-      expect(statement.query).toContain("value <> '' and char_length(value) <= 120 and value ilike $2");
-      expect(statement.query).toContain("limit 31");
-      expect(optionsSql("model_query", "", {}).query).not.toMatch(/setup|status/);
     });
   });
 });

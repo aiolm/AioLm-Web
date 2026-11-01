@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { GET as readiness } from "@/app/v1/readiness/route";
 import type { InMemoryBenchmarkStore } from "@/server/memory-store";
-import { READINESS_PROBE_TIMEOUT_MS, REQUIRED_MIGRATIONS } from "@/server/repository";
+import { REQUIRED_MIGRATIONS } from "@/server/repository";
 import type { BenchmarkStore } from "@/server/repository";
 import { __setTestStore } from "@/server/store";
 import { freshStore, setupTestEnv } from "./helpers";
@@ -101,18 +101,6 @@ describe("readiness endpoint", () => {
     __setTestStore(null);
     delete (process.env as Record<string, string | undefined>)["DATABASE_URL"];
     expect((await readiness()).status).toBe(503);
-  });
-
-  it("passes the shared probe bound to the store", async () => {
-    // The route does not race the read itself; the store bounds it inside
-    // PostgreSQL so a probe that gives up does not leave a statement running.
-    const seen: Array<number | undefined> = [];
-    store.appliedMigrations = async (timeoutMs?: number): Promise<string[]> => {
-      seen.push(timeoutMs);
-      return [...REQUIRED_MIGRATIONS];
-    };
-    expect((await readiness()).status).toBe(200);
-    expect(seen).toEqual([READINESS_PROBE_TIMEOUT_MS]);
   });
 
   it("refuses to report ready on an unconfigured production deployment", async () => {

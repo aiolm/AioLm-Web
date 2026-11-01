@@ -58,6 +58,14 @@ rename them to a built-in engine to bypass validation, and never extend the
 website validator independently of the shared package. Weight bits remain
 separate from activation/KV precision and unknown when not declared.
 
+The current desktop explorer's profile importer reads the existing public
+`GET /v1/benchmark-runs/<id>` projection: `id`, `benchmark.runtime` and
+`benchmark.execution`. The app validates that projection and creates local
+profiles; the website neither imports desktop code nor accepts local profile
+settings. The app supplies its own toolbar in its unprivileged website window;
+ordinary browser pages gain no native bridge. Existing owner/recovery and
+management-handoff flows remain separate.
+
 The installed package ships the authoritative machine-readable surface; read it
 from `node_modules`, not from a transcribed copy:
 

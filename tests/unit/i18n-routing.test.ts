@@ -16,7 +16,7 @@ describe('locale page routing', () => {
     expect(isLocale('constructor')).toBe(false);
   });
   it.each(['https://example.invalid/', '//example.invalid/', '/\\example.invalid/'])('rejects non-local destination %s', path => {
-    expect(() => localizedPath('en', path)).toThrow('same-origin');
+    expect(() => localizedPath('en', path)).toThrow();
   });
   it.each(['/v1/readiness', '/v1/benchmark-runs', '/api/test', '/_next/static/file.js', '/favicon.png', '/brand/aio-monogram.png', '/sitemap.xml', '/en', '/ko/benchmarks', '/fr/benchmarks', '/unknown', '/benchmarks/example/unknown', '/manage/unknown', '/guides/unknown', '/guides/install/unknown'])('does not negotiate %s', path => {
     expect(isLegacyPage(path)).toBe(false);

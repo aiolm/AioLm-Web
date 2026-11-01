@@ -1,6 +1,6 @@
 const messages = {
   "site.title": "AioLM — Many engines. One workspace.",
-  "site.description": "AioLM (All-in-One LM) is a GUI adapter for llama.cpp, vLLM, MLX and external inference engines. Manage models, settings and local chat in one workspace.",
+  "site.description": "AioLM unifies llama.cpp, vLLM, MLX and compatible external engines: engine-neutral model search, loaded-model management, personalized chat, projects and a local API server.",
   "site.skip": "Skip to main content",
   "site.primary": "Primary",
   "site.home": "Home",

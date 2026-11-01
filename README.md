@@ -50,10 +50,13 @@ supported platforms change.
 The homepage, FAQ and search descriptions describe the adapter architecture in
 all four languages. The shared social card names the built-in engines and
 adapters for external inference engines. Built-in vLLM targets supported Linux or
-Apple silicon macOS 15+ through vllm-metal; MLX targets Apple silicon. External
-engines require a compatible reviewed executable/bridge, model and platform.
-Registration uses the local OpenAI-compatible API and does not grant every
-benchmark, modality, deep-verification or portable-bundle capability.
+Apple silicon macOS 15+ through vllm-metal; MLX targets Apple silicon. Automatic
+external connections require a local OpenAI-compatible v1 server or an installed
+engine with a clear launch method, model and platform; advanced manual adapter
+registration remains available. Connecting does not enable unsupported
+modalities, exact-token benchmarks or portable bundles. Runtime probes do not
+certify inference quality; CPU-reference numerical verification is not offered
+in the current desktop app or public CLI.
 
 ## Public pages
 
@@ -172,16 +175,51 @@ it never touches, and the real upper bound of the 24h cutoffs.
 
 `/<locale>/guides` provides installation, first conversation, engine selection and external inference engine setup in all four site languages. Instructions use the visible button names, direct platform download choices and one action per illustrated step. Technical details and validation limits remain in expandable sections. User-facing help stays on the site; GitHub hosts release downloads, source and license.
 
-Guide copy lives in `src/content/guides`. Published app screenshots must be captured from a running native desktop app with its real Rust backend. An isolated profile and public model files keep personal data out of the capture. Do not substitute IPC responses, installed-runtime status, discovery results or model answers. The original screenshot collections are preserved in local task materials while their public images are replaced.
+The current screenshots were captured from the native macOS app built from
+desktop v0.3.4 source, not browser-only rendering. Keep
+`src/lib/desktop-release.ts` tied to the latest published installer assets.
 
-The `public/screenshots/guides/v0.3.2` collection covers onboarding, engine and model setup, chat, updates and advanced registration in four languages. The separate `automatic-connection` collection covers discovery, model selection and connection captured before their v0.3.3 release. A capture record identifies its source commit, released/unreleased state at capture time, app version, executable hash, native process, Linux execution environment, capture session and timestamp. These historical values and image paths remain unchanged after a release; they do not describe current feature availability. The screenshot and supporting evidence have their own SHA-256 hashes. Captures showing actual model responses additionally need the engine and model artifact hashes and request/response evidence. The evidence labels whether request/response digests cover the visible UI conversation or actual HTTP payloads; a UI-text digest is not described as a wire capture. A screenshot alone does not establish installation, every device/engine combination, model quality or update-installation acceptance. F09, full Linux acceptance and real v0.3.1 → v0.3.2 update installation/UI checks remain open.
+The localized homepage and guides cover engine-neutral All formats/Trending
+search, GGUF and complete safetensors downloads, shared per-engine profiles,
+resource estimates and loaded-model actions. Internal chat is independent of
+the explicitly started API server; external clients use its URL, key and model
+ID. Personalization covers shared/AioLM AGENTS.md precedence and local skills,
+including their read-only instruction role and MCP's existing approval boundary.
+Startup update notices do not install an update automatically.
 
-The homepage light/dark pair must follow the same native-capture requirement. Capture-only test harnesses and synthetic backend code are not shipped. Image URLs include the content hash so replacements invalidate browser/CDN optimization caches. Tests check file integrity, native provenance and locale coverage. Guide images enlarge in an accessible native dialog, with horizontal viewing on small screens.
+AppImage instructions install `zenity` for MCP approval dialogs, alongside the
+CPU/FUSE dependencies. The guides also explain installer-triggered app exit,
+macOS Keychain/PATH caveats, local benchmark-profile creation, lost-key recovery
+limits and the boundaries of llama.cpp resource estimates. Literal interface
+labels follow the desktop locale catalogs rather than independent translations.
+
+The desktop's public-benchmark explorer is an unprivileged, private-browsing
+window loading the existing website directly, not an iframe or a second explorer
+implementation. Its app-owned toolbar offers profile creation on a public
+result; an ordinary browser does not have that control. The native app fetches
+the public detail API and validates the recorded settings. It preserves existing
+profiles, assignments and running models, reuses an existing import, and reports
+unsupported options. Importing neither downloads model files nor installs a
+runtime. No native IPC or owner credentials are added to the website.
+
+Guide copy lives in `src/content/guides`. Published app screenshots must be captured from a running native desktop app with its real Rust backend. Use an isolated profile and public model files; never substitute IPC responses, installed-runtime status, discovery results or model answers. Temporary capture builds, old screenshots and one-off validation materials are not maintained repository artifacts.
+
+`public/screenshots/current/manifest.json` contains only the locale, image ID,
+path, dimensions and SHA-256 used to render and cache the 84 published images:
+19 guide screens and two homepage themes per language. Capture logs, process
+records, DOM snapshots and per-image validation JSON are not shipped or kept.
+
+Homepage images follow the selected language and system light/dark preference.
+Hash-versioned URLs invalidate image caches when files change. Tests check
+locale/theme coverage, PNG dimensions and file hashes. Guide images enlarge in
+an accessible native dialog, with horizontal viewing on small screens.
+
+Screenshots do not establish model quality, every engine/device combination,
+F09 resolution, full Linux acceptance or historical update-installation results.
 
 The external-engine guide leads with the automatic flow available in v0.3.3 and later: find a local server or choose an installation folder, select a model, then connect. It does not ask users for engine IDs, JSON, executables or probe commands. The current implementation targets loopback OpenAI-compatible v1; it does not infer or translate arbitrary wire protocols. A running local server must return an actual model list before it is offered, and actual text/chat and SSE checks must pass before a connection is saved. An existing server remains outside AioLM's process ownership; disconnecting stops AioLM's proxy, not the original server. An installed program is considered for managed launch only when its launch method and model identity are clear. Ambiguous commands or models, different protocols and required credentials remain unconfirmed. An already running container server can use the same local protocol, but automatic container/daemon creation and management are not implemented. Availability of this flow does not establish all-engine validation.
 
-Manual registration remains under expandable advanced guidance, with five screenshots captured before v0.3.3 and the older v0.3.2 button names explained separately. That section distinguishes provider-authored `*.setup.json` input recipes with companion programs, provider/developer-prepared completed registration JSON for advanced import (`*.engine.json` is only a filename example), and the engine's own configuration files such as `deployment.json`. Manual registration does not require either import file: the form constructs the registration and successful registration saves it internally as `adapters/<engine-id>/<runtime-id>/registration.json`. It does not export a separate `.engine.json` or infer unknown model/port/probe settings.
+Manual registration remains under expandable advanced guidance, illustrated with the current native app. That section distinguishes provider-authored `*.setup.json` input recipes with companion programs, provider/developer-prepared completed registration JSON for advanced import (`*.engine.json` is only a filename example), and the engine's own configuration files such as `deployment.json`. Manual registration does not require either import file: the form constructs the registration and successful registration saves it internally as `adapters/<engine-id>/<runtime-id>/registration.json`. It does not export a separate `.engine.json` or infer unknown model/port/probe settings.
 
-Public guides describe the common connection contract and file roles rather than publishing an external-engine catalog. The former `/<locale>/guides/external-engines` URL permanently redirects to `/<locale>/guides/adapters#files`. The 16 user-specified engines are test cases for engine neutrality; their original source revisions, launch observations and validation statuses are preserved unchanged in `tests/fixtures/external-engine-targets-2026-10-28.json`, outside the public assets and product imports. They do not establish installed adapters or universal compatibility. The three actual CPU CLI execution reports remain public under `public/verification` and linked from the adapter guide, with their initial failures and limited scope preserved. These historical v0.3.2 CLI records do not verify the automatic flow introduced in v0.3.3 or an all-engine capability.
+Public guides describe the common connection contract and file roles rather than publishing an external-engine catalog. The former `/<locale>/guides/external-engines` URL permanently redirects to `/<locale>/guides/adapters#files`.
 
-Preserve the unresolved F09, overall Linux acceptance and real update-installation/UI limits when updating the guides. Do not replace the original device-validation materials or v0.3.1 fixtures with these UI examples.

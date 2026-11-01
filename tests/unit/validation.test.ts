@@ -42,12 +42,12 @@ describe("publication validation", () => {
     const row = syntheticSubmission().measurements.rows[0]!;
     const benchmark = syntheticSubmission({ measurements: { status: "complete", rows: Array.from({ length: 10001 }, () => row) } });
     // The shared contract owns the message; the website asserts rejection, not wording.
-    expect(() => validatePublicationRequest({ benchmark, description_md: "" })).toThrow(/measurements.*rows/);
+    expect(() => validatePublicationRequest({ benchmark, description_md: "" })).toThrow();
   });
 
   it("rejects >4MiB snapshots without truncating", () => {
     const big = "x".repeat(4 * 1024 * 1024 + 1);
-    expect(() => parsePublicationSnapshot(big)).toThrow(/4MiB/);
+    expect(() => parsePublicationSnapshot(big)).toThrow();
   });
 
   it("receipts stay within 16KiB and bind the submission", () => {

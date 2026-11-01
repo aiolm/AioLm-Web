@@ -32,8 +32,7 @@
     "react-dom": "^19.3.0",
     "react-markdown": "^10.1.0",
     "rehype-sanitize": "^6.0.0",
-    "remark-gfm": "^4.0.1",
-    "zod": "^4.6.5"
+    "remark-gfm": "^4.0.1"
   },
   "overrides": {
     "postcss": "^8.5.23"

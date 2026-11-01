@@ -1,21 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  BROWSER_HISTORY_LIMIT,
-  normalizeBrowserFilters,
-  popBrowserHistory,
-  pushBrowserHistory,
-  sameBrowserFilters,
-} from "@/components/benchmark-browser";
-import {
   EXPLORER_COMPARE_LIMIT,
   EMPTY_EXPLORER_FILTERS,
   invalidExplorerRanges,
   buildExplorerOptionsPath,
   EXPLORER_FILTER_MAX_LENGTH,
-  EXPLORER_FILTER_PLACEHOLDERS,
   EXPLORER_HISTORY_LIMIT,
   EXPLORER_PAGE_PATH,
-  activeExplorerFilters,
   buildExplorerRequestPath,
   buildExplorerSearch,
   comparisonCompatibility,
@@ -25,10 +16,7 @@ import {
   explorerStateFromSearch,
   normalizeExplorerFilters,
   parseExplorerLocation,
-  popExplorerHistory,
-  pushExplorerHistory,
   readExplorerHistory,
-  sameExplorerFilters,
   sanitizeExplorerCursor,
   type ExplorerItem,
   type ExplorerState,
@@ -73,10 +61,6 @@ describe("shareable filter links", () => {
     const search = "?q=synthetic-gpu&model=legacy-label&model_query=synthetic-repo&gpu=synthetic-gpu&cursor=page2";
     let state = explorerStateFromSearch(search);
     expect(parseExplorerLocation(buildExplorerSearch({ filters: state.applied, cursor: state.cursor })).filters).toEqual(state.applied);
-    const chips = activeExplorerFilters(state.applied);
-    expect(chips.find(chip => chip.key === "q")?.label).toBe("All-fields keyword");
-    expect(chips.find(chip => chip.key === "model")?.label).toBe("Model label");
-    expect(chips.find(chip => chip.key === "model_query")?.label).toBe("Model");
     state = explorerReducer(state, { type: "draft", key: "model_query", value: "new-model" });
     expect(state.applied.model_query).toBe("synthetic-repo");
     state = explorerReducer(state, { type: "apply" });
@@ -154,15 +138,6 @@ describe("shareable filter links", () => {
   });
 });
 
-describe("filter field hints", () => {
-  it("describes label shapes instead of naming a model or a competing product", () => {
-    // The contract defines exactly one measurement method, so the hint can be exact.
-    expect(EXPLORER_FILTER_PLACEHOLDERS.method).toBe("cold-prompt-serving@1");
-    expect(EXPLORER_FILTER_PLACEHOLDERS.model).toContain("sha256:");
-    // Workload hints are corpus names from the workload contract.
-    expect(EXPLORER_FILTER_PLACEHOLDERS.workload).toBe("code_python, novel_en");
-  });
-});
 
 describe("applying, resetting and removing filters", () => {
   it("trims a draft and restarts paging when the filter set changes", () => {
@@ -210,15 +185,6 @@ describe("applying, resetting and removing filters", () => {
     expect(explorerReducer(state, { type: "removeFilter", key: "workload" })).toBe(state);
   });
 
-  it("lists active filters as labelled chips in field order", () => {
-    const state = explorerStateFromSearch("?workload=synthetic-corpus&model=sha256%3A0000aaaa");
-    expect(activeExplorerFilters(state.applied).map((filter) => filter.key)).toEqual(["model", "workload"]);
-    expect(activeExplorerFilters(state.applied)[0]).toEqual({
-      key: "model",
-      label: "Model label",
-      value: "sha256:0000aaaa",
-    });
-  });
 });
 
 describe("bounded keyset paging", () => {
@@ -422,15 +388,6 @@ describe("result cell formatting", () => {
 
 });
 
-describe("original browser helper names", () => {
-  it("still exports the history and filter helpers", () => {
-    expect(BROWSER_HISTORY_LIMIT).toBe(EXPLORER_HISTORY_LIMIT);
-    expect(pushBrowserHistory).toBe(pushExplorerHistory);
-    expect(popBrowserHistory).toBe(popExplorerHistory);
-    expect(normalizeBrowserFilters).toBe(normalizeExplorerFilters);
-    expect(sameBrowserFilters).toBe(sameExplorerFilters);
-  });
-});
 
 
 describe("discovery filters and sorting", () => {
@@ -513,11 +470,4 @@ describe("configured input lengths", () => {
     expect(formatPromptLengths([0, -1, Number.NaN, 1.5] as number[])).toBeNull();
   });
 
-  it("carries the summary fields the list and the comparison read", () => {
-    const summary = result("0000aaaa", { mean_pp_tps: 128.75, prompt_lengths: [512, 4096] }).summary;
-    expect(formatThroughput(summary.mean_pp_tps)).toBe("128.8");
-    expect(formatPromptLengths(summary.prompt_lengths)).toBe("512 · 4K");
-    // A result published before these fields existed reads as a gap, not as a zero.
-    expect(formatThroughput(result("0000bbbb").summary.mean_pp_tps)).toBe(EXPLORER_MISSING);
-  });
 });

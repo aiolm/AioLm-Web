@@ -111,6 +111,14 @@
   text-align: center;
 }
 
+.home-source-notice {
+  margin-block-start: 12px;
+  color: var(--ui-muted);
+  font-size: var(--fs-support);
+  line-height: 1.6;
+  text-align: center;
+}
+
 .home-install .install-box {
   margin: 0;
   border-color: var(--ui-border);

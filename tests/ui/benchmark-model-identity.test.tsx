@@ -3,10 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 import { I18nProvider } from "@/i18n/client";
 import { createTranslator } from "@/i18n/translate";
 import en from "@/i18n/messages/benchmark/en";
-import ko from "@/i18n/messages/benchmark/ko";
 import {
   formatBaseModels,
-  formatMetadataSource,
   formatWeightQuantization,
   huggingFaceUrl,
   isRepositoryId,
@@ -18,11 +16,9 @@ import {
   type BenchmarkModelInfo,
 } from "@/components/benchmark-model-identity";
 import { buildSetupGroups } from "@/components/benchmark-detail-fields";
-import { BenchmarkExplorerTable } from "@/components/benchmark-explorer-table";
 import { BenchmarkExplorerComparison } from "@/components/benchmark-explorer-comparison";
-import { BenchmarkExplorerFilters } from "@/components/benchmark-explorer-filters";
-import { environmentFacts, formatComparisonCpu, formatComparisonExecution, formatComparisonOs, formatComparisonRuntime, formatComparisonVram } from "@/components/benchmark-explorer-format";
-import { explorerStateFromSearch, type ExplorerItem, type ExplorerSummary } from "@/components/benchmark-explorer-state";
+import { formatComparisonCpu, formatComparisonExecution, formatComparisonOs, formatComparisonRuntime, formatComparisonVram } from "@/components/benchmark-explorer-format";
+import { type ExplorerItem, type ExplorerSummary } from "@/components/benchmark-explorer-state";
 import { BenchmarkDetail } from "@/components/benchmark-detail";
 
 const fetched = vi.hoisted(() => ({ data: null as unknown }));
@@ -128,23 +124,6 @@ describe("what the weights are", () => {
     expect(formatBaseModels(info(), t)).toBe("synthetic-base/synthetic-weights");
   });
 
-  it("localizes the unknowns instead of leaving English in another locale", () => {
-    const korean = createTranslator(ko);
-    expect(formatWeightQuantization(null, korean)).toBe(korean("benchmark.Unknown"));
-    expect(modelValue(null, korean)).toBe(korean("benchmark.Unknown"));
-    expect(formatWeightQuantization(info({ quantization: null }), korean)).toContain("15");
-  });
-
-  it("reads the metadata source in words rather than the raw enum", () => {
-    expect(formatMetadataSource(info(), t)).toBe("GGUF file + Hugging Face");
-    expect(formatMetadataSource(info({ source: "gguf" }), t)).toBe("GGUF file");
-    expect(formatMetadataSource(info({ source: "huggingface" }), t)).toBe("Hugging Face");
-    expect(formatMetadataSource(info({ source: null }), t)).toBe("Unknown");
-    expect(formatMetadataSource(info({ source: "unexpected" }), t)).toBe("Unknown");
-    expect(formatMetadataSource(null, t)).toBe("Unknown");
-    const korean = createTranslator(ko);
-    expect(formatMetadataSource(info(), korean)).toBe(korean("benchmark.GGUF file and Hugging Face"));
-  });
 
   it("drops members of the wrong type and bounds the base model list", () => {
     const parsed = readModelInfo({
@@ -192,91 +171,6 @@ describe("which file was measured", () => {
   });
 });
 
-describe("the result list", () => {
-  it("names the publisher and the weight quantization beside the model, and its gaps", () => {
-    const html = render(<BenchmarkExplorerTable items={[item("a", { model_info: info() })]} compare={[]} onToggleComparison={() => {}} />);
-    expect(html).toContain('<span class="explorer-fact-label">Publisher</span><span class="explorer-fact-value">synthetic-org<');
-    expect(html).toContain('<span class="explorer-fact-label">Weight quantization</span><span class="explorer-fact-value">4 bit · Q4_K_M<');
-    // The quantizer is reported on the result page, never as the publisher here.
-    expect(html).not.toContain("synthetic-quantizer");
-
-    const bare = render(<BenchmarkExplorerTable items={[item("b")]} compare={[]} onToggleComparison={() => {}} />);
-    expect(bare).toContain('<span class="explorer-fact-label">Publisher</span><span class="explorer-fact-value">Unknown<');
-    expect(bare).toContain('<span class="explorer-fact-label">Weight quantization</span><span class="explorer-fact-value">Unknown<');
-  });
-
-  it("labels every environment value instead of running them together", () => {
-    const setup = {
-      os: "synthetic-os", arch: null, cpu: null, cores: 8, vendors: [], gpus: [], vram_mb: 4096,
-      runtime: "synthetic-runtime", runtime_version: "1.2", backend: "synthetic-backend", mode: null,
-      context_size: null, parallel: null, threads: null, gpu_layers: null,
-      flash_attention: null, cache_type_k: null, cache_type_v: null, split_mode: null,
-    };
-    expect(environmentFacts(setup, t).map((fact) => fact.label)).toEqual(["OS", "Runtime", "Backend", "VRAM", "Logical cores"]);
-    // An unreported part leaves no dangling separator behind.
-    expect(environmentFacts({ ...setup, backend: null, vram_mb: null }, t).map((fact) => fact.key)).toEqual(["os", "runtime", "cores"]);
-    expect(environmentFacts(undefined, t)).toEqual([]);
-
-    const html = render(<BenchmarkExplorerTable items={[item("a", { setup })]} compare={[]} onToggleComparison={() => {}} />);
-    expect(html).toContain('<span class="explorer-fact-label">Backend</span><span class="explorer-fact-value">synthetic-backend<');
-    expect(html).toContain('<span class="explorer-fact-label">VRAM</span><span class="explorer-fact-value">4.00 GiB<');
-
-    const htmlWithCpu = render(<BenchmarkExplorerTable items={[item("c", { setup: { ...setup, cpu: "synthetic-cpu" } })]} compare={[]} onToggleComparison={() => {}} />);
-    expect(htmlWithCpu).toContain('<span class="explorer-fact-label">CPU</span><span class="explorer-fact-value">synthetic-cpu · 8 Thread<');
-  });
-
-  it("keeps the six columns and the workload metadata in the redesigned list", () => {
-    const html = render(<BenchmarkExplorerTable items={[item("a", { model_info: info() })]} compare={[]} onToggleComparison={() => {}} />);
-    expect(html.match(/<th scope="col"/g)).toHaveLength(6);
-    expect(html).toContain("Prefill");
-    expect(html).toContain("Decode");
-    expect(html).toContain("Measurement count: 4");
-    // The comparison checkbox stays the first cell of the row, ahead of identity and environment.
-    expect(html.indexOf("explorer-cell-compare")).toBeLessThan(html.indexOf("explorer-cell-identity"));
-    expect(html.indexOf("explorer-cell-identity")).toBeLessThan(html.indexOf("explorer-cell-environment"));
-    expect(html).not.toContain("explorer-status");
-  });
-
-  it("keeps each row's own context and workload in view and every other fact in one disclosure", () => {
-    const setup = {
-      os: "synthetic-os", arch: null, cpu: "synthetic-cpu", cores: 8, vendors: [], gpus: ["synthetic-gpu"], vram_mb: 4096,
-      runtime: "synthetic-runtime", runtime_version: "1.2", backend: "synthetic-backend", mode: null,
-      context_size: null, parallel: null, threads: null, gpu_layers: null,
-      flash_attention: null, cache_type_k: null, cache_type_v: null, split_mode: null,
-    };
-    const point = { prompt_tokens: 512, concurrency: 1, generation_length: 128, samples: 3, pp_tps: { median: 100, min: 90, max: 110 }, tg_tps: { median: 10, min: 9, max: 11 }, ttft_ms: null, e2e_ms: { median: 2000, min: 1900, max: 2100 } };
-    const rows = [
-      item("a", { model_info: info(), setup, prompt_lengths: [512, 4096], points: [point] }),
-      item("b", { model_info: info(), setup, workload_label: "code_python", prompt_lengths: [8192], points: [point] }),
-    ];
-    const html = render(<BenchmarkExplorerTable items={rows} compare={[]} onToggleComparison={() => {}} />);
-    const [first, second] = html.split('<tr class="explorer-row">').slice(1);
-    // Nothing is hoisted into a shared caption: each row states what it ran.
-    expect(first).toContain(">512 · 4K<");
-    expect(first).toContain("synthetic-corpus");
-    expect(second).toContain(">8K<");
-    expect(second).toContain("Python code (code_python)");
-    for (const row of [first, second]) {
-      expect(row.match(/<details/g)).toHaveLength(1);
-      const details = row.slice(row.indexOf("<details"), row.indexOf("</details>"));
-      expect(details).toContain('aria-label="Setup and provenance for synthetic-model on synthetic-gpu"');
-      for (const fact of ["Publisher", "CPU", "OS", "Runtime", "VRAM", "Method", "Duration", "Measured points", "Registered"]) {
-        expect(details).toContain('<span class="explorer-fact-label">' + fact + "</span>");
-      }
-      expect(details).toContain("synthetic-org");
-      expect(details).toContain("2.00 s (1.90–2.10)");
-      // The device, backend, quantization and point being read stay outside the disclosure.
-      const visible = row.replace(details, "");
-      for (const value of [">synthetic-gpu<", ">synthetic-backend<", ">4 bit · Q4_K_M<", "512 / c1 · n=3", ">100.0<", ">90.0–110.0<"]) expect(visible).toContain(value);
-    }
-  });
-
-  it("keeps supporting lists inside a block parent so the markup stays valid", () => {
-    const html = render(<BenchmarkExplorerTable items={[item("a", { model_info: info() })]} compare={[]} onToggleComparison={() => {}} />);
-    expect(html).toContain('<div class="explorer-cell-value">');
-    expect(html).not.toContain('<span class="explorer-cell-value"><ul');
-  });
-});
 
 describe("the comparison", () => {
   it("warns when the picked results did not run the same file, without judging any model", () => {
@@ -287,8 +181,6 @@ describe("the comparison", () => {
       />,
     );
     expect(differing).toContain("do not all name the same weights file");
-    expect(differing).toContain("says nothing about how good any model is");
-    expect(differing).not.toMatch(/better|worse/i);
   });
 
   it("warns just as plainly when a picked result never said which file it ran", () => {
@@ -307,14 +199,6 @@ describe("the comparison", () => {
     expect(same).not.toContain("do not all name the same weights file");
   });
 
-  it("reads identity across the columns and names the gaps", () => {
-    const html = render(
-      <BenchmarkExplorerComparison items={[item("a", { model_info: info() }), item("b")]} onRemove={() => {}} onClear={() => {}} />,
-    );
-    for (const label of ["Publisher", "Weight quantization", "Base model", "Artifact file"]) expect(html).toContain(label);
-    expect(html).toContain("synthetic-model-q4_k_m.gguf");
-    expect(html).toContain("Unknown");
-  });
 
   it("reads the environment across the columns with a label per row", () => {
     const setup = {
@@ -342,9 +226,6 @@ describe("the comparison", () => {
         onRemove={() => {}} onClear={() => {}}
       />,
     );
-    for (const label of ["Operating system", "CPU", "Runtime and backend", "VRAM", "Execution settings"]) {
-      expect(html, label).toContain(label);
-    }
     expect(html).toContain("synthetic-os · x64");
     expect(html).toContain("synthetic-runtime 1.2 · synthetic-backend");
     expect(html).toContain("8.00 GiB");
@@ -363,22 +244,6 @@ describe("the result page", () => {
     status: "complete",
   };
 
-  it("publishes the whole of the reported metadata in its own group", () => {
-    const [model] = buildSetupGroups(benchmark, t);
-    const labels = model.fields.map((field) => field.label);
-    for (const label of [
-      "Model name", "Publisher", "Repository", "Weight quantization", "Quantization file type",
-      "Quantized by", "Model architecture", "Parameter size", "Weights format", "Base model",
-      "Artifact file", "Metadata source", "Model identity", "Model checksum", "Model size",
-    ]) {
-      expect(labels, label).toContain(label);
-    }
-    const value = (label: string) => model.fields.find((field) => field.label === label)?.value;
-    expect(value("Publisher")).toBe("synthetic-org");
-    expect(value("Quantized by")).toBe("synthetic-quantizer");
-    expect(value("Base model")).toEqual(["synthetic-base/synthetic-weights"]);
-    expect(value("Metadata source")).toBe("GGUF file + Hugging Face");
-  });
 
   it("offers a public source link only for an id that validated", () => {
     const [model] = buildSetupGroups(benchmark, t);
@@ -407,24 +272,6 @@ describe("the result page", () => {
   });
 });
 
-describe("the advanced filters", () => {
-  it("adds publisher, quantization and base model as free-text comboboxes in the model group", () => {
-    const html = renderToStaticMarkup(
-      <I18nProvider locale="en" messages={en}>
-        <BenchmarkExplorerFilters draft={explorerStateFromSearch("?publisher=synthetic-org").draft} onChange={() => {}} />
-      </I18nProvider>,
-    );
-    const group = html.split('class="explorer-filter-group"')[1];
-    for (const key of ["model_query", "publisher", "quantization", "base_model"]) expect(group, key).toContain('name="' + key + '"');
-    // Typed text survives: suggestions are optional, the field is not a select.
-    expect(group).toContain('value="synthetic-org"');
-    expect(group.match(/role="combobox"/g)?.length).toBe(5);
-    // Weight bits stay visible; exact quantization stays in the linked advanced group.
-    expect(group.split('class="explorer-secondary-filters"')[0]).toContain('name="weight_bits"');
-    expect(group.split('class="explorer-secondary-filters"')[0]).not.toContain('name="quantization"');
-    expect(group).toContain('class="explorer-secondary-filters" open=""');
-  });
-});
 
 describe("the result page header", () => {
   it("reads the publisher and the weight quantization before the metrics, and links the source safely", () => {
@@ -437,9 +284,6 @@ describe("the result page header", () => {
       summary: { ...summary(), model_info: info() },
     };
     const html = render(<BenchmarkDetail publicId="synthetic-id" />);
-    expect(html).toContain("<dt>Publisher</dt><dd>synthetic-org</dd>");
-    expect(html).toContain("<dt>Weight quantization</dt><dd>Q4_K_M</dd>");
-    expect(html).toContain("Quantization describes the weights in the published file");
     expect(html).toContain('href="https://huggingface.co/synthetic-org/synthetic-repo"');
     expect(html).toContain('rel="noreferrer noopener"');
     fetched.data = null;

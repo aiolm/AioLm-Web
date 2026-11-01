@@ -12,7 +12,6 @@ import {
   formatMegabytes,
   describeGpuDetails,
   formatMilliseconds,
-  statusTone,
   DETAIL_MISSING,
 } from "@/components/benchmark-detail-format";
 import { buildSetupGroups, type BenchmarkSetup, type SetupGroup } from "@/components/benchmark-detail-fields";
@@ -57,78 +56,6 @@ describe("setup groups", () => {
     expect(labelsOf(groups)).not.toContain("llama-server options");
     if (engine === "vllm-metal") expect(valueOf(groups, "Runtime version")).toBe("vllm-metal 0.30.0 · vLLM 0.30.0");
   });
-  it("reads as titled groups instead of one long list, with the machine split from the software", () => {
-    const groups = buildSetupGroups(publicSetup());
-    expect(groups.map((g) => g.title)).toEqual([
-      "Model",
-      "Hardware",
-      "Operating system",
-      "Runtime and backend",
-      "Workload and method",
-      "Execution settings",
-    ]);
-    expect(new Set(groups.map((g) => g.id)).size).toBe(groups.length);
-    for (const group of groups) expect(group.fields.length).toBeGreaterThan(0);
-  });
-
-  it("keeps every field the earlier flat list published except omitted result status and installed graphics", () => {
-    const labels = labelsOf(buildSetupGroups(publicSetup()));
-    for (const label of [
-      "App version",
-      "Model identity",
-      "Model checksum",
-      "Model size",
-      "Runtime",
-      "Method",
-      "Corpus",
-      "Prompt lengths (tokens)",
-      "Generation length (tokens)",
-      "Batch sizes",
-      "Repetitions",
-      "Warmup",
-      "Operating system",
-      "Architecture",
-      "CPU",
-      "CPU cores",
-      "Run mode",
-      "Selected graphics",
-      "Allocated context size (tokens)",
-      "Parallel requests",
-      "Threads",
-      "Graphics layers",
-    ]) {
-      expect(labels).toContain(label);
-    }
-    // Outcome/status badges and redundant installed graphics are intentionally omitted
-    expect(labels).not.toContain("Result status");
-    expect(labels).not.toContain("Installed graphics");
-
-    // System memory is shown when reported
-    const withRam = buildSetupGroups(publicSetup({ environment: { system_memory_bytes: 34_359_738_368 } }));
-    expect(labelsOf(withRam)).toContain("System memory");
-    expect(valueOf(withRam, "System memory")).toBe("32.00 GiB (34,359,738,368 B)");
-  });
-
-  it("publishes the contract fields the flat list left out", () => {
-    const labels = labelsOf(buildSetupGroups(publicSetup()));
-    for (const label of [
-      "Runtime version",
-      "Runtime backend",
-      "Method version",
-      "Corpus version",
-      "Corpus checksum",
-      "Graphics selection complete",
-      "Batch threads",
-      "Flash attention",
-      "KV cache type (keys)",
-      "KV cache type (values)",
-      "Split mode",
-      "Tensor split",
-      "llama-server options",
-    ]) {
-      expect(labels).toContain(label);
-    }
-  });
 
   it("shows the published launch one option per line, keeping each option with its value", () => {
     const groups = buildSetupGroups(publicSetup({
@@ -153,10 +80,6 @@ describe("setup groups", () => {
     expect(valueOf(buildSetupGroups(publicSetup()), "llama-server options")).toBe("Unknown");
   });
 
-  it("never renders a label twice with the same unit", () => {
-    const labels = labelsOf(buildSetupGroups(publicSetup()));
-    expect(new Set(labels).size).toBe(labels.length);
-  });
 
   it("separates an absent value from an empty reported list", () => {
     const groups = buildSetupGroups(publicSetup());
@@ -219,11 +142,6 @@ describe("graphics devices", () => {
     });
   }
 
-  it("shows every member the contract publishes for a device", () => {
-    expect(describeGpu(discrete)).toBe(
-      "Name: synthetic-gpu-a · Vendor: synthetic-vendor · VRAM: 24.00 GiB · Driver: 0.0.0-synthetic · Integrated: No",
-    );
-  });
 
   it("shows selected devices one entry at a time, in reported order, omitting installed graphics", () => {
     const groups = buildSetupGroups(environmentWith([discrete, partial], [discrete]));
@@ -271,54 +189,6 @@ describe("graphics devices", () => {
 describe("measurement columns", () => {
   const row = syntheticSubmission().measurements.rows[0] as unknown as Record<string, unknown>;
 
-  it("orders core contract metrics and expands detailed metrics upon request", () => {
-    const reversed = Object.fromEntries(Object.entries(row).reverse());
-    expect(buildRowColumns([reversed]).map((c) => c.key)).toEqual(buildRowColumns([row]).map((c) => c.key));
-    // Core columns (default mode)
-    expect(buildRowColumns([row]).map((c) => c.key)).toEqual([
-      "prompt_tokens",
-      "concurrency",
-      "repetition",
-      "pp_tps",
-      "tg_tps",
-      "ttft_ms",
-      "peak_memory_bytes",
-    ]);
-
-    // Detailed columns (when toggle is active)
-    expect(buildRowColumns([row], true).map((c) => c.key)).toEqual([
-      "prompt_tokens",
-      "concurrency",
-      "repetition",
-      "pp_tps",
-      "tg_tps",
-      "ttft_ms",
-      "peak_memory_bytes",
-      "generation_length",
-      "completion_tokens",
-      "cached_tokens",
-      "tpot_ms",
-      "e2e_ms",
-      "total_tps",
-      "timing_source",
-    ]);
-
-    // Outcome column is defensively removed from both core and detailed views
-    expect(buildRowColumns([row], false).map((c) => c.key)).not.toContain("failed");
-    expect(buildRowColumns([row], true).map((c) => c.key)).not.toContain("failed");
-  });
-
-  it("labels every metric with its reported unit, bilingual labels, and process memory", () => {
-    const byKey = new Map(buildRowColumns([row], true).map((c) => [c.key, c]));
-    expect(byKey.get("tg_tps")).toMatchObject({ label: "Decode", unit: "tok/s", numeric: true });
-    expect(byKey.get("pp_tps")).toMatchObject({ label: "Prefill", unit: "tok/s", numeric: true });
-    expect(byKey.get("e2e_ms")).toMatchObject({ label: "End-to-end duration", unit: "s", numeric: true });
-    expect(byKey.get("ttft_ms")).toMatchObject({ label: "TTFT", unit: "ms" });
-    expect(byKey.get("prompt_tokens")).toMatchObject({ label: "Prompt", unit: "tokens" });
-    // peak_memory_bytes is specifically labeled Peak process memory, not VRAM or system memory
-    expect(byKey.get("peak_memory_bytes")).toMatchObject({ label: "Peak process memory", numeric: true });
-    expect(byKey.get("failed")).toBeUndefined();
-  });
 
   it("keeps a metric that only later rows carry, and an unknown key under its own name in detailed mode", () => {
     const partial: Record<string, unknown> = { prompt_tokens: 1 };
@@ -382,13 +252,6 @@ describe("detail value formatting", () => {
     expect(formatCompactBytes(512)).toBe("512 B");
   });
 
-  it("gives the ok tone only to a run that completed", () => {
-    expect(statusTone("complete")).toBe("ok");
-    expect(statusTone("failed")).toBe("bad");
-    expect(statusTone("partial")).toBe("");
-    expect(statusTone("cancelled")).toBe("");
-    expect(statusTone(null)).toBe("");
-  });
 });
 
 

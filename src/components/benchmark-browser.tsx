@@ -13,7 +13,6 @@ import { BenchmarkExplorerTable } from "./benchmark-explorer-table";
 import { UiSelect } from "./ui-select";
 import {
   EXPLORER_COMPARE_LIMIT,
-  EXPLORER_HISTORY_LIMIT,
   EXPLORER_PAGE_PATH,
   activeExplorerFilters,
   basisPointOf,
@@ -29,25 +28,12 @@ import {
   explorerStateFromSearch,
   hasActiveExplorerFilters,
   normalizeExplorerFilters,
-  popExplorerHistory,
-  pushExplorerHistory,
   readExplorerHistory,
   sameExplorerFilters,
   type ExplorerAction,
-  type ExplorerFilters,
   type ExplorerListResponse,
 } from "./benchmark-explorer-state";
 
-/**
- * Original browser helper names. They now delegate to the explorer state module
- * so callers and tests that import them from here keep working.
- */
-export const BROWSER_HISTORY_LIMIT = EXPLORER_HISTORY_LIMIT;
-export const pushBrowserHistory = pushExplorerHistory;
-export const popBrowserHistory = popExplorerHistory;
-export const normalizeBrowserFilters = normalizeExplorerFilters;
-export const sameBrowserFilters = sameExplorerFilters;
-export type BrowserFilters = ExplorerFilters;
 
 /**
  * Systematic browsing of published results: grouped discovery controls beside the result

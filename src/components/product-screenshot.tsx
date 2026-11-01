@@ -1,28 +1,36 @@
 import { getImageProps } from "next/image";
+import type { Locale } from '@/i18n/config';
 import type { Translator } from '@/i18n/types';
-import lightCapture from '../../public/screenshots/product-models-en-light.png';
-import darkCapture from '../../public/screenshots/product-models-en-dark.png';
+import screenshots from '../../public/screenshots/current/manifest.json';
 
 /**
  * Native desktop captures of the model workspace in light and dark themes.
- * Source, process and image evidence is recorded in screenshots/manifest.json.
+ * Image paths, dimensions and cache hashes come from screenshots/current/manifest.json.
  * The picture follows the operating system color scheme and downloads one
  * variant. Captures must use an isolated profile without personal user data.
  */
-const SCREENSHOT = { width: 1280, height: 800 } as const;
 
-export function ProductScreenshot({ t }: { t: Translator }): React.JSX.Element {
+export function ProductScreenshot({ locale, t }: { locale: Locale; t: Translator }): React.JSX.Element {
+  const lightCapture = screenshots.captures.find(capture => capture.locale === locale && capture.id === 'product-models-light');
+  const darkCapture = screenshots.captures.find(capture => capture.locale === locale && capture.id === 'product-models-dark');
+  if (!lightCapture || !darkCapture) throw new Error(`Missing homepage screenshots: ${locale}`);
   const common = {
     alt: t('home.screenshotAlt'),
-    width: SCREENSHOT.width,
-    height: SCREENSHOT.height,
+    width: lightCapture.width,
+    height: lightCapture.height,
     sizes: "(min-width: 86rem) 80rem, (max-width: 40rem) 220vw, 100vw",
     priority: true,
   };
-  // Static imports give each revised capture a content hash, so image caches
-  // cannot keep showing the previous desktop design at an unchanged URL.
-  const { props: { srcSet: dark } } = getImageProps({ ...common, src: darkCapture });
-  const { props: light } = getImageProps({ ...common, src: lightCapture });
+  const { props: { srcSet: dark } } = getImageProps({
+    ...common,
+    src: `/screenshots/current/${darkCapture.file}?v=${darkCapture.sha256}`,
+    width: darkCapture.width,
+    height: darkCapture.height,
+  });
+  const { props: light } = getImageProps({
+    ...common,
+    src: `/screenshots/current/${lightCapture.file}?v=${lightCapture.sha256}`,
+  });
   return (
     <figure className="home-screenshot">
       <picture>

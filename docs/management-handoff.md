@@ -80,11 +80,3 @@ is `sha256("handoff-v1|" + token)`. It is domain-separated from CSRF hashes
 act as a session. Redemption and result deletion revoke the row. Retention
 removes it with the other management sessions.
 
-### Rollout
-
-No migration is needed: `REQUIRED_MIGRATIONS`, grants, readiness and the
-pg_cron retention job are unchanged. Deploy the website **before** a desktop
-build that calls `POST /v1/management-handoffs`. An older website answers that
-route with `404`. The desktop app then opens nothing and says the website needs
-an update; it does not fall back automatically, because an older website has
-neither the handoff nor the backup-file picker.

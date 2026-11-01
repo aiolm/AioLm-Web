@@ -1,7 +1,7 @@
 import type { EnglishMessages } from './en';
 const messages = {
   "site.title": "AioLM — 다양한 추론 엔진을 하나의 작업 공간에서",
-  "site.description": "AioLM(All-in-One LM)은 llama.cpp·vLLM·MLX와 외부 추론 엔진을 하나의 작업 공간에서 사용하는 GUI 어댑터입니다. 모델·설정·로컬 채팅을 함께 관리하세요.",
+  "site.description": "AioLM은 llama.cpp·vLLM·MLX와 호환 외부 엔진을 연결합니다. 엔진 중립 모델 검색, 로드된 모델 관리, 개인화 채팅, 프로젝트와 로컬 API 서버를 하나의 작업 공간에서 사용하세요.",
   "site.skip": "본문으로 건너뛰기",
   "site.primary": "주 탐색",
   "site.home": "홈",

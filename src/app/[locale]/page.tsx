@@ -55,7 +55,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   const [home, site] = await Promise.all([getMessages(locale, 'home'), getMessages(locale, 'site')]);
   const t = createTranslator({ ...site, ...home });
   const url = new URL(localizedPath(locale, '/'), getServiceOrigin()).href;
-  const faq = ['What', 'Os', 'Engines', 'Benchmark', 'Account'].map(key => ({ question: t(`home.faq${key}Question`), answer: t(`home.faq${key}Answer`) }));
+  const faq = ['What', 'Os', 'Engines', 'Api', 'Updates', 'Benchmark', 'Account'].map(key => ({ question: t(`home.faq${key}Question`), answer: t(`home.faq${key}Answer`) }));
   return (
     <>
       <JsonLd data={{ '@context': 'https://schema.org', '@graph': [
@@ -78,6 +78,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             <div className="home-install">
               <p className="home-install-label" aria-hidden="true">{t('home.installCommandTitle')}</p>
               <InstallSection locale={locale} messages={home} />
+              <p className="home-source-notice">{t('home.sourceNotice')}</p>
             </div>
             <div className="home-hero-actions">
               <a className="button button-primary" href={GITHUB_REPOSITORY_URL}>
@@ -94,7 +95,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       </section>
 
       <div className="site-shell home-showcase">
-        <ProductScreenshot t={t} />
+        <ProductScreenshot locale={locale} t={t} />
       </div>
 
       <section className="site-shell home-section" aria-labelledby="engines-title">

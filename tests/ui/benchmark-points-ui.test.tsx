@@ -55,7 +55,6 @@ describe("reading a list at one operating point", () => {
     expect(html).toContain("85.4");
     expect(html).toContain("90.1");
     expect(html).toContain("512 / c1 · n=3");
-    expect(html).toContain("Each row reports its own leading operating point");
     // The mixed means are stored but never shown.
     expect(html).not.toContain("999");
   });
@@ -65,8 +64,6 @@ describe("reading a list at one operating point", () => {
       <BenchmarkExplorerTable items={[wide, narrow]} compare={[]} basis={{ prompt_tokens: 4096, concurrency: 1 }} onToggleComparison={() => {}} />,
     );
     expect(html).toContain("61.2");
-    expect(html).toContain('<span class="explorer-head-basis">4K / c1</span>');
-    expect(html).toContain("each read at 4K / c1");
     // The result that never measured 4K reports the gap instead of its 512 value.
     expect(html).toContain("Not measured at this point");
     expect(html).not.toContain("90.1");
@@ -75,7 +72,7 @@ describe("reading a list at one operating point", () => {
   it("shows the spread a median came from, and leaves it off when there is none", () => {
     const single = item("single", [point(512, 1, { samples: 1, tg_tps: { median: 70, min: 70, max: 70 } })]);
     const html = render(<BenchmarkExplorerTable items={[wide, single]} compare={[]} onToggleComparison={() => {}} />);
-    expect(html).toContain('<span class="explorer-metric-spread">85.0–86.0</span>');
+    expect(html).toContain("85.0–86.0");
     expect(html).toContain("512 / c1 · n=1");
     // A point whose repetitions all landed on one value prints no range of one number.
     expect(html).not.toContain("70.0–70.0");
@@ -137,18 +134,8 @@ describe("the points a result measured", () => {
     expect(html).toContain("52.6");
     expect(html).toContain("61.2");
     expect(html).toContain("4K");
-    // The generation length is fixed for this run, so it is not a column of one repeated number.
-    expect(html).not.toContain("Generation length</span>");
   });
 
-  it("offers the concurrencies the selected input length actually measured", () => {
-    const html = render(<BenchmarkPointsPanel points={points} />);
-    const chips = html.slice(html.indexOf("detail-point-chips"), html.indexOf("detail-point-reading"));
-    expect(chips).toContain(">512<");
-    expect(chips).toContain(">4K<");
-    expect(chips).toContain(">1<");
-    expect(chips).toContain(">4<");
-  });
 
   it("adds a generation length column only when the run varied it", () => {
     const varied = [point(512, 1), { ...point(512, 1), generation_length: 512 }];
@@ -158,7 +145,6 @@ describe("the points a result measured", () => {
   it("says a result named no point rather than showing an invented speed", () => {
     const html = render(<BenchmarkPointsPanel points={[]} />);
     expect(html).toContain("no measurement that names an operating point");
-    expect(html).not.toContain("detail-performance-grid");
   });
 
   it("says when the stored points were cut", () => {

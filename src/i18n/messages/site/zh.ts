@@ -1,7 +1,7 @@
 import type { EnglishMessages } from './en';
 const messages = {
   "site.title": "AioLM — 多种推理引擎，一个工作空间",
-  "site.description": "AioLM（All-in-One LM）是连接 llama.cpp、vLLM、MLX 和外部推理引擎的 GUI 适配器，在一个工作空间中管理模型、设置与本地聊天。",
+  "site.description": "AioLM 统一连接 llama.cpp、vLLM、MLX 和兼容的外部引擎，在一个工作空间中使用引擎中立的模型搜索、已加载模型管理、个性化聊天、项目和本地 API 服务器。",
   "site.skip": "跳转到主要内容",
   "site.primary": "主导航",
   "site.home": "首页",

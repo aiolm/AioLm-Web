@@ -1,7 +1,7 @@
 import type { EnglishMessages } from './en';
 const messages = {
   "site.title": "AioLM — 多様な推論エンジンをひとつのワークスペースで",
-  "site.description": "AioLM（All-in-One LM）はllama.cpp・vLLM・MLXと外部推論エンジンをひとつの作業空間で使うGUIアダプターです。モデル・設定・ローカルチャットをまとめて管理できます。",
+  "site.description": "AioLMでllama.cpp・vLLM・MLXと互換外部エンジンをひとつに。エンジンに依存しないモデル検索、ロード済みモデル管理、パーソナライズしたチャット、プロジェクト、ローカルAPIサーバー。",
   "site.skip": "本文へスキップ",
   "site.primary": "メインナビゲーション",
   "site.home": "ホーム",
