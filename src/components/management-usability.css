@@ -57,13 +57,14 @@
 }
 
 .management-panel .recovery-paste > summary,
-.report-disclosure > summary {
-  line-height: 1.65;
+.report-disclosure.card > summary {
+  font-size: var(--fs-body-compact);
+  line-height: var(--lh-compact);
 }
 
 .management-panel textarea {
   min-height: 12rem;
-  line-height: 1.75;
+  line-height: var(--lh-control);
 }
 
 .management-panel input[type="file"] {
@@ -76,7 +77,7 @@
   background: var(--ui-input);
   color: var(--ui-ink);
   font: inherit;
-  font-size: var(--fs-body);
+  font-size: var(--fs-control);
 }
 
 /* The native picker button is the page's main action: action fill and an
@@ -100,7 +101,7 @@
   background: var(--file-glyph) left 12px center / 16px 16px no-repeat, var(--ui-action-gradient);
   color: var(--ui-on-accent);
   font: inherit;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
 }
 
@@ -134,7 +135,7 @@
 
 .management-panel .recovery-paste > summary {
   cursor: pointer;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
 }
 
 .management-panel .recovery-paste[open] > summary {
@@ -153,7 +154,7 @@
 
 .report-disclosure > summary {
   cursor: pointer;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
 }
 
 .report-disclosure[open] > summary {

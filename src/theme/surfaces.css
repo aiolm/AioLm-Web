@@ -1,13 +1,13 @@
 /* Palette treatment applies throughout the existing page structure. */
 body { background-image: var(--ui-canvas-gradient); }
 /* Multiline controls scale with enlarged text without overlapping their lines. */
-:root :is(input[type="text"], input[type="search"], input[type="password"], textarea, button, .button, .ui-option) { line-height: 1.45; }
-:root .explorer-compact .explorer-field-input { line-height: 1.45; }
+:root :is(input[type="text"], input[type="search"], input[type="password"], textarea, button, .button, .ui-option) { line-height: var(--lh-control); }
+:root .explorer-compact .explorer-field-input { line-height: var(--lh-control); }
 .themed-brand-mark { display: block; flex: none; background: var(--ui-brand-icon) center / contain no-repeat; }
-.site-header .site-brand { font-size: 18px; letter-spacing: -.025em; }
+.site-header .site-brand { font-size: var(--fs-brand); line-height: var(--lh-group); letter-spacing: var(--tracking-brand); }
 .site-header .site-nav-link[aria-current="page"] { position: relative; background: transparent; color: var(--ui-ink); box-shadow: none; }
 .site-header .site-nav-link[aria-current="page"]::after { content: ''; position: absolute; height: 2px; inset-inline: 10px; inset-block-end: -4px; background: var(--ui-indicator-gradient); }
-.site-header .site-nav-link { white-space: nowrap; }
+.site-header .site-nav-link { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
 .button-primary, .button.primary, button.primary, .explorer-compact .explorer-button-primary,
 .explorer-sidebar-actions > .explorer-button-primary {
   border: 0; background: var(--ui-action-gradient); color: var(--ui-on-accent);
@@ -49,7 +49,6 @@ body { background-image: var(--ui-canvas-gradient); }
   opacity: 1;
   filter: none;
   box-shadow: none;
-  font-weight: 500;
   cursor: not-allowed;
 }
 .explorer-compact .explorer-rail { background: var(--ui-rail-gradient); border-radius: 6px; }

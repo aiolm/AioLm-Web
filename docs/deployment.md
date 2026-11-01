@@ -186,6 +186,11 @@ platform logs. Point an uptime monitor at it; read `config:check` when it turns 
 ## Vercel
 
 - Framework preset: Next.js. Build: `npm run build`. Output: default.
+  Keep this build command: it runs the PostCSS typography guard before
+  `next build`, whose ESLint pass also rejects inline typography overrides.
+  `npm run lint` runs the same CSS guard plus ESLint. CI uses both standard
+  commands; do not replace the Vercel build command with bare `next build`.
+  See [the design system](design-system.md) for the shared scale and change policy.
 - `vercel.json` pins the framework and the `icn1` region so the functions sit
   next to the database. If the plan refuses a `regions` entry, delete it from
   `vercel.json` and set the region in the project's Function Region setting.
@@ -199,12 +204,14 @@ platform logs. Point an uptime monitor at it; read `config:check` when it turns 
   pg_cron, which the once-per-day granularity of a Hobby cron cannot match.
 - What ships: `.vercelignore` keeps tests, CI, `docs/`, the operator scripts,
   `sql/`, local caches, and every `.env*` file out of the upload, and records
-  what each exclusion was checked against. `sql/` and `scripts/` are
-  operator-only: nothing enumerates `sql/migrations/` at runtime (readiness
-  compares the ledger against `REQUIRED_MIGRATIONS`) and no build step runs a
-   script. `package-lock.json` and `vendor/aiolm-benchmark-contracts-0.8.0.tgz`
-  stay in the upload — the build installs the contracts package from that
-  archive.
+  what each exclusion was checked against. Nothing enumerates
+  `sql/migrations/` at runtime (readiness compares the ledger against
+  `REQUIRED_MIGRATIONS`). The sole uploaded script is
+  `scripts/check-design-system.mjs`, required by the build; operator scripts
+  and the theme generator remain excluded. `package-lock.json` and
+  `vendor/aiolm-benchmark-contracts-0.8.0.tgz` stay in the upload — the build
+  installs the contracts package from that archive, and the checker uses the
+  explicitly declared PostCSS development dependency.
 
 ## Go-live checklist
 

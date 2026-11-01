@@ -22,7 +22,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
-      - run: npm run lint
+      - name: lint and typography design-system enforcement
+        run: npm run lint
       - name: unit tests (test env)
         run: npm test
         env:

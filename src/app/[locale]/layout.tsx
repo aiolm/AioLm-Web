@@ -7,6 +7,7 @@ import { isLocale, locales } from '@/i18n/config';
 import { getMessages } from '@/i18n/server';
 import { createTranslator } from '@/i18n/translate';
 import { I18nProvider } from '@/i18n/client';
+import '@/theme/typography.css';
 import '../globals.css';
 import '@/theme/palettes.css';
 import '@/theme/surfaces.css';

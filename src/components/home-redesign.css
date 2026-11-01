@@ -7,10 +7,6 @@
    column instead of full-bleed bands or cards.
    ========================================================================== */
 
-.home-hero,
-.home-section {
-  --home-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-}
 
 /* --------------------------------------------------------------- hero ---- */
 
@@ -28,28 +24,21 @@
 }
 
 .home-hero .home-hero-title {
-  font-size: var(--fs-hero);
-  font-weight: 700;
-  letter-spacing: -0.035em;
-  line-height: 1.08;
+  font-size: var(--fs-page-title);
+  font-weight: var(--fw-heading);
+  letter-spacing: var(--tracking-title);
+  line-height: var(--lh-title);
 }
 
 .home-hero-title > span { display: block; }
 
-:lang(ko) .home-hero .home-hero-title,
-:lang(ja) .home-hero .home-hero-title,
-:lang(zh) .home-hero .home-hero-title {
-  font-size: var(--fs-hero-cjk);
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-}
 
 .home-hero-subtitle {
   max-width: 36rem;
   margin-block-start: 16px;
   color: var(--ui-muted);
-  font-size: var(--fs-lede);
-  line-height: 1.6;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
   text-wrap: pretty;
 }
 
@@ -68,7 +57,8 @@
   padding-inline: 16px;
   border-radius: var(--ui-radius-md);
   box-shadow: var(--ui-action-edge);
-  font-size: var(--fs-body);
+  font-size: var(--fs-control);
+  line-height: var(--lh-control);
 }
 
 .home-text-link {
@@ -77,8 +67,9 @@
   gap: 6px;
   min-height: max(36px, var(--control-min));
   color: var(--ui-ink);
-  font-size: var(--fs-body);
-  font-weight: 500;
+  font-size: var(--fs-control);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-control);
   text-decoration: none;
 }
 
@@ -107,7 +98,8 @@
   margin-block-end: 8px;
   color: var(--ui-muted);
   font-size: var(--fs-support);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-support);
   text-align: center;
 }
 
@@ -115,7 +107,7 @@
   margin-block-start: 12px;
   color: var(--ui-muted);
   font-size: var(--fs-support);
-  line-height: 1.6;
+  line-height: var(--lh-support);
   text-align: center;
 }
 
@@ -132,23 +124,24 @@
   padding-inline: 4px;
   background: transparent;
 }
-.install-panel[hidden] { display: none; }
-.install-copy-error { padding: 0 14px 12px; color: var(--ui-danger); font-size: var(--fs-support); line-height: 1.5; }
+.home-install .install-panel[hidden] { display: none; }
+.home-install .install-copy-error { padding: 0 14px 12px; color: var(--ui-danger); font-size: var(--fs-support); line-height: var(--lh-support); }
 
 .home-install .install-tab {
   flex: 0 1 auto;
   margin-block-end: -1px;
   padding: 8px 12px;
   background: transparent;
-  font-size: var(--fs-body);
-  font-weight: 500;
+  font-size: var(--fs-control);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-control);
 }
 
 .home-install .install-tab.active {
   background: transparent;
   border-bottom-color: var(--ui-accent);
   color: var(--ui-ink);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .home-install .install-panel { padding: 8px; }
@@ -159,22 +152,23 @@
 .home-install .install-cmd-code {
   display: block;
   padding: 6px 10px;
-  font-family: var(--home-mono);
-  font-size: var(--fs-support);
-  line-height: 1.5;
+  font-family: var(--font-mono);
+  font-size: var(--fs-code);
+  line-height: var(--lh-code);
   overflow-wrap: anywhere;
   text-overflow: clip;
   white-space: normal;
 }
 
-.home-install .install-cmd-prompt { color: var(--ui-faint); font-weight: 500; }
+.home-install .install-cmd-prompt { color: var(--ui-faint); font-weight: var(--fw-medium); }
 
 .home-install .install-copy-button {
   min-height: var(--control-min);
   padding: var(--control-pad-block) var(--control-pad-inline);
   border: 0;
-  font-size: var(--fs-body);
-  font-weight: 500;
+  font-size: var(--fs-control);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-control);
 }
 
 .home-install .install-copy-button:hover {
@@ -210,7 +204,7 @@
   margin: 16px auto 0;
   color: var(--ui-muted);
   font-size: var(--fs-support);
-  line-height: 1.45;
+  line-height: var(--lh-support);
   text-align: center;
   text-wrap: pretty;
 }
@@ -224,20 +218,20 @@
     calc(100% - 2 * var(--page-gutter)) 1px;
 }
 
-.home-section-head { display: grid; gap: 6px; margin-block-end: 24px; }
+.home-section-head { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin-block-end: 24px; overflow-wrap: anywhere; }
 
 .home-section .home-section-title {
   font-size: var(--fs-section);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.3;
+  font-weight: var(--fw-heading);
+  letter-spacing: var(--tracking-heading);
+  line-height: var(--lh-heading);
 }
 
 .home-section-detail {
   max-width: 36rem;
   color: var(--ui-muted);
   font-size: var(--fs-body);
-  line-height: 1.5;
+  line-height: var(--lh-body);
   text-wrap: pretty;
 }
 
@@ -262,26 +256,26 @@
 
 .home-step-number {
   color: var(--ui-faint);
-  font-family: var(--home-mono);
+  font-family: var(--font-mono);
   font-size: var(--fs-support);
   font-variant-numeric: tabular-nums;
-  line-height: 1.5rem;
+  line-height: var(--lh-support);
 }
 
 .home-step-copy { display: grid; gap: 4px; min-width: 0; }
 
 .home-step .home-step-title {
   font-size: var(--fs-group);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1.55;
+  font-weight: var(--fw-heading);
+  letter-spacing: var(--tracking-heading);
+  line-height: var(--lh-group);
 }
 
 .home-step-detail {
   max-width: 40rem;
   color: var(--ui-muted);
   font-size: var(--fs-body);
-  line-height: 1.5;
+  line-height: var(--lh-body);
   text-wrap: pretty;
 }
 
@@ -309,10 +303,10 @@
 .home-faq-item > summary:hover .home-faq-question { color: var(--ui-accent); }
 
 .home-faq .home-faq-question {
-  font-size: var(--fs-group);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1.5;
+  font-size: var(--fs-body-compact);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-normal);
+  line-height: var(--lh-compact);
 }
 
 .home-faq-chevron {
@@ -328,7 +322,7 @@
   padding-block-end: 16px;
   color: var(--ui-muted);
   font-size: var(--fs-body);
-  line-height: 1.6;
+  line-height: var(--lh-body);
   text-wrap: pretty;
 }
 
@@ -347,9 +341,9 @@
 
 .home-closing .home-closing-title {
   font-size: var(--fs-section);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.4;
+  font-weight: var(--fw-heading);
+  letter-spacing: var(--tracking-heading);
+  line-height: var(--lh-heading);
 }
 
 .home-closing-detail {
@@ -357,7 +351,7 @@
   margin-block-start: 6px;
   color: var(--ui-muted);
   font-size: var(--fs-body);
-  line-height: 1.5;
+  line-height: var(--lh-body);
   text-wrap: pretty;
 }
 
@@ -370,8 +364,9 @@
   padding-inline: 16px;
   border: 0;
   border-radius: var(--ui-radius-sm);
-  font-size: var(--fs-body);
-  font-weight: 500;
+  font-size: var(--fs-control);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-control);
   text-decoration: none;
   white-space: nowrap;
 }
@@ -427,7 +422,7 @@
 
 /* Linux instructions stay readable beside the platform command. */
 .home-install .install-panel-detail { padding: 12px; }
-.install-requirements { margin: 0 0 8px; font-weight: 600; font-size: var(--fs-support); }
-.install-instructions { margin: 0 0 12px; color: var(--ui-muted); font-size: var(--fs-support); line-height: 1.5; }
-.install-links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 12px; font-size: var(--fs-support); }
-.install-links a { text-decoration: underline; text-underline-offset: 3px; }
+.home-install .install-requirements { margin: 0 0 8px; font-weight: var(--fw-semibold); font-size: var(--fs-body); line-height: var(--lh-body); }
+.home-install .install-instructions { margin: 0 0 12px; color: var(--ui-muted); font-size: var(--fs-body); line-height: var(--lh-body); }
+.home-install .install-links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 12px; font-size: var(--fs-control); line-height: var(--lh-control); }
+.home-install .install-links a { text-decoration: underline; text-underline-offset: 3px; }

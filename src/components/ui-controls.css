@@ -21,9 +21,9 @@
   background: var(--ui-input);
   color: var(--ui-ink);
   font: inherit;
-  font-size: var(--fs-body);
-  font-weight: 400;
-  line-height: 1.45;
+  font-size: var(--fs-control);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-control);
   text-align: start;
   cursor: pointer;
 }
@@ -62,8 +62,8 @@
   background: var(--ui-menu-surface, var(--ui-surface));
   color: var(--ui-ink);
   box-shadow: var(--ui-elev-menu, var(--ui-elev-2));
-  font-size: var(--fs-body);
-  line-height: 1.45;
+  font-size: var(--fs-control);
+  line-height: var(--lh-control);
 }
 .ui-menu--above { transform: translateY(-100%); }
 /* Free-text suggestions stay attached to their field instead of floating in a portal. */
@@ -99,8 +99,8 @@
   outline: 0;
   background: transparent;
   color: var(--ui-ink);
-  font-size: var(--fs-body);
-  line-height: 1.45;
+  font-size: var(--fs-control);
+  line-height: var(--lh-control);
   cursor: pointer;
 }
 .ui-option-label { min-width: 0; white-space: normal; overflow-wrap: normal; }
@@ -124,7 +124,7 @@
 /* In free-text suggestions aria-selected marks the active option, so the committed
    value is flagged separately; in fixed selects aria-selected is the value. */
 .ui-menu .ui-option.is-committed,
-.ui-menu:not(.ui-menu--inline) .ui-option[aria-selected="true"] { color: var(--ui-accent); font-weight: 550; }
+.ui-menu:not(.ui-menu--inline) .ui-option[aria-selected="true"] { color: var(--ui-accent); font-weight: var(--fw-medium); }
 .ui-menu .ui-option[aria-disabled="true"] { color: var(--ui-faint); opacity: .55; cursor: not-allowed; }
 .ui-option-check { flex: 0 0 16px; width: 16px; height: 16px; color: var(--ui-accent); }
 
@@ -148,7 +148,7 @@ details:is(.explorer-secondary-filters, .detail-group, .detail-description, .rec
   gap: 8px;
   list-style: none;
   cursor: pointer;
-  line-height: 1.5;
+  line-height: var(--lh-control);
 }
 details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure) > summary::-webkit-details-marker { display: none; }
 details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure) > summary::before { content: none; }

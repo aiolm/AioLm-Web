@@ -5,9 +5,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev --hostname localhost --port 3000",
-    "build": "next build",
+    "build": "npm run design:check && next build",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "npm run design:check && eslint .",
+    "design:check": "node scripts/check-design-system.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -45,6 +46,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "eslint": "^9.39.5",
     "eslint-config-next": "^15.5.25",
+    "postcss": "^8.5.23",
     "tsx": "^4.23.13",
     "typescript": "^6.0.3",
     "vitest": "^5.0.1"

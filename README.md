@@ -100,6 +100,10 @@ and calibrated text/focus colors. Notice colors live in
 `src/theme/status-tones.json`, with distinct icons and readable foregrounds on
 soft gradients. Page components use these semantic tokens.
 
+Typography follows the Guides across every page and locale. See the
+[design system](docs/design-system.md) for shared roles, responsive/zoom policy
+and lint/build enforcement.
+
 ## Quick start (synthetic local)
 
 ```sh
