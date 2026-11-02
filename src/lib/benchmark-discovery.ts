@@ -3,10 +3,16 @@ import { findPoint, pointMedian, findServingPoint, servingPointMedian } from "./
 import type { BenchmarkSummary } from "./summary";
 import { isWeightBitValue, weightBits } from "./weight-bits";
 
+/** Installed on the AioLM host, not evidence of execution placement or allocated VRAM. */
+export type BenchmarkHostGpu = NonNullable<PublicBenchmarkSubmission["environment"]>["installed_gpus"][number];
+
 export interface BenchmarkSetup {
   os: string | null; arch: string | null; cpu: string | null; cores: number | null;
   physical_cores?: number | null; ram_bytes?: number | null;
   vendors: string[]; gpus: string[]; vram_mb: number | null;
+  /** Null means host environment unavailable; [] is a recorded empty inventory. */
+  host_gpus?: BenchmarkHostGpu[] | null;
+  execution_selection_complete?: boolean | null;
   runtime: string | null; runtime_version: string | null; backend: string | null; mode: string | null;
   runtime_build?: string | null; runtime_variant?: string | null; runtime_plugin_version?: string | null;
   context_size: number | null; parallel: number | null; threads: number | null; gpu_layers: number | null;
@@ -279,6 +285,7 @@ export function normalizeSetup(b: PublicBenchmarkSubmission): BenchmarkSetup {
   const common = {
     os: env?.os ?? null, arch: env?.arch ?? null, cpu: env?.cpu.name ?? null, cores: env?.cpu.logical_cores ?? null,
     physical_cores: env?.cpu.physical_cores ?? null, ram_bytes: env?.system_memory_bytes ?? null,
+    host_gpus: env?.installed_gpus ?? null, execution_selection_complete: env?.execution.selection_complete ?? null,
     vendors: strings(devices.map(g => g.vendor)), gpus: strings(devices.map(g => g.name)),
     vram_mb: devices.length > 0 && env?.execution.selection_complete && devices.every(g => g.vram_mb !== null) ? devices.reduce((sum, g) => sum + g.vram_mb!, 0) : null,
     runtime: b.runtime.name, runtime_version: b.runtime.version, runtime_build: b.runtime.build, backend: b.runtime.backend,
@@ -311,7 +318,7 @@ export function textValues(summary: BenchmarkSummary, field: TextFilterKey): str
   if (field === "weight_bits") { const bits = weightBits(summary.model_info); return bits === null ? [] : [String(bits)]; }
   const infoString = (value: unknown): string | null => typeof value === "string" && value ? value : null;
   const identity = summary.identity;
-  if (field === "q") return [...new Set(GLOBAL_SEARCH_FILTER_KEYS.flatMap(k => textValues(summary, k)).concat(summary.status, MODEL_INFO_SEARCH_KEYS.flatMap(k => infoString(summary.model_info?.[k]) ?? [])))];
+  if (field === "q") return [...new Set(GLOBAL_SEARCH_FILTER_KEYS.flatMap(k => textValues(summary, k)).concat(summary.status, MODEL_INFO_SEARCH_KEYS.flatMap(k => infoString(summary.model_info?.[k]) ?? []), (summary.setup?.host_gpus ?? []).flatMap(g => [g.name, g.vendor].filter((v): v is string => !!v))))];
   if (field === "model_query") return [...new Set([summary.model_label, ...MODEL_QUERY_INFO_KEYS.map(k => infoString(summary.model_info?.[k])), identity?.model_sha256, identity?.model_repository, identity?.model_revision].filter((v): v is string => typeof v === "string" && !!v))];
   if (["model", "hardware", "method", "workload"].includes(field)) return [summary[`${field}_label` as "model_label"]];
   if (field === "base_model") {

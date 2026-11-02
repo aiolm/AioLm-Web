@@ -18,6 +18,8 @@ import { benchmarkFallback } from "./benchmark-i18n";
  */
 
 import { asRecord, describeArguments, describeGpuDetails, describeGpuList, type ReportedDevice, displayText, formatByteSize, joinList } from "./benchmark-detail-format";
+import { recordedSettingPresentation, selectedGpuRecord } from "./benchmark-evidence";
+import type { RecordedSetting } from "@aiolm/benchmark-contracts";
 import {
   formatMetadataSource,
   formatWeightQuantization,
@@ -47,6 +49,9 @@ export interface SetupField {
   label: string;
   /** Rendered next to the label, never folded into the value. */
   unit?: string;
+  identity?: string;
+  descriptor?: string;
+  description?: string;
   /** One readable value, or one entry per reported item when the field is a set of devices. */
   value: string | string[];
   /**
@@ -65,6 +70,7 @@ export interface SetupGroup {
   id: string;
   title: string;
   fields: SetupField[];
+  notes?: string[];
 }
 
 export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benchmarkFallback): SetupGroup[] {
@@ -89,18 +95,18 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
   // Model group: key fields shown once; empty optional metadata fields omitted.
   const modelFields: SetupField[] = [
     { label: t("benchmark.Model name"), value: info?.name ? modelDisplayName(info, info.name) : modelValue(null, t) },
-    { label: t("benchmark.Publisher"), value: modelValue(isRepositoryId(repository) ? repository.split("/")[0] : modelPublisher(info), t) },
+    { label: t("benchmark.Publisher"), value: serving && !isRepositoryId(repository) && !modelPublisher(info) ? t("benchmark.Value not recorded") : modelValue(isRepositoryId(repository) ? repository.split("/")[0] : modelPublisher(info), t) },
     { label: t("benchmark.Weight quantization"), value: formatWeightQuantization(info, t) },
   ];
-  if (repository) {
+  if (repository || serving) {
     modelFields.push({
       label: t("benchmark.Repository"),
-      value: repository,
-      ...(repositoryUrl ? { links: { [repository]: repositoryUrl } } : {}),
+      value: repository || t("benchmark.Value not recorded"),
+      ...(repository && repositoryUrl ? { links: { [repository]: repositoryUrl } } : {}),
     });
   }
-  if (info?.quantized_by) {
-    modelFields.push({ label: t("benchmark.Quantized by"), value: info.quantized_by });
+  if (info?.quantized_by || serving) {
+    modelFields.push({ label: t("benchmark.Quantized by"), value: info?.quantized_by || t("benchmark.Value not recorded") });
   }
   if (info && info.base_models.length > 0) {
     modelFields.push({
@@ -129,14 +135,18 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
   }
   modelFields.push(
     { label: t("benchmark.Model identity"), value: displayText(model?.["status"], t) },
-    { label: t("benchmark.Model checksum"), value: displayText(model?.["sha256"], t) },
+    { label: t("benchmark.Model checksum"), value: serving && model?.sha256 == null ? t("benchmark.Value not recorded") : displayText(model?.["sha256"], t) },
     { label: t("benchmark.Model size"), value: formatByteSize(model?.["size_bytes"], t) },
   );
   if (serving) {
-    modelFields.push({ label: t("benchmark.Source revision"), value: displayText(source?.revision, t) });
+    modelFields.push({ label: t("benchmark.Source revision"), value: source?.revision == null ? t("benchmark.Value not recorded") : displayText(source.revision, t) });
   }
+  const missingModelFields = [
+    [t("benchmark.Model checksum"), model?.sha256], [t("benchmark.Repository"), repository],
+    [t("benchmark.Source revision"), source?.revision], [t("benchmark.Quantized by"), info?.quantized_by],
+  ].filter(([, value]) => value == null || value === "").map(([label]) => label as string);
 
-  // Hardware group: Selected GPU only; no installed GPU list. System RAM when reported.
+  // Installed host inventory and configured execution selection are different facts.
   const physicalCores = typeof cpu?.["physical_cores"] === "number" && cpu["physical_cores"] > 0 ? cpu["physical_cores"] : null;
   const logicalCores = cpu?.["logical_cores"];
   const hardwareFields: SetupField[] = [
@@ -152,10 +162,17 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
       value: formatByteSize(environment["system_memory_bytes"], t),
     });
   }
+  if (serving) {
+    hardwareFields.push({
+      label: t("benchmark.Installed host GPUs"),
+      value: describeGpuList(environment?.installed_gpus, t),
+      devices: describeGpuDetails(environment?.installed_gpus, t),
+    });
+  }
   hardwareFields.push(
     { label: t("benchmark.Run mode"), value: displayText(envExecution?.["mode"], t) },
-    { label: t("benchmark.Selected graphics"), value: describeGpuList(envExecution?.["selected_gpus"], t), devices: describeGpuDetails(envExecution?.["selected_gpus"], t) },
-    { label: t("benchmark.Graphics selection complete"), value: displayText(envExecution?.["selection_complete"], t) },
+    { label: t("benchmark.Selected graphics"), value: serving ? selectedGpuRecord(Array.isArray(envExecution?.selected_gpus) ? envExecution.selected_gpus.map(gpu => displayText(asRecord(gpu)?.name, t)) : undefined, envExecution?.mode, envExecution?.selection_complete, t) : describeGpuList(envExecution?.["selected_gpus"], t), devices: describeGpuDetails(envExecution?.["selected_gpus"], t), ...(serving && envExecution?.selection_complete === false && Array.isArray(envExecution?.selected_gpus) && envExecution.selected_gpus.length ? { description: t("benchmark.Incomplete selection record") } : {}) },
+    { label: t(serving ? "benchmark.Selection record complete" : "benchmark.Graphics selection complete"), value: displayText(envExecution?.["selection_complete"], t) },
   );
 
   return [
@@ -163,11 +180,16 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
       id: "detail-setup-model",
       title: t("benchmark.Model"),
       fields: modelFields,
+      ...(serving ? { notes: [
+        ...(missingModelFields.length ? [t("benchmark.Not recorded: {fields}. Names and quantization labels do not establish this evidence.", { fields: missingModelFields.join(", ") })] : []),
+        t("benchmark.Source repository and revision describe provenance, not the weights SHA256 or proof of unmodified weights."),
+      ] } : {}),
     },
     {
       id: "detail-setup-hardware",
       title: t("benchmark.Hardware"),
       fields: hardwareFields,
+      ...(serving ? { notes: [t("benchmark.Installed host GPUs do not establish execution selection or layer placement. System RAM is not dedicated VRAM.")] } : {}),
     },
     {
       id: "detail-setup-os",
@@ -184,11 +206,11 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
         { label: t("benchmark.Runtime"), value: displayText(runtime?.["name"], t) },
         { label: t("benchmark.Runtime version"), value: displayText(serving ? runtime?.version : runtimeVersionLabel(runtime), t) },
         ...(serving ? [
-          { label: t("benchmark.Runtime variant"), value: displayText(runtime?.variant, t) },
+          { label: t("benchmark.Runtime variant"), value: runtime?.variant == null ? t("benchmark.Not recorded; applicability not declared") : displayText(runtime.variant, t) },
           { label: t("benchmark.Runtime build"), value: displayText(runtime?.build, t) },
-          { label: t("benchmark.Runtime plugin version"), value: displayText(runtime?.plugin_version, t) },
+          { label: t("benchmark.Runtime plugin version"), value: runtime?.plugin_version == null ? t("benchmark.Not recorded; applicability not declared") : displayText(runtime.plugin_version, t) },
         ] : []),
-        { label: t("benchmark.Runtime backend"), value: displayText(runtime?.["backend"], t) },
+        { label: t("benchmark.Runtime backend"), value: serving && runtime?.backend == null ? t("benchmark.Backend identity not recorded") : displayText(runtime?.["backend"], t) },
         { label: t("benchmark.App version"), value: displayText(benchmark.app_version, t) },
       ],
     },
@@ -226,6 +248,7 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
     {
       id: "detail-setup-execution",
       title: t("benchmark.Execution settings"),
+      ...(serving ? { notes: [t("benchmark.No role means no common semantic role was assigned, not a missing setting value. No unit specified means the publication supplied no unit.")] } : {}),
       fields: serving ? [
         { label: t("benchmark.Execution topology"), value: displayText(execution?.topology, t) },
         { label: t("benchmark.Memory scope"), value: displayText(execution?.memory_scope, t) },
@@ -250,20 +273,12 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
   ];
 }
 
-/** Typed values preserve false, zero and array order; nullable values stay unknown. */
+/** Preserve typed values; optional descriptor metadata is not a missing value. */
 function recordedSettingFields(value: unknown, t: Translator): SetupField[] {
   if (!Array.isArray(value) || value.length === 0) return [{ label: t("benchmark.Recorded settings"), value: t("benchmark.None reported") }];
   return value.map((entry) => {
-    const setting = asRecord(entry);
-    const scope = Array.isArray(setting?.scope) ? JSON.stringify(setting.scope) : t("benchmark.Unknown");
-    const target = setting?.target === "request" ? t("benchmark.Request") : t("benchmark.Launch");
-    const name = [scope, displayText(setting?.name, t)].filter(Boolean).join(".");
-    const role = setting?.role == null ? t("benchmark.Unknown") : displayText(setting.role, t);
-    const typed = setting?.value == null ? t("benchmark.Unknown") : JSON.stringify(setting.value);
-    return {
-      label: `${target} · ${name} · ${t("benchmark.Role")}: ${role}`,
-      unit: typeof setting?.unit === "string" ? setting.unit : t("benchmark.Unknown"),
-      value: typed,
-    };
+    const setting = entry as RecordedSetting;
+    if (!setting || !Array.isArray(setting.scope)) return { label: t("benchmark.Recorded settings"), value: t("benchmark.Value not recorded") };
+    return recordedSettingPresentation(setting, t);
   });
 }

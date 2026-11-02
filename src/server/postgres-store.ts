@@ -1,9 +1,11 @@
 import type postgres from "postgres";
+import type { PublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
 import { encodeDiscoveryCursor, type ListCursor } from "../lib/pagination";
 import { sortValue, withRuntimeBuild, type OptionField, type BenchmarkOptions, type SettingDescriptor } from "../lib/benchmark-discovery";
 import { listSql, optionsSql } from "./benchmark-discovery-sql";
 import { permitExpiryForSession, verifyUploadPermit } from "../lib/permits";import { quotaKeyForIp, quotaWindowDay, quotaWindowHour } from "../lib/ip";
 import type { BenchmarkFilters } from "../lib/summary";
+import { withCanonicalIdentity } from "../lib/summary";
 import { getDb } from "./db";
 import type {
   AcceptArgs, AcceptOutcome, BenchmarkStore, ListResult, ManagementSessionRow, PublicListItem, ReportRow, StoredRun, UploadSessionRow,
@@ -73,7 +75,8 @@ export class PostgresBenchmarkStore implements BenchmarkStore {
         hidden, deleted, summary, byte_size, row_count,
         created_at::text as created_at, updated_at::text as updated_at
       from bench.benchmark_runs where submission_id = ${submissionId} limit 1`;
-    return rows[0] ?? null;
+    const row = rows[0];
+    return row && !row.deleted && row.benchmark && row.summary ? withCanonicalIdentity(withRuntimeBuild(row, row.benchmark.runtime.build), row.benchmark) : row ?? null;
   }
 
   async getRunByPublicId(publicId: string): Promise<StoredRun | null> {
@@ -82,7 +85,8 @@ export class PostgresBenchmarkStore implements BenchmarkStore {
         hidden, deleted, summary, byte_size, row_count,
         created_at::text as created_at, updated_at::text as updated_at
       from bench.benchmark_runs where public_id = ${publicId} limit 1`;
-    return rows[0] ?? null;
+    const row = rows[0];
+    return row && !row.deleted && row.benchmark && row.summary ? withCanonicalIdentity(withRuntimeBuild(row, row.benchmark.runtime.build), row.benchmark) : row ?? null;
   }
 
   async acceptRunAtomic(args: AcceptArgs): Promise<AcceptOutcome> {
@@ -256,8 +260,11 @@ export class PostgresBenchmarkStore implements BenchmarkStore {
 
   async listRuns(filters: BenchmarkFilters, limit: number, cursor: ListCursor | null): Promise<ListResult> {
     const statement = listSql(filters, limit, cursor);
-    const rows = await this.sql.unsafe<Array<PublicListItem & { runtime_build: string | null }>>(statement.query, statement.values);
-    const page = rows.slice(0, limit).map(({ runtime_build, ...item }) => withRuntimeBuild(item, runtime_build)), last = page.at(-1);
+    // Stored benchmark metadata has no measurement rows. Strip it after the same
+    // read-only enrichment used by detail and memory reads; never expose it on LIST.
+    const rows = await this.sql.unsafe<Array<PublicListItem & { runtime_build: string | null; benchmark_metadata: PublicBenchmarkSubmission }>>(statement.query, statement.values);
+    const page = rows.slice(0, limit).map(({ runtime_build, benchmark_metadata, ...item }) =>
+      withCanonicalIdentity(withRuntimeBuild(item, runtime_build), benchmark_metadata)), last = page.at(-1);
     return { items: page, next_cursor: rows.length > limit && last ? encodeDiscoveryCursor(last.created_at, last.public_id, filters, sortValue(last.summary, filters)) : null };
   }
 

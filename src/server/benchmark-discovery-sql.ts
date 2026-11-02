@@ -8,10 +8,12 @@ export const RUNTIME_BUILD_EXPRESSION = "engine_build";
 export const LIST_RUNTIME_BUILD_COLUMN = "engine_build";
 const IDENTITY_COLUMNS: Record<string, string> = { runtime: "engine_name", runtime_version: "engine_version", runtime_variant: "engine_variant", runtime_build: "engine_build", runtime_plugin_version: "engine_plugin_version", app_version: "app_version", model_format: "model_format", model_sha256: "model_sha256", model_repository: "model_repository", model_revision: "model_revision" };
 const CANONICAL_IDENTITY_COLUMNS = ["engine_name", "engine_version", "engine_variant", "engine_build", "engine_plugin_version", "model_format", "model_sha256", "model_size_bytes", "model_repository", "model_revision", "app_version", "method_id", "method_version"] as const;
+const HARDWARE_LABEL = "case when summary->>'hardware_label' = 'unknown' and coalesce(benchmark#>>'{environment,cpu,name}', '') <> '' then 'Host CPU: ' || (benchmark#>>'{environment,cpu,name}') else summary->>'hardware_label' end";
 const LIST_SUMMARY = `summary || jsonb_build_object('identity', jsonb_build_object(${CANONICAL_IDENTITY_COLUMNS.map(column => `'${column}', ${column}`).join(", ")}), 'schema_version', (benchmark->>'schema_version')::integer)`;
 export function textExpression(field: SingleTextField): string {
   if (IDENTITY_COLUMNS[field]) return IDENTITY_COLUMNS[field];
   if (field === "weight_bits") return "bench.model_weight_bits(summary->'model_info')::text";
+  if (field === "hardware") return HARDWARE_LABEL;
   if (["model", "hardware", "method", "workload"].includes(field)) return `summary->>'${field}_label'`;
   if (ARRAY_TEXT_PATHS[field]) return `bench.discovery_array_text(${ARRAY_TEXT_PATHS[field]})`;
   if (field === "publisher" || field === "quantization") return `summary->'model_info'->>'${field}'`;
@@ -64,7 +66,7 @@ export function discoverySql(filters: BenchmarkFilters) {
     if (key === "weight_bits") { clauses.push(`${textExpression(key)} = ${bind(filters[key]!)}`); continue; }
     const pattern = bind(literalPattern(filters[key]!));
     if (key === "model_query") clauses.push(`(${MODEL_QUERY_EXPRESSIONS.map(expr => `${expr} ilike ${pattern}`).join(" or ")})`);
-    else if (key === "q") clauses.push(`(${GLOBAL_SEARCH_FILTER_KEYS.map(k => match(k, pattern)).concat(MODEL_QUERY_EXPRESSIONS.map(expr => `${expr} ilike ${pattern}`), MODEL_INFO_SEARCH_KEYS.map(k => `summary->'model_info'->>'${k}' ilike ${pattern}`), [`summary->>'status' ilike ${pattern}`]).join(" or ")})`);
+    else if (key === "q") clauses.push(`(${GLOBAL_SEARCH_FILTER_KEYS.map(k => match(k, pattern)).concat(MODEL_QUERY_EXPRESSIONS.map(expr => `${expr} ilike ${pattern}`), MODEL_INFO_SEARCH_KEYS.map(k => `summary->'model_info'->>'${k}' ilike ${pattern}`), [`summary->>'status' ilike ${pattern}`, `exists (select 1 from jsonb_array_elements(coalesce(benchmark#>'{environment,installed_gpus}', '[]'::jsonb)) as host_gpu(device) where device->>'name' ilike ${pattern} or device->>'vendor' ilike ${pattern})`]).join(" or ")})`);
     else clauses.push(match(key, pattern));
   }
   for (const key of RANGE_FILTER_KEYS) for (const bound of ["min", "max"] as const) {
@@ -96,7 +98,7 @@ export function listSql(filters: BenchmarkFilters, limit: number, cursor: ListCu
     else if (cursor.value == null) clauses.push(`(${expr} is null and ${tie})`);
     else { const value = bind(cursor.value); clauses.push(`(${expr} is null or ${expr} ${sort.endsWith("desc") ? "<" : ">"} ${value} or (${expr} = ${value} and ${tie}))`); }
   }
-  return { values, query: `select public_id, ${LIST_SUMMARY} as summary, ${LIST_RUNTIME_BUILD_COLUMN} as runtime_build, description_md, revision, created_at::text as created_at, updated_at::text as updated_at from bench.benchmark_runs where ${clauses.join(" and ")} order by ${expr ? `${expr} ${sort.endsWith("desc") ? "desc" : "asc"} nulls last, ` : ""}bench.benchmark_runs.created_at ${direction}, public_id ${direction} limit ${bind(limit + 1)}` };
+  return { values, query: `select public_id, ${LIST_SUMMARY} as summary, benchmark as benchmark_metadata, ${LIST_RUNTIME_BUILD_COLUMN} as runtime_build, description_md, revision, created_at::text as created_at, updated_at::text as updated_at from bench.benchmark_runs where ${clauses.join(" and ")} order by ${expr ? `${expr} ${sort.endsWith("desc") ? "desc" : "asc"} nulls last, ` : ""}bench.benchmark_runs.created_at ${direction}, public_id ${direction} limit ${bind(limit + 1)}` };
 }
 export function optionsSql(field: OptionField, query: string, filters: BenchmarkFilters, setting?: SettingDescriptor) {
   const remaining = { ...filters };

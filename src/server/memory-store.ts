@@ -86,12 +86,14 @@ export class InMemoryBenchmarkStore implements BenchmarkStore {
   }
 
   async getRunBySubmission(submissionId: string): Promise<StoredRun | null> {
-    return this.runs.get(submissionId) ?? null;
+    const row = this.runs.get(submissionId);
+    return row && !row.deleted ? withCanonicalIdentity(withRuntimeBuild(row, row.benchmark.runtime.build), row.benchmark) : row ?? null;
   }
 
   async getRunByPublicId(publicId: string): Promise<StoredRun | null> {
     const sub = this.byPublic.get(publicId);
-    return sub ? (this.runs.get(sub) ?? null) : null;
+    const row = sub ? this.runs.get(sub) : undefined;
+    return row && !row.deleted ? withCanonicalIdentity(withRuntimeBuild(row, row.benchmark.runtime.build), row.benchmark) : row ?? null;
   }
 
   async acceptRunAtomic(args: AcceptArgs): Promise<AcceptOutcome> {

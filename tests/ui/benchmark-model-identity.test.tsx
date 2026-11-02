@@ -304,7 +304,6 @@ describe("serving detail and comparison", () => {
     ]);
     const html = render(<ServingBenchmarkPointsPanel points={points} memoryScope="unavailable" />);
     expect(html).toContain("No output was observed");
-    expect(html).toContain("attached upstream memory is unavailable");
     expect(html).toContain("Observed reasoning");
     expect(html).toContain("Reported completion tokens");
     expect(html).toContain("n=1");

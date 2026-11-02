@@ -120,3 +120,60 @@ describe("API serving summary", () => {
     expect(summary.serving_points).toBeUndefined();
   });
 });
+
+describe("installed host GPU inventory", () => {
+  const integrated = { name: "Integrated Host GPU", vendor: "Host Vendor", vram_mb: null, driver: null, integrated: true };
+  const selected = { name: "Selected Compute GPU", vendor: "Compute Vendor", vram_mb: 8192, driver: "compute-driver", integrated: false };
+
+  it("keeps per-device host facts separate from selected execution devices and memory", () => {
+    const benchmark = syntheticServingSubmission();
+    benchmark.environment!.cpu.name = "Distinct Host CPU";
+    benchmark.environment!.installed_gpus = [integrated, { ...selected, name: "Installed Discrete GPU", vram_mb: 16384 }];
+    benchmark.environment!.execution = { mode: "selected", selection_complete: true, selected_gpus: [selected] };
+    const summary = summarizeBenchmark(validatePublicBenchmark(benchmark));
+    expect(summary.setup).toMatchObject({
+      cpu: "Distinct Host CPU", host_gpus: [integrated, { ...selected, name: "Installed Discrete GPU", vram_mb: 16384 }],
+      gpus: ["Selected Compute GPU"], vendors: ["Compute Vendor"], vram_mb: 8192,
+      execution_selection_complete: true,
+    });
+    expect(summary.hardware_label).toBe("Selected Compute GPU");
+  });
+
+  it("enriches an already identified stored summary without changing measurements or the original record", () => {
+    const benchmark = syntheticServingSubmission();
+    benchmark.environment!.cpu.name = "Distinct Host CPU";
+    benchmark.environment!.installed_gpus = [integrated];
+    benchmark.environment!.execution = { mode: "unknown", selection_complete: false, selected_gpus: [] };
+    const summary = summarizeBenchmark(benchmark);
+    delete summary.setup!.host_gpus;
+    delete summary.setup!.execution_selection_complete;
+    summary.hardware_label = "unknown";
+    // Stored aggregates are authoritative; metadata-only projection must not rebuild them.
+    summary.serving_points![0]!.output_bytes_per_second = { median: 321, min: 123, max: 456, samples: 7 };
+    benchmark.measurements.rows = [];
+    const item = { summary, revision: 12 };
+    const before = JSON.stringify({ item, benchmark });
+    const projected = withCanonicalIdentity(item, benchmark);
+    expect(projected.summary.setup).toMatchObject({
+      host_gpus: [integrated], execution_selection_complete: false,
+      gpus: [], vendors: [], vram_mb: null, mode: "unknown",
+    });
+    expect(projected.summary.hardware_label).toBe("Host CPU: Distinct Host CPU");
+    expect(projected.summary.serving_points).toBe(summary.serving_points);
+    expect(projected.summary.serving_points![0]!.output_bytes_per_second).toEqual({ median: 321, min: 123, max: 456, samples: 7 });
+    expect(projected.revision).toBe(12);
+    expect(JSON.stringify({ item, benchmark })).toBe(before);
+    expect(withCanonicalIdentity(projected, benchmark)).toBe(projected);
+  });
+
+  it("distinguishes a recorded empty inventory from unavailable host metadata without inferring a device", () => {
+    const benchmark = syntheticServingSubmission();
+    benchmark.environment!.execution = { mode: "unknown", selection_complete: false, selected_gpus: [] };
+    expect(summarizeBenchmark(benchmark).setup).toMatchObject({ host_gpus: [], gpus: [], vendors: [], vram_mb: null, execution_selection_complete: false });
+    benchmark.environment = null;
+    expect(summarizeBenchmark(benchmark)).toMatchObject({
+      hardware_label: "unknown",
+      setup: { host_gpus: null, execution_selection_complete: null, cpu: null, gpus: [], vendors: [], vram_mb: null },
+    });
+  });
+});

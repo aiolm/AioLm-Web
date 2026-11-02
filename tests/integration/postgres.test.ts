@@ -7,7 +7,7 @@ import type { PublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
 import { randomBase64Url32, sha256HexUtf8 } from "@/lib/crypto";
 import { syntheticSubmission, syntheticServingSubmission } from "@/lib/fixtures";
 import { pythonBenchmark } from "../inference-benchmarks";
-import { summarizeBenchmark } from "@/lib/summary";
+import { summarizeBenchmark, type BenchmarkSummary } from "@/lib/summary";
 import { weightBits } from "@/lib/weight-bits";
 import weightEncodings from "@/lib/weight-encodings.json";
 import { normalizeModelInfo } from "@/lib/model-info";
@@ -561,7 +561,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       // 008 is immutable: newer application-only setup projections are not backfilled.
       expect(rows.map((row) => row.summary.setup)).toEqual(benchmarks.map((benchmark) => {
         const setup = { ...summarizeBenchmark(benchmark).setup! };
-        for (const key of ["prompt_length", "ram_bytes", "physical_cores", "runtime_build", "runtime_variant", "runtime_plugin_version", "repetitions", "warmup", "corpus", "corpus_version"] as const) delete setup[key];
+        for (const key of ["prompt_length", "ram_bytes", "physical_cores", "runtime_build", "runtime_variant", "runtime_plugin_version", "repetitions", "warmup", "corpus", "corpus_version", "host_gpus", "execution_selection_complete"] as const) delete setup[key];
         return setup;
       }));
       expect(rows[0]!.summary.setup?.vram_mb).toBe(8193);
@@ -1746,7 +1746,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     const memory = new InMemoryBenchmarkStore();
     const ids: string[] = [];
 
-    async function publish(benchmark: PublicBenchmarkSubmission) {
+    async function publish(benchmark: PublicBenchmarkSubmission, summary?: BenchmarkSummary) {
       const submissionId = randomUUID(), ownerSecret = randomBase64Url32();
       benchmark = { ...benchmark, submission_id: submissionId };
       const body = JSON.stringify({ benchmark, description_md: "serving-integration" });
@@ -1758,7 +1758,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       const args: AcceptArgs = {
         ...acceptArgs(submissionId, ownerSecret, permit, GENEROUS_QUOTA),
         body_sha256: hash, benchmarkMeta,
-        rows: benchmark.measurements.rows, summary: summarizeBenchmark(benchmark),
+        rows: benchmark.measurements.rows, summary: summary ?? summarizeBenchmark(benchmark),
         byte_size: Buffer.byteLength(body), row_count: benchmark.measurements.rows.length,
       };
       const accepted = await store!.acceptRunAtomic(args);
@@ -1795,6 +1795,56 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       expect((await parity({ ...filters, warmup: true })).items).toEqual([]);
       expect((await parity({ ...filters, repetitions_min: 2, repetitions_max: 3 })).items).toEqual([]);
       expect(await store!.listOptions("runtime", "", filters)).toEqual(await memory.listOptions("runtime", "", filters));
+    });
+
+    it("projects missing host inventory on LIST and DETAIL without rewriting stored payloads, metrics or selected GPU meanings", async () => {
+      const hostGpu = { name: "Integrated Host Device", vendor: "Host Inventory Vendor", vram_mb: null, driver: null, integrated: true };
+      const selectedGpu = { name: "Selected Compute Device", vendor: "Compute Vendor", vram_mb: 4096, driver: "compute-driver", integrated: false };
+      const environment = syntheticServingSubmission().environment!;
+      const cases: Array<[string, typeof environment | null]> = [
+        ["uncollected", { ...environment, cpu: { name: "Distinct Host CPU", physical_cores: 8, logical_cores: 16 }, installed_gpus: [hostGpu], execution: { mode: "unknown", selected_gpus: [], selection_complete: false } }],
+        ["selected", { ...environment, installed_gpus: [hostGpu], execution: { mode: "selected", selected_gpus: [selectedGpu], selection_complete: true } }],
+        ["empty", { ...environment, installed_gpus: [] }],
+        ["unavailable", null],
+      ];
+      const published = [];
+      for (const [label, env] of cases) {
+        const fixture = syntheticServingSubmission({ environment: env });
+        fixture.runtime.version = "host-inventory-regression";
+        const retained = summarizeBenchmark(fixture);
+        delete retained.setup!.host_gpus;
+        delete retained.setup!.execution_selection_complete;
+        if (label === "uncollected") retained.hardware_label = "unknown";
+        retained.serving_points![0]!.output_bytes_per_second = { median: 321, min: 123, max: 456, samples: 7 };
+        const run = await publish(fixture, retained);
+        memory.byPublic.set(run.public_id, run.public_id);
+        published.push({ label, run });
+      }
+      const before = await db!`select public_id, benchmark, summary, revision, body_sha256 from bench.benchmark_runs where submission_id = any(${ids}) order by public_id`;
+      const filters = { runtime_version: "host-inventory-regression" };
+      const listed = await parity(filters);
+      expect(listed.items).toEqual((await memory.listRuns(filters, 100, null)).items);
+      for (const { label, run } of published) {
+        const item = listed.items.find(item => item.public_id === run.public_id)!;
+        expect(item.summary.setup!.host_gpus).toEqual(label === "unavailable" ? null : label === "empty" ? [] : [hostGpu]);
+        expect(item.summary.setup!.execution_selection_complete).toBe(label === "unavailable" ? null : label !== "uncollected");
+        expect(item.summary.setup!.gpus).toEqual(label === "selected" ? ["Selected Compute Device"] : []);
+        expect(item.summary.setup!.vram_mb).toBe(label === "selected" ? 4096 : null);
+        expect(item.summary.serving_points![0]!.output_bytes_per_second).toEqual({ median: 321, min: 123, max: 456, samples: 7 });
+        expect((await store!.getRunByPublicId(run.public_id))!.summary).toEqual(item.summary);
+        expect((await store!.getRunBySubmission(run.submission_id))!.summary).toEqual(item.summary);
+        expect((await memory.getRunByPublicId(run.public_id))!.summary).toEqual(item.summary);
+        expect(item).not.toHaveProperty("benchmark_metadata");
+        expect(item).not.toHaveProperty("benchmark");
+      }
+      const uncollected = published.find(p => p.label === "uncollected")!.run;
+      expect(listed.items.find(item => item.public_id === uncollected.public_id)!.summary.hardware_label).toBe("Host CPU: Distinct Host CPU");
+      for (const q of ["Integrated Host Device", "Host Inventory Vendor"]) expect((await parity({ ...filters, q })).items).toHaveLength(2);
+      expect((await parity({ ...filters, q: "Distinct Host CPU" })).items.map(item => item.public_id)).toEqual([uncollected.public_id]);
+      for (const filtersWithHostAsSelected of [{ gpu: hostGpu.name }, { vendor: hostGpu.vendor }]) expect((await parity({ ...filters, ...filtersWithHostAsSelected })).items).toEqual([]);
+      for (const field of ["gpu", "vendor", "hardware"] as const) expect(await store!.listOptions(field, "", filters)).toEqual(await memory.listOptions(field, "", filters));
+      const after = await db!`select public_id, benchmark, summary, revision, body_sha256 from bench.benchmark_runs where submission_id = any(${ids}) order by public_id`;
+      expect(after).toEqual(before);
     });
 
     it.each(["llama.cpp", "vllm", "mlx-vlm", "sglang", null])("accepts and manages %s with canonical generated identity and tombstone erasure", async name => {
@@ -1859,6 +1909,29 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       const first = await store!.listRuns(reversed, 1, null);
       expect(first.items).toHaveLength(1);
       expect(canonicalSettingDescriptor(descriptor)).toBe('{"target":"launch","scope":[],"name":"batch","unit":null,"role":null}');
+    });
+
+    it("keeps context roles, scopes and units exact without aliasing typed settings into legacy fields", async () => {
+      const fixture = syntheticServingSubmission();
+      const context: SettingDescriptor = { target: "launch", scope: [], name: "ctx-size", unit: "tokens", role: "context.total_tokens" };
+      fixture.execution.settings.push(
+        { ...context, value: 32768 },
+        { ...context, scope: ["serve"], role: "context.per_sequence_tokens", value: 8192 },
+        { target: "launch", scope: [], name: "parallel", unit: "count", role: "concurrency.capacity", value: 4 },
+      );
+      const run = await publish(fixture);
+      expect((await parity({ setting: [{ ...context, op: "eq", value: 32768 }] })).items.map(item => item.public_id)).toEqual([run.public_id]);
+      for (const mismatch of [
+        { ...context, role: "context.per_sequence_tokens" as const },
+        { ...context, scope: ["serve"] },
+        { ...context, unit: "count" as const },
+        { ...context, name: "context_size" },
+      ]) expect((await parity({ setting: [{ ...mismatch, op: "eq", value: 32768 }] })).items).toEqual([]);
+      const listed = (await parity({ runtime_version: fixture.runtime.version! })).items.find(item => item.public_id === run.public_id)!;
+      expect(listed.summary.setup).toMatchObject({ context_size: null, parallel: null, cache_type_k: null, cache_type_v: null });
+      expect(listed.summary.setup!.settings).toEqual(fixture.execution.settings);
+      expect(await store!.listOptions("setting_value", "", {}, context)).toEqual({ options: [{ value: "32768", count: 1 }], has_more: false });
+      expect(await store!.listOptions("setting_value", "", {}, context)).toEqual(await memory.listOptions("setting_value", "", {}, context));
     });
 
     it("returns thirty typed C-ordered distinct visible facet values and respects every provided condition", async () => {

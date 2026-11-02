@@ -4,6 +4,7 @@ import { useI18n } from "@/i18n/client";
 import { SETTING_UNITS, SETTING_ROLES, SETTING_MAX_CONDITIONS, canonicalSettingCondition, canonicalSettingDescriptor, parseSettingCondition, parseSettingDescriptor, type SettingDescriptor, type SettingCondition, type BenchmarkOptions } from "@/lib/benchmark-discovery";
 import { explorerOptionsRequestError, buildExplorerSettingOptionsPath, type ExplorerFilters } from "./benchmark-explorer-state";
 import { useJsonFetch } from "./ui";
+import { recordedSettingLabel } from "./benchmark-evidence";
 
 type ValueType = "string" | "number" | "boolean" | "array";
 interface SettingDraft { target: string; scope: string; name: string; unit: string; role: string; op: string; valueType: ValueType; text: string; min: string; max: string }
@@ -77,12 +78,12 @@ function SettingRow({ raw, index, filters, onChange, onRemove }: { raw: string; 
     <label className="explorer-field"><span className="explorer-field-label">{t("benchmark.Recorded option suggestions")}</span>
       <select className="explorer-field-input" value="" onChange={event => { if (!event.target.value) return; try { const choice = parseSettingDescriptor(event.target.value); update({ target: choice.target, scope: choice.scope.join(", "), name: choice.name, unit: choice.unit ?? "", role: choice.role ?? "" }); } catch { /* Reject malformed recommendations. */ } }}>
         <option value="">{t("benchmark.Choose an option or enter its identity below")}</option>
-        {(descriptors.data?.options ?? []).flatMap(option => { try { const value = parseSettingDescriptor(option.value); return [<option key={option.value} value={canonicalSettingDescriptor(value)}>{value.target} / {value.scope.join(" / ")}{value.scope.length ? " / " : ""}{value.name} · {value.unit ?? t("benchmark.Unknown unit")} · {value.role ?? t("benchmark.No role")} ({option.count})</option>]; } catch { return []; } })}
+        {(descriptors.data?.options ?? []).flatMap(option => { try { const value = parseSettingDescriptor(option.value); return [<option key={option.value} value={canonicalSettingDescriptor(value)}>{recordedSettingLabel(value, t)} ({option.count})</option>]; } catch { return []; } })}
       </select>
     </label>
     <div className="explorer-setting-grid">
       {select("target", "Target", [["launch", "Launch"], ["request", "Request"]])}{field("scope", "Scope (comma-separated names)")}{field("name", "Option name")}
-      {select("unit", "Unit", [["", "Unknown unit"], ...SETTING_UNITS.map(value => [value, value] as [string, string])])}
+      {select("unit", "Unit", [["", "No unit specified"], ...SETTING_UNITS.map(value => [value, value] as [string, string])])}
       {select("role", "Role", [["", "No role"], ...SETTING_ROLES.map(value => [value, value] as [string, string])])}
       {select("op", "Condition", [["eq", "Equals"], ["range", "Numeric range"]])}
       {draft.op === "eq" ? <>{select("valueType", "Value type", [["string", "Text"], ["number", "Number"], ["boolean", "Boolean"], ["array", "Number list"]])}

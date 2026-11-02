@@ -34,6 +34,12 @@ export function joinList(values: unknown, t: Translator = benchmarkFallback): st
   return values.map((v) => displayText(v, t)).join(", ");
 }
 
+/** A reported integrated GPU may have no dedicated VRAM figure; never substitute system RAM. */
+export function reportedGpuMemory(value: unknown, integrated: unknown, t: Translator = benchmarkFallback): string {
+  if (typeof value === "number" && Number.isFinite(value) && value >= 0) return formatVramGb(value, t);
+  return t(integrated === true ? "benchmark.No dedicated VRAM figure (integrated GPU)" : "benchmark.Dedicated VRAM not reported");
+}
+
 /**
  * One graphics device, with every member the contract publishes for it
  * (`$defs/gpu`). Each part names itself because any of them can be null: an
@@ -46,7 +52,7 @@ export function describeGpu(value: unknown, t: Translator = benchmarkFallback): 
   return [
     `${t("benchmark.Name")}: ${displayText(gpu["name"], t)}`,
     `${t("benchmark.Vendor")}: ${displayText(gpu["vendor"], t)}`,
-    `${t("benchmark.VRAM")}: ${formatVramGb(gpu["vram_mb"], t)}`,
+    `${t(gpu["integrated"] === true ? "benchmark.Reported GPU memory" : "benchmark.VRAM")}: ${reportedGpuMemory(gpu["vram_mb"], gpu["integrated"], t)}`,
     `${t("benchmark.Driver")}: ${displayText(gpu["driver"], t)}`,
     `${t("benchmark.Integrated")}: ${displayText(gpu["integrated"], t)}`,
   ].join(" · ");
@@ -93,7 +99,7 @@ export function describeGpuDetails(value: unknown, t: Translator = benchmarkFall
       name,
       facts: [
         { label: t("benchmark.Vendor"), value: displayText(device["vendor"], t) },
-        { label: t("benchmark.VRAM"), value: formatVramGb(device["vram_mb"], t) },
+        { label: t(device["integrated"] === true ? "benchmark.Reported GPU memory" : "benchmark.VRAM"), value: reportedGpuMemory(device["vram_mb"], device["integrated"], t) },
         { label: t("benchmark.Driver"), value: displayText(device["driver"], t) },
         { label: t("benchmark.Integrated"), value: displayText(device["integrated"], t) },
       ],

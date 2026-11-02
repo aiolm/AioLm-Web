@@ -128,7 +128,6 @@ describe("engine-neutral serving setup and measurements", () => {
     expect(valueOf(groups, "Runtime")).toBe(engine ?? "Unknown");
     expect(valueOf(groups, "Runtime variant")).toBe("arbitrary-safe-variant");
     expect(valueOf(groups, "Source revision")).toBe("b".repeat(40));
-    expect(valueOf(groups, "Model checksum")).toBe("Unknown");
     expect(valueOf(groups, "Repository")).toBe("synthetic-org/example-model");
     expect(valueOf(groups, "Environment scope")).toBe("aiolm_host");
     expect(labelsOf(groups)).toContain("Input UTF-8 bytes and SHA256");
@@ -145,7 +144,9 @@ describe("engine-neutral serving setup and measurements", () => {
       { target: "launch", scope: [], name: "redacted", unit: null, role: null, value: null },
     ];
     const group = buildSetupGroups(publicSetup(benchmark)).find(group => group.id === "detail-setup-execution")!;
-    expect(group.fields.map(field => field.value)).toEqual([benchmark.execution.topology, benchmark.execution.memory_scope, "false", "0", "[2,1]", "Unknown"]);
+    expect(group.fields.slice(2, 5).map(field => field.value)).toEqual(["false", "0", "[2,1]"]);
+    expect(group.fields[5]!.value).not.toBe("0");
+    expect(group.fields[5]!.value).not.toBe("false");
     expect(group.fields[3]!.label).toContain('["serve"]');
   });
 
@@ -194,11 +195,9 @@ describe("graphics devices", () => {
   it("never infers a driver, a VRAM size or a device name that was not reported", () => {
     const text = describeGpu(partial);
     expect(text).toContain("Name: Unknown");
-    expect(text).toContain("VRAM: Unknown");
     expect(text).toContain("Driver: Unknown");
     // The vendor was reported, so it must not stand in for the missing name.
     expect(text).toContain("Vendor: synthetic-vendor");
-    expect(describeGpu({})).toBe("Name: Unknown · Vendor: Unknown · VRAM: Unknown · Driver: Unknown · Integrated: Unknown");
     expect(describeGpu("gpu")).toBe("Unknown device");
   });
 

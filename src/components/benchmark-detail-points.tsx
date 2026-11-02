@@ -5,6 +5,7 @@ import { ColumnHeading } from "./benchmark-i18n";
 import type { BenchmarkPoint } from "@/lib/benchmark-points";
 import { SERVING_METRIC_KEYS, type ServingBenchmarkPoint, type ServingMetricKey } from "@aiolm/benchmark-contracts";
 import { servingMetricColumns } from "./benchmark-detail-rows";
+import { servingMetricAbsence } from "./benchmark-evidence";
 import {
   formatDuration,
   formatPointLabel,
@@ -195,9 +196,10 @@ function MeasuredCell({ value, spread }: { value: string; spread: string | null 
 }
 
 /** Schema3 keeps the shared metric-specific sample counts and byte operating points. */
-export function ServingBenchmarkPointsPanel({ points, memoryScope }: {
+export function ServingBenchmarkPointsPanel({ points, memoryScope, requestUsage }: {
   points: readonly ServingBenchmarkPoint[];
   memoryScope: unknown;
+  requestUsage?: unknown;
 }): React.JSX.Element {
   const { t } = useI18n();
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -217,15 +219,18 @@ export function ServingBenchmarkPointsPanel({ points, memoryScope }: {
     <p className="muted detail-point-reading" role="status">{t("benchmark.Reading {point} over {samples} repetitions; output tokens are a requested maximum.", { point: label(selected), samples: selected.samples })}</p>
     <p className="muted">{t("benchmark.Client-observed text and reasoning bytes are not tokens. First output is the first observed text or reasoning; reported token and cache counts may be unknown.")}</p>
     {selected.output_bytes?.max === 0 ? <p className="muted">{t("benchmark.No output was observed. Zero bytes is known; first-output latency is unknown.")}</p> : null}
-    <p className="muted">{t("benchmark.Memory scope")}: {typeof memoryScope === "string" ? memoryScope : t("benchmark.Unknown")}. {t("benchmark.Memory is attributed only to the recorded owned process scope; attached upstream memory is unavailable.")}</p>
+    <p className="muted">{t("benchmark.Memory scope")}: {memoryScope === "owned_process_tree" ? t("benchmark.Owned process tree") : memoryScope === "owned_root_process" ? t("benchmark.Owned root process") : memoryScope === "unavailable" ? t("benchmark.Unavailable for this process scope") : t("benchmark.Value not recorded")}{typeof memoryScope === "string" ? ` (${memoryScope})` : ""}.</p>
     <div className="detail-performance-grid">
       {columns.map((column) => {
         const key = column.key as ServingMetricKey;
         const stat = selected[key];
         return <div className="detail-metric-card" key={key}>
           <span className="detail-metric-label">{column.label}</span>
-          <strong className="detail-metric-value">{column.format(stat?.median)} <small>{column.unit}</small></strong>
-          <span className="detail-metric-spread">{spread(selected, key, column.format) ?? t("benchmark.Unknown")}</span>
+          <strong className="detail-metric-value">{column.format(stat?.median)}{stat && column.unit ? <small> {column.unit}</small> : null}</strong>
+          <span className="detail-metric-spread">{spread(selected, key, column.format) ?? servingMetricAbsence(key, {
+            requestUsage, memoryScope, outputBytes: selected.output_bytes?.max,
+            contentBytes: selected.content_bytes?.max, reasoningBytes: selected.reasoning_bytes?.max,
+          }, t)}</span>
         </div>;
       })}
     </div>
@@ -240,7 +245,10 @@ export function ServingBenchmarkPointsPanel({ points, memoryScope }: {
           <th scope="row"><button type="button" className="detail-point-select" aria-pressed={point === selected} onClick={() => setSelectedIndex(index)}>{point.input_bytes} B</button></th><td>{point.concurrency}</td><td>{point.max_output_tokens}</td><td>{point.samples}</td>
           {SERVING_METRIC_KEYS.map((key, metricIndex) => {
             const column = columns[metricIndex]!;
-            return <MeasuredCell key={key} value={column.format(point[key]?.median)} spread={spread(point, key, column.format)} />;
+            return <MeasuredCell key={key} value={point[key] ? column.format(point[key]?.median) : servingMetricAbsence(key, {
+              requestUsage, memoryScope, outputBytes: point.output_bytes?.max,
+              contentBytes: point.content_bytes?.max, reasoningBytes: point.reasoning_bytes?.max,
+            }, t)} spread={spread(point, key, column.format)} />;
           })}
         </tr>)}</tbody>
       </table>

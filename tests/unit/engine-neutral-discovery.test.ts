@@ -128,6 +128,58 @@ describe("canonical memory discovery", () => {
     expect(matchesFilters(summary, { setting: [eq(2, { role: "concurrency.capacity" })] })).toBe(false);
     expect(matchesFilters(summary, { setting: [eq(2), eq(3)] })).toBe(false);
   });
+  it("matches recorded context descriptors exactly instead of inventing legacy names or roles", async () => {
+    const store = new InMemoryBenchmarkStore();
+    const run = withSettings("contexts", [
+      { name: "ctx-size", value: 32768, unit: "tokens", role: "context.total_tokens" },
+      { name: "ctx-size", scope: ["serve"], value: 8192, unit: "tokens", role: "context.per_sequence_tokens" },
+      { name: "parallel", value: 4, unit: "count", role: "concurrency.capacity" },
+      { name: "enabled", value: false }, { name: "zero", value: 0 }, { name: "split", value: [0, 1], unit: "ratio" },
+    ]);
+    store.runs.set(run.submission_id, run);
+    const exact = eq(32768, { name: "ctx-size", unit: "tokens", role: "context.total_tokens" });
+    expect((await store.listRuns({ setting: [exact, eq(false, { name: "enabled" }), eq(0, { name: "zero" }), eq([0, 1], { name: "split", unit: "ratio" })] }, 25, null)).items).toHaveLength(1);
+    for (const mismatch of [
+      eq(32768, { name: "ctx-size", unit: "tokens", role: "context.per_sequence_tokens" }),
+      eq(32768, { name: "ctx-size", scope: ["serve"], unit: "tokens", role: "context.total_tokens" }),
+      eq(32768, { name: "ctx-size", unit: "count", role: "context.total_tokens" }),
+      eq(32768, { name: "context_size", unit: "tokens", role: "context.total_tokens" }),
+    ]) expect((await store.listRuns({ setting: [mismatch] }, 25, null)).items).toEqual([]);
+    expect(await store.listOptions("setting_value", "", {}, exact)).toEqual({ options: [{ value: "32768", count: 1 }], has_more: false });
+    expect(run.summary.setup).toMatchObject({ context_size: null, parallel: null, cache_type_k: null, cache_type_v: null });
+  });
+  it("enriches list and detail from the run's own host inventory while preserving selected-only filters and options", async () => {
+    const store = new InMemoryBenchmarkStore(), benchmark = syntheticServingSubmission();
+    benchmark.environment!.cpu.name = "Distinct Host CPU";
+    const hostGpu = { name: "Integrated Host GPU", vendor: "Host Vendor", vram_mb: null, integrated: true, driver: null };
+    benchmark.environment!.installed_gpus = [hostGpu];
+    benchmark.environment!.execution = { mode: "unknown", selected_gpus: [], selection_complete: false };
+    const run = stored("host-only", benchmark);
+    delete run.summary.setup!.host_gpus;
+    delete run.summary.setup!.execution_selection_complete;
+    run.summary.hardware_label = "unknown";
+    run.benchmark.measurements.rows = [];
+    store.runs.set(run.submission_id, run);
+    store.byPublic.set(run.public_id, run.submission_id);
+    const before = JSON.stringify(run);
+    for (const q of ["Integrated Host GPU", "Host Vendor", "Distinct Host CPU"]) {
+      const listed = (await store.listRuns({ q }, 25, null)).items;
+      expect(listed.map(item => item.public_id)).toEqual(["host-only"]);
+      expect(listed[0]!.summary.setup).toMatchObject({ host_gpus: [hostGpu], gpus: [], vendors: [], vram_mb: null, execution_selection_complete: false });
+      expect(listed[0]!.summary.hardware_label).toBe("Host CPU: Distinct Host CPU");
+    }
+    const detail = await store.getRunByPublicId(run.public_id);
+    expect(detail!.summary).toEqual((await store.listRuns({}, 25, null)).items[0]!.summary);
+    expect((await store.getRunBySubmission(run.submission_id))!.summary).toEqual(detail!.summary);
+    expect(detail!.summary.serving_points).toBe(run.summary.serving_points);
+    expect((await store.listRuns({ gpu: "Integrated Host GPU" }, 25, null)).items).toEqual([]);
+    expect((await store.listRuns({ vendor: "Host Vendor" }, 25, null)).items).toEqual([]);
+    expect((await store.listRuns({ vram_min: 0 }, 25, null)).items).toEqual([]);
+    expect((await store.listOptions("gpu", "", {})).options).toEqual([]);
+    expect((await store.listOptions("vendor", "", {})).options).toEqual([]);
+    expect(await store.listOptions("hardware", "", {})).toEqual({ options: [{ value: "Host CPU: Distinct Host CPU", count: 1 }], has_more: false });
+    expect(JSON.stringify(run)).toBe(before);
+  });
   it("facets count distinct visible runs, respect ALL conditions, and preserve false/zero types", async () => {
     const store = new InMemoryBenchmarkStore();
     store.runs.set("a", withSettings("a", [{ value: 0 }, { value: false, name: "enabled" }]));

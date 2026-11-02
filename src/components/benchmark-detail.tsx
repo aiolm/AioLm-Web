@@ -19,8 +19,9 @@ import { buildRowColumns, isFailedRow } from "@/components/benchmark-detail-rows
 import { BenchmarkPointsPanel, ServingBenchmarkPointsPanel } from "@/components/benchmark-detail-points";
 import { formatMethodName, formatPromptLengths, formatWorkloadName } from "@/components/benchmark-explorer-format";
 import type { BenchmarkPoint } from "@/lib/benchmark-points";
-import { servingMetricValues, type ServingBenchmarkPoint, type ServingBenchmarkRow } from "@aiolm/benchmark-contracts";
+import { SERVING_METRIC_KEYS, servingMetricValues, type ServingMetricKey, type ServingBenchmarkPoint, type ServingBenchmarkRow } from "@aiolm/benchmark-contracts";
 import { ColumnHeading } from "./benchmark-i18n";
+import { servingMetricAbsence } from "./benchmark-evidence";
 
 interface Detail {
   id: string;
@@ -231,7 +232,7 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
         {/* What ran on which machine comes before any number read from it. */}
         <BenchmarkHardwareOverview benchmark={data.benchmark} />
         {serving
-          ? <ServingBenchmarkPointsPanel points={summary.serving_points ?? []} memoryScope={asRecord(data.benchmark.execution)?.memory_scope} />
+          ? <ServingBenchmarkPointsPanel points={summary.serving_points ?? []} memoryScope={asRecord(data.benchmark.execution)?.memory_scope} requestUsage={workload?.request_usage} />
           : <BenchmarkPointsPanel points={summary.points ?? []} truncated={summary.points_truncated ?? false} />}
         <div className="detail-context-grid">
           <div className="detail-fact">
@@ -279,6 +280,8 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
             pageCount={pageCount}
             onPage={setVisiblePage}
             schemaVersion={data.benchmark.schema_version}
+            requestUsage={workload?.request_usage}
+            memoryScope={asRecord(data.benchmark.execution)?.memory_scope}
           />
         ) : null}
         {rows && rowsCursor && !rowsError ? (
@@ -309,17 +312,14 @@ function SetupSection({ benchmark }: { benchmark: BenchmarkSetup }): React.JSX.E
       <h2 id="env-title">{t("benchmark.Test setup (as reported)")}</h2>
       <p className="muted">{t("benchmark.These values were sent with the publication and are shown as reported. They are not independently verified.")}</p>
       <p className="muted">{t("benchmark.The publisher is the namespace of the repository the file came from; whoever quantized the weights is listed separately and is often someone else. Quantization describes the weights in the published file, not the KV cache, and it is not a statement about output quality.")}</p>
-      {benchmark.schema_version === 3 ? <>
-        <p className="muted">{t("benchmark.Source repository and revision describe provenance, not the weights SHA256 or proof of unmodified weights.")}</p>
-        <p className="muted">{t("benchmark.Host resources describe the AioLM host, not the attached engine or container allocation.")}</p>
-      </> : null}
       {groups.map((group) => (
         <details className="detail-group" key={group.id}>
           <summary className="detail-group-title" id={group.id}>{group.title}</summary>
+          {group.notes?.map(note => <p className="muted" key={note}>{note}</p>)}
           <dl className="kv" aria-labelledby={group.id}>
             {group.fields.map((field) => (
-              <Fragment key={field.unit ? `${field.label} (${field.unit})` : field.label}>
-                <dt>
+              <Fragment key={field.identity ?? (field.unit ? `${field.label} (${field.unit})` : field.label)}>
+                <dt title={field.descriptor}>
                   {field.label}
                   {field.unit ? <span className="detail-unit"> ({field.unit})</span> : null}
                 </dt>
@@ -345,6 +345,7 @@ function SetupSection({ benchmark }: { benchmark: BenchmarkSetup }): React.JSX.E
                   ) : (
                     <SetupValue field={field} text={field.value} />
                   )}
+                  {field.description ? <p className="muted">{field.description}</p> : null}
                 </dd>
               </Fragment>
             ))}
@@ -377,6 +378,8 @@ function RowsPreview({
   pageCount,
   onPage,
   schemaVersion,
+  requestUsage,
+  memoryScope,
 }: {
   rows: unknown[];
   start: number;
@@ -385,6 +388,8 @@ function RowsPreview({
   pageCount: number;
   onPage: (page: number) => void;
   schemaVersion: unknown;
+  requestUsage: unknown;
+  memoryScope: unknown;
 }): React.JSX.Element {
   const { t } = useI18n();
   const [showDetailed, setShowDetailed] = useState(false);
@@ -434,7 +439,14 @@ function RowsPreview({
               <tr key={start + i}>
                 {columns.map((column) => (
                   <td key={column.key} className={column.numeric ? "detail-num" : undefined}>
-                    {column.format(row[column.key])}
+                    {schemaVersion === 3 && row[column.key] == null && SERVING_METRIC_KEYS.includes(column.key as ServingMetricKey)
+                      ? servingMetricAbsence(column.key as ServingMetricKey, {
+                        requestUsage, memoryScope, usageStatus: row.usage_status,
+                        outputBytes: typeof row.output_bytes === "number" ? row.output_bytes : undefined,
+                        contentBytes: typeof row.content_bytes === "number" ? row.content_bytes : undefined,
+                        reasoningBytes: typeof row.reasoning_bytes === "number" ? row.reasoning_bytes : undefined,
+                      }, t)
+                      : schemaVersion === 3 && column.key === "usage_status" && row.usage_status === "missing" && requestUsage === false ? t("benchmark.Usage not requested") : column.format(row[column.key])}
                   </td>
                 ))}
               </tr>

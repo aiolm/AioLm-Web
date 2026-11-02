@@ -32,6 +32,44 @@ Scalar metadata is defined once in browser-safe `FILTER_DEFINITIONS`. The same
 definitions drive parsing and explorer controls; engine selection never clears
 generic conditions or disables another engine's fields.
 
+### Recorded facts and missing information
+
+`setup.host_gpus` preserves the installed AioLM-host inventory, including each
+device's nullable memory, driver and integrated flag. `null` means the host
+environment was unavailable; `[]` is a recorded empty inventory.
+`setup.execution_selection_complete` preserves the selection-record flag,
+including `false`. Neither inventory nor a requested GPU-layer count proves
+that a device was selected or that model layers ran there.
+
+The existing `gpus`, `vendors`, `vram_mb`, GPU/vendor filters and VRAM sorts
+remain selected-execution-only. General `q` search also covers installed host
+GPU names/vendors. A missing hardware label may fall back to an explicitly
+labelled `Host CPU: …`; this names the host CPU, not a CPU-only execution.
+List/detail reads enrich older summaries from their own stored benchmark
+metadata. They never rewrite payloads, revisions, checksums or measurements.
+
+Serving execution values come from `setup.settings`, not the intentionally
+null legacy context/parallel/cache convenience fields. Target, exact scope,
+name, unit and role remain part of descriptor identity. Compact displays keep
+the full descriptor and show declared semantic roles separately; no common
+role or submitted unit is not a missing setting value. Client concurrency,
+server concurrency capacity and the three context-allocation roles remain
+different facts.
+
+Integrated GPUs with no memory figure are not assigned system RAM as VRAM.
+Runtime backend/variant/plugin fields without evidence remain unrecorded;
+a null field does not declare that it is inapplicable to that engine. Known
+model metadata is retained independently of missing checksum/source/quantizer
+information. Newly collected model hashes apply only to new runs, never to
+historical results.
+
+When usage was not requested, absent reported token/cache counters are
+identified as such. Missing and invalid usage responses remain distinct in
+individual measurements. Zero observed channel bytes stay zero; a channel
+with no output has no first-event latency. Memory follows the recorded owned
+process scope. No absent metric becomes zero or an estimated token rate.
+
+
 | Range key (`_min` / `_max`) | Recorded meaning |
 | --- | --- |
 | `input_bytes` | Maximum configured `workload.inputs[].bytes`, not the largest completed point |

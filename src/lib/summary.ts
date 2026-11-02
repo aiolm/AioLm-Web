@@ -43,17 +43,30 @@ export function normalizeIdentity(benchmark: PublicBenchmarkSubmission): Benchma
   };
 }
 
-/** Enrich old stored summaries on read only; preserve their labels, metrics and body. */
+/** Enrich metadata on read only; never recompute measurements or mutate the stored body. */
 export function withCanonicalIdentity<T extends { summary: BenchmarkSummary }>(item: T, benchmark: PublicBenchmarkSubmission): T & { summary: BenchmarkSummary } {
-  if (item.summary.identity !== undefined && item.summary.schema_version !== undefined) return item;
+  const setup = item.summary.setup;
+  const hardwareLabel = withHostCpuLabel(item.summary.hardware_label, benchmark);
+  if (item.summary.identity !== undefined && item.summary.schema_version !== undefined && setup?.host_gpus !== undefined && setup.execution_selection_complete !== undefined && hardwareLabel === item.summary.hardware_label) return item;
   return {
     ...item,
     summary: {
       ...item.summary,
       identity: item.summary.identity ?? normalizeIdentity(benchmark),
       schema_version: item.summary.schema_version ?? benchmark.schema_version,
+      hardware_label: hardwareLabel,
+      setup: setup ? {
+        ...setup,
+        host_gpus: setup.host_gpus !== undefined ? setup.host_gpus : benchmark.environment?.installed_gpus ?? null,
+        execution_selection_complete: setup.execution_selection_complete !== undefined ? setup.execution_selection_complete : benchmark.environment?.execution.selection_complete ?? null,
+      } : normalizeSetup(benchmark),
     },
   };
+}
+
+function withHostCpuLabel(label: string, benchmark: PublicBenchmarkSubmission): string {
+  const cpu = benchmark.environment?.cpu.name;
+  return label === "unknown" && cpu ? `Host CPU: ${cpu}` : label;
 }
 
 /**
@@ -116,7 +129,7 @@ export function summarizeBenchmark(benchmark: PublicBenchmarkSubmission): Benchm
     identity: normalizeIdentity(benchmark),
     setup: normalizeSetup(benchmark),
     model_label: modelLabelFor(benchmark, modelInfo),
-    hardware_label: hardwareLabel,
+    hardware_label: withHostCpuLabel(hardwareLabel, benchmark),
     method_label: benchmark.method ? `${benchmark.method.id}@${benchmark.method.version}` : "unknown",
     workload_label: benchmark.workload.corpus,
     corpus: benchmark.workload.corpus,

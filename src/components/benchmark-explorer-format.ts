@@ -187,11 +187,13 @@ export interface SummaryFact {
 /** Extracts the list of individual GPUs from a summary and its setup, aggregating identical devices with count x N. */
 export function extractGpuList(summary: { hardware_label: string; setup?: { gpus?: string[] | null } }): string[] {
   let raw: string[] = [];
-  if (summary.hardware_label && summary.hardware_label.includes(" + ")) {
+  if (Array.isArray(summary.setup?.gpus) && summary.setup.gpus.length === 0) {
+    raw = [];
+  } else if (summary.hardware_label && summary.hardware_label.includes(" + ")) {
     raw = summary.hardware_label.split(" + ").map((s) => s.trim()).filter(Boolean);
-  } else if (summary.hardware_label && summary.hardware_label !== "cpu" && summary.hardware_label !== "unknown") {
+  } else if (summary.hardware_label && summary.hardware_label !== "cpu" && summary.hardware_label !== "unknown" && !summary.hardware_label.startsWith("Host CPU: ")) {
     raw = [summary.hardware_label.trim()];
-  } else if (summary.setup?.gpus && summary.setup.gpus.length > 0) {
+  } else if (Array.isArray(summary.setup?.gpus)) {
     raw = summary.setup.gpus;
   }
   return formatGpuLabels(raw);

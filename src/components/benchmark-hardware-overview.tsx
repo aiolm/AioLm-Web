@@ -1,9 +1,10 @@
 "use client";
 import { useI18n } from "@/i18n/client";
-import { asRecord, displayText, formatCompactBytes, formatVramGb } from "./benchmark-detail-format";
+import { asRecord, displayText, formatCompactBytes, formatVramGb, reportedGpuMemory } from "./benchmark-detail-format";
 import { formatCpuCores, runtimeVersionLabel } from "./benchmark-explorer-format";
 import { ColumnHeading } from "./benchmark-i18n";
 import type { BenchmarkSetup } from "./benchmark-detail-fields";
+import { selectedGpuRecord } from "./benchmark-evidence";
 
 interface AggregatedGpu {
   gpu: Record<string, unknown>;
@@ -46,7 +47,10 @@ export function BenchmarkHardwareOverview({ benchmark }: { benchmark: BenchmarkS
   const cpu = asRecord(env?.cpu);
   const execution = asRecord(env?.execution);
   const runtime = asRecord(benchmark.runtime);
-  const rawGpus = execution?.mode === "cpu" ? [] : Array.isArray(execution?.selected_gpus) ? execution.selected_gpus.map(asRecord).filter((gpu): gpu is Record<string, unknown> => gpu !== null) : [];
+  const rawGpus = benchmark.schema_version === 3
+    ? (Array.isArray(env?.installed_gpus) ? env.installed_gpus : []).map(asRecord).filter((gpu): gpu is Record<string, unknown> => gpu !== null)
+    : execution?.mode === "cpu" ? [] : Array.isArray(execution?.selected_gpus) ? execution.selected_gpus.map(asRecord).filter((gpu): gpu is Record<string, unknown> => gpu !== null) : [];
+  const selectedNames = Array.isArray(execution?.selected_gpus) ? execution.selected_gpus.map(asRecord).filter((gpu): gpu is Record<string, unknown> => gpu !== null).map(gpu => displayText(gpu.name, t)) : [];
   const gpus = aggregateGpus(rawGpus);
   const osArch = [env?.os, env?.arch].filter(value => typeof value === "string").join(" · ");
   const runtimeVersion = benchmark.schema_version === 3 ? (typeof runtime?.version === "string" ? runtime.version : null) : runtimeVersionLabel(runtime);
@@ -57,7 +61,7 @@ export function BenchmarkHardwareOverview({ benchmark }: { benchmark: BenchmarkS
       {benchmark.schema_version === 3 ? <p className="muted">{t("benchmark.Host resources describe the AioLM host, not the attached engine or container allocation.")} {t("benchmark.Environment scope")}: {displayText(env?.scope, t)}</p> : null}
       <div className="detail-hardware-grid">
         <article className="detail-hardware-card">
-          <ColumnHeading label={t("benchmark.Selected graphics")} />
+          <ColumnHeading label={t(benchmark.schema_version === 3 ? "benchmark.Installed host GPUs" : "benchmark.Selected graphics")} />
           {gpus.length > 0 ? (
             <ul className="detail-hardware-gpus">
               {gpus.map(({ gpu, count }, index) => {
@@ -68,17 +72,20 @@ export function BenchmarkHardwareOverview({ benchmark }: { benchmark: BenchmarkS
                     <strong>{title}</strong>
                     {typeof gpu.vram_mb === "number" ? (
                       <div className="detail-fact">
-                        <span className="detail-fact-label">{t("benchmark.VRAM")}</span>
+                        <span className="detail-fact-label">{t(gpu.integrated === true ? "benchmark.Reported GPU memory" : "benchmark.VRAM")}</span>
                         <span className="detail-fact-value">{formatVramGb(gpu.vram_mb, t)}</span>
                       </div>
                     ) : null}
+                    {benchmark.schema_version === 3 && typeof gpu.integrated === "boolean" ? <div className="detail-fact"><span className="detail-fact-label">{t("benchmark.Integrated")}</span><span className="detail-fact-value">{displayText(gpu.integrated, t)}</span></div> : null}
+                    {benchmark.schema_version === 3 && gpu.vram_mb == null ? <div className="detail-fact"><span className="detail-fact-label">{t(gpu.integrated === true ? "benchmark.Reported GPU memory" : "benchmark.VRAM")}</span><span className="detail-fact-value">{reportedGpuMemory(gpu.vram_mb, gpu.integrated, t)}</span></div> : null}
                   </li>
                 );
               })}
             </ul>
           ) : (
-            <strong>{execution?.mode === "cpu" ? "CPU" : "—"}</strong>
+            <strong>{benchmark.schema_version === 3 ? t(Array.isArray(env?.installed_gpus) ? "benchmark.None reported" : "benchmark.Host GPU inventory not recorded") : execution?.mode === "cpu" ? "CPU" : "—"}</strong>
           )}
+          {benchmark.schema_version === 3 ? <div className="detail-fact"><span className="detail-fact-label">{t("benchmark.Selected graphics")}</span><span className="detail-fact-value">{selectedGpuRecord(selectedNames, execution?.mode, execution?.selection_complete, t)}</span></div> : null}
         </article>
 
         <article className="detail-hardware-card">
@@ -116,10 +123,10 @@ export function BenchmarkHardwareOverview({ benchmark }: { benchmark: BenchmarkS
                 {runtimeVersion ? ` ${runtimeVersion}` : ""}
               </span>
             </div>
-            {runtime?.backend ? (
+            {runtime?.backend || benchmark.schema_version === 3 ? (
               <div className="detail-fact">
                 <span className="detail-fact-label">{t("benchmark.Backend")}</span>
-                <span className="detail-fact-value">{displayText(runtime.backend, t)}</span>
+                <span className="detail-fact-value">{runtime?.backend ? displayText(runtime.backend, t) : t("benchmark.Backend identity not recorded")}</span>
               </div>
             ) : null}
             {osArch ? (
