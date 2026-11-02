@@ -17,6 +17,7 @@
 .benchmark-detail #detail-title { font-size: var(--fs-page-title); font-weight: var(--fw-heading); line-height: var(--lh-title); letter-spacing: var(--tracking-title); overflow-wrap: anywhere; }
 .benchmark-detail .detail-meta-row { gap: 8px 24px; margin-top: 10px; }
 .benchmark-detail .detail-meta-row .detail-fact { font-size: var(--fs-support); line-height: var(--lh-support); }
+.benchmark-detail .detail-meta-row .detail-fact-label { min-width: 0; overflow-wrap: anywhere; white-space: normal; }
 .benchmark-detail .detail-fact-label { color: var(--ui-muted); font-size: var(--fs-support); line-height: var(--lh-support); }
 .benchmark-detail .detail-weight-badge { padding: 0 7px; border-radius: 5px; background: var(--ui-secondary-gradient); color: var(--ui-secondary-ink); font-size: var(--fs-support); font-weight: var(--fw-medium); line-height: var(--lh-support); }
 .benchmark-detail .detail-environment { margin-block-start: 20px; padding: 0; border: 0; }
