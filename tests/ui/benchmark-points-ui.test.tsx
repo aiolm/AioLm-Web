@@ -167,7 +167,6 @@ describe("reading engine-neutral serving points", () => {
     const html = render(<BenchmarkExplorerTable items={[serving]} compare={[]} onToggleComparison={() => {}} />);
     expect(html).toContain("20.0 B/s");
     expect(html).toContain("10.0 B/s–30.0 B/s · n=2");
-    expect(html).toContain("4096 B / c1 / max128 tok");
     expect(html).toContain("50.0 ms");
     expect(html).not.toContain("NaN");
     expect(html).not.toContain("Infinity");

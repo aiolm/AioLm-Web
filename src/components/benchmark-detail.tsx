@@ -251,7 +251,7 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
             <span className="detail-fact-value">{t("benchmark.{value} runs", { value: String(summary.row_count) })}</span>
           </div>
         </div>
-        <p className="muted detail-record-date">{t("benchmark.Revision {revision} · updated", { revision: data.revision })} <LocalTime value={data.updated_at} /></p>
+        <p className="muted detail-record-date">{t("benchmark.Registered")} <LocalTime value={data.created_at} /> · {t("benchmark.Revision {revision} · updated", { revision: data.revision })} <LocalTime value={data.updated_at} /></p>
       </section>
 
       {data.description_md ? <details className="card detail-description"><summary>{t("benchmark.Description")}</summary><SafeMarkdown text={data.description_md} /></details> : null}

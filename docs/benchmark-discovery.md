@@ -418,83 +418,74 @@ metadata are not written at all, and raw benchmark metadata, measurement rows,
 hashes, capacity counters, and tombstones are left untouched. It also adds
 trigram indexes for the three new filters where pg_trgm is available.
 
-### Sidebar explorer controls
+## Beginner-first explorer controls
 
-On screens wider than 1100px, a 300px filter sidebar sits beside the page title,
-active-filter chips, and results. The comparison guide follows the results inside
-the same main column, so a taller sidebar cannot push it down or leave a gap above it.
-There is no separate top search: finding a model is the first control in the sidebar.
-Model, Hardware, and Execution environment are
-always-visible sections whose headings count their populated conditions. Only their
-Advanced filters and the Measurement settings group collapse, and each shows how many
-of its conditions are selected. Measurement settings starts closed unless it contains
-a restored condition.
+The explorer is a single-column, search-first page at every width. Its primary
+search writes the existing broad `q` condition: model, engine and hardware text
+can be searched without learning the detailed field names. Search submits the
+complete draft, not just the visible search input.
 
-- Model exposes Find a model and weight quantization; Advanced filters holds base
-  model and publisher. Find a model is model_query: it searches the model name,
-  repository, file (artifact), and SHA-256 hash, and its suggestions list only those
-  values. Its hint reads "Search model names, repositories, files or SHA-256 hashes."
-- Hardware exposes GPU vendor, GPU model, and selected GPU VRAM in MiB;
-  Advanced filters holds CPU and logical cores.
-- Execution environment exposes OS; Advanced filters holds runtime, backend,
-  and architecture.
-- Measurement settings holds input length, parallel sequences, threads, GPU
-  layers, execution mode, method, workload, and the remaining execution settings.
+**More filters** opens an inline panel containing the existing Model, Inference
+engine, Hardware and Measurement groups. Execution-option conditions have their
+own nested disclosure. This panel starts closed even for shared links; applied
+conditions remain visible as removable chips, and the toggle counts detailed
+scalar constraints plus typed setting conditions, excluding `q`, ordering and the
+point-only toggle, which belongs to the separate result controls.
+No filter or query parameter is removed by the simplified presentation.
 
-Advanced filters use an inset, tinted panel with an accent rule and a plus/minus
-trigger, distinct from the larger primary group headings. Inputs use 16px text;
-field labels and result metadata use 14px, with larger model names and metrics.
-Korean text prefers word boundaries when wrapping. These presentation changes
-preserve the existing filters and disclosure behavior.
+The detailed panel stays mounted when closed. Its editable values, typed
+`false` and numeric arrays, and hidden `setting` and point inputs remain in the
+same form. Closing it neither submits nor discards edits. A visible status line
+reports unapplied changes; incomplete or over-length drafts block Search even
+when the panel is closed. The panel's Apply action submits the same whole draft.
+Applying detailed conditions closes the panel and focuses the results heading
+on desktop and mobile. Clear resets the view and pagination, keeps hand-picked
+comparison selections, and returns keyboard focus to Search.
 
-Populated advanced groups open when restored from a link. A minimum/maximum
-pair counts as one condition in group badges. Closing a disclosure preserves
-its controls and draft values, and invalid numeric ranges reveal their group.
-One Apply filters button, pinned to the bottom of the sidebar, submits the complete
-draft; a status line beside it reports unapplied changes, and invalid ranges are
-reported in the sidebar and block applying. The sort select belongs to the sidebar
-form through its native `form` attribute.
-The sidebar header's Clear filters stays visible, disabled when no filters can
-be cleared. It resets drafts, results, and pagination; comparison selections
-survive. Reset is also available in the filtered empty state.
+All matching rules remain canonical: `q` is broad, `model_query` searches model
+metadata, `model` reads the model label, and engine identity and typed settings
+retain their existing exact constraints. Changing an engine does not remove
+other conditions. Generic setting conditions are offered in serving scope only;
+leftover conditions stay editable in legacy scope so they can be removed rather
+than silently discarded.
 
-At 1100px and below, Find models and filter (Hide filters while open) shows the
-sidebar above the results. Applying closes this outer panel and moves focus to the results heading after layout
-updates. Desktop submissions preserve each disclosure's open/closed state.
-Results use labeled cards when the viewport or available result column is too
-narrow for the full table.
+Sorting remains beside the results and applies immediately without submitting
+unfinished filter edits. Ordering is not a narrowing filter, does not become a
+filter chip, and does not turn a truly empty view into a filtered-empty message.
+Point-ranked orders still require a complete measured point.
 
-The generic Hardware input is omitted because its GPU names, vendor fallbacks,
-and execution-mode values overlap the dedicated GPU and execution filters, and the
-old top search and Model fingerprint inputs are gone in favor of Find a model.
-Existing `hardware`, `q`, and `model` query parameters keep their original matching
-behavior: hardware matches as before, q remains the broad all-fields search, and
-model still reads the model label alone. Each remains visible as a removable
-active-filter chip (Hardware, All-fields keyword, Model label), and a hidden input
-preserves it when submitting the form; they have no editable input and do not
-count toward group badges. Find a model writes model_query, so it never changes
-what an old q or model link matches.
+**Match measurement conditions** is a separate, collapsed result-control
+disclosure. Its summary always names the current point or explains that each
+result uses its own measured conditions. Point selection and `point_only` apply
+immediately and reset pagination. Serving uses the whole bytes/concurrency/cap
+tuple; legacy uses the whole token-length/concurrency pair. Clearing a point
+also clears `point_only` and point-ranked sorting. Hidden form fields preserve
+the tuple during filter submission; point halves never become separate chips.
+These controls are omitted only from a truly empty default view, not a view
+with an explicitly selected point or order.
+Refresh stays beside the results heading, including on an empty view; it does not
+submit pending edits.
 
-The basis point sits beside the results with sorting, because both decide how the
-results are read rather than which are listed. Its options are the points that
-were really measured under the current conditions, offered as whole pairs, so a
-reader cannot ask for an input length at a concurrency nobody ran. Selecting one
-applies immediately and resets pagination; leaving it unset is a valid view in
-which each row reports its own leading point and names it. Clearing it also
-clears point_only and any order that ranked at it. The two halves never appear as
-removable filter chips, since removing one would leave half a point behind, and
-they ride along as hidden fields with a filter submit so applying a filter cannot
-silently drop the point every row is read at.
+Serving result rows lead with the model link, recorded host hardware and engine,
+first-output time, output speed in B/s, and the exact measured conditions.
+Medians, non-degenerate ranges and differing observed sample counts remain
+visible; single-sample values are not repeated as identical min/max ranges.
+Unknown values remain unknown, never zero. Hardware describes the AioLM host,
+not necessarily an attached service's compute host. Full identity, inputs and
+hashes, settings, memory scope, all metric statistics and registration time are
+available on the existing result-detail page. Legacy token rows keep their
+existing units and detailed disclosures. Narrow layouts use labeled cards
+without shrinking the shared typography.
 
-Sorting sits beside the results and applies immediately to the current query.
-It resets pagination without applying or discarding unfinished filter edits,
-including invalid ranges. Search and filter changes require Apply filters.
-URL sharing, browser history, free-text suggestions, and keyset paging retain
-their existing behavior. Disclosure state is local presentation, not URL state.
+A truly empty view explains that measurement happens in the desktop app and
+links to the localized measuring/sharing guide. A filtered-empty view offers a
+way to clear conditions. Neither state invents examples or a global result
+count. API errors retain the existing retry behavior.
 
-A result link preserves the current query. When a shared cursor or a return from
-a detail page has no previous-page history, First page provides a way back to
-the beginning while retaining filters.
+URL sharing, browser back/forward, keyset paging, free-text suggestions,
+locale-preserving result links and the bounded comparison basket retain their
+existing behavior. A shared cursor without local back-stack still offers First
+page. Disclosure state is presentation only, never a query parameter.
 
 
 Published measurement policy: new submissions must be complete, non-empty, and contain no failed rows. Local diagnostic records remain local. System RAM is an optional measurement-time capacity in environment.system_memory_bytes and summary.setup.ram_bytes; it is not GPU VRAM or peak process memory. Model display names may omit encoding suffixes, but weight encoding always comes from model metadata, never from the display label.

@@ -98,11 +98,11 @@ export function isPointSort(sort: string): boolean {
 }
 
 /**
- * A view whose numbers are read at a basis point is not a narrowed view, so the
- * basis alone does not count as filtering. point_only does hide results and counts.
+ * A basis point and display order do not narrow results. Only point_only narrows
+ * the basis selection; sort stays in its visible menu, not in filter chips.
  */
 function narrowingKeys(): readonly ExplorerFilterKey[] {
-  return EXPLORER_FILTER_KEYS.filter((key) => !(EXPLORER_BASIS_KEYS as readonly string[]).includes(key));
+  return EXPLORER_FILTER_KEYS.filter((key) => key !== "sort" && !(EXPLORER_BASIS_KEYS as readonly string[]).includes(key));
 }
 
 export function hasActiveExplorerFilters(filters: ExplorerFilters): boolean {

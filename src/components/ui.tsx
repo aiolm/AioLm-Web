@@ -1,11 +1,9 @@
 "use client";
 
 import { useI18n } from "@/i18n/client";
-import { localizedPath } from "@/i18n/config";
 import type { Translator } from "@/i18n/types";
 
-import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 
 /** Truncate to a maximum number of Unicode codepoints without regex parsing. */
 export function truncateToCodePoints(text: string, max: number): string {
@@ -35,12 +33,10 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
 }
 
 /**
- * The explorer's empty result state. The illustration is decorative; the
- * "About AioLM" link gives a reader who lands on an empty explorer somewhere to
- * go, which the results panel itself cannot offer.
+ * Empty results with a caller-provided next step: widen a search or learn how to
+ * create and share a result. The action stays relevant to the current page.
  */
-export function EmptyState({ title, hint }: { title: string; hint?: string }): React.JSX.Element {
-  const { locale, t } = useI18n();
+export function EmptyState({ title, hint, action }: { title: string; hint?: string; action: ReactNode }): React.JSX.Element {
   return (
     <div className="empty-state" role="status">
       <span className="empty-state-art" aria-hidden="true">
@@ -53,9 +49,7 @@ export function EmptyState({ title, hint }: { title: string; hint?: string }): R
       </span>
       <p className="empty-state-title"><strong>{title}</strong></p>
       {hint ? <p className="empty-state-hint muted">{hint}</p> : null}
-      <Link className="empty-state-link" href={localizedPath(locale, "/")}>
-        {t("common.about")}
-      </Link>
+      <div className="empty-state-actions">{action}</div>
     </div>
   );
 }

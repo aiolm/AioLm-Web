@@ -9,25 +9,25 @@ body { background-image: var(--ui-canvas-gradient); }
 .site-header .site-nav-link[aria-current="page"]::after { content: ''; position: absolute; height: 2px; inset-inline: 10px; inset-block-end: -4px; background: var(--ui-indicator-gradient); }
 .site-header .site-nav-link { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
 .button-primary, .button.primary, button.primary, .explorer-compact .explorer-button-primary,
-.explorer-sidebar-actions > .explorer-button-primary {
+.explorer-filter-panel-actions > .explorer-button-primary {
   border: 0; background: var(--ui-action-gradient); color: var(--ui-on-accent);
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%), 0 1px 2px rgb(0 0 0 / 7%);
 }
 .button-primary:hover, .button.primary:hover, button.primary:hover, .explorer-compact .explorer-button-primary:hover,
-.explorer-sidebar-actions > .explorer-button-primary:hover { background: var(--ui-action-gradient); filter: brightness(.98); }
+.explorer-filter-panel-actions > .explorer-button-primary:hover { background: var(--ui-action-gradient); filter: brightness(.98); }
 .button-primary:active, .button.primary:active, button.primary:active, .explorer-compact .explorer-button-primary:active,
-.explorer-sidebar-actions > .explorer-button-primary:active { background: var(--ui-action-gradient); }
+.explorer-filter-panel-actions > .explorer-button-primary:active { background: var(--ui-action-gradient); }
 .button.secondary, .home-secondary-button { background: var(--ui-action-secondary-gradient); color: var(--ui-action-secondary-ink); }
 /* Action surfaces are distinct from pale fields and static tags. */
 .button-outline, .home-secondary-button,
-.explorer-compact :is(.explorer-refresh, .explorer-comparison-clear, .explorer-page-previous, .explorer-page-next, .explorer-sidebar-toggle),
+.explorer-compact :is(.explorer-refresh, .explorer-comparison-clear, .explorer-page-previous, .explorer-page-next, .explorer-filter-toggle),
 .install-copy-button,
 .management-panel button:not(.primary):not(.danger) {
   background: var(--ui-action-secondary-gradient);
   color: var(--ui-action-secondary-ink);
 }
 :is(.button-outline, .home-secondary-button):hover,
-.explorer-compact :is(.explorer-refresh, .explorer-comparison-clear, .explorer-page-previous, .explorer-page-next, .explorer-sidebar-toggle):hover:not(:disabled),
+.explorer-compact :is(.explorer-refresh, .explorer-comparison-clear, .explorer-page-previous, .explorer-page-next, .explorer-filter-toggle):hover:not(:disabled),
 .install-copy-button:hover:not(:disabled),
 .management-panel button:not(.primary):not(.danger):hover:not(:disabled) {
   background: var(--ui-action-secondary-gradient-hover);
@@ -35,7 +35,7 @@ body { background-image: var(--ui-canvas-gradient); }
   filter: none;
 }
 /* Text actions keep an explicit cue even where a filled surface would be noisy. */
-.explorer-compact :is(.explorer-sidebar-reset, .explorer-comparison-remove):not(:disabled) {
+.explorer-compact :is(.explorer-filter-reset, .explorer-comparison-remove):not(:disabled) {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -51,9 +51,9 @@ body { background-image: var(--ui-canvas-gradient); }
   box-shadow: none;
   cursor: not-allowed;
 }
-.explorer-compact .explorer-rail { background: var(--ui-rail-gradient); border-radius: 6px; }
-.explorer-sidebar-actions { background: transparent; }
-.explorer-compact .explorer-rail .explorer-validation { color: var(--ui-rail-error); }
+.explorer-compact .explorer-detailed-filters { background: var(--ui-rail-gradient); border-radius: var(--ui-radius-lg); }
+.explorer-filter-panel-actions { background: transparent; }
+.explorer-compact .explorer-detailed-filters .explorer-validation { color: var(--ui-rail-error); }
 input[type="text"], input[type="search"], input[type="password"], textarea, select,
 .ui-select .ui-select-trigger, .explorer-compact .explorer-field-input { background: var(--ui-field-rest-gradient); }
 .ui-select .ui-select-trigger:hover:not(:disabled),
@@ -126,10 +126,6 @@ textarea, textarea:is(:hover, :focus) { background-position: right 10px top 10px
   select:hover { background: var(--ui-field-hover-gradient); }
   pre, .install-cmd-code, .detail-command { background-image: var(--ui-mono-gradient); }
 }
-@media (max-width: 900px) {
-  .explorer-compact .explorer-rail { background: transparent; }
-  .explorer-compact .explorer-sidebar-content { background: var(--ui-rail-gradient); }
-}
 @media (forced-colors: active) {
   :root :is(button, .button), :root button.primary, :root .button-primary {
     background: ButtonFace;
@@ -154,14 +150,7 @@ textarea, textarea:is(:hover, :focus) { background-position: right 10px top 10px
   :root .explorer-compact .explorer-field-input[role="combobox"]:is(:hover, :focus) { background-image: none; }
 }
 
-/* Component CSS loads later; keep the approved rail tint on desktop,
-   sticky actions and the open mobile panel without painting a closed panel. */
-@media (forced-colors: none) and (min-width: 901px) {
-  :root .explorer-compact .explorer-rail { background-image: var(--ui-rail-gradient); }
-}
+/* Component CSS loads later; retain the approved panel and sticky-action tint. */
 @media (forced-colors: none) {
-  :root .explorer-compact .explorer-sidebar-actions { background-image: var(--ui-rail-gradient); }
-}
-@media (forced-colors: none) and (max-width: 900px) {
-  :root .explorer-compact .explorer-sidebar-content { background-image: var(--ui-rail-gradient); }
+  :root .explorer-compact :is(.explorer-detailed-filters, .explorer-filter-panel-actions) { background-image: var(--ui-rail-gradient); }
 }

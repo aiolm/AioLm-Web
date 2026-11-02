@@ -552,10 +552,6 @@ main > .grid {
   gap: 12px;
 }
 
-/* ------------------------------------------------------ explorer rail ---- */
-
-.explorer-rail { min-width: 0; }
-
 .explorer-filters { margin: 0; }
 
 .explorer-filter-set {

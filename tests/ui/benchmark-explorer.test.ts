@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   EXPLORER_COMPARE_LIMIT,
   EMPTY_EXPLORER_FILTERS,
+  activeExplorerFilters,
+  hasActiveExplorerFilters,
   invalidExplorerRanges,
   invalidExplorerDraft,
   buildExplorerOptionsPath,
@@ -424,6 +426,16 @@ describe("discovery filters and sorting", () => {
 });
 
 describe("immediate result sorting", () => {
+  it("keeps ordering out of narrowing conditions without dropping it from the shared view", () => {
+    const ordered = explorerStateFromSearch("?sort=oldest");
+    expect(hasActiveExplorerFilters(ordered.applied)).toBe(false);
+    expect(activeExplorerFilters(ordered.applied)).toEqual([]);
+    const draft = explorerReducer(ordered, { type: "draft", key: "q", value: "synthetic query" });
+    const applied = explorerReducer(draft, { type: "apply" });
+    expect(hasActiveExplorerFilters(applied.applied)).toBe(true);
+    expect(activeExplorerFilters(applied.applied).map(filter => filter.key)).toEqual(["q"]);
+    expect(new URLSearchParams(buildExplorerSearch({ filters: applied.applied, cursor: null })).get("sort")).toBe("oldest");
+  });
   it("sorts applied results without submitting unfinished text or invalid ranges", () => {
     let state = explorerStateFromSearch("?measurement=legacy&vendor=synthetic&cursor=page2", [""]);
     state = explorerReducer(state, { type: "draft", key: "q", value: "unfinished query" });

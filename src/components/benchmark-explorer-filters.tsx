@@ -12,14 +12,13 @@ export function BenchmarkExplorerFilters({ draft, onChange, onSettingsChange, ac
   const { t } = useI18n();
   const invalid = invalidExplorerRanges(draft);
   const legacy = draft.measurement === "legacy";
-  const definitions = Object.entries(FILTER_DEFINITIONS).filter(([key, definition]) => definition.scope === "all" || definition.scope === (legacy ? "legacy" : "serving")
-    || (definition.kind === "range" ? draft[`${key as RangeFilterKey}_min`] || draft[`${key as RangeFilterKey}_max`] : draft[key as ExplorerFilterKey]));
+  const definitions = Object.entries(FILTER_DEFINITIONS).filter(([key, definition]) => key !== "q" && (definition.scope === "all" || definition.scope === (legacy ? "legacy" : "serving")
+    || (definition.kind === "range" ? draft[`${key as RangeFilterKey}_min`] || draft[`${key as RangeFilterKey}_max`] : draft[key as ExplorerFilterKey])));
   const textField = (key: TextFilterKey, label: string) => {
     const optionsPath = buildExplorerOptionsPath(key, key === "weight_bits" ? "" : draft[key], draft);
     const requestError = explorerOptionsRequestError(optionsPath);
     return key === "weight_bits"
     ? <BenchmarkWeightBitsFilter key={key} value={draft.weight_bits} optionsPath={optionsPath} onChange={value => onChange("weight_bits", value)} />
-    : key === "q" ? <label className="explorer-field" key={key}><span className="explorer-field-label">{t(`benchmark.${label}`)}</span><input name={key} className="explorer-field-input" value={draft[key]} onChange={event => onChange(key, event.target.value)} /></label>
     : <EditableCombobox key={key} name={key} label={t(`benchmark.${label}`)} value={draft[key]}
       hint={key === "model_query" ? t("benchmark.Search model names, repositories, files or SHA-256 hashes.") : undefined}
       placeholder={t("benchmark.Type any value")} optionsUrl={optionsPath} requestError={requestError ? t(`benchmark.${requestError}`) : undefined} onChange={value => onChange(key, value)}
@@ -38,7 +37,7 @@ export function BenchmarkExplorerFilters({ draft, onChange, onSettingsChange, ac
     {invalid.includes(range) ? <p id={`error-${range}`} className="explorer-validation" role="alert">{t("benchmark.Use whole numbers with minimum ≤ maximum.")}</p> : null}
   </fieldset>;
   return <>
-    <div className="explorer-sidebar-groups">
+    <div className="explorer-filter-groups">
       {([ ["model", "Model"], ["engine", "Inference engine"], ["hardware", "Hardware"], ["measurement", "Measurement"] ] as const).map(([group, label]) => <section key={group} className="explorer-filter-group" aria-label={t(`benchmark.${label}`)}>
         <h3 className="explorer-filter-group-title">{t(`benchmark.${label}`)}</h3>
         <div className="explorer-group-fields">
@@ -47,12 +46,12 @@ export function BenchmarkExplorerFilters({ draft, onChange, onSettingsChange, ac
             : <label className="explorer-field" key={key}><span className="explorer-field-label">{t(`benchmark.${definition.label}`)}</span><select name={key} className="explorer-field-input" value={draft[key as ExplorerFilterKey]} onChange={event => onChange(key as ExplorerFilterKey, event.target.value)}><option value="">{t("benchmark.Any")}</option><option value="1">{t("benchmark.Yes")}</option><option value="0">{t("benchmark.No")}</option></select></label>)}
         </div>
       </section>)}
-      <section className="explorer-filter-group" aria-label={t("benchmark.Execution options")}><h3 className="explorer-filter-group-title">{t("benchmark.Execution options")}</h3><BenchmarkSettingEditor filters={draft} onChange={onSettingsChange} /></section>
+      {!legacy || draft.setting.length > 0 ? <details className="explorer-secondary-filters explorer-execution-filters"><summary>{t("benchmark.Execution options")}{draft.setting.length > 0 ? <span className="explorer-filter-count">{draft.setting.length}</span> : null}</summary><BenchmarkSettingEditor filters={draft} onChange={onSettingsChange} /></details> : null}
     </div>
     {EXPLORER_BASIS_KEYS.map(key => <input type="hidden" key={key} name={key} value={draft[key]} />)}
     <input type="hidden" name="point_only" value={draft.point_only} />
     {draft.setting.map((condition, index) => <input type="hidden" name="setting" key={index} value={condition} />)}
-    <div className="explorer-sidebar-actions">{actions}</div>
+    <div className="explorer-filter-panel-actions">{actions}</div>
     {invalidExplorerDraft(draft) ? <p className="explorer-validation" role="alert">{t("benchmark.Check conditions before applying. Byte and legacy token conditions cannot be mixed.")}</p> : null}
   </>;
 }

@@ -1,6 +1,7 @@
 "use client";
 import { LocalTime } from "./local-time";
 import { useI18n } from "@/i18n/client";
+import type { Translator } from "@/i18n/types";
 import { localizedPath } from "@/i18n/config";
 import { useSearchParams } from "next/navigation";
 
@@ -26,11 +27,9 @@ import {
   formatThroughputSpread,
   formatWorkloadName,
   type SummaryFact,
-  formatServingPointLabel,
   formatServingMetric,
-  SERVING_METRIC_LABELS,
 } from "./benchmark-explorer-format";
-import { defaultPoint, findPoint, pointMedian, defaultServingPoint, findServingPoint, SERVING_METRIC_KEYS, type BenchmarkPoint } from "@/lib/benchmark-points";
+import { defaultPoint, findPoint, pointMedian, defaultServingPoint, findServingPoint, type BenchmarkPoint, type ServingBenchmarkPoint } from "@/lib/benchmark-points";
 import { formatWeightPrecision, modelPublisher, modelValue } from "./benchmark-model-identity";
 
 /**
@@ -43,9 +42,9 @@ import { formatWeightPrecision, modelPublisher, modelValue } from "./benchmark-m
  * point named, each row reports that point and the column compares like for
  * like; without one, each row reports its own leading point and says which.
  *
- * Each row keeps its own context and workload in view; everything else that
- * qualifies a number sits in one disclosure per row, so no fact is lost and no
- * condition is assumed to be shared by the other rows.
+ * Serving rows keep their exact measured point in view; the model link leads
+ * to full configuration, provenance and statistics. Legacy rows retain their
+ * context/workload and per-row disclosure. No conditions are assumed shared.
  *
  * Headings are in the page language only.
  * Results are successful-only; failed rows and status badges are omitted.
@@ -91,6 +90,13 @@ function MetricCell({ value, spread }: { value: string; spread: string | null })
   );
 }
 
+function servingSpread(key: "first_output_ms" | "output_bytes_per_second", point: ServingBenchmarkPoint | null, t: Translator): string | null {
+  const stat = point?.[key];
+  if (!point || !stat) return null;
+  if (stat.min === stat.max) return stat.samples === point.samples ? null : `n=${stat.samples}`;
+  return `${formatServingMetric(key, stat.min, t)}–${formatServingMetric(key, stat.max, t)} · n=${stat.samples}`;
+}
+
 export interface BenchmarkExplorerTableProps {
   items: ExplorerItem[];
   compare: ExplorerItem[];
@@ -113,43 +119,48 @@ export function BenchmarkExplorerTable({
   const servingBasis = basis && "input_bytes" in basis ? basis : null;
   if (items.every(item => item.summary.schema_version === 3)) return <table className="explorer-table">
     <caption className="explorer-table-caption">{t("benchmark.Client-observed API measurements. Sorting is not an independently verified hardware or engine ranking.")}</caption>
-    <thead className="explorer-table-head"><tr className="explorer-head-row">{["Compare", "Model", "Environment", "First output", "Observed output B/s", "Measurement"].map((label, index) => <th className={`explorer-head-cell ${index === 5 ? "explorer-head-setup" : ""}`} scope="col" key={label}>{t(`benchmark.${label}`)}</th>)}</tr></thead>
+    <thead className="explorer-table-head">
+      <tr className="explorer-head-row">
+        <th scope="col" className="explorer-head-cell explorer-head-compare">
+          <ColumnHeading label={t("benchmark.Compare")} />
+        </th>
+        <th scope="col" className="explorer-head-cell explorer-head-identity explorer-head-model">
+          <ColumnHeading label={t("benchmark.Model")} />
+        </th>
+        <th scope="col" className="explorer-head-cell explorer-head-environment">
+          <ColumnHeading label={t("benchmark.Hardware and engine")} />
+        </th>
+        <th scope="col" className="explorer-head-cell explorer-head-numeric explorer-head-prefill">
+          <ColumnHeading label={t("benchmark.First output")} />
+        </th>
+        <th scope="col" className="explorer-head-cell explorer-head-numeric explorer-head-decode">
+          <ColumnHeading label={t("benchmark.Observed output B/s")} />
+        </th>
+        <th scope="col" className="explorer-head-cell explorer-head-setup">
+          <ColumnHeading label={t("benchmark.Test conditions")} />
+        </th>
+      </tr>
+    </thead>
     <tbody className="explorer-table-body">{items.map(item => {
       const summary = item.summary;
       const shown = servingBasis ? findServingPoint(summary.serving_points, servingBasis.input_bytes, servingBasis.concurrency, servingBasis.max_output_tokens) : defaultServingPoint(summary.serving_points);
       const selected = isCompared(compare, item.public_id);
       const identity = { model: summary.model_label, hardware: summary.hardware_label };
-      const facts: SummaryFact[] = [
-        ...Object.entries(summary.identity ?? {}).map(([key, value]) => ({ key, label: t(`benchmark.identity.${key}`), value: value === null ? t("benchmark.Unknown") : String(value) })),
-        { key: "method", label: t("benchmark.Method"), value: formatMethodName(summary.method_label, t) },
-        { key: "corpus", label: t("benchmark.workload"), value: `${formatWorkloadName(summary.setup?.corpus, t)} · v${summary.setup?.corpus_version ?? "?"}` },
-        { key: "inputs", label: t("benchmark.Input UTF-8 bytes and SHA256"), value: summary.setup?.inputs?.map(input => `${input.bytes} B · ${input.sha256}`).join("; ") || t("benchmark.Unknown") },
-        { key: "cap", label: t("benchmark.Maximum output token request"), value: summary.setup?.max_output_tokens ?? t("benchmark.Unknown") },
-        { key: "concurrency", label: t("benchmark.maxConcurrency"), value: summary.setup?.max_concurrency ?? t("benchmark.Unknown") },
-        { key: "warmup", label: t("benchmark.warmup"), value: summary.setup?.warmup == null ? t("benchmark.Unknown") : t(summary.setup.warmup ? "benchmark.Yes" : "benchmark.No") },
-        { key: "usage", label: t("benchmark.requestUsage"), value: summary.setup?.request_usage == null ? t("benchmark.Unknown") : t(summary.setup.request_usage ? "benchmark.Yes" : "benchmark.No") },
-        { key: "cache", label: t("benchmark.Cache policy"), value: summary.setup?.cache_policy ?? t("benchmark.Unknown") },
-        { key: "topology", label: t("benchmark.Execution topology"), value: summary.setup?.topology ?? t("benchmark.Unknown") },
-        { key: "memory", label: t("benchmark.Memory scope"), value: summary.setup?.memory_scope ?? t("benchmark.Unknown") },
-        ...SERVING_METRIC_KEYS.map(key => {
-          const stat = shown?.[key];
-          return { key, label: t(`benchmark.${SERVING_METRIC_LABELS[key]}`), value: stat ? `${formatServingMetric(key, stat.median, t)} · ${formatServingMetric(key, stat.min, t)}–${formatServingMetric(key, stat.max, t)} · n=${stat.samples}` : t("benchmark.Unknown") };
-        }),
-        ...((summary.setup?.settings ?? []).map((setting, index) => ({ key: `setting-${index}`, label: `${setting.target} / ${setting.scope.length ? setting.scope.join(" / ") + " / " : ""}${setting.name}${setting.unit ? ` (${setting.unit})` : ""}${setting.role ? ` · ${setting.role}` : ""}`, value: setting.value === null ? t("benchmark.Unknown") : Array.isArray(setting.value) ? setting.value.join(", ") : String(setting.value) }))),
-        { key: "registered", label: t("benchmark.Registered"), value: <LocalTime value={item.created_at} /> },
+      const gpuList = extractGpuList(summary);
+      const environmentSummary: SummaryFact[] = [
+        ...(summary.setup?.mode === "cpu" ? [] : [{ key: "gpu", label: t("benchmark.GPU"), value: gpuList.length ? gpuList.join(", ") : t("benchmark.Unknown") }]),
+        { key: "cpu", label: t("benchmark.CPU"), value: summary.setup?.cpu ?? t("benchmark.Unknown") },
+        { key: "runtime", label: t("benchmark.Inference engine"), value: `${summary.identity?.engine_name ?? t("benchmark.Unknown")}${summary.setup?.backend ? ` · ${summary.setup.backend}` : ""}` },
       ];
       return <tr className="explorer-row" key={item.public_id}>
         <ExplorerCell label={t("benchmark.Compare")} className="explorer-cell-compare"><input type="checkbox" className="explorer-compare-input" checked={selected} disabled={!selected && comparisonFull} aria-label={t(selected ? "benchmark.Remove {model} on {hardware} from the comparison" : "benchmark.Add {model} on {hardware} to the comparison", identity)} onChange={() => onToggleComparison(item)} /></ExplorerCell>
         <th scope="row" className="explorer-cell explorer-cell-identity explorer-cell-model"><Link className="explorer-detail-link" href={localizedPath(locale, `${explorerDetailHref(item.public_id)}${search ? `?${search}` : ""}`)}>{summary.model_label}</Link><FactList className="explorer-model-facts" facts={[{ key: "format", label: t("benchmark.Model format"), value: summary.identity?.model_format ?? t("benchmark.Unknown") }, { key: "quantization", label: t("benchmark.Weight quantization"), value: formatWeightPrecision(summary.model_info ?? null, t) }]} /></th>
-        <ExplorerCell label={t("benchmark.Environment")} className="explorer-cell-environment"><FactList className="explorer-environment-facts" facts={environmentFacts(summary.setup, t)} /></ExplorerCell>
-        <ExplorerCell label={t("benchmark.First output")} className="explorer-cell-numeric explorer-cell-prefill"><MetricCell value={formatServingMetric("first_output_ms", shown?.first_output_ms?.median, t)} spread={shown?.first_output_ms ? `${formatServingMetric("first_output_ms", shown.first_output_ms.min, t)}–${formatServingMetric("first_output_ms", shown.first_output_ms.max, t)} · n=${shown.first_output_ms.samples}` : null} /></ExplorerCell>
-        <ExplorerCell label={t("benchmark.Observed output B/s")} className="explorer-cell-numeric explorer-cell-decode"><MetricCell value={formatServingMetric("output_bytes_per_second", shown?.output_bytes_per_second?.median, t)} spread={shown?.output_bytes_per_second ? `${formatServingMetric("output_bytes_per_second", shown.output_bytes_per_second.min, t)}–${formatServingMetric("output_bytes_per_second", shown.output_bytes_per_second.max, t)} · n=${shown.output_bytes_per_second.samples}` : null} /></ExplorerCell>
-        <ExplorerCell label={t("benchmark.Measurement")} className="explorer-cell-setup">
-          <span className="explorer-setup-line">{summary.method_label}</span>
-          <span className="explorer-setup-line">{shown ? `${formatServingPointLabel(shown.input_bytes, shown.concurrency, shown.max_output_tokens)} · n=${shown.samples}` : t("benchmark.Not measured at this point")}</span>
-          <span className="explorer-setup-line">{t("benchmark.inputBytes")}: {summary.setup?.max_input_bytes ?? t("benchmark.Unknown")}</span>
-          <p className="explorer-range-hint">{t("benchmark.Memory is only the recorded owned compute scope; unavailable memory stays unknown. Host RAM is not engine memory.")}</p>
-          <details className="explorer-row-details"><summary>{t("benchmark.Setup and provenance")}</summary><FactList className="explorer-detail-facts" facts={facts} /></details>
+        <ExplorerCell label={t("benchmark.Hardware and engine")} className="explorer-cell-environment"><FactList className="explorer-environment-facts explorer-serving-environment" facts={environmentSummary} /></ExplorerCell>
+        <ExplorerCell label={t("benchmark.First output")} className="explorer-cell-numeric explorer-cell-prefill"><MetricCell value={formatServingMetric("first_output_ms", shown?.first_output_ms?.median, t)} spread={servingSpread("first_output_ms", shown, t)} /></ExplorerCell>
+        <ExplorerCell label={t("benchmark.Observed output B/s")} className="explorer-cell-numeric explorer-cell-decode"><MetricCell value={formatServingMetric("output_bytes_per_second", shown?.output_bytes_per_second?.median, t)} spread={servingSpread("output_bytes_per_second", shown, t)} /></ExplorerCell>
+        <ExplorerCell label={t("benchmark.Test conditions")} className="explorer-cell-setup">
+          <span className="explorer-setup-line">{shown ? t("benchmark.{bytes} B input · {concurrency} requests · max {tokens} output tokens", { bytes: shown.input_bytes, concurrency: shown.concurrency, tokens: shown.max_output_tokens }) : t("benchmark.Not measured at this point")}</span>
+          {shown ? <span className="explorer-setup-line">{t("benchmark.{count} measurements", { count: shown.samples })}</span> : null}
         </ExplorerCell>
       </tr>;
     })}</tbody>
