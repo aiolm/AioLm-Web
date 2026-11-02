@@ -69,6 +69,56 @@ individual measurements. Zero observed channel bytes stay zero; a channel
 with no output has no first-event latency. Memory follows the recorded owned
 process scope. No absent metric becomes zero or an estimated token rate.
 
+### Later Hugging Face model information
+
+`GET /v1/benchmark-runs/{public_id}/model-information` returns a separate
+catalog view. It never updates `benchmark`, `summary.model_info`, recorded
+source/revision, measurement rows or the publication's revision/body checksum.
+Existing source/owner/base-model filters still query the recorded submission,
+not later model-card text.
+
+The lookup uses the recorded full SHA-256 and exact byte size. A recorded
+repository or model metadata name is only a candidate-discovery hint. A name,
+file name, repository commit, Git blob id or aggregate repository size is not
+file-identity proof. Every returned artifact must have the same LFS SHA-256
+and byte size in metadata fetched at a fixed repository revision.
+
+The response contains `status`, `reason`, `match_basis`, `sha256`,
+`size_bytes`, `checked_at` and `matches`. Status is `matched`, `unidentified`,
+`not_found` or `unavailable`; an unidentified record explains missing checksum,
+size or discovery hint. `checked_at` is lookup time, not measurement or download
+time. A record without its own hash is not repaired with a current local file
+hash; the interface can instead offer a clearly unverified model-name search.
+
+Each match independently names its repository, pinned revision, artifact,
+repository namespace owner, model-card base models/licenses and an explicitly
+declared quantizer when present. Fixed-domain, revision-pinned links expose
+the evidence. Multiple matching repositories remain separate sources: neither
+the first result nor its namespace becomes the original download source,
+author or quantizer. A matching file does not verify benchmark execution,
+hardware or performance. Card declarations are not independent provenance
+attestations.
+
+Only public Hugging Face JSON metadata is fetched, without credentials,
+redirects or weight downloads. Scans are limited to eight candidate repositories,
+4,096 files per repository, 64 returned matches, 2 MiB per response and eight
+seconds, with four concurrent upstream requests. The per-instance public cache
+holds 128 results and at most 16 single-flight lookups; matches live one day,
+bounded no-match results 15 minutes and upstream failures 15 seconds. No-match
+means no match found within this bounded lookup, not absence from the whole Hub.
+
+Every endpoint read rechecks publication visibility before using that cache.
+Missing/deleted/hidden runs return 404, database outages return retryable 503,
+and an upstream failure is represented as `unavailable` in a successful DTO.
+Responses use `no-store` so caching never bypasses moderation.
+
+List, detail and comparison load this information independently of measurements.
+Repository/file/base-model/license information is visible when matched; raw
+proof details remain initially closed. Loading or unavailable HF data never
+blocks the benchmark results, and all four locales retain the search-first
+layout and text-zoom wrapping.
+
+
 
 | Range key (`_min` / `_max`) | Recorded meaning |
 | --- | --- |

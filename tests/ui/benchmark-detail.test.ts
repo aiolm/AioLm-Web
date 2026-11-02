@@ -127,8 +127,8 @@ describe("engine-neutral serving setup and measurements", () => {
     const groups = buildSetupGroups(publicSetup(benchmark));
     expect(valueOf(groups, "Runtime")).toBe(engine ?? "Unknown");
     expect(valueOf(groups, "Runtime variant")).toBe("arbitrary-safe-variant");
-    expect(valueOf(groups, "Source revision")).toBe("b".repeat(40));
-    expect(valueOf(groups, "Repository")).toBe("synthetic-org/example-model");
+    expect(valueOf(groups, "Source revision (recorded)")).toBe("b".repeat(40));
+    expect(valueOf(groups, "Repository (recorded)")).toBe("synthetic-org/example-model");
     expect(valueOf(groups, "Environment scope")).toBe("aiolm_host");
     expect(labelsOf(groups)).toContain("Input UTF-8 bytes and SHA256");
     expect(labelsOf(groups)).not.toContain("Prompt lengths (tokens)");

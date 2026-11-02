@@ -1,0 +1,24 @@
+.benchmark-model-information {
+  min-width: 0;
+  max-width: 100%;
+  margin-block-start: 12px;
+  font-size: var(--fs-body-compact);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-compact);
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.benchmark-model-information p { margin-block: 4px; }
+.benchmark-model-information .benchmark-catalog-label { color: var(--ui-muted); font-size: var(--fs-support); line-height: var(--lh-support); }
+.benchmark-model-information a { color: var(--ui-accent); text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.benchmark-model-information a:focus-visible,
+.benchmark-model-information summary:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; border-radius: var(--ui-radius-sm); }
+.benchmark-model-information .benchmark-catalog-matches { display: grid; gap: 12px; margin: 4px 0; padding: 0; list-style: none; }
+.benchmark-catalog-match { min-width: 0; }
+.benchmark-model-information .benchmark-catalog-repository { font-weight: var(--fw-medium); }
+.benchmark-model-information .benchmark-catalog-fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; margin-block: 8px; }
+.benchmark-catalog-fields dt { color: var(--ui-muted); font-size: var(--fs-support); line-height: var(--lh-support); }
+.benchmark-catalog-fields dd { margin: 0 0 6px; min-width: 0; overflow-wrap: anywhere; }
+.benchmark-catalog-evidence > summary { min-height: var(--control-min); cursor: pointer; color: var(--ui-accent); font-size: var(--fs-control); line-height: var(--lh-control); }
+.benchmark-model-information-compact { font-size: var(--fs-support); line-height: var(--lh-support); }

@@ -32,6 +32,7 @@ import {
 import { defaultPoint, findPoint, pointMedian, defaultServingPoint, findServingPoint, type BenchmarkPoint, type ServingBenchmarkPoint } from "@/lib/benchmark-points";
 import { formatWeightPrecision, modelPublisher, modelValue } from "./benchmark-model-identity";
 import { selectedGpuRecord, servingMetricAbsence } from "./benchmark-evidence";
+import { BenchmarkModelInformation } from "./benchmark-model-information";
 
 /**
  * Published results as one native table. Model and Environment are separated
@@ -157,7 +158,7 @@ export function BenchmarkExplorerTable({
       ];
       return <tr className="explorer-row" key={item.public_id}>
         <ExplorerCell label={t("benchmark.Compare")} className="explorer-cell-compare"><input type="checkbox" className="explorer-compare-input" checked={selected} disabled={!selected && comparisonFull} aria-label={t(selected ? "benchmark.Remove {model} on {hardware} from the comparison" : "benchmark.Add {model} on {hardware} to the comparison", identity)} onChange={() => onToggleComparison(item)} /></ExplorerCell>
-        <th scope="row" className="explorer-cell explorer-cell-identity explorer-cell-model"><Link className="explorer-detail-link" href={localizedPath(locale, `${explorerDetailHref(item.public_id)}${search ? `?${search}` : ""}`)}>{summary.model_label}</Link><FactList className="explorer-model-facts" facts={[{ key: "format", label: t("benchmark.Model format"), value: summary.identity?.model_format ?? t("benchmark.Unknown") }, { key: "quantization", label: t("benchmark.Weight quantization"), value: formatWeightPrecision(summary.model_info ?? null, t) }]} /></th>
+        <th scope="row" className="explorer-cell explorer-cell-identity explorer-cell-model"><Link className="explorer-detail-link" href={localizedPath(locale, `${explorerDetailHref(item.public_id)}${search ? `?${search}` : ""}`)}>{summary.model_label}</Link><FactList className="explorer-model-facts" facts={[{ key: "format", label: t("benchmark.Model format"), value: summary.identity?.model_format ?? t("benchmark.Unknown") }, { key: "quantization", label: t("benchmark.Weight quantization"), value: formatWeightPrecision(summary.model_info ?? null, t) }]} /><BenchmarkModelInformation publicId={item.public_id} recordedName={summary.model_info?.name} compact /></th>
         <ExplorerCell label={t("benchmark.Hardware and engine")} className="explorer-cell-environment"><FactList className="explorer-environment-facts explorer-serving-environment" facts={environmentSummary} /></ExplorerCell>
         <ExplorerCell label={t("benchmark.First output")} className="explorer-cell-numeric explorer-cell-prefill"><MetricCell value={!shown ? t("benchmark.Not measured at this point") : shown.first_output_ms ? formatServingMetric("first_output_ms", shown.first_output_ms.median, t) : servingMetricAbsence("first_output_ms", { outputBytes: shown.output_bytes?.max }, t)} spread={servingSpread("first_output_ms", shown, t)} /></ExplorerCell>
         <ExplorerCell label={t("benchmark.Observed output B/s")} className="explorer-cell-numeric explorer-cell-decode"><MetricCell value={!shown ? t("benchmark.Not measured at this point") : shown.output_bytes_per_second ? formatServingMetric("output_bytes_per_second", shown.output_bytes_per_second.median, t) : servingMetricAbsence("output_bytes_per_second", {}, t)} spread={servingSpread("output_bytes_per_second", shown, t)} /></ExplorerCell>
@@ -208,7 +209,7 @@ export function BenchmarkExplorerTable({
           // Weight quantization qualifies the model name itself, so it stays next to
           // it; both it and the publisher name their gaps instead of disappearing.
           const quantizationFact: SummaryFact = { key: "quantization", label: t("benchmark.Weight quantization"), value: formatWeightPrecision(info, t) };
-          const publisherFact: SummaryFact = { key: "publisher", label: t("benchmark.Publisher"), value: modelValue(modelPublisher(info), t) };
+          const publisherFact: SummaryFact = { key: "publisher", label: t("benchmark.Repository owner (recorded)"), value: modelValue(modelPublisher(info), t) };
           const envRaw = environmentFacts(summary.setup, t).filter(fact => fact.key !== "gpu" && (summary.setup?.cpu ? fact.key !== "cores" : true));
           const gpuList = extractGpuList(summary);
           const gpuValue: React.ReactNode = gpuList.length > 1 ? (
@@ -280,6 +281,7 @@ export function BenchmarkExplorerTable({
                     {summary.model_label}
                   </Link>
                   <FactList className="explorer-model-facts" facts={[quantizationFact]} />
+                  <BenchmarkModelInformation publicId={item.public_id} recordedName={info?.name} compact />
                 </div>
               </th>
               <td className="explorer-cell explorer-cell-environment">

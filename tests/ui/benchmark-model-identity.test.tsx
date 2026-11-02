@@ -251,26 +251,26 @@ describe("the result page", () => {
 
   it("offers a public source link only for an id that validated", () => {
     const [model] = buildSetupGroups(benchmark, t);
-    expect(model.fields.find((field) => field.label === "Repository")?.links)
+    expect(model.fields.find((field) => field.label === "Repository (recorded)")?.links)
       .toEqual({ "synthetic-org/synthetic-repo": "https://huggingface.co/synthetic-org/synthetic-repo" });
-    expect(model.fields.find((field) => field.label === "Base model")?.links)
+    expect(model.fields.find((field) => field.label === "Base model (recorded)")?.links)
       .toEqual({ "synthetic-base/synthetic-weights": "https://huggingface.co/synthetic-base/synthetic-weights" });
 
     const escaped = { metadata: info({ repository: "../escape", base_models: ["also/../escape"] }) };
     const unlinkable = buildSetupGroups({ ...benchmark, model: escaped }, t)[0];
-    expect(unlinkable.fields.find((field) => field.label === "Repository")?.links).toBeUndefined();
-    expect(unlinkable.fields.find((field) => field.label === "Base model")?.links).toEqual({});
+    expect(unlinkable.fields.find((field) => field.label === "Repository (recorded)")?.links).toBeUndefined();
+    expect(unlinkable.fields.find((field) => field.label === "Base model (recorded)")?.links).toEqual({});
   });
 
   it("reports unknown for required facts and omits empty optional metadata fields for bare publication", () => {
     const bare = { status: "unidentified", sha256: null, size_bytes: null };
     const [model] = buildSetupGroups({ ...benchmark, model: bare }, t);
-    for (const label of ["Model name", "Publisher", "Weight quantization", "Model checksum", "Model size"]) {
+    for (const label of ["Model name", "Repository owner (recorded)", "Weight quantization", "Model checksum", "Model size"]) {
       expect(model.fields.find((field) => field.label === label)?.value, label).toBe("Unknown");
     }
     expect(model.fields.find((field) => field.label === "Model identity")?.value).toBe("unidentified");
     // Empty optional metadata fields are omitted
-    for (const label of ["Base model", "Artifact file", "Repository", "Quantized by"]) {
+    for (const label of ["Base model (recorded)", "Artifact file (recorded)", "Repository (recorded)", "Quantized by (recorded)"]) {
       expect(model.fields.find((field) => field.label === label)).toBeUndefined();
     }
   });

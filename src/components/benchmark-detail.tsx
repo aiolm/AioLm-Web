@@ -22,6 +22,7 @@ import type { BenchmarkPoint } from "@/lib/benchmark-points";
 import { SERVING_METRIC_KEYS, servingMetricValues, type ServingMetricKey, type ServingBenchmarkPoint, type ServingBenchmarkRow } from "@aiolm/benchmark-contracts";
 import { ColumnHeading } from "./benchmark-i18n";
 import { servingMetricAbsence } from "./benchmark-evidence";
+import { BenchmarkModelInformation } from "./benchmark-model-information";
 
 interface Detail {
   id: string;
@@ -221,7 +222,7 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
         <h1 id="detail-title">{summary.model_label}</h1>
         <div className="detail-meta-row">
           <div className="detail-fact">
-            <span className="detail-fact-label">{t("benchmark.Publisher")}</span>
+            <span className="detail-fact-label">{t("benchmark.Repository owner (recorded)")}</span>
             <span className="detail-fact-value">{modelValue(modelPublisher(summary.model_info ?? null), t)}</span>
           </div>
           <div className="detail-fact">
@@ -229,6 +230,7 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
             <span className="detail-fact-value detail-weight-badge">{formatWeightQuantization(summary.model_info ?? null, t)}</span>
           </div>
         </div>
+        <BenchmarkModelInformation publicId={publicId} recordedName={summary.model_info?.name} />
         {/* What ran on which machine comes before any number read from it. */}
         <BenchmarkHardwareOverview benchmark={data.benchmark} />
         {serving
@@ -311,7 +313,7 @@ function SetupSection({ benchmark }: { benchmark: BenchmarkSetup }): React.JSX.E
     <section className="card" aria-labelledby="env-title">
       <h2 id="env-title">{t("benchmark.Test setup (as reported)")}</h2>
       <p className="muted">{t("benchmark.These values were sent with the publication and are shown as reported. They are not independently verified.")}</p>
-      <p className="muted">{t("benchmark.The publisher is the namespace of the repository the file came from; whoever quantized the weights is listed separately and is often someone else. Quantization describes the weights in the published file, not the KV cache, and it is not a statement about output quality.")}</p>
+      <p className="muted">{t("benchmark.recordedModelSourceExplanation")}</p>
       {groups.map((group) => (
         <details className="detail-group" key={group.id}>
           <summary className="detail-group-title" id={group.id}>{group.title}</summary>

@@ -22,6 +22,7 @@ import { servingMetricColumns } from "./benchmark-detail-rows";
 import { asRecord, displayText, formatByteSize } from "./benchmark-detail-format";
 import type { ServingMetricKey } from "@aiolm/benchmark-contracts";
 import { recordedSettingPresentation, selectedGpuRecord, servingMetricAbsence } from "./benchmark-evidence";
+import { BenchmarkModelInformation } from "./benchmark-model-information";
 
 /**
  * Side-by-side view of results the reader picked by hand. It transposes the
@@ -66,10 +67,11 @@ export function servingComparisonSignature(item: ExplorerItem): string {
 }
 
 function comparisonFields(t: Translator, locale: Locale, search: string, basis: ExplorerBasis | null, items: ExplorerItem[]): ComparisonField[] { return [
-  { key: "publisher", label: t("benchmark.Publisher"), render: (item) => modelValue(modelPublisher(item.summary.model_info ?? null), t) },
+  { key: "catalog", label: t("benchmark.catalogTitle"), render: item => <BenchmarkModelInformation publicId={item.public_id} recordedName={item.summary.model_info?.name} /> },
+  { key: "publisher", label: t("benchmark.Repository owner (recorded)"), render: (item) => modelValue(modelPublisher(item.summary.model_info ?? null), t) },
   { key: "quantization", label: t("benchmark.Weight quantization"), render: (item) => formatWeightPrecision(item.summary.model_info ?? null, t) },
-  { key: "base-model", label: t("benchmark.Base model"), render: (item) => formatBaseModels(item.summary.model_info ?? null, t) },
-  { key: "artifact", label: t("benchmark.Artifact file"), render: (item) => modelValue(item.summary.model_info?.artifact ?? null, t) },
+  { key: "base-model", label: t("benchmark.Base model (recorded)"), render: (item) => formatBaseModels(item.summary.model_info ?? null, t) },
+  { key: "artifact", label: t("benchmark.Artifact file (recorded)"), render: (item) => modelValue(item.summary.model_info?.artifact ?? null, t) },
   ...(items.some(item => item.summary.schema_version !== 3) ? [{ key: "hardware", label: t("benchmark.Hardware"), render: (item: ExplorerItem) => item.summary.hardware_label }] : []),
   { key: "host-gpus", label: t("benchmark.Installed host GPUs"), render: item => item.summary.setup?.host_gpus == null ? t("benchmark.Host GPU inventory not recorded") : item.summary.setup.host_gpus.length ? item.summary.setup.host_gpus.map(gpu => `${gpu.name ?? gpu.vendor ?? t("benchmark.Unknown device")}${gpu.integrated === true ? ` · ${t("benchmark.Integrated")}` : ""}`).join("; ") : t("benchmark.None reported") },
   { key: "selected-gpus", label: t("benchmark.Selected graphics"), render: item => selectedGpuRecord(item.summary.setup?.gpus, item.summary.setup?.mode, item.summary.setup?.execution_selection_complete, t) },
@@ -87,7 +89,7 @@ function comparisonFields(t: Translator, locale: Locale, search: string, basis: 
   ...([
     ["engine_variant", "Runtime variant"], ["engine_build", "Runtime build"], ["engine_plugin_version", "Runtime plugin version"],
     ["model_format", "Weights format"], ["model_sha256", "Model checksum"], ["model_size_bytes", "Model size"],
-    ["model_repository", "Repository"], ["model_revision", "Source revision"], ["app_version", "App version"],
+    ["model_repository", "Repository (recorded)"], ["model_revision", "Source revision (recorded)"], ["app_version", "App version"],
   ] as const).map(([key, label]): ComparisonField => ({ key, label: t(`benchmark.${label}`), render: item => key === "model_size_bytes" ? formatByteSize(item.summary.identity?.[key], t) : item.summary.schema_version === 3 && item.summary.identity?.[key] == null ? t(key === "engine_variant" || key === "engine_plugin_version" ? "benchmark.Not recorded; applicability not declared" : "benchmark.Value not recorded") : displayText(item.summary.identity?.[key], t) })),
   ...(["inputs", "max_output_tokens", "corpus", "corpus_version", "warmup", "request_usage", "cache_policy"] as const).map((key): ComparisonField => ({
     key, label: t(`benchmark.${({ inputs: "Input hashes", max_output_tokens: "Maximum output token request", corpus: "Corpus", corpus_version: "Corpus version", warmup: "Warmup", request_usage: "Request usage", cache_policy: "Cache policy" })[key]}`),

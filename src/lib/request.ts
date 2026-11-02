@@ -9,11 +9,14 @@ export class BoundedBodyError extends Error {
   }
 }
 
-export async function readBoundedBytes(request: Request, maxBytes: number): Promise<Uint8Array> {
+export async function readBoundedBytes(request: Pick<Request, "headers" | "body">, maxBytes: number): Promise<Uint8Array> {
   const declared = request.headers.get("content-length");
   if (declared !== null) {
     const n = Number(declared);
-    if (Number.isSafeInteger(n) && n > maxBytes) throw new BoundedBodyError();
+    if (Number.isSafeInteger(n) && n > maxBytes) {
+      await request.body?.cancel().catch(() => undefined);
+      throw new BoundedBodyError();
+    }
   }
   const body = request.body;
   if (!body) return new Uint8Array(0);

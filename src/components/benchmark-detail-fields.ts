@@ -95,28 +95,28 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
   // Model group: key fields shown once; empty optional metadata fields omitted.
   const modelFields: SetupField[] = [
     { label: t("benchmark.Model name"), value: info?.name ? modelDisplayName(info, info.name) : modelValue(null, t) },
-    { label: t("benchmark.Publisher"), value: serving && !isRepositoryId(repository) && !modelPublisher(info) ? t("benchmark.Value not recorded") : modelValue(isRepositoryId(repository) ? repository.split("/")[0] : modelPublisher(info), t) },
+    { label: t("benchmark.Repository owner (recorded)"), value: serving && !isRepositoryId(repository) && !modelPublisher(info) ? t("benchmark.Value not recorded") : modelValue(isRepositoryId(repository) ? repository.split("/")[0] : modelPublisher(info), t) },
     { label: t("benchmark.Weight quantization"), value: formatWeightQuantization(info, t) },
   ];
   if (repository || serving) {
     modelFields.push({
-      label: t("benchmark.Repository"),
+      label: t("benchmark.Repository (recorded)"),
       value: repository || t("benchmark.Value not recorded"),
       ...(repository && repositoryUrl ? { links: { [repository]: repositoryUrl } } : {}),
     });
   }
   if (info?.quantized_by || serving) {
-    modelFields.push({ label: t("benchmark.Quantized by"), value: info?.quantized_by || t("benchmark.Value not recorded") });
+    modelFields.push({ label: t("benchmark.Quantized by (recorded)"), value: info?.quantized_by || t("benchmark.Value not recorded") });
   }
   if (info && info.base_models.length > 0) {
     modelFields.push({
-      label: t("benchmark.Base model"),
+      label: t("benchmark.Base model (recorded)"),
       value: info.base_models,
       links: huggingFaceLinks(info.base_models),
     });
   }
   if (info?.artifact) {
-    modelFields.push({ label: t("benchmark.Artifact file"), value: info.artifact });
+    modelFields.push({ label: t("benchmark.Artifact file (recorded)"), value: info.artifact });
   }
   if (info?.architecture) {
     modelFields.push({ label: t("benchmark.Model architecture"), value: info.architecture });
@@ -139,11 +139,11 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
     { label: t("benchmark.Model size"), value: formatByteSize(model?.["size_bytes"], t) },
   );
   if (serving) {
-    modelFields.push({ label: t("benchmark.Source revision"), value: source?.revision == null ? t("benchmark.Value not recorded") : displayText(source.revision, t) });
+    modelFields.push({ label: t("benchmark.Source revision (recorded)"), value: source?.revision == null ? t("benchmark.Value not recorded") : displayText(source.revision, t) });
   }
   const missingModelFields = [
-    [t("benchmark.Model checksum"), model?.sha256], [t("benchmark.Repository"), repository],
-    [t("benchmark.Source revision"), source?.revision], [t("benchmark.Quantized by"), info?.quantized_by],
+    [t("benchmark.Model checksum"), model?.sha256], [t("benchmark.Repository (recorded)"), repository],
+    [t("benchmark.Source revision (recorded)"), source?.revision], [t("benchmark.Quantized by (recorded)"), info?.quantized_by],
   ].filter(([, value]) => value == null || value === "").map(([label]) => label as string);
 
   // Installed host inventory and configured execution selection are different facts.
