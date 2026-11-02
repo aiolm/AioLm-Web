@@ -153,7 +153,7 @@ describe("public Hugging Face model information lookup", () => {
     expect(peak).toBeLessThanOrEqual(4);
   });
 
-  it.each([302, 429, 500])("represents upstream HTTP %i as unavailable without retrying", async status => {
+  it.each([302, 401, 429, 500])("represents upstream HTTP %i as unavailable without retrying", async status => {
     const fetcher = vi.fn(async () => new Response(null, { status, headers: { location: "https://unsafe.example/" } }));
     const result = await createHuggingFaceModelInformationLookup({ fetch: fetcher })(evidence());
     expect(result).toMatchObject({ status: "unavailable", matches: [] });
