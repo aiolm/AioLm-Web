@@ -53,7 +53,7 @@ function measurementColumns(t: Translator): readonly RowColumn[] {
 
 /** Shared metric presentation for serving rows, points and comparison. */
 export function servingMetricColumns(t: Translator = benchmarkFallback): RowColumn[] {
-  const metrics: { key: ServingMetricKey; label: string; unit: string; format: (value: unknown) => string }[] = [
+  const metrics: { key: ServingMetricKey; label: string; unit?: string; format: (value: unknown) => string }[] = [
     { key: "first_output_ms", label: "First observed output", unit: "ms", format: formatMilliseconds },
     { key: "first_content_ms", label: "First observed content", unit: "ms", format: formatMilliseconds },
     { key: "first_reasoning_ms", label: "First observed reasoning", unit: "ms", format: formatMilliseconds },
@@ -66,7 +66,7 @@ export function servingMetricColumns(t: Translator = benchmarkFallback): RowColu
     { key: "reported_completion_tokens", label: "Reported completion tokens", unit: "tok", format: formatCount },
     { key: "reported_cached_tokens", label: "Reported cached tokens", unit: "tok", format: formatCount },
     { key: "reported_tokens_per_second", label: "Reported token rate", unit: "tok/s", format: throughput },
-    { key: "peak_memory_bytes", label: "Peak process memory", unit: "B", format: formatCount },
+    { key: "peak_memory_bytes", label: "Peak process memory", format: (value) => formatCompactBytes(value, t) },
   ];
   return metrics.map((metric) => ({ ...metric, label: t(`benchmark.${metric.label}`), numeric: true }));
 }
@@ -78,7 +78,7 @@ function servingColumns(t: Translator): RowColumn[] {
     { key: "max_output_tokens", label: t("benchmark.Maximum output token request"), unit: "tok", numeric: true, format: formatCount },
     { key: "repetition", label: t("benchmark.Repetition"), numeric: true, format: formatCount },
     ...servingMetricColumns(t),
-    { key: "usage_status", label: t("benchmark.Usage status"), numeric: false, format: (value) => formatCellValue(value, t) },
+    { key: "usage_status", label: t("benchmark.Usage status"), numeric: false, format: (value) => value === "complete" ? t("benchmark.Usage counters complete") : value === "partial" ? t("benchmark.Usage counters partial") : value === "missing" ? t("benchmark.Usage not reported") : value === "invalid" ? t("benchmark.Usage response invalid or inconsistent") : formatCellValue(value, t) },
     { key: "finish_reasons", label: t("benchmark.Finish reasons (request order)"), numeric: false, format: (value) => Array.isArray(value) ? value.join(", ") : formatCellValue(value, t) },
     { key: "timing_source", label: t("benchmark.Timing source"), numeric: false, format: (value) => formatCellValue(value, t) },
   ];
