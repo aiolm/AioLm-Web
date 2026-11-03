@@ -1,6 +1,6 @@
 # Contracts integration
 
-`@aiolm/benchmark-contracts` 0.9.0 owns the shared data contract: DTOs,
+`@aiolm/benchmark-contracts` 0.10.0 owns the shared data contract: DTOs,
 validation, JSON Schema/OpenAPI, publication bounds, recovery encoding, receipt
 shape. The website consumes that package directly — it does not carry its own
 copy of the rules and never imports app sources at runtime.
@@ -10,7 +10,7 @@ copy of the rules and never imports app sources at runtime.
 The versioned tarball is committed to this repository and installed from there:
 
 ```json
-"@aiolm/benchmark-contracts": "file:vendor/aiolm-benchmark-contracts-0.9.0.tgz"
+"@aiolm/benchmark-contracts": "file:vendor/aiolm-benchmark-contracts-0.10.0.tgz"
 ```
 
 `package-lock.json` pins its `integrity` (`sha512-…`), so `npm ci` fails if the
@@ -37,12 +37,17 @@ one-argument API allows the HTTP debug loopback.
 
 ## Schema and API surface
 
-Contract 0.9.0 accepts unchanged legacy schema1/2 snapshots and schema3
+Contract 0.10.0 accepts unchanged legacy schema1/2 snapshots and schema3
 `openai-chat-serving@1` snapshots through the same `/v1/**` routes. OpenAPI
 `info.version` is 2.0.0. New results use exact UTF-8 input byte sizes/hashes,
 client-observed content/reasoning timing and output bytes, and nullable
 engine-reported token/cache counters. Unknown engine identity, model format or
 launch settings does not disqualify a complete serving workload.
+
+Validation selects the declared schema before checking its fields. An invalid
+schema3 input therefore reports that input's constraint, not an unrelated
+legacy `schema_version` failure. Accepted wire shapes and publication bounds
+are unchanged.
 
 Public runtime identity has six required nullable fields and no fixed engine
 enum. Model format is engine-independent; declared GGUF metadata is permitted
@@ -114,5 +119,5 @@ Set `CONTRACTS_TARBALL_PATH` to additionally compare a candidate archive
 against the vendored one before adopting a new version:
 
 ```sh
-CONTRACTS_TARBALL_PATH=./vendor/aiolm-benchmark-contracts-0.9.0.tgz npm run contracts:check
+CONTRACTS_TARBALL_PATH=./vendor/aiolm-benchmark-contracts-0.10.0.tgz npm run contracts:check
 ```

@@ -5,7 +5,7 @@ import { useI18n } from "@/i18n/client";
 import type { HuggingFaceFileMatch, HuggingFaceModelInformation } from "@/lib/model-information";
 import { huggingFaceUrl, isRepositoryId } from "./benchmark-model-identity";
 import { LocalTime } from "./local-time";
-import { useJsonFetch } from "./ui";
+import { requestJson, useJsonFetch, type JsonRequest } from "./ui";
 import "./benchmark-model-information.css";
 
 /** Construct links from validated identifiers, never a catalog-supplied URL/host. */
@@ -55,6 +55,45 @@ function CatalogMatch({ match, compact }: { match: HuggingFaceFileMatch; compact
   </li>;
 }
 
+const MODEL_INFORMATION_CONCURRENCY = 4;
+let activeModelInformationRequests = 0;
+const modelInformationQueue: Array<() => void> = [];
+
+function startQueuedModelInformation(): void {
+  while (activeModelInformationRequests < MODEL_INFORMATION_CONCURRENCY && modelInformationQueue.length) {
+    modelInformationQueue.shift()!();
+  }
+}
+
+/** Share only a transport limit across list/detail/comparison, not a result cache. */
+const requestModelInformation: JsonRequest = (url, signal) => {
+  const { promise, resolve, reject } = Promise.withResolvers<unknown>();
+  if (signal.aborted) {
+    reject(new DOMException("The request was aborted.", "AbortError"));
+    return promise;
+  }
+  const abortQueued = (): void => {
+    const index = modelInformationQueue.indexOf(start);
+    if (index !== -1) modelInformationQueue.splice(index, 1);
+    reject(new DOMException("The request was aborted.", "AbortError"));
+  };
+  const start = (): void => {
+    signal.removeEventListener("abort", abortQueued);
+    activeModelInformationRequests++;
+    // Once sent, finish reading the response even after unmount/URL changes.
+    // Aborting fetch would free a slot while the server's lookup still runs.
+    // useJsonFetch discards the result for the aborted consumer instead.
+    void requestJson(url).then(resolve, reject).finally(() => {
+      activeModelInformationRequests--;
+      startQueuedModelInformation();
+    });
+  };
+  signal.addEventListener("abort", abortQueued, { once: true });
+  modelInformationQueue.push(start);
+  startQueuedModelInformation();
+  return promise;
+};
+
 /** A later, independent lookup. Measurement content never waits for this request. */
 export function BenchmarkModelInformation({ publicId, recordedName, compact = false }: {
   publicId: string;
@@ -62,7 +101,7 @@ export function BenchmarkModelInformation({ publicId, recordedName, compact = fa
   compact?: boolean;
 }): React.JSX.Element {
   const { t } = useI18n();
-  const { data, error, reload } = useJsonFetch<HuggingFaceModelInformation>(`/v1/benchmark-runs/${encodeURIComponent(publicId)}/model-information`);
+  const { data, error, reload } = useJsonFetch<HuggingFaceModelInformation>(`/v1/benchmark-runs/${encodeURIComponent(publicId)}/model-information`, null, requestModelInformation);
   const matched = data?.status === "matched" && data.matches.length > 0;
   const status = error || data?.status === "unavailable" ? t("benchmark.catalogUnavailable")
     : !data ? t("benchmark.catalogLoading")

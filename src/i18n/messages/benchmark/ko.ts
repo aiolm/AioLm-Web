@@ -245,6 +245,7 @@ const messages = {
   "benchmark.Toggle suggestions for {field}": "{field} 추천값 열기 또는 닫기",
   "benchmark.Search": "검색",
   "benchmark.Search by model, engine or graphics card": "모델, 엔진 또는 그래픽 카드로 검색",
+  "benchmark.Search must be at most {limit} characters.": "검색어는 {limit}자 이하여야 합니다.",
   "benchmark.Hide detailed filters": "상세 조건 닫기",
   "benchmark.Detailed filters": "상세 조건",
   "benchmark.Match measurement conditions": "측정 조건 맞추기",

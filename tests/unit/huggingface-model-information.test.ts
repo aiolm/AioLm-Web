@@ -219,6 +219,30 @@ describe("public Hugging Face model information lookup", () => {
     expect((await lookup({ ...input, size_bytes: 1235 })).status).toBe("not_found");
   });
 
+  it("refreshes partially failed scans so recovered repositories are not hidden for a day", async () => {
+    let time = 100000;
+    let recovered = false;
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url = new URL(String(input));
+      if (url.pathname === "/api/models") return json([{ id: "mirror/model" }]);
+      const repo = url.pathname.includes("/source/") ? "source/model" : "mirror/model";
+      if (repo === "source/model" && !recovered) return new Response(null, { status: 429 });
+      return json(model(repo));
+    });
+    const lookup = createHuggingFaceModelInformationLookup({ fetch: fetcher, now: () => time });
+    const input = evidence({ repository: "source/model" });
+    const first = await lookup(input);
+    expect(first.status).toBe("matched");
+    expect(first.matches.map(match => match.repository)).toEqual(["mirror/model"]);
+    recovered = true;
+    time += 14999;
+    expect((await lookup(input)).matches.map(match => match.repository)).toEqual(["mirror/model"]);
+    time++;
+    const refreshed = await lookup(input);
+    expect(refreshed.matches.map(match => match.repository)).toEqual(["mirror/model", "source/model"]);
+    expect(refreshed.checked_at).not.toBe(first.checked_at);
+  });
+
   it.each([{ status: "not_found", ttl: 900000 }, { status: "unavailable", ttl: 15000 }])(
     "expires $status evidence after its shorter cache lifetime", async ({ status, ttl }) => {
       let time = 100000;

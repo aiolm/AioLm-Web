@@ -6,7 +6,7 @@ import { EditableCombobox } from "./editable-combobox";
 import { BenchmarkWeightBitsFilter } from "./benchmark-weight-bits-filter";
 import { BenchmarkSettingEditor } from "./benchmark-setting-editor";
 import "./ui-controls.css";
-import { EXPLORER_BASIS_KEYS, explorerOptionsRequestError, buildExplorerOptionsPath, invalidExplorerRanges, invalidExplorerDraft, type ExplorerFilters, type ExplorerFilterKey } from "./benchmark-explorer-state";
+import { EXPLORER_BASIS_KEYS, EXPLORER_FILTER_MAX_LENGTH, explorerOptionsRequestError, buildExplorerOptionsPath, invalidExplorerRanges, invalidExplorerDraft, type ExplorerFilters, type ExplorerFilterKey } from "./benchmark-explorer-state";
 
 export function BenchmarkExplorerFilters({ draft, onChange, onSettingsChange, actions }: { draft: ExplorerFilters; onChange: (key: ExplorerFilterKey, value: string) => void; onSettingsChange: (value: string[]) => void; actions?: ReactNode }): React.JSX.Element {
   const { t } = useI18n();
@@ -52,6 +52,6 @@ export function BenchmarkExplorerFilters({ draft, onChange, onSettingsChange, ac
     <input type="hidden" name="point_only" value={draft.point_only} />
     {draft.setting.map((condition, index) => <input type="hidden" name="setting" key={index} value={condition} />)}
     <div className="explorer-filter-panel-actions">{actions}</div>
-    {invalidExplorerDraft(draft) ? <p className="explorer-validation" role="alert">{t("benchmark.Check conditions before applying. Byte and legacy token conditions cannot be mixed.")}</p> : null}
+    {invalidExplorerDraft(draft) && Array.from(draft.q.trim()).length <= EXPLORER_FILTER_MAX_LENGTH ? <p className="explorer-validation" role="alert">{t("benchmark.Check conditions before applying. Byte and legacy token conditions cannot be mixed.")}</p> : null}
   </>;
 }

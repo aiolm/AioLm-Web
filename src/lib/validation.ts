@@ -3,8 +3,8 @@
  * artifact, never duplicated here. The website must not carry an independent
  * copy of the shared contract.
  *
- * Artifact: vendor/aiolm-benchmark-contracts-0.8.0.tgz
- * (from AioLM v0.3.2 packages/benchmark-contracts, integrity-pinned in package-lock.json)
+ * The vendored artifact is selected in package.json and integrity-pinned in
+ * package-lock.json; its source lives in AioLM's packages/benchmark-contracts.
  */
 export {
   DESCRIPTION_MAX_CODEPOINTS,

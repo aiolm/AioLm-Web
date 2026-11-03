@@ -1,6 +1,6 @@
 /**
  * Owner recovery encoding — re-exported from the versioned packed artifact
- * (vendor/aiolm-benchmark-contracts-0.8.0.tgz). No independent copy here.
+ * selected in package.json and integrity-pinned in package-lock.json. No independent copy here.
  */
 export {
   RECOVERY_PREFIX,

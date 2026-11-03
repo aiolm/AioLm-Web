@@ -100,11 +100,11 @@ export function createHuggingFaceModelInformationLookup(options: { fetch?: typeo
     if (current) return current;
     if (pending.size >= MAX_PENDING) return { ...base, status: "unavailable", checked_at: new Date(now()).toISOString() };
 
+    let failed = false;
     const scan = async (): Promise<HuggingFaceModelInformation> => {
       const checked_at = new Date(now()).toISOString();
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), DEADLINE_MS);
-      let failed = false;
       const matches: HuggingFaceFileMatch[] = [];
       const candidates = new Set<string>(repo ? [repo] : []);
       // Start the recorded repository first; a name search can only add candidates.
@@ -177,7 +177,8 @@ export function createHuggingFaceModelInformationLookup(options: { fetch?: typeo
     pending.set(key, work);
     try {
       const value = await work;
-      const ttl = value.status === "matched" ? 86400000 : value.status === "not_found" ? 900000 : 15000;
+      // Valid matches survive a partial failure, but recovered sources must be checked soon.
+      const ttl = failed ? 15000 : value.status === "matched" ? 86400000 : value.status === "not_found" ? 900000 : 15000;
       if (cache.size >= MAX_CACHE) cache.delete(cache.keys().next().value!);
       cache.set(key, { expires: now() + ttl, value });
       return value;

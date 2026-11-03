@@ -6,7 +6,7 @@
  * resets and comparison bounds are verified directly instead of through a DOM.
  */
 
-import { FILTER_DEFINITIONS, TEXT_FILTER_KEYS, TEXT_FILTER_MAX_LENGTH, RANGE_FILTER_KEYS, BOOLEAN_FILTER_KEYS, DISCOVERY_MAX_QUERY_BYTES, compareCanonical, parseFilters, parseOptionsQuery, parseSettingCondition, canonicalSettingCondition, canonicalSettingDescriptor, type SettingDescriptor, type BenchmarkSetup } from "@/lib/benchmark-discovery";
+import { FILTER_DEFINITIONS, TEXT_FILTER_KEYS, TEXT_FILTER_MAX_LENGTH, RANGE_FILTER_KEYS, BOOLEAN_FILTER_KEYS, DEFAULT_MEASUREMENT, DISCOVERY_MAX_QUERY_BYTES, compareCanonical, parseFilters, parseOptionsQuery, parseSettingCondition, canonicalSettingCondition, canonicalSettingDescriptor, type SettingDescriptor, type BenchmarkSetup } from "@/lib/benchmark-discovery";
 import { parsePointId, parseServingPointId, type BenchmarkPoint, type ServingBenchmarkPoint } from "@/lib/benchmark-points";
 import type { BenchmarkModelInfo } from "./benchmark-model-identity";
 import type { BenchmarkIdentity } from "@/lib/summary";
@@ -77,12 +77,16 @@ export const EXPLORER_COMPARE_LIMIT = 3;
 export const EXPLORER_CURSOR_MAX_LENGTH = 2048;
 
 export const EMPTY_EXPLORER_FILTERS = { ...Object.fromEntries(EXPLORER_FILTER_KEYS.map(key => [key, ""])), setting: [] } as unknown as ExplorerFilters;
-function normalizeValue(value: string): string { return value.trim(); }
+function normalizeValue(value: string, key: ExplorerFilterKey): string {
+  const trimmed = value.trim();
+  // An explicit Common API selection is the same scope as an omitted default.
+  return key === "measurement" && trimmed === DEFAULT_MEASUREMENT ? "" : trimmed;
+}
 function normalizeSettings(settings: string[]): string[] {
   return [...new Set(settings.map(value => { try { return canonicalSettingCondition(parseSettingCondition(value)); } catch { return value; } }))].sort(compareCanonical);
 }
 export function normalizeExplorerFilters(filters: ExplorerFilters): ExplorerFilters {
-  return { ...Object.fromEntries(EXPLORER_FILTER_KEYS.map(key => [key, normalizeValue(filters[key] ?? "")])), setting: normalizeSettings(filters.setting ?? []) } as ExplorerFilters;
+  return { ...Object.fromEntries(EXPLORER_FILTER_KEYS.map(key => [key, normalizeValue(filters[key] ?? "", key)])), setting: normalizeSettings(filters.setting ?? []) } as ExplorerFilters;
 }
 export function sameExplorerFilters(a: ExplorerFilters, b: ExplorerFilters): boolean {
   return EXPLORER_FILTER_KEYS.every(key => a[key] === b[key]) && JSON.stringify(normalizeSettings(a.setting)) === JSON.stringify(normalizeSettings(b.setting));
@@ -153,7 +157,7 @@ function repairBasis(filters: ExplorerFilters): ExplorerFilters {
 export function parseExplorerLocation(search: string): ExplorerLocation {
   const params = new URLSearchParams(search);
   const filters: ExplorerFilters = { ...EMPTY_EXPLORER_FILTERS, setting: params.getAll("setting") };
-  for (const key of EXPLORER_FILTER_KEYS) filters[key] = normalizeValue(params.get(key) ?? "");
+  for (const key of EXPLORER_FILTER_KEYS) filters[key] = normalizeValue(params.get(key) ?? "", key);
   filters.setting = normalizeSettings(filters.setting);
   if (!(filters.sort in EXPLORER_SORTS) || filters.sort === "newest") filters.sort = "";
   return { filters: repairBasis(filters), cursor: sanitizeExplorerCursor(params.get("cursor")) };
@@ -163,7 +167,7 @@ export function parseExplorerLocation(search: string): ExplorerLocation {
 export function buildExplorerSearch(location: ExplorerLocation): string {
   const params = new URLSearchParams();
   for (const key of EXPLORER_FILTER_KEYS) {
-    const value = normalizeValue(location.filters[key] ?? "");
+    const value = normalizeValue(location.filters[key] ?? "", key);
     if (value) params.set(key, value);
   }
   for (const condition of normalizeSettings(location.filters.setting)) params.append("setting", condition);
@@ -357,7 +361,7 @@ export function explorerReducer(state: ExplorerState, action: ExplorerAction): E
       };
     }
     case "draft": {
-      const draft = { ...state.draft, [action.key]: action.value };
+      const draft = { ...state.draft, [action.key]: action.key === "measurement" ? normalizeValue(action.value, action.key) : action.value };
       if (action.key === "measurement") {
         for (const key of EXPLORER_BASIS_KEYS) draft[key] = "";
         draft.point_only = "";

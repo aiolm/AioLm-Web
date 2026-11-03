@@ -13,6 +13,12 @@ schema3 and the exact method/version, not a list of supported engine names.
 Byte parameters and legacy token parameters cannot be mixed; invalid combinations
 return 400 rather than silently reinterpreting units.
 
+The browser treats explicit default Common API scope as the default, not an
+active condition chip; Legacy remains an explicit condition. Search stays first
+and detailed conditions start closed. Search text is limited to 120 trimmed
+Unicode code points: an overlong query disables submission and explains that
+length limit in the selected locale, without truncating or resetting the input.
+
 The list endpoint retains `{items,next_cursor}`, with 25 items by default and a
 maximum of 100. Cursor binding includes `engine-neutral-serving-v1`, method scope,
 canonical conditions and sort. Old, changed-filter or changed-scope cursors return
@@ -103,9 +109,11 @@ Only public Hugging Face JSON metadata is fetched, without credentials,
 redirects or weight downloads. Scans are limited to eight candidate repositories,
 4,096 files per repository, 64 returned matches, 2 MiB per response and eight
 seconds, with four concurrent upstream requests. The per-instance public cache
-holds 128 results and at most 16 single-flight lookups; matches live one day,
-bounded no-match results 15 minutes and upstream failures 15 seconds. No-match
-means no match found within this bounded lookup, not absence from the whole Hub.
+holds 128 results and at most 16 single-flight lookups; successful matches live
+one day, bounded no-match results 15 minutes and upstream failures 15 seconds.
+A partial scan keeps verified matches but uses the 15-second failure lifetime,
+so a recovered candidate is not hidden for a day. No-match means no match found
+within this bounded lookup, not absence from the whole Hub.
 
 Every endpoint read rechecks publication visibility before using that cache.
 Missing/deleted/hidden runs return 404, database outages return retryable 503,
@@ -113,12 +121,16 @@ and an upstream failure is represented as `unavailable` in a successful DTO.
 Responses use `no-store` so caching never bypasses moderation.
 
 List, detail and comparison load this information independently of measurements.
-Repository/file/base-model/license information is visible when matched; raw
-proof details remain initially closed. Loading or unavailable HF data never
+Their shared browser queue admits at most four active catalog fetches. Queued
+requests for removed rows are cancelled before dispatch; already-started bodies
+finish before releasing their slot, and stale replies do not replace current
+state. Repository/file/base-model/license information is visible when matched;
+raw proof details remain initially closed. Loading or unavailable HF data never
 blocks the benchmark results, and all four locales retain the search-first
-layout and text-zoom wrapping.
+layout. Numeric ranges wrap at desktop and narrow widths, including text zoom,
+rather than overlapping adjacent values or shrinking the shared type scale.
 
-
+## Configured workload ranges
 
 | Range key (`_min` / `_max`) | Recorded meaning |
 | --- | --- |

@@ -121,7 +121,7 @@
 .explorer-compact .explorer-detail-link:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; border-radius: 3px; }
 .explorer-compact .explorer-metric-value { display: block; font-size: var(--fs-table); font-weight: var(--fw-semibold); line-height: var(--lh-table); }
 .explorer-compact .explorer-metric-spread { display: block; margin-block-start: 2px; font-size: var(--fs-support); line-height: var(--lh-support); color: var(--ui-muted); }
-.explorer-compact .explorer-table :is(.explorer-metric-value, .explorer-metric-spread) { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.explorer-compact .explorer-table :is(.explorer-metric-value, .explorer-metric-spread) { white-space: normal; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 .explorer-compact .explorer-table .explorer-cell-value { overflow-wrap: break-word; }
 .explorer-compact .explorer-option-status { font-size: var(--fs-support); line-height: var(--lh-support); }
 

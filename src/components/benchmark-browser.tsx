@@ -14,6 +14,7 @@ import { BenchmarkExplorerTable } from "./benchmark-explorer-table";
 import { UiSelect } from "./ui-select";
 import {
   EXPLORER_COMPARE_LIMIT,
+  EXPLORER_FILTER_MAX_LENGTH,
   EXPLORER_PAGE_PATH,
   activeExplorerFilters,
   basisPointOf,
@@ -159,6 +160,7 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
   const filtered = hasActiveExplorerFilters(state.applied);
   const clearable = filtered || hasActiveExplorerFilters(state.draft) || state.applied.sort !== "" || state.draft.sort !== "" || basis !== null;
   const invalidDraft = invalidExplorerDraft(state.draft);
+  const searchTooLong = Array.from(state.draft.q.trim()).length > EXPLORER_FILTER_MAX_LENGTH;
   const draftRequestBlocked = !isExplorerRequestWithinBounds(buildExplorerRequestPath({ filters: normalizeExplorerFilters(state.draft), cursor: null }));
   const nextRequestBlocked = !!data?.next_cursor && !isExplorerRequestWithinBounds(buildExplorerRequestPath({ filters: state.applied, cursor: data.next_cursor }));
   const comparisonFull = !canAddToComparison(state.compare);
@@ -188,6 +190,7 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
               <label className="explorer-field explorer-search-field" htmlFor="explorer-search">
                 <span className="explorer-field-label">{t("benchmark.search")}</span>
                 <input id="explorer-search" name="q" type="search" className="explorer-field-input"
+                  aria-invalid={searchTooLong} aria-describedby={searchTooLong ? "explorer-search-error" : undefined}
                   placeholder={t("benchmark.Search by model, engine or graphics card")} value={state.draft.q}
                   onChange={event => dispatch({ type: "draft", key: "q", value: event.target.value })} />
               </label>
@@ -202,8 +205,9 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
               <p className="explorer-draft-status" role="status">{draftChanged ? t("benchmark.Changes not applied. Apply filters to update results.") : null}</p>
               {clearable ? <button type="button" className="explorer-filter-reset" onClick={clearFilters}>{t("benchmark.Clear filters")}</button> : null}
             </div>
+            {searchTooLong ? <p id="explorer-search-error" className="explorer-validation" role="alert">{t("benchmark.Search must be at most {limit} characters.", { limit: EXPLORER_FILTER_MAX_LENGTH })}</p> : null}
             {draftRequestBlocked ? <p className="explorer-validation" role="alert">{t(`benchmark.${EXPLORER_QUERY_LIMIT_MESSAGE}`)}</p> : null}
-            {!filtersOpen && invalidDraft ? <p className="explorer-validation" role="alert">{t("benchmark.Check conditions before applying. Byte and legacy token conditions cannot be mixed.")}</p> : null}
+            {!filtersOpen && invalidDraft && !searchTooLong ? <p className="explorer-validation" role="alert">{t("benchmark.Check conditions before applying. Byte and legacy token conditions cannot be mixed.")}</p> : null}
             <div id="explorer-detailed-filters" className="explorer-detailed-filters" hidden={!filtersOpen} aria-labelledby="explorer-detailed-title">
               <div className="explorer-filter-panel-header">
                 <h2 id="explorer-detailed-title" className="explorer-filter-panel-title">{t("benchmark.Detailed filters")}</h2>

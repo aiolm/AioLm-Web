@@ -58,7 +58,18 @@ export function isAbortError(err: unknown): boolean {
   return err instanceof DOMException && err.name === "AbortError";
 }
 
-export function useJsonFetch<T>(url: string | null, initialData: T | null = null): { data: T | null; error: string | null; reload: () => void } {
+export type JsonRequest = (url: string, signal: AbortSignal) => Promise<unknown>;
+
+export async function requestJson(url: string, signal?: AbortSignal): Promise<unknown> {
+  const res = await fetch(url, { headers: { accept: "application/json" }, signal });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new LocalizedRequestError(parseApiErrorKey(body, res.status));
+  }
+  return res.json();
+}
+
+export function useJsonFetch<T>(url: string | null, initialData: T | null = null, request: JsonRequest = requestJson): { data: T | null; error: string | null; reload: () => void } {
   const { t } = useI18n();
   const [state, setState] = useState<{ url: string | null; data: T | null; error: string | null }>({
     url: initialData === null ? null : url,
@@ -71,21 +82,14 @@ export function useJsonFetch<T>(url: string | null, initialData: T | null = null
     if (!url) return;
     const controller = new AbortController();
     let cancelled = false;
-    fetch(url, { headers: { accept: "application/json" }, signal: controller.signal })
-      .then(async (res) => {
-        if (!res.ok) {
-          const body = await res.text().catch(() => "");
-          throw new LocalizedRequestError(parseApiErrorKey(body, res.status));
-        }
-        return (await res.json()) as T;
-      })
-      .then((json) => { if (!cancelled && !controller.signal.aborted) setState({ url, data: json, error: null }); })
+    request(url, controller.signal)
+      .then((json) => { if (!cancelled && !controller.signal.aborted) setState({ url, data: json as T, error: null }); })
       .catch((err: unknown) => {
         if (cancelled || controller.signal.aborted || isAbortError(err)) return;
         if (!cancelled) setState({ url, data: null, error: err instanceof LocalizedRequestError ? err.key : "error.network" });
       });
     return () => { cancelled = true; controller.abort(); };
-  }, [url, nonce]);
+  }, [url, nonce, request]);
   // Only expose results for the current url; a fresh url resets to loading without a sync setState.
   if (state.url !== url) return { data: null, error: null, reload };
   return { data: state.data, error: state.error ? t(state.error) : null, reload };

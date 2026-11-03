@@ -244,6 +244,7 @@ const messages = {
   "benchmark.Toggle suggestions for {field}": "Toggle suggestions for {field}",
   "benchmark.Search": "Search",
   "benchmark.Search by model, engine or graphics card": "Search by model, engine or graphics card",
+  "benchmark.Search must be at most {limit} characters.": "Search must be at most {limit} characters.",
   "benchmark.Hide detailed filters": "Hide detailed filters",
   "benchmark.Detailed filters": "Detailed filters",
   "benchmark.Match measurement conditions": "Match measurement conditions",

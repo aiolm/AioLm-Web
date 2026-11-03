@@ -19,7 +19,7 @@ accounts in v1.
   desktop app can open the page with a single-use handoff
   ([management handoff](docs/management-handoff.md)).
 - API: the wire contract is the OpenAPI document shipped by
-  `@aiolm/benchmark-contracts` 0.9.0
+  `@aiolm/benchmark-contracts` 0.10.0
   (`node_modules/@aiolm/benchmark-contracts/schema/openapi.json`). Routes:
   `POST /v1/upload-sessions`, `POST .../verify`, `GET ...`, `POST /v1/benchmark-runs`,
   `GET /v1/benchmark-runs`, `GET /v1/benchmark-runs/<id>`, `GET .../measurements`,
@@ -145,13 +145,13 @@ See `docs/deployment.md` and `docs/operations.md`.
 ## Contracts
 
 Validation, recovery encoding, and the schema/OpenAPI surface come from
-`@aiolm/benchmark-contracts` 0.9.0, installed from the vendored archive
-`vendor/aiolm-benchmark-contracts-0.9.0.tgz` and integrity-pinned in
+`@aiolm/benchmark-contracts` 0.10.0, installed from the vendored archive
+`vendor/aiolm-benchmark-contracts-0.10.0.tgz` and integrity-pinned in
 `package-lock.json`. The website re-exports that package rather than keeping a
 second copy of the rules, and never imports app sources at runtime. Details and
 the upgrade procedure in `docs/contracts-integration.md`.
 
-Contract 0.9.0 preserves legacy schema1/2 and accepts schema3
+Contract 0.10.0 preserves legacy schema1/2 and accepts schema3
 `openai-chat-serving@1` results from any connected streaming text-chat engine,
 including an unknown public identity. New measurements distinguish exact input
 UTF-8 bytes, client-observed content/reasoning timing and optional reported
