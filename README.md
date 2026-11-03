@@ -187,6 +187,11 @@ it never touches, and the real upper bound of the 24h cutoffs.
 The current screenshots were captured from the native macOS app built from
 desktop v0.3.4 source, not browser-only rendering. Keep
 `src/lib/desktop-release.ts` tied to the latest published installer assets.
+Advance that version only after the desktop release's exact-source CI, all four
+platform package builds and public-download verification pass. Installer links,
+checksum examples and the four localized guide notices share this value; it does
+not change the historical screenshot capture version.
+
 
 The localized homepage and guides cover engine-neutral All formats/Trending
 search, GGUF and complete safetensors downloads, shared per-engine profiles,
