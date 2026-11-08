@@ -1,24 +1,38 @@
+/*
+ * Submission management: an unboxed page introduction beside one bordered
+ * access panel, then the opened record as a shared panel with an ordered
+ * action bar. Button and field paint comes from the shared primitives.
+ */
+.management-panel > .card.management-access { padding: 0; border: 0; border-radius: 0; background: transparent; }
+.management-panel .management-access-body { min-width: 0; margin: 0; padding: 24px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-lg); background: var(--ui-surface); }
+.management-panel .management-access-body > :first-child { margin-block-start: 0; }
+.management-panel .management-access-body > :last-child,
+.management-panel .management-access-body > [role="status"]:last-child > :last-child { margin-block-end: 0; }
+
 .management-panel .management-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: .75rem;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  padding-top: 16px;
   border-top: 1px solid var(--ui-border);
 }
 
-.management-panel .management-actions .danger {
-  margin-inline-start: auto;
-}
+.management-panel .management-actions > button { white-space: normal; }
+.management-panel .management-actions .danger { margin-inline-start: auto; }
 
-.management-panel .kv dd {
-  overflow-wrap: break-word;
-}
+.management-panel .kv dd { min-width: 0; overflow-wrap: anywhere; }
 
+/* Saved recovery files: one ruled list; the current file is marked by text and fill. */
+.management-panel .recovery-files { display: grid; justify-items: start; gap: 12px; margin-block: 16px 0; }
+.management-panel .recovery-files > ul { justify-self: stretch; }
 .management-panel .recovery-files ul {
-  list-style: none;
-  margin: 0 0 1rem;
+  margin: 0;
   padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  list-style: none;
 }
 
 .management-panel .recovery-files li {
@@ -26,137 +40,119 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: .75rem;
-  padding: .75rem 0;
-  border-bottom: 1px solid var(--ui-border);
+  gap: 8px 12px;
+  padding: 12px 16px;
 }
+
+.management-panel .recovery-files li + li { border-top: 1px solid var(--ui-border); }
+.management-panel .recovery-files li[aria-current="true"] { background: var(--ui-accent-soft); }
+.management-panel .recovery-files li:first-child { border-start-start-radius: var(--ui-radius-md); border-start-end-radius: var(--ui-radius-md); }
+.management-panel .recovery-files li:last-child { border-end-start-radius: var(--ui-radius-md); border-end-end-radius: var(--ui-radius-md); }
 
 .management-panel .recovery-files li > div {
   display: grid;
-  gap: .25rem;
+  flex: 1 1 16rem;
+  gap: 4px;
   min-width: 0;
 }
 
-.management-panel .recovery-files li[aria-current="true"] .recovery-file-name::before {
-  content: "● ";
-}
+.management-panel .recovery-files li > div .hint { margin: 0; overflow-wrap: anywhere; }
+.management-panel .recovery-files li > button { flex: none; white-space: normal; }
+.management-panel .recovery-files li[aria-current="true"] .recovery-file-name::before { content: "● "; color: var(--ui-accent); }
+.management-panel .recovery-file-name { overflow-wrap: anywhere; }
 
-.management-panel .recovery-file-name {
-  overflow-wrap: break-word;
-}
-
-.management-panel .recovery-files {
-  margin-block: 24px;
-  padding-block: 20px;
-  border-block: 1px solid var(--ui-border);
-}
-
-.management-panel .recovery-paste {
-  padding-block: 16px;
-  border-block: 1px solid var(--ui-border);
-}
+/* Pasting a code is the alternative path, kept in one disclosure. */
+.management-panel .recovery-paste { margin-top: 24px; padding-block: 8px 0; border: 0; border-top: 1px solid var(--ui-border); }
 
 .management-panel .recovery-paste > summary,
 .report-disclosure.card > summary {
   font-size: var(--fs-body-compact);
+  font-weight: var(--fw-medium);
   line-height: var(--lh-compact);
+  cursor: pointer;
 }
+
+.management-panel .recovery-paste[open] > summary { margin-bottom: 12px; }
+.management-panel .recovery-paste form > button { white-space: normal; }
 
 .management-panel textarea {
   min-height: 12rem;
   line-height: var(--lh-control);
 }
 
+/* The file picker is the page's main action; the field keeps a clear boundary. */
 .management-panel input[type="file"] {
   display: block;
   width: 100%;
   min-width: 0;
-  padding: 12px;
-  border: 0;
-  border-radius: var(--ui-radius-sm);
-  background: var(--ui-input);
+  max-width: 100%;
+  padding: 8px;
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-field-fill);
   color: var(--ui-ink);
   font: inherit;
   font-size: var(--fs-control);
+  line-height: var(--lh-control);
+  overflow-wrap: anywhere;
 }
 
-/* The native picker button is the page's main action: action fill and an
-   upload glyph drawn in the action ink (--ui-on-accent: #242424 in both modes). */
-.management-panel input[type="file"] {
-  --file-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 13V4M6.5 7.5 10 4l3.5 3.5M4 13v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2' fill='none' stroke='%23FFFFFF' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  --file-muted-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 13V4M6.5 7.5 10 4l3.5 3.5M4 13v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2' fill='none' stroke='%23646464' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-}
-@media (prefers-color-scheme: dark) {
-  .management-panel input[type="file"] {
-    --file-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 13V4M6.5 7.5 10 4l3.5 3.5M4 13v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2' fill='none' stroke='%23242424' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    --file-muted-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 13V4M6.5 7.5 10 4l3.5 3.5M4 13v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2' fill='none' stroke='%23D1D1D1' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  }
-}
+.management-panel input[type="file"]:hover:not(:disabled) { background: var(--ui-field-fill-hover); border-color: var(--ui-border-strongest); }
+.management-panel input[type="file"]:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 1px; }
 
 .management-panel input[type="file"]::file-selector-button {
+  min-height: var(--control-min);
   margin-inline-end: 12px;
-  padding: 8px 12px 8px 34px;
+  padding: var(--control-pad-block) var(--control-pad-inline);
   border: 0;
-  border-radius: var(--ui-radius-sm);
-  background: var(--file-glyph) left 12px center / 16px 16px no-repeat, var(--ui-action-gradient);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-action-gradient);
   color: var(--ui-on-accent);
   font: inherit;
   font-weight: var(--fw-semibold);
   cursor: pointer;
 }
 
-.management-panel input[type="file"]:hover:not(:disabled)::file-selector-button {
-  filter: brightness(.96);
-}
-
-.management-panel input[type="file"]:disabled {
-  cursor: not-allowed;
-}
+.management-panel input[type="file"]:hover:not(:disabled)::file-selector-button { background-image: linear-gradient(var(--ui-primary-hover-veil), var(--ui-primary-hover-veil)), var(--ui-action-gradient); }
+.management-panel input[type="file"]:disabled { color: var(--ui-muted); cursor: not-allowed; }
 
 .management-panel input[type="file"]:disabled::file-selector-button {
-  background: var(--file-muted-glyph) left 12px center / 16px 16px no-repeat, var(--ui-field-gradient);
+  border: 1px solid var(--ui-border);
+  background: var(--ui-field-fill);
   color: var(--ui-muted);
-  opacity: 1;
+  filter: none;
   cursor: not-allowed;
 }
 
 @media (forced-colors: active) {
+  .management-panel input[type="file"] { border-color: CanvasText; }
   .management-panel input[type="file"]::file-selector-button {
-    padding-inline-start: 12px;
     background: ButtonFace;
     color: ButtonText;
     outline: 1px solid ButtonText;
   }
+  .management-panel .management-access-body,
+  .management-panel .recovery-files ul { border-color: CanvasText; }
+  .management-panel .recovery-files li[aria-current="true"] { outline: 2px solid Highlight; outline-offset: -2px; }
 }
 
-.management-panel .recovery-paste {
-  margin-top: 1.5rem;
+@media (max-width: 700px), (pointer: coarse) {
+  .management-panel input[type="file"]::file-selector-button { min-height: 44px; }
 }
 
-.management-panel .recovery-paste > summary {
-  cursor: pointer;
-  font-weight: var(--fw-medium);
-}
-
-.management-panel .recovery-paste[open] > summary {
-  margin-bottom: 1rem;
+@media (max-width: 640px) {
+  .management-panel .management-access-body { padding: 16px; }
+  .management-panel .recovery-files li { padding: 12px; }
 }
 
 @media (max-width: 600px) {
   .management-panel .management-actions {
     flex-direction: column;
+    align-items: stretch;
   }
 
-  .management-panel .management-actions .danger {
-    margin-inline-start: 0;
-  }
+  .management-panel .management-actions .danger { margin-inline-start: 0; }
 }
 
-.report-disclosure > summary {
-  cursor: pointer;
-  font-weight: var(--fw-medium);
-}
-
-.report-disclosure[open] > summary {
-  margin-bottom: 1rem;
-}
+.report-disclosure[open] > summary { margin-bottom: 12px; }
+.report-disclosure form > p > button { white-space: normal; }

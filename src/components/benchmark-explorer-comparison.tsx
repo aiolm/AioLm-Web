@@ -246,7 +246,7 @@ export function BenchmarkExplorerComparison({
                   <span className="explorer-comparison-item-title">{item.summary.model_label}</span>
                   <button
                     type="button"
-                    className="explorer-comparison-remove"
+                    className="explorer-button explorer-button-quiet explorer-comparison-remove"
                     onClick={() => onRemove(item)}
                     aria-label={t("benchmark.Remove {model} on {hardware} from the comparison", { model: item.summary.model_label, hardware: item.summary.hardware_label })}
                   >{t("benchmark.Remove")}</button>

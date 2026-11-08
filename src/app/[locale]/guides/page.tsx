@@ -26,7 +26,7 @@ export default async function Guides({ params }: { params: Promise<{ locale: str
       {guideSlugs.map((slug, index) => <li key={slug} id={`guide-${slug}`}><Link href={localizedPath(locale, `/guides/${slug}`)}>
         <span className="guide-list-number" aria-hidden="true">0{index + 1}</span>
         <div><h2 id={`title-guide-${slug}`} tabIndex={-1}>{content.guides[slug].title}</h2><p>{content.guides[slug].description}</p></div>
-        <span aria-hidden="true">↗</span>
+        <span className="guide-list-arrow" aria-hidden="true">→</span>
       </Link></li>)}
     </ol></div>
     </article>

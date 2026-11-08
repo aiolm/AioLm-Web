@@ -2,223 +2,136 @@
    Home page.
 
    Every rule is scoped to a home-* class so nothing here reaches another page.
-   Colors come from the shared --ui-* tokens in globals.css, so light and dark
-   follow the site theme. Sections are divided by fine rules inside the page
-   column instead of full-bleed bands or cards.
+   Layout only: colors, controls, install box and buttons come from the shared
+   tokens and control styles, so the page follows the same flat app language
+   as the rest of the site. Sections read like the app's settings rows: a
+   heading column beside its content at wide widths, stacked when narrow.
    ========================================================================== */
 
 
 /* --------------------------------------------------------------- hero ---- */
 
-.home-hero { background: var(--ui-surface); }
-
-.home-hero-inner { padding-block: 64px 40px; }
-
-.home-hero-copy {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  max-width: 48rem;
-  margin-inline: auto;
-  text-align: center;
+.home-hero-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+  padding-block: 48px 32px;
 }
+
+.home-hero-intro { min-width: 0; max-width: 36rem; }
 
 .home-hero .home-hero-title {
   font-size: var(--fs-page-title);
   font-weight: var(--fw-heading);
   letter-spacing: var(--tracking-title);
   line-height: var(--lh-title);
+  overflow-wrap: anywhere;
 }
 
 .home-hero-title > span { display: block; }
 
-
 .home-hero-subtitle {
-  max-width: 36rem;
-  margin-block-start: 16px;
+  margin-block-start: 12px;
   color: var(--ui-muted);
   font-size: var(--fs-body);
   line-height: var(--lh-body);
   text-wrap: pretty;
 }
 
-.home-hero-actions {
+.home-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: 12px 24px;
-  margin-block-start: 28px;
+  gap: 12px 16px;
+  margin-block-start: 24px;
 }
 
-/* The page's primary actions stay one step above the 32px control size. */
-.home-hero-actions .button {
-  min-height: max(36px, var(--control-min));
-  padding-inline: 16px;
-  border-radius: var(--ui-radius-md);
-  box-shadow: var(--ui-action-edge);
-  font-size: var(--fs-control);
-  line-height: var(--lh-control);
-}
+.home-actions .button { max-width: 100%; }
 
 .home-text-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: max(36px, var(--control-min));
-  color: var(--ui-ink);
+  gap: 8px;
+  min-height: var(--control-min);
+  max-width: 100%;
   font-size: var(--fs-control);
   font-weight: var(--fw-medium);
   line-height: var(--lh-control);
   text-decoration: none;
+  overflow-wrap: anywhere;
 }
 
-.home-text-link:hover { color: var(--ui-accent); }
+.home-text-link:hover { text-decoration: underline; }
 
 .home-text-link .arrow-icon,
-.home-secondary-button .arrow-icon {
-  width: 16px;
-  height: 16px;
-  transition: transform 0.15s ease;
-}
-
-.home-text-link:hover .arrow-icon,
-.home-secondary-button:hover .arrow-icon { transform: translateX(2px); }
+.home-actions .arrow-icon { width: 16px; height: 16px; }
 
 /* ------------------------------------------------------ install command ---- */
 
-.home-install {
-  width: 100%;
-  max-width: 44rem;
-  margin-block-start: 40px;
-  text-align: start;
-}
+.home-install { min-width: 0; }
 
 .home-install-label {
   margin-block-end: 8px;
-  color: var(--ui-muted);
-  font-size: var(--fs-support);
-  font-weight: var(--fw-medium);
-  line-height: var(--lh-support);
-  text-align: center;
+  font-size: var(--fs-group);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-group);
 }
+
+.home-install .install-box { margin: 0; }
 
 .home-source-notice {
-  margin-block-start: 12px;
+  margin-block-start: 8px;
   color: var(--ui-muted);
   font-size: var(--fs-support);
   line-height: var(--lh-support);
-  text-align: center;
+  text-wrap: pretty;
 }
-
-.home-install .install-box {
-  margin: 0;
-  border-color: var(--ui-border);
-  border-radius: var(--ui-radius-lg);
-  background: var(--ui-surface);
-  box-shadow: none;
-}
-
-.home-install .install-tabs {
-  display: flex;
-  padding-inline: 4px;
-  background: transparent;
-}
-.home-install .install-panel[hidden] { display: none; }
-.home-install .install-copy-error { padding: 0 14px 12px; color: var(--ui-danger); font-size: var(--fs-support); line-height: var(--lh-support); }
-
-.home-install .install-tab {
-  flex: 0 1 auto;
-  margin-block-end: -1px;
-  padding: 8px 12px;
-  background: transparent;
-  font-size: var(--fs-control);
-  font-weight: var(--fw-medium);
-  line-height: var(--lh-control);
-}
-
-.home-install .install-tab.active {
-  background: transparent;
-  border-bottom-color: var(--ui-accent);
-  color: var(--ui-ink);
-  font-weight: var(--fw-semibold);
-}
-
-.home-install .install-panel { padding: 8px; }
-
-/* The command is the one real line users paste, so it wraps whole instead of truncating. */
-.home-install .install-cmd-row { align-items: flex-start; }
-
-.home-install .install-cmd-code {
-  display: block;
-  padding: 6px 10px;
-  font-family: var(--font-mono);
-  font-size: var(--fs-code);
-  line-height: var(--lh-code);
-  overflow-wrap: anywhere;
-  text-overflow: clip;
-  white-space: normal;
-}
-
-.home-install .install-cmd-prompt { color: var(--ui-faint); font-weight: var(--fw-medium); }
-
-.home-install .install-copy-button {
-  min-height: var(--control-min);
-  padding: var(--control-pad-block) var(--control-pad-inline);
-  border: 0;
-  font-size: var(--fs-control);
-  font-weight: var(--fw-medium);
-  line-height: var(--lh-control);
-}
-
-.home-install .install-copy-button:hover {
-  border: 0;
-}
-
-.home-install .install-copy-button.copied {
-  border-color: var(--ui-border);
-  background: var(--ui-surface);
-  color: var(--tone-success-ink);
-}
-
 
 /* --------------------------------------------------------- screenshot ---- */
 
-.home-showcase { padding-block: 16px 72px; }
+.home-showcase { padding-block: 16px 48px; }
 
-.home-screenshot { max-width: 80rem; margin: 0 auto; }
+.home-screenshot { margin: 0; }
 
 .home-screenshot picture {
   display: block;
   overflow: hidden;
   border: 1px solid var(--ui-border);
-  border-radius: var(--ui-radius-xl);
-  background: var(--ui-sidebar);
-  box-shadow: var(--ui-elev-figure);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-surface-muted);
 }
 
 .home-screenshot-image { display: block; width: 100%; height: auto; }
 
 .home-screenshot-caption {
-  max-width: 44rem;
-  margin: 16px auto 0;
+  max-width: 48rem;
+  margin-block-start: 12px;
   color: var(--ui-muted);
   font-size: var(--fs-support);
   line-height: var(--lh-support);
-  text-align: center;
   text-wrap: pretty;
 }
 
 /* ----------------------------------------------------------- sections ---- */
 
-/* The rule sits on the content column, not across the page gutter. */
+/* The rule spans the content column, not the page gutter. */
 .home-section {
-  padding-block: 56px;
-  background: linear-gradient(var(--ui-border), var(--ui-border)) no-repeat center top /
-    calc(100% - 2 * var(--page-gutter)) 1px;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px 48px;
+  padding-block: 40px;
 }
 
-.home-section-head { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin-block-end: 24px; overflow-wrap: anywhere; }
+.home-section::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: var(--page-gutter);
+  border-block-start: 1px solid var(--ui-border);
+}
+
+.home-section-head { display: grid; gap: 8px; min-width: 0; align-content: start; overflow-wrap: anywhere; }
 
 .home-section .home-section-title {
   font-size: var(--fs-section);
@@ -227,52 +140,58 @@
   line-height: var(--lh-heading);
 }
 
+.home-section-body { display: grid; gap: 12px; min-width: 0; overflow-wrap: anywhere; }
+
 .home-section-detail {
-  max-width: 36rem;
+  max-width: 48rem;
   color: var(--ui-muted);
   font-size: var(--fs-body);
   line-height: var(--lh-body);
   text-wrap: pretty;
 }
 
+.home-section-body .home-actions { margin-block-start: 4px; }
+
 /* ----------------------------------------------------------- workflow ---- */
 
 .home-steps {
+  min-width: 0;
   margin: 0;
   padding: 0;
-  border-top: 1px solid var(--ui-border);
   list-style: none;
 }
 
 .home-step {
   display: grid;
-  grid-template-columns: 3rem minmax(0, 1fr);
-  gap: 4px 16px;
-  padding-block: 20px;
-  border-bottom: 1px solid var(--ui-border);
+  grid-template-columns: 2rem minmax(0, 1fr);
+  gap: 4px 12px;
+  padding-block: 16px;
+  border-block-end: 1px solid var(--ui-border);
 }
 
-.home-step:last-child { border-bottom: 0; }
+.home-step:first-child { padding-block-start: 0; }
+
+.home-step:last-child { padding-block-end: 0; border-block-end: 0; }
 
 .home-step-number {
   color: var(--ui-faint);
   font-family: var(--font-mono);
   font-size: var(--fs-support);
   font-variant-numeric: tabular-nums;
-  line-height: var(--lh-support);
+  line-height: var(--lh-group);
 }
 
 .home-step-copy { display: grid; gap: 4px; min-width: 0; }
 
 .home-step .home-step-title {
   font-size: var(--fs-group);
-  font-weight: var(--fw-heading);
-  letter-spacing: var(--tracking-heading);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-normal);
   line-height: var(--lh-group);
 }
 
 .home-step-detail {
-  max-width: 40rem;
+  max-width: 48rem;
   color: var(--ui-muted);
   font-size: var(--fs-body);
   line-height: var(--lh-body);
@@ -281,11 +200,9 @@
 
 /* ---------------------------------------------------------------- faq ---- */
 
-.home-faq { display: grid; gap: 24px 56px; }
+.home-faq-list { min-width: 0; border-block-start: 1px solid var(--ui-border); }
 
-.home-faq-list { min-width: 0; border-top: 1px solid var(--ui-border); }
-
-.home-faq-item { border-bottom: 1px solid var(--ui-border); }
+.home-faq-item { border-block-end: 1px solid var(--ui-border); }
 
 .home-faq-item > summary {
   display: flex;
@@ -293,7 +210,7 @@
   justify-content: space-between;
   gap: 16px;
   min-height: 44px;
-  padding-block: 10px;
+  padding-block: 8px;
   cursor: pointer;
   list-style: none;
 }
@@ -303,14 +220,17 @@
 .home-faq-item > summary:hover .home-faq-question { color: var(--ui-accent); }
 
 .home-faq .home-faq-question {
+  min-width: 0;
   font-size: var(--fs-body-compact);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-medium);
   letter-spacing: var(--tracking-normal);
   line-height: var(--lh-compact);
 }
 
 .home-faq-chevron {
   flex-shrink: 0;
+  width: 16px;
+  height: 16px;
   color: var(--ui-faint);
   transition: transform 0.15s ease;
 }
@@ -318,7 +238,7 @@
 .home-faq-item[open] .home-faq-chevron { transform: rotate(180deg); }
 
 .home-faq-item > p {
-  max-width: 64ch;
+  max-width: 48rem;
   padding-block-end: 16px;
   color: var(--ui-muted);
   font-size: var(--fs-body);
@@ -333,11 +253,11 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 24px 48px;
-  padding-block: 48px 64px;
+  gap: 16px 48px;
+  padding-block: 40px 64px;
 }
 
-.home-closing-copy { flex: 1 1 24rem; min-width: 0; }
+.home-closing-copy { flex: 1 1 24rem; min-width: 0; overflow-wrap: anywhere; }
 
 .home-closing .home-closing-title {
   font-size: var(--fs-section);
@@ -347,82 +267,58 @@
 }
 
 .home-closing-detail {
-  max-width: 44rem;
-  margin-block-start: 6px;
+  max-width: 48rem;
+  margin-block-start: 4px;
   color: var(--ui-muted);
   font-size: var(--fs-body);
   line-height: var(--lh-body);
   text-wrap: pretty;
 }
 
-.home-secondary-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: max(36px, var(--control-min));
-  padding-inline: 16px;
-  border: 0;
-  border-radius: var(--ui-radius-sm);
-  font-size: var(--fs-control);
-  font-weight: var(--fw-medium);
-  line-height: var(--lh-control);
-  text-decoration: none;
-  white-space: nowrap;
-}
+.home-closing .button { max-width: 100%; }
 
 /* --------------------------------------------------------- responsive ---- */
 
-@media (min-width: 48rem) {
-  .home-step { grid-template-columns: 3rem minmax(0, 2fr) minmax(0, 3fr); gap: 8px 32px; padding-block: 22px; }
-
-  .home-step-copy { display: contents; }
-
-  .home-step-detail { padding-block-start: 2px; }
-}
-
 @media (min-width: 64rem) {
-  .home-faq { grid-template-columns: minmax(0, 4fr) minmax(0, 6fr); column-gap: 56px; }
+  /* Introduction and install share the first view instead of stacking. */
+  .home-hero-inner {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: start;
+    gap: 48px;
+    padding-block: 56px 40px;
+  }
 
-  .home-faq .home-section-title { position: sticky; top: 76px; align-self: start; }
+  .home-hero-intro { padding-block-start: 8px; }
+
+  .home-section { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); padding-block: 48px; }
+
+  .home-closing { padding-block: 48px 64px; }
 }
 
 @media (max-width: 40rem) {
-  .home-hero-inner { padding-block: 48px 32px; }
+  .home-hero-inner { gap: 24px; padding-block: 32px 24px; }
 
-  .home-hero-actions .button { flex: 1 1 100%; }
+  .home-actions .button { flex: 1 1 auto; }
 
-  .home-install { margin-block-start: 32px; }
-
-  .home-install .install-tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 8em), 1fr)); padding-inline: 0; }
-
-  .home-install .install-tab { padding: max(8px, .6em) var(--control-pad-inline); }
-
-  .home-install .install-tab-label { flex-direction: column; gap: 2px; text-align: center; }
-
+  /* The one real command line wraps whole beside a full-width copy action. */
   .home-install .install-cmd-row { flex-direction: column; align-items: stretch; }
 
   .home-install .install-copy-button { justify-content: center; }
 
-  .home-showcase { padding-block: 8px 48px; }
+  .home-showcase { padding-block: 8px 32px; }
 
   /* A whole desktop window is illegible at phone width, so show its top-left corner at a readable scale. */
-  .home-screenshot picture { aspect-ratio: 4 / 3; border-radius: var(--ui-radius-lg); }
+  .home-screenshot picture { aspect-ratio: 4 / 3; }
 
   .home-screenshot-image { width: 220%; max-width: none; }
 
-  .home-section { padding-block: 48px; }
+  .home-section { padding-block: 32px; }
 
-  .home-section-head { margin-block-end: 24px; }
+  .home-closing { padding-block: 32px 48px; }
 
-  .home-closing { padding-block: 40px 56px; }
-
-  .home-secondary-button { flex: 1 1 100%; white-space: normal; }
+  .home-closing .button { flex: 1 1 100%; }
 }
 
-/* Linux instructions stay readable beside the platform command. */
-.home-install .install-panel-detail { padding: 12px; }
-.home-install .install-requirements { margin: 0 0 8px; font-weight: var(--fw-semibold); font-size: var(--fs-body); line-height: var(--lh-body); }
-.home-install .install-instructions { margin: 0 0 12px; color: var(--ui-muted); font-size: var(--fs-body); line-height: var(--lh-body); }
-.home-install .install-links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 12px; font-size: var(--fs-control); line-height: var(--lh-control); }
-.home-install .install-links a { text-decoration: underline; text-underline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .home-faq-chevron { transition: none; }
+}

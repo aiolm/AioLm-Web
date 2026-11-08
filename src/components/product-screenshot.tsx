@@ -18,7 +18,7 @@ export function ProductScreenshot({ locale, t }: { locale: Locale; t: Translator
     alt: t('home.screenshotAlt'),
     width: lightCapture.width,
     height: lightCapture.height,
-    sizes: "(min-width: 86rem) 80rem, (max-width: 40rem) 220vw, 100vw",
+    sizes: "(max-width: 40rem) 220vw, (min-width: 80rem) 77rem, 100vw",
     priority: true,
   };
   const { props: { srcSet: dark } } = getImageProps({

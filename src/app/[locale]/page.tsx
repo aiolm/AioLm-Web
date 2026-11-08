@@ -13,11 +13,8 @@ import { InstallSection } from "@/components/install-section";
 import "@/components/home-redesign.css";
 
 /**
- * Product introduction. A fully static server component: no data is fetched and
- * nothing here is interactive beyond native links, so the page ships no client
- * JavaScript of its own.
- *
- * Installation instructions for Windows, macOS and Linux.
+ * Server-rendered product introduction. InstallSection owns platform tabs and
+ * clipboard actions; download links and FAQ disclosures keep native semantics.
  */
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -65,7 +62,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       ] }} />
       <section className="home-hero" aria-labelledby="hero-title">
         <div className="site-shell home-hero-inner">
-          <div className="home-hero-copy">
+          <div className="home-hero-intro">
             <h1 className="home-hero-title" id="hero-title">
               <span>{t('home.heroFirst')}</span>
               {' '}
@@ -74,14 +71,11 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             <p className="home-hero-subtitle">
               {t('home.subtitle')}
             </p>
-
-            <div className="home-install">
-              <p className="home-install-label" aria-hidden="true">{t('home.installCommandTitle')}</p>
-              <InstallSection locale={locale} messages={home} />
-              <p className="home-source-notice">{t('home.sourceNotice')}</p>
-            </div>
-            <div className="home-hero-actions">
-              <a className="button button-primary" href={GITHUB_REPOSITORY_URL}>
+            <div className="home-actions">
+              <Link className="button button-primary" href={localizedPath(locale, '/guides/install')}>
+                {t('home.download')}
+              </Link>
+              <a className="button button-outline" href={GITHUB_REPOSITORY_URL}>
                 <GitHubMark />
                 <span>{t('site.github')}</span>
               </a>
@@ -90,6 +84,12 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
                 <ArrowIcon />
               </Link>
             </div>
+          </div>
+
+          <div className="home-install">
+            <p className="home-install-label" aria-hidden="true">{t('home.installCommandTitle')}</p>
+            <InstallSection locale={locale} messages={home} />
+            <p className="home-source-notice">{t('home.sourceNotice')}</p>
           </div>
         </div>
       </section>
@@ -101,13 +101,15 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       <section className="site-shell home-section" aria-labelledby="engines-title">
         <header className="home-section-head">
           <h2 className="home-section-title" id="engines-title">{t('home.enginesTitle')}</h2>
+        </header>
+        <div className="home-section-body">
           <p className="home-section-detail">{t('home.enginesBuiltin')}</p>
           <p className="home-section-detail">{t('home.enginesExternal')}</p>
           <p className="home-section-detail">{t('home.enginesHelp')}</p>
-        </header>
-        <div className="home-hero-actions">
-          <Link className="home-text-link" href={localizedPath(locale, '/guides/compatibility')}>{t('home.enginesGuide')}<ArrowIcon /></Link>
-          <Link className="home-text-link" href={localizedPath(locale, '/guides/adapters')}>{t('home.adaptersGuide')}<ArrowIcon /></Link>
+          <div className="home-actions">
+            <Link className="home-text-link" href={localizedPath(locale, '/guides/compatibility')}>{t('home.enginesGuide')}<ArrowIcon /></Link>
+            <Link className="home-text-link" href={localizedPath(locale, '/guides/adapters')}>{t('home.adaptersGuide')}<ArrowIcon /></Link>
+          </div>
         </div>
       </section>
 
@@ -132,7 +134,9 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       </section>
 
       <section className="site-shell home-section home-faq" aria-labelledby="faq-title" id="faq">
-        <h2 className="home-section-title" id="faq-title">{t('home.faqTitle')}</h2>
+        <header className="home-section-head">
+          <h2 className="home-section-title" id="faq-title">{t('home.faqTitle')}</h2>
+        </header>
         <div className="home-faq-list">
           {faq.map(item => (
             <details className="home-faq-item" key={item.question}>
@@ -151,7 +155,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           <h2 className="home-closing-title" id="closing-title">{t('home.closing')}</h2>
           <p className="home-closing-detail">{t('home.closingDetail')}</p>
         </div>
-        <Link className="home-secondary-button" href={localizedPath(locale, '/benchmarks')}>
+        <Link className="button button-outline" href={localizedPath(locale, '/benchmarks')}>
           <span>{t('home.browse')}</span>
           <ArrowIcon />
         </Link>

@@ -205,7 +205,7 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
             </div>
             <div className="explorer-search-meta">
               <p className="explorer-draft-status" role="status">{draftChanged ? t("benchmark.Changes not applied. Apply filters to update results.") : null}</p>
-              {clearable ? <button type="button" className="explorer-filter-reset" onClick={clearFilters}>{t("benchmark.Clear filters")}</button> : null}
+              {clearable ? <button type="button" className="explorer-button explorer-button-quiet explorer-filter-reset" onClick={clearFilters}>{t("benchmark.Clear filters")}</button> : null}
             </div>
             {searchTooLong ? <p id="explorer-search-error" className="explorer-validation" role="alert">{t("benchmark.Search must be at most {limit} characters.", { limit: EXPLORER_FILTER_MAX_LENGTH })}</p> : null}
             {draftRequestBlocked ? <p className="explorer-validation" role="alert">{t(`benchmark.${EXPLORER_QUERY_LIMIT_MESSAGE}`)}</p> : null}

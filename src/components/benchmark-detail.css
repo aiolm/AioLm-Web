@@ -1,49 +1,63 @@
 /*
- * A result page using the shared guide typography: reading text, supporting
- * facts, ruled tables with tabular figures, and the measurement environment
- * as one horizontal band under the title.
+ * A result page in the shared workspace language: an unboxed page header with
+ * the measured performance, then neutral bordered panels for each section.
+ * Buttons and fields are painted centrally; this file owns layout, ruled
+ * tables with tabular figures, and the pressed state of point selectors.
  */
 .benchmark-detail { font-size: var(--fs-body); line-height: var(--lh-body); }
 .benchmark-detail:lang(ko) { word-break: keep-all; }
-.benchmark-detail .detail-back { font-size: var(--fs-control); line-height: var(--lh-control); }
-.benchmark-detail .detail-back a { color: var(--ui-muted); }
-.benchmark-detail .detail-back a:hover { color: var(--ui-ink); }
-.benchmark-detail .card > h2 { font-size: var(--fs-section); font-weight: var(--fw-heading); line-height: var(--lh-heading); letter-spacing: var(--tracking-heading); }
-.benchmark-detail .card > .muted { font-size: var(--fs-body); line-height: var(--lh-body); }
+.benchmark-detail .detail-back { margin: 0; font-size: var(--fs-control); line-height: var(--lh-control); }
+.benchmark-detail .detail-back a { color: var(--ui-muted); text-decoration: none; }
+.benchmark-detail .detail-back a:hover { color: var(--ui-ink); text-decoration: underline; text-underline-offset: 3px; }
+.benchmark-detail .detail-back a:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; border-radius: var(--ui-radius-sm); }
+/* The page heading and its reading are the page itself, not another card. */
+.benchmark-detail > .card:has(> h1) { padding: 0; border: 0; border-radius: 0; background: transparent; }
+.benchmark-detail .card > h2 { margin: 0; font-size: var(--fs-section); font-weight: var(--fw-heading); line-height: var(--lh-heading); letter-spacing: var(--tracking-heading); }
+.benchmark-detail .card > .muted { max-width: 80ch; color: var(--ui-muted); font-size: var(--fs-body); line-height: var(--lh-body); }
 .benchmark-detail .column-heading { display: inline-flex; flex-direction: column; }
 .benchmark-detail .column-heading-unit { color: var(--ui-faint); font-weight: var(--fw-regular); }
 
 /* Title, identity and environment. */
-.benchmark-detail #detail-title { font-size: var(--fs-page-title); font-weight: var(--fw-heading); line-height: var(--lh-title); letter-spacing: var(--tracking-title); overflow-wrap: anywhere; }
-.benchmark-detail .detail-meta-row { gap: 8px 24px; margin-top: 10px; }
-.benchmark-detail .detail-meta-row .detail-fact { font-size: var(--fs-support); line-height: var(--lh-support); }
+.benchmark-detail #detail-title { margin: 0; font-size: var(--fs-page-title); font-weight: var(--fw-heading); line-height: var(--lh-title); letter-spacing: var(--tracking-title); overflow-wrap: anywhere; }
+.benchmark-detail .detail-meta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; margin-top: 8px; }
+.benchmark-detail .detail-meta-row .detail-fact { min-width: 0; font-size: var(--fs-support); line-height: var(--lh-support); }
 .benchmark-detail .detail-meta-row .detail-fact-label { min-width: 0; overflow-wrap: anywhere; white-space: normal; }
 .benchmark-detail .detail-fact-label { color: var(--ui-muted); font-size: var(--fs-support); line-height: var(--lh-support); }
-.benchmark-detail .detail-weight-badge { padding: 0 7px; border-radius: 5px; background: var(--ui-secondary-gradient); color: var(--ui-secondary-ink); font-size: var(--fs-support); font-weight: var(--fw-medium); line-height: var(--lh-support); }
-.benchmark-detail .detail-environment { margin-block-start: 20px; padding: 0; border: 0; }
+.benchmark-detail .detail-weight-badge { padding: 0 6px; border: 0; border-radius: var(--ui-radius-sm); background: var(--tone-neutral-bg); color: var(--tone-neutral-ink); font-size: var(--fs-support); font-weight: var(--fw-medium); line-height: var(--lh-support); }
+.benchmark-detail .detail-environment { margin-block-start: 24px; padding: 0; border: 0; border-radius: 0; background: transparent; }
 .benchmark-detail .detail-environment > h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.benchmark-detail .detail-environment .detail-hardware-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin: 0; padding: 14px 0; border-radius: var(--ui-radius-lg); background: transparent; }
-.benchmark-detail .detail-environment .detail-hardware-card { display: grid; align-content: start; gap: 2px; min-width: 0; padding: 2px 20px; border: 0; border-inline-start: 1px solid var(--ui-border); border-radius: 0; background: transparent; font-size: var(--fs-table); line-height: var(--lh-table); }
-.benchmark-detail .detail-environment .detail-hardware-card:first-child { padding-block-start: 2px; border-inline-start: 0; }
+.benchmark-detail .detail-environment > .muted { margin-block-end: 12px; }
+.benchmark-detail .detail-environment .detail-hardware-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin: 0; padding: 16px 0; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-lg); background: var(--ui-surface); }
+.benchmark-detail .detail-environment .detail-hardware-card { display: grid; align-content: start; gap: 4px; min-width: 0; padding: 0 16px; border: 0; border-inline-start: 1px solid var(--ui-border); border-radius: 0; background: transparent; font-size: var(--fs-table); line-height: var(--lh-table); }
+.benchmark-detail .detail-environment .detail-hardware-card:first-child { padding-block-start: 0; border-inline-start: 0; }
 .benchmark-detail .detail-environment .detail-hardware-card > .column-heading { color: var(--ui-muted); font-size: var(--fs-support); font-weight: var(--fw-regular); line-height: var(--lh-support); }
 .benchmark-detail .detail-hardware-card > strong,
 .benchmark-detail .detail-gpu-entry > strong { font-size: var(--fs-table); font-weight: var(--fw-medium); line-height: var(--lh-table); overflow-wrap: anywhere; }
 .benchmark-detail .detail-hardware-card .detail-fact { font-size: var(--fs-support); line-height: var(--lh-support); }
 .benchmark-detail .detail-hardware-card .detail-fact-value { color: var(--ui-muted); font-weight: var(--fw-regular); }
-.benchmark-detail .detail-gpu-entry:not(:last-child) { margin-block-end: 6px; padding-block-end: 6px; border-bottom: 1px solid var(--ui-border); }
+.benchmark-detail .detail-gpu-entry:not(:last-child) { margin-block-end: 8px; padding-block-end: 8px; border-bottom: 1px solid var(--ui-border); }
 
 /* The operating point being read, and what was measured there. */
-.benchmark-detail .detail-point-chips { gap: 12px 32px; margin-block-start: 28px; }
-.benchmark-detail .detail-chip-legend { font-size: var(--fs-control); font-weight: var(--fw-medium); line-height: var(--lh-control); color: var(--ui-muted); }
-.benchmark-detail .detail-chip-row { gap: 6px; margin-block-start: 6px; }
-.benchmark-detail .detail-chip { min-height: var(--control-min); padding: var(--control-pad-block) var(--control-pad-inline); line-height: var(--lh-control); border: 0; border-radius: var(--ui-radius-sm); background: var(--ui-action-secondary-gradient); color: var(--ui-action-secondary-ink); font-size: var(--fs-control); font-weight: var(--fw-regular); font-variant-numeric: tabular-nums; }
-.benchmark-detail .detail-chip-on { border: 0; background: var(--ui-selected-gradient); color: var(--ui-selected-ink); font-weight: var(--fw-semibold); }
+.benchmark-detail .detail-points { min-width: 0; }
+.benchmark-detail .detail-points > p { max-width: 80ch; }
+.benchmark-detail .detail-point-chips { display: flex; flex-wrap: wrap; gap: 16px 32px; margin-block-start: 32px; }
+.benchmark-detail .detail-points > .detail-chip-set:first-child { margin-block-start: 32px; }
+.benchmark-detail .detail-chip-set { min-width: 0; margin: 0; padding: 0; border: 0; }
+.benchmark-detail .detail-chip-legend { padding: 0; color: var(--ui-muted); font-size: var(--fs-control); font-weight: var(--fw-medium); line-height: var(--lh-control); }
+.benchmark-detail .detail-chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-block-start: 8px; }
+/* Point chips are toggle buttons: neutral when idle, a selected fill and ring when pressed. */
+.benchmark-detail .detail-chip { min-height: var(--control-min); padding: var(--control-pad-block) var(--control-pad-inline); border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); background: var(--ui-action-secondary-fill); color: var(--ui-action-secondary-ink); font-size: var(--fs-control); font-weight: var(--fw-regular); line-height: var(--lh-control); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; text-decoration: none; }
+.benchmark-detail .detail-chip:hover:not([aria-pressed="true"]) { background: var(--ui-action-secondary-fill-hover); color: var(--ui-action-secondary-ink-hover); }
+.benchmark-detail .detail-chip[aria-pressed="true"] { border-color: var(--ui-accent); background: var(--ui-accent-soft); color: var(--ui-ink); box-shadow: inset 0 0 0 1px var(--ui-accent); font-weight: var(--fw-semibold); text-decoration: none; }
 .benchmark-detail :is(.detail-chip, .detail-point-select):focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
-.benchmark-detail .detail-point-reading { margin-block-start: 14px; font-size: var(--fs-body); line-height: var(--lh-body); }
-.benchmark-detail .detail-performance-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-block: 16px 24px; border-block: 1px solid var(--ui-border); }
-.benchmark-detail .detail-metric-card { display: grid; align-content: start; gap: 2px; padding: 18px 20px; border: 0; border-inline-end: 1px solid var(--ui-border); border-radius: 0; background: transparent; }
+.benchmark-detail .detail-point-reading { margin-block-start: 16px; color: var(--ui-ink); font-size: var(--fs-body); line-height: var(--lh-body); }
+.benchmark-detail .detail-performance-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-block: 16px 24px; border-block: 1px solid var(--ui-border); }
+.benchmark-detail .detail-metric-card { display: grid; align-content: start; gap: 4px; min-width: 0; padding: 16px; border: 0; border-inline-end: 1px solid var(--ui-border); border-radius: 0; background: transparent; }
 .benchmark-detail .detail-metric-card:first-child { padding-inline-start: 0; }
+.benchmark-detail .detail-metric-card:nth-child(4n) { border-inline-end: 0; }
 .benchmark-detail .detail-metric-card:last-child { border-inline-end: 0; }
+.benchmark-detail .detail-metric-card:nth-child(4n + 1) { padding-inline-start: 0; }
+.benchmark-detail .detail-metric-card:nth-child(n + 5) { border-top: 1px solid var(--ui-border); }
 .benchmark-detail .detail-metric-label { color: var(--ui-muted); font-size: var(--fs-support); line-height: var(--lh-support); }
 .benchmark-detail .detail-metric-value { font-size: var(--fs-metric); font-weight: var(--fw-semibold); line-height: var(--lh-metric); font-variant-numeric: tabular-nums; white-space: normal; overflow-wrap: anywhere; }
 .benchmark-detail .detail-metric-value small { color: var(--ui-muted); font-size: var(--fs-support); font-weight: var(--fw-regular); line-height: var(--lh-support); }
@@ -58,66 +72,92 @@
 .benchmark-detail .detail-num { text-align: right; }
 .benchmark-detail th.detail-num .column-heading { align-items: flex-end; }
 .benchmark-detail .detail-points-caption,
-.benchmark-detail .detail-rows-caption { padding-block: 0 10px; color: var(--ui-muted); font-size: var(--fs-support); line-height: var(--lh-support); text-align: start; }
-.benchmark-detail .detail-point-value { font-weight: var(--fw-medium); }
+.benchmark-detail .detail-rows-caption { padding-block: 0 8px; color: var(--ui-muted); font-size: var(--fs-support); line-height: var(--lh-support); text-align: start; }
+.benchmark-detail .detail-point-value { display: block; font-weight: var(--fw-medium); }
 .benchmark-detail .detail-point-spread { display: block; color: var(--ui-muted); font-size: var(--fs-support); line-height: var(--lh-support); }
-.benchmark-detail .detail-point-row-on { background: var(--ui-panel-raised); }
-.benchmark-detail .detail-point-select { min-height: var(--control-min); padding: var(--control-pad-block) var(--control-pad-inline); border: 0; border-radius: var(--ui-radius-sm); background: none; color: var(--ui-accent); font: inherit; font-size: var(--fs-control); font-weight: var(--fw-medium); line-height: var(--lh-control); cursor: pointer; }
-.benchmark-detail .detail-point-row-on .detail-point-select { color: var(--ui-ink); font-weight: var(--fw-semibold); }
-.benchmark-detail .detail-point-select:not([aria-pressed="true"]):hover { text-decoration: underline; text-underline-offset: 3px; }
+/* The selected row is marked by a leading rule as well as its fill. */
+.benchmark-detail .detail-point-row-on { background: var(--ui-accent-soft); }
+.benchmark-detail .detail-point-row-on > th:first-child { box-shadow: inset 3px 0 0 var(--ui-accent); }
+.benchmark-detail .detail-point-select { min-height: var(--control-min); margin-inline-start: -8px; padding: var(--control-pad-block) 8px; border: 0; border-radius: var(--ui-radius-md); background: transparent; color: var(--ui-accent); font: inherit; font-size: var(--fs-control); font-weight: var(--fw-medium); line-height: var(--lh-control); font-variant-numeric: tabular-nums; text-decoration: none; white-space: nowrap; cursor: pointer; }
+.benchmark-detail .detail-point-select:hover:not([aria-pressed="true"]) { background: var(--ui-accent-soft); }
+.benchmark-detail .detail-point-select[aria-pressed="true"] { color: var(--ui-ink); font-weight: var(--fw-semibold); text-decoration: none; }
 .benchmark-detail .detail-rows { font-size: var(--fs-table); line-height: var(--lh-table); }
-.benchmark-detail .detail-rows tbody tr:hover { background: var(--ui-panel-raised); }
+.benchmark-detail .detail-rows tbody tr:hover { background: var(--ui-surface-muted); }
+/* Wide tables scroll inside their own keyboard-focusable region, never the page. */
+.benchmark-detail :is(.detail-points-scroll, .detail-rows-scroll) { max-width: 100%; min-width: 0; overflow-x: auto; }
 .benchmark-detail :is(.detail-points-scroll, .detail-rows-scroll):focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
-.benchmark-detail .detail-points-scroll { max-width: 100%; overflow-x: auto; }
+.benchmark-detail .detail-points-scroll { margin-block-start: 8px; }
 .benchmark-detail .detail-points-table { min-width: 100%; }
-.benchmark-detail .detail-metric-card { min-width: 0; }
-.benchmark-detail .detail-chip-row { display: flex; flex-wrap: wrap; }
 .benchmark-detail .detail-points-truncated,
 .benchmark-detail .detail-points-empty { font-size: var(--fs-body); line-height: var(--lh-body); }
 
 /* Conditions of the whole run. */
-.benchmark-detail .detail-context-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 24px; margin-block: 24px 12px; padding: 0; border: 0; background: transparent; }
-.benchmark-detail .detail-context-grid .detail-fact { font-size: var(--fs-table); line-height: var(--lh-table); }
-.benchmark-detail .detail-context-grid .detail-fact-label { font-size: var(--fs-support); line-height: var(--lh-support); }
+.benchmark-detail .detail-context-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 24px; margin-block: 24px 12px; padding: 0; border: 0; background: transparent; }
+.benchmark-detail .detail-context-grid .detail-fact { display: grid; align-content: start; gap: 2px; min-width: 0; font-size: var(--fs-table); line-height: var(--lh-table); }
+.benchmark-detail .detail-context-grid .detail-fact-label { font-size: var(--fs-support); line-height: var(--lh-support); white-space: normal; }
+.benchmark-detail .detail-context-grid .detail-fact-label::after { content: none; }
 .benchmark-detail .detail-context-grid .detail-fact-value { font-size: var(--fs-table); font-weight: var(--fw-medium); line-height: var(--lh-table); overflow-wrap: anywhere; }
-.benchmark-detail .detail-record-date { font-size: var(--fs-support); line-height: var(--lh-support); }
+.benchmark-detail .detail-record-date { color: var(--ui-muted); font-size: var(--fs-support); line-height: var(--lh-support); }
 
-/* Buttons and disclosures. */
+/* Sections: action bars and disclosures. Button paint comes from the shared primitives. */
+.benchmark-detail .detail-rows-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-block: 16px 12px; }
 .benchmark-detail .detail-metrics-toggle,
 .benchmark-detail .card > p > button,
-.benchmark-detail nav > button { min-height: var(--control-min); padding: var(--control-pad-block) var(--control-pad-inline); border: 0; border-radius: var(--ui-radius-sm); background: var(--ui-action-secondary-gradient); color: var(--ui-action-secondary-ink); font: inherit; font-size: var(--fs-control); font-weight: var(--fw-medium); line-height: var(--lh-control); cursor: pointer; }
-.benchmark-detail .detail-metrics-toggle:hover,
-.benchmark-detail .card > p > button:hover:not(:disabled),
-.benchmark-detail nav > button:hover:not(:disabled) { background: var(--ui-action-secondary-gradient); }
-.benchmark-detail :is(.detail-description, .detail-group) > summary { min-height: 36px; font-size: var(--fs-group); font-weight: var(--fw-heading); line-height: var(--lh-group); letter-spacing: var(--tracking-heading); cursor: pointer; }
-.benchmark-detail :is(.detail-description, .detail-group) > summary:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; border-radius: 4px; }
-.benchmark-detail .detail-group { border-top: 1px solid var(--ui-border); }
-.benchmark-detail .detail-group:last-of-type { border-bottom: 1px solid var(--ui-border); }
+.benchmark-detail nav > button { min-height: var(--control-min); padding: var(--control-pad-block) var(--control-pad-inline); white-space: normal; }
+.benchmark-detail .detail-metrics-toggle[aria-pressed="true"] { border-color: var(--ui-accent); background: var(--ui-accent-soft); color: var(--ui-ink); box-shadow: inset 0 0 0 1px var(--ui-accent); }
+.benchmark-detail .card nav { display: flex; flex-wrap: wrap; gap: 8px; margin-block-start: 8px; }
+.benchmark-detail .alert p { margin: 0; }
+.benchmark-detail .alert p + p { margin-block-start: 8px; }
+.benchmark-detail :is(.detail-description, .detail-group) > summary { min-height: var(--control-min); font-size: var(--fs-group); font-weight: var(--fw-heading); line-height: var(--lh-group); letter-spacing: var(--tracking-heading); cursor: pointer; }
+.benchmark-detail :is(.detail-description, .detail-group) > summary:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; border-radius: var(--ui-radius-md); }
+.benchmark-detail .detail-description[open] > summary { margin-block-end: 8px; }
+.benchmark-detail .detail-group { margin: 0; padding: 0; border-top: 1px solid var(--ui-border); }
 .benchmark-detail .detail-group + .detail-group { margin-block-start: 0; padding-block-start: 0; }
-.benchmark-detail .detail-group .detail-group-title { margin: 0; padding-block: 8px; font-size: var(--fs-group); line-height: var(--lh-group); }
+.benchmark-detail .detail-group .detail-group-title { min-height: var(--control-min); margin: 0; padding-block: 8px; font-size: var(--fs-group); line-height: var(--lh-group); }
 .benchmark-detail .detail-group[open] > .kv { margin-block: 4px 16px; }
-.benchmark-detail .kv { gap: 10px 24px; }
-.benchmark-detail .kv dt { color: var(--ui-muted); font-size: var(--fs-support); line-height: var(--lh-support); }
-.benchmark-detail .kv dd { font-size: var(--fs-table); line-height: var(--lh-table); overflow-wrap: anywhere; }
+.benchmark-detail .detail-group > .muted { max-width: 80ch; margin-block: 0 12px; color: var(--ui-muted); font-size: var(--fs-body-compact); line-height: var(--lh-compact); }
+.benchmark-detail .kv { gap: 8px 24px; }
+.benchmark-detail .kv dt { color: var(--ui-muted); font-size: var(--fs-support); line-height: var(--lh-support); overflow-wrap: anywhere; }
+.benchmark-detail .kv dd { min-width: 0; font-size: var(--fs-table); line-height: var(--lh-table); overflow-wrap: anywhere; }
+.benchmark-detail .kv dd > .muted { margin-block-start: 4px; color: var(--ui-muted); font-size: var(--fs-support); line-height: var(--lh-support); }
+.benchmark-detail .detail-device-cards { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.benchmark-detail .detail-device-card { min-width: 0; padding: 8px 0; border: 0; border-radius: 0; background: transparent; }
+.benchmark-detail .detail-device-card + .detail-device-card { border-top: 1px solid var(--ui-border); }
 .benchmark-detail .detail-device-facts dt { font-size: var(--fs-support); line-height: var(--lh-support); }
 .benchmark-detail :is(.detail-hardware-card .detail-fact-label, .detail-hardware-card .detail-fact-value, .detail-metric-label, .detail-metric-spread, .detail-points > .muted) { min-width: 0; overflow-wrap: anywhere; white-space: normal; }
 .benchmark-detail .detail-device-list { min-width: 0; grid-template-columns: minmax(0, 1fr); overflow-wrap: anywhere; }
+.benchmark-detail .detail-command { max-width: 100%; overflow-x: auto; }
 
 @media (max-width: 900px) {
-  .benchmark-detail .detail-environment .detail-hardware-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 0; }
+  .benchmark-detail .detail-environment .detail-hardware-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 0; }
   .benchmark-detail .detail-environment .detail-hardware-card:nth-child(odd) { border-inline-start: 0; }
   .benchmark-detail .detail-performance-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .benchmark-detail .detail-metric-card { padding-inline: 0 16px; border-inline-end: 0; }
+  .benchmark-detail .detail-metric-card:nth-child(n) { padding-inline-start: 0; border-top: 0; }
   .benchmark-detail .detail-metric-card:nth-child(n + 3) { border-top: 1px solid var(--ui-border); }
   .benchmark-detail .detail-context-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) {
   .benchmark-detail .detail-environment .detail-hardware-grid { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 4px 16px; }
-  .benchmark-detail .detail-environment .detail-hardware-card { padding: 10px 0; border-inline-start: 0; border-top: 1px solid var(--ui-border); }
-  .benchmark-detail .detail-environment .detail-hardware-card:first-child { border-top: 0; }
+  .benchmark-detail .detail-environment .detail-hardware-card { padding: 12px 0; border-inline-start: 0; border-top: 1px solid var(--ui-border); }
+  .benchmark-detail .detail-environment .detail-hardware-card:first-child { padding-block-start: 12px; border-top: 0; }
   .benchmark-detail .detail-context-grid { grid-template-columns: minmax(0, 1fr); }
-  .benchmark-detail :is(.detail-chip, .detail-metrics-toggle, .card > p > button, nav > button) { min-height: 44px; }
+  .benchmark-detail .detail-rows-toolbar { align-items: stretch; }
+}
+@media (max-width: 360px) {
+  .benchmark-detail .detail-performance-grid { grid-template-columns: minmax(0, 1fr); }
+  .benchmark-detail .detail-metric-card:nth-child(n + 2) { border-top: 1px solid var(--ui-border); }
 }
 @media (max-width: 700px), (pointer: coarse) {
-  .benchmark-detail :is(.detail-description, .detail-group) > summary { min-height: 44px; }
+  .benchmark-detail :is(.detail-description, .detail-group) > summary,
+  .benchmark-detail .detail-group .detail-group-title { min-height: 44px; }
+  .benchmark-detail :is(.detail-chip, .detail-point-select, .detail-metrics-toggle, .card > p > button, nav > button) { min-height: 44px; }
+}
+@media (forced-colors: active) {
+  .benchmark-detail .detail-chip { border-color: ButtonText; }
+  .benchmark-detail .detail-chip[aria-pressed="true"],
+  .benchmark-detail .detail-metrics-toggle[aria-pressed="true"] { outline: 2px solid Highlight; outline-offset: 1px; }
+  .benchmark-detail .detail-point-row-on > th:first-child { box-shadow: none; outline: 2px solid Highlight; outline-offset: -2px; }
+  .benchmark-detail .detail-environment .detail-hardware-grid,
+  .benchmark-detail .detail-weight-badge { border: 1px solid CanvasText; }
 }

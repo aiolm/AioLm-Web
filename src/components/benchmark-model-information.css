@@ -1,7 +1,14 @@
+/* Independent catalog lookup: a quiet bordered note on the result page and a
+   compact supporting block in result rows. Complete evidence stays in the
+   disclosure; links remain native, underlined links. */
 .benchmark-model-information {
   min-width: 0;
   max-width: 100%;
-  margin-block-start: 12px;
+  margin-block-start: 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
   font-size: var(--fs-body-compact);
   font-weight: var(--fw-regular);
   line-height: var(--lh-compact);
@@ -10,15 +17,39 @@
 }
 
 .benchmark-model-information p { margin-block: 4px; }
-.benchmark-model-information .benchmark-catalog-label { color: var(--ui-muted); font-size: var(--fs-support); line-height: var(--lh-support); }
-.benchmark-model-information a { color: var(--ui-accent); text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.benchmark-model-information > p:first-child { margin-block-start: 0; }
+.benchmark-model-information > :last-child { margin-block-end: 0; }
+.benchmark-model-information .muted { color: var(--ui-muted); }
+.benchmark-model-information .benchmark-catalog-label { color: var(--ui-muted); font-size: var(--fs-support); font-weight: var(--fw-medium); line-height: var(--lh-support); }
+.benchmark-model-information a { color: var(--ui-accent); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; overflow-wrap: anywhere; }
 .benchmark-model-information a:focus-visible,
 .benchmark-model-information summary:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; border-radius: var(--ui-radius-sm); }
-.benchmark-model-information .benchmark-catalog-matches { display: grid; gap: 12px; margin: 4px 0; padding: 0; list-style: none; }
+.benchmark-model-information .alert-action { margin-block: 4px; white-space: normal; }
+.benchmark-model-information .benchmark-catalog-matches { display: grid; gap: 12px; margin: 8px 0; padding: 0; list-style: none; }
 .benchmark-catalog-match { min-width: 0; }
+.benchmark-catalog-match + .benchmark-catalog-match { padding-block-start: 12px; border-top: 1px solid var(--ui-border); }
 .benchmark-model-information .benchmark-catalog-repository { font-weight: var(--fw-medium); }
 .benchmark-model-information .benchmark-catalog-fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; margin-block: 8px; }
 .benchmark-catalog-fields dt { color: var(--ui-muted); font-size: var(--fs-support); line-height: var(--lh-support); }
-.benchmark-catalog-fields dd { margin: 0 0 6px; min-width: 0; overflow-wrap: anywhere; }
-.benchmark-catalog-evidence > summary { min-height: var(--control-min); cursor: pointer; color: var(--ui-accent); font-size: var(--fs-control); line-height: var(--lh-control); }
-.benchmark-model-information-compact { font-size: var(--fs-support); line-height: var(--lh-support); }
+.benchmark-catalog-fields dd { min-width: 0; margin: 0 0 8px; overflow-wrap: anywhere; }
+.benchmark-catalog-evidence > summary { display: list-item; min-height: var(--control-min); padding-block: 6px; color: var(--ui-accent); font-size: var(--fs-control); font-weight: var(--fw-medium); line-height: var(--lh-control); cursor: pointer; }
+.benchmark-catalog-evidence[open] > summary { margin-block-end: 4px; }
+
+/* Inside a result row the lookup is supporting text, not another panel. */
+.benchmark-model-information-compact {
+  margin-block-start: 8px;
+  padding: 8px 0 0;
+  border: 0;
+  border-top: 1px solid var(--ui-border);
+  border-radius: 0;
+  background: transparent;
+  font-size: var(--fs-support);
+  line-height: var(--lh-support);
+}
+.benchmark-model-information-compact .benchmark-catalog-evidence > summary { min-height: 28px; padding-block: 2px; }
+/* A comparison cell is already ruled; the lookup reads as the cell's text. */
+.explorer-comparison .benchmark-model-information { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; font-size: var(--fs-table); line-height: var(--lh-table); }
+
+@media (pointer: coarse) {
+  .benchmark-model-information-compact .benchmark-catalog-evidence > summary { min-height: 44px; }
+}

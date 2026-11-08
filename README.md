@@ -93,16 +93,17 @@ The product introduction is static. Public benchmark details include server-rend
 initial content; filtering, comparisons and measurement pagination require JavaScript.
 See [search and answer discovery](docs/search-discovery.md) for metadata and sitemaps.
 The shared Orchid Periwinkle theme follows the system light/dark preference and
-uses the desktop app's colors, gradients and brand mark. There is no palette
-selector. Approved colors live in `src/theme/palette-data.json`; run
-`npm run theme:generate` after changing them to regenerate the shared CSS tokens
-and calibrated text/focus colors. Notice colors live in
-`src/theme/status-tones.json`, with distinct icons and readable foregrounds on
-soft gradients. Page components use these semantic tokens.
+uses the desktop app's colors, brand mark and control geometry. There is no
+palette selector. Canvas, panels, fields, secondary actions and notices are
+flat; primary actions and navigation keep the app's brand gradients. Approved
+colors live in `src/theme/palette-data.json`, `status-tones.json` and
+`control-tones.json`. Run `npm run theme:generate` after changing those inputs
+to validate contrast and regenerate the shared CSS tokens.
 
-Typography follows the Guides across every page and locale. See the
-[design system](docs/design-system.md) for shared roles, responsive/zoom policy
-and lint/build enforcement.
+Typography shares the app's interface hierarchy across every page and locale,
+while long web prose keeps a 16px reading size. See the [design
+system](docs/design-system.md) for shared roles, responsive/zoom policy and
+lint/build enforcement.
 
 ## Quick start (synthetic local)
 

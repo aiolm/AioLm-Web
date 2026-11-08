@@ -1,7 +1,7 @@
 /* ==========================================================================
    Shared selection and disclosure controls — Orchid Periwinkle.
-   Borderless gradient triggers, a persistent chevron and keyboard focus.
-   Portaled menus use --ui-ink; the filter rail uses --ui-rail-* instead.
+   App-sized fields, a persistent chevron and keyboard focus.
+   Portaled menus use the same surface, boundary and ink as the app.
    ========================================================================== */
 
 /* ---------------------------------------------------------- trigger ---- */
@@ -16,9 +16,9 @@
   gap: 8px;
   margin: 0;
   padding: var(--control-pad-block) var(--control-pad-inline);
-  border: 0;
-  border-radius: var(--ui-radius-sm);
-  background: var(--ui-input);
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-field-fill);
   color: var(--ui-ink);
   font: inherit;
   font-size: var(--fs-control);
@@ -27,21 +27,21 @@
   text-align: start;
   cursor: pointer;
 }
-.ui-select-trigger:hover:not(:disabled) { background: var(--ui-input-hover, var(--ui-input)); }
-.ui-select-trigger[aria-expanded="true"] { outline: 2px solid var(--ui-focus); outline-offset: 1px; }
+.ui-select-trigger:hover:not(:disabled, :focus, [aria-expanded="true"]) { background: var(--ui-field-fill-hover); border-color: var(--ui-border-strongest); }
+.ui-select-trigger[aria-expanded="true"] { border-color: var(--ui-focus); outline: 1px solid var(--ui-focus); outline-offset: 0; }
 .ui-select-trigger:focus-visible,
 .explorer-combobox-toggle:focus-visible {
   outline: 2px solid var(--ui-focus);
   outline-offset: 2px;
-  border-radius: var(--ui-radius-sm);
+  border-radius: var(--ui-radius-md);
 }
-.ui-select-trigger:disabled { opacity: .55; cursor: not-allowed; }
-.ui-select-value { min-width: 0; white-space: normal; overflow-wrap: normal; }
-.ui-select-chevron { flex: 0 0 16px; width: 16px; height: 16px; color: var(--ui-muted); opacity: 1; transition: transform 150ms ease, color 120ms ease; }
+.ui-select-trigger:disabled { opacity: 1; cursor: not-allowed; }
+.ui-select-value { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+.ui-select-chevron { flex: 0 0 16px; width: 16px; height: 16px; color: var(--ui-muted); opacity: 1; transition: transform 150ms ease; }
 .ui-select:hover .ui-select-chevron, .explorer-combobox-control:hover .ui-select-chevron { color: var(--ui-ink); }
 [aria-expanded="true"] > .ui-select-chevron { color: var(--ui-ink); transform: rotate(180deg); }
 
-/* Result toolbar controls sit beside 40px buttons; the header selector is sized to its label. */
+/* Result toolbar and header selectors share the standard control height. */
 .explorer-result-actions .ui-select-trigger { min-height: var(--control-min); }
 .language-selector .ui-select-trigger { width: auto; }
 
@@ -57,8 +57,8 @@
   overflow: auto;
   overscroll-behavior: contain;
   list-style: none;
-  border: 0;
-  border-radius: var(--ui-radius-menu, 10px);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-menu);
   background: var(--ui-menu-surface, var(--ui-surface));
   color: var(--ui-ink);
   box-shadow: var(--ui-elev-menu, var(--ui-elev-2));
@@ -90,7 +90,7 @@
 .ui-menu .ui-option {
   position: relative;
   display: flex;
-  min-height: 32px;
+  min-height: var(--control-min);
   align-items: center;
   justify-content: space-between;
   gap: 8px;
@@ -103,7 +103,7 @@
   line-height: var(--lh-control);
   cursor: pointer;
 }
-.ui-option-label { min-width: 0; white-space: normal; overflow-wrap: normal; }
+.ui-option-label { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
 .ui-menu--inline .ui-option-label { flex: 1; }
 /* Virtual keyboard focus needs a shape with contrast, not just a pale fill. */
 .ui-menu .ui-option.is-highlighted::before {
@@ -120,11 +120,11 @@
 .ui-menu--inline .ui-option > span:first-child { min-width: 0; overflow-wrap: anywhere; }
 .ui-menu--inline .ui-option > .explorer-option-count { flex-shrink: 0; }
 .ui-menu .ui-option:hover,
-.ui-menu .ui-option.is-highlighted { outline: 0; background: var(--ui-surface-muted); }
+.ui-menu .ui-option.is-highlighted { outline: 0; background: var(--ui-input-hover); }
 /* In free-text suggestions aria-selected marks the active option, so the committed
    value is flagged separately; in fixed selects aria-selected is the value. */
 .ui-menu .ui-option.is-committed,
-.ui-menu:not(.ui-menu--inline) .ui-option[aria-selected="true"] { color: var(--ui-accent); font-weight: var(--fw-medium); }
+.ui-menu:not(.ui-menu--inline) .ui-option[aria-selected="true"] { background: var(--ui-accent-soft); color: var(--ui-ink); font-weight: var(--fw-semibold); }
 .ui-menu .ui-option[aria-disabled="true"] { color: var(--ui-faint); opacity: .55; cursor: not-allowed; }
 .ui-option-check { flex: 0 0 16px; width: 16px; height: 16px; color: var(--ui-accent); }
 
@@ -191,8 +191,6 @@ details.explorer-secondary-filters > summary:has(.explorer-filter-count)::after 
   flex: none;
   width: 16px;
   height: 16px;
-  margin-inline-end: 6px;
-  vertical-align: -3px;
   background: currentColor;
   -webkit-mask: var(--action-glyph) center / 16px 16px no-repeat;
   mask: var(--action-glyph) center / 16px 16px no-repeat;

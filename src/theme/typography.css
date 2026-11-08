@@ -1,41 +1,41 @@
-/* Shared typography, measured from the product guides. See docs/design-system.md. */
+/* App-aligned interface roles with a readable web prose scale. See docs/design-system.md. */
 :root {
   --font-sans: "Pretendard", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
 
   --fs-small: .75rem;
-  --fs-support: .8125rem;
+  --fs-support: .75rem;
   --fs-control: .875rem;
   --fs-table: .875rem;
   --fs-code: .8125rem;
   --fs-body-compact: .9375rem;
   --fs-body: 1rem;
-  --fs-group: 1.125rem;
+  --fs-group: .875rem;
   --fs-brand: 1.125rem;
-  --fs-section: 1.25rem;
+  --fs-section: 1.125rem;
   --fs-metric: 1.375rem;
-  --fs-page-title: clamp(1.8rem, 1.35rem + 1.4vw, 2.5rem);
+  --fs-page-title: 1.5rem;
 
-  --lh-title: 1.25;
-  --lh-heading: 1.45;
+  --lh-title: 1.3;
+  --lh-heading: 1.5;
   --lh-group: 1.5;
-  --lh-body: 1.8;
-  --lh-compact: 1.7;
-  --lh-support: 1.6;
-  --lh-control: 1.45;
-  --lh-table: 1.7;
+  --lh-body: 1.7;
+  --lh-compact: 1.6;
+  --lh-support: 1.5;
+  --lh-control: 1.5;
+  --lh-table: 1.5;
   --lh-code: 1.8;
   --lh-metric: 1.3;
 
   --fw-regular: 400;
   --fw-medium: 500;
-  --fw-semibold: 600;
-  --fw-heading: 700;
-  --fw-brand: 750;
+  --fw-semibold: 550;
+  --fw-heading: 650;
+  --fw-brand: 650;
 
-  --tracking-title: -.035em;
-  --tracking-heading: -.015em;
-  --tracking-brand: -.025em;
+  --tracking-title: -.02em;
+  --tracking-heading: -.01em;
+  --tracking-brand: -.02em;
   --tracking-label: .025em;
   --tracking-normal: 0;
 }
@@ -47,8 +47,6 @@
 
 @media (max-width: 40rem) {
   :root {
-    --fs-body: .9375rem;
-    --fs-table: .8125rem;
     --fs-metric: 1.25rem;
   }
 }
