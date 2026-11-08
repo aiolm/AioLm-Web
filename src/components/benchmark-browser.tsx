@@ -39,6 +39,7 @@ import {
 } from "./benchmark-explorer-state";
 import { settingConditionLabel } from "./benchmark-setting-editor";
 import { servingPointId } from "@/lib/benchmark-points";
+import { measurementScope, sortAvailable } from "@/lib/benchmark-discovery";
 import { formatPointLabel, formatServingPointLabel } from "./benchmark-explorer-format";
 
 
@@ -154,6 +155,7 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
   }, [data?.next_cursor, dispatch]);
 
   const items = data?.items ?? [];
+  const scope = measurementScope(state.applied.measurement);
   const basis = basisPointOf(state.applied);
   const basisValue = basis ? "input_bytes" in basis ? servingPointId(basis.input_bytes, basis.concurrency, basis.max_output_tokens) : `${basis.prompt_tokens}/${basis.concurrency}` : "";
   const active = activeExplorerFilters(state.applied);
@@ -170,7 +172,7 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
   const showResultControls = items.length > 0 || filtered || basis !== null || state.applied.sort !== "";
   const basisLabel = basis
     ? "input_bytes" in basis
-      ? formatServingPointLabel(basis.input_bytes, basis.concurrency, basis.max_output_tokens)
+      ? formatServingPointLabel(basis.input_bytes, basis.concurrency, basis.max_output_tokens, basis.scope)
       : formatPointLabel(basis.prompt_tokens, basis.concurrency)
     : t("benchmark.Each result's own leading point");
   const clearFilters = (): void => {
@@ -256,7 +258,7 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
               <div className="explorer-field explorer-sort"><label className="explorer-field-label" id="explorer-sort-label" htmlFor="explorer-sort">{t("benchmark.Sort")}</label>
                 {/* Ranking measured speed needs a point to rank at, so those orders wait for one. */}
                 <UiSelect id="explorer-sort" form="explorer-filter-form" name="sort" labelledBy="explorer-sort-label" value={state.applied.sort || "newest"}
-                  options={Object.entries(EXPLORER_SORTS).filter(([value]) => state.applied.measurement === "legacy" ? !value.startsWith("input_bytes") && value !== "output_rate_desc" : !value.startsWith("context") && value !== "throughput_desc").map(([value, label]) => ({ value, label: t(`benchmark.${label}`), disabled: isPointSort(value) && basis === null }))}
+                  options={Object.entries(EXPLORER_SORTS).filter(([value]) => sortAvailable(value, scope)).map(([value, label]) => ({ value, label: t(`benchmark.${label}`), disabled: isPointSort(value) && basis === null }))}
                   onChange={value => dispatch({ type: "sort", value })} />
               </div>
             </div> : null}
@@ -264,7 +266,7 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
           {showResultControls ? <details className="explorer-measurement-controls">
             <summary>{t("benchmark.Match measurement conditions")}<span className="explorer-measurement-value">{basisLabel}</span></summary>
             <p className="explorer-field-hint">{t("benchmark.Applies immediately")} {t("benchmark.Results use each run's own measured point unless you choose one.")}</p>
-            <BenchmarkBasisPoint value={basisValue} legacy={state.applied.measurement === "legacy"}
+            <BenchmarkBasisPoint value={basisValue} scope={scope}
               only={state.applied.point_only === "1"} optionsPath={ready ? buildExplorerPointOptionsPath(state.applied) : ""}
               onSelect={value => dispatch({ type: "basisPoint", value })}
               onOnlyChange={value => dispatch({ type: "pointOnly", value })} />
@@ -335,9 +337,10 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
         <details className="explorer-guide">
         <summary><span id="explorer-guide-title" className="explorer-guide-title">{t("benchmark.Compare like for like")}</span></summary>
         <p className="explorer-guide-text">{t("benchmark.Match the model fingerprint, hardware, workload and measurement method before reading anything into a difference. Results published with a different method or workload measured different work.")}</p>
-        <p className="explorer-guide-text">{t("benchmark.Common API measurements use client-observed timing and UTF-8 output bytes, including reasoning. Reported token counters are optional and are not decode timing. Cache is as configured.")}</p>
+        <p className="explorer-guide-text">{t("benchmark.Common API measurements use client-observed timing and UTF-8 output bytes, including reasoning. Historical output-cap token counters are optional and are not decode timing. Cache is as configured.")}</p>
+        <p className="explorer-guide-text">{t("benchmark.Fixed-output results are the default scope: every request reported exactly the requested output tokens, so output tokens per second compare like for like only at the same method and operating point. Historical output-cap results keep their own scope and are never mixed with fixed output.")}</p>
         <p className="explorer-guide-text">{t("benchmark.Each metric shows the shared point median, range and observed sample count. Missing measurements stay unknown; neither bytes nor missing token counters are converted to tokens.")}</p>
-        <p className="explorer-guide-text">{t("benchmark.Serving points require input UTF-8 bytes, concurrency and output token cap together. Legacy token points remain in the explicit legacy scope. Configured input filters do not claim that every point completed.")}</p>
+        <p className="explorer-guide-text">{t("benchmark.Serving points require input UTF-8 bytes, concurrency and output tokens together. Legacy token points remain in the explicit legacy scope. Configured input filters do not claim that every point completed.")}</p>
         <p className="explorer-guide-text">{t("benchmark.A missing measurement is shown as an em dash (—), never as a zero. Sorting does not make different setups directly comparable.")}</p>
         </details>
         </div>

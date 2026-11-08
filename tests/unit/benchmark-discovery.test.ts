@@ -142,7 +142,7 @@ describe("discovery query validation", () => {
 });
 
 describe("discovery API and memory queries", () => {
-  it.each(SORT_VALUES.filter(s => !s.startsWith("input_bytes_") && s !== "output_rate_desc"))("pages %s without gaps, repeats or hidden records", async sort => {
+  it.each(SORT_VALUES.filter(s => !s.startsWith("input_bytes_") && s !== "output_rate_desc" && s !== "token_rate_desc"))("pages %s without gaps, repeats or hidden records", async sort => {
     for (let i = 0; i < 7; i++) { const r = run(`id${i}`, i === 0 ? null : i % 3); r.summary.setup!.vram_mb = i === 0 ? null : i % 3; r.summary.mean_tg_tps = i === 0 ? null : i % 3; r.summary.mean_e2e_ms = i === 0 ? null : i % 3; store.runs.set(r.public_id, r); }
     const hidden = run("hidden"); hidden.hidden = true; store.runs.set("hidden", hidden);
     const deleted = run("deleted"); deleted.deleted = true; store.runs.set("deleted", deleted);

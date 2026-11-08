@@ -1,6 +1,7 @@
 import type { Translator } from "@/i18n/types";
 import { benchmarkFallback } from "./benchmark-i18n";
 import type { ServingMetricKey } from "@aiolm/benchmark-contracts";
+import { FIXED_OUTPUT_MEASUREMENT, type ServingMeasurementScope } from "@/lib/benchmark-discovery";
 /**
  * Column contract for the measurement table. The published row shape is fixed
  * by `@aiolm/benchmark-contracts` (`$defs/row`), so columns are declared here in
@@ -51,8 +52,11 @@ function measurementColumns(t: Translator): readonly RowColumn[] {
   ];
 }
 
-/** Shared metric presentation for serving rows, points and comparison. */
-export function servingMetricColumns(t: Translator = benchmarkFallback): RowColumn[] {
+/**
+ * Shared metric presentation for serving rows, points and comparison. Fixed
+ * output leads with its exact reported token rate; otherwise the shared order holds.
+ */
+export function servingMetricColumns(t: Translator = benchmarkFallback, fixedOutput = false): RowColumn[] {
   const metrics: { key: ServingMetricKey; label: string; unit?: string; format: (value: unknown) => string }[] = [
     { key: "first_output_ms", label: "First observed output", unit: "ms", format: formatMilliseconds },
     { key: "first_content_ms", label: "First observed content", unit: "ms", format: formatMilliseconds },
@@ -68,16 +72,19 @@ export function servingMetricColumns(t: Translator = benchmarkFallback): RowColu
     { key: "reported_tokens_per_second", label: "Reported token rate", unit: "tok/s", format: throughput },
     { key: "peak_memory_bytes", label: "Peak process memory", format: (value) => formatCompactBytes(value, t) },
   ];
-  return metrics.map((metric) => ({ ...metric, label: t(`benchmark.${metric.label}`), numeric: true }));
+  const columns = metrics.map((metric) => ({ ...metric, label: t(`benchmark.${metric.label}`), numeric: true }));
+  return fixedOutput ? [...columns.filter(column => column.key === "reported_tokens_per_second"), ...columns.filter(column => column.key !== "reported_tokens_per_second")] : columns;
 }
 
-function servingColumns(t: Translator): RowColumn[] {
+function servingColumns(t: Translator, fixedOutput: boolean): RowColumn[] {
   return [
     { key: "input_bytes", label: t("benchmark.Input UTF-8 bytes"), unit: "B", numeric: true, format: formatCount },
     { key: "concurrency", label: t("benchmark.Concurrency"), numeric: true, format: formatCount },
-    { key: "max_output_tokens", label: t("benchmark.Maximum output token request"), unit: "tok", numeric: true, format: formatCount },
+    { key: "max_output_tokens", label: t(fixedOutput ? "benchmark.fixedOutputTokens" : "benchmark.Maximum output token request"), unit: "tok", numeric: true, format: formatCount },
     { key: "repetition", label: t("benchmark.Repetition"), numeric: true, format: formatCount },
     ...servingMetricColumns(t),
+    // Fixed-output evidence: one engine-reported completion count per launch slot, exactly as published.
+    { key: "reported_completion_tokens_by_request", label: t("benchmark.Reported completion tokens per request (launch order)"), unit: "tok", numeric: false, format: (value) => Array.isArray(value) ? value.join(", ") : formatCellValue(value, t) },
     { key: "usage_status", label: t("benchmark.Usage status"), numeric: false, format: (value) => value === "complete" ? t("benchmark.Usage counters complete") : value === "partial" ? t("benchmark.Usage counters partial") : value === "missing" ? t("benchmark.Usage not reported") : value === "invalid" ? t("benchmark.Usage response invalid or inconsistent") : formatCellValue(value, t) },
     { key: "finish_reasons", label: t("benchmark.Finish reasons (request order)"), numeric: false, format: (value) => Array.isArray(value) ? value.join(", ") : formatCellValue(value, t) },
     { key: "timing_source", label: t("benchmark.Timing source"), numeric: false, format: (value) => formatCellValue(value, t) },
@@ -111,6 +118,7 @@ export function buildRowColumns(
   tOrDetailed?: Translator | boolean,
   maybeDetailed?: boolean,
   schemaVersion?: unknown,
+  servingScope: ServingMeasurementScope | null = null,
 ): RowColumn[] {
   let t: Translator = benchmarkFallback;
   let detailed = !!maybeDetailed;
@@ -121,7 +129,9 @@ export function buildRowColumns(
     detailed = !!maybeDetailed;
   }
   if (schemaVersion === 3) {
-    const columns = servingColumns(t);
+    // Historical output-cap rows never carried per-request counts, so they get no empty evidence column.
+    const perRequest = rows.some((row) => Object.hasOwn(row, "reported_completion_tokens_by_request"));
+    const columns = servingColumns(t, servingScope === FIXED_OUTPUT_MEASUREMENT).filter((column) => perRequest || column.key !== "reported_completion_tokens_by_request");
     return detailed ? columns : columns.filter((column) => SERVING_CORE_KEYS[column.key]);
   }
   const seen = new Set<string>();

@@ -2,7 +2,7 @@ import type React from "react";
 import { formatGpuLabels } from "@/lib/gpu-labels";
 import { formatRuntimeVersionLabel } from "@aiolm/benchmark-contracts";
 import type { Translator } from "@/i18n/types";
-import type { BenchmarkSetup } from "@/lib/benchmark-discovery";
+import { FIXED_OUTPUT_MEASUREMENT, type BenchmarkSetup, type ServingMeasurementScope } from "@/lib/benchmark-discovery";
 import type { BenchmarkPoint, MetricStat, ServingMetricKey } from "@/lib/benchmark-points";
 import { benchmarkFallback } from "./benchmark-i18n";
 /**
@@ -66,8 +66,9 @@ export function formatPointLabel(promptTokens: number, concurrency: number): str
   return `${formatPromptLength(promptTokens)} / c${concurrency}`;
 }
 
-export function formatServingPointLabel(inputBytes: number, concurrency: number, maxTokens: number): string {
-  return `${inputBytes} B / c${concurrency} / max${maxTokens} tok`;
+/** Fixed-output points name exact reported tokens; historical points name only a request cap. */
+export function formatServingPointLabel(inputBytes: number, concurrency: number, maxTokens: number, scope: ServingMeasurementScope | null): string {
+  return `${inputBytes} B / c${concurrency} / ${scope === FIXED_OUTPUT_MEASUREMENT ? `${maxTokens} tok` : `max ${maxTokens} tok`}`;
 }
 export const SERVING_METRIC_LABELS: Record<ServingMetricKey, string> = {
   first_output_ms: "First output", first_content_ms: "First content", first_reasoning_ms: "First reasoning",
@@ -303,10 +304,17 @@ const METHOD_KEYS: Record<string, string> = {
   "warm-prompt-serving": "benchmark.method.warm-prompt-serving",
   "concurrent-prompt-serving": "benchmark.method.concurrent-prompt-serving",
 };
+/** Serving method versions measure different work, so each version has its own name. */
+const SERVING_METHOD_KEYS: Record<string, string> = {
+  "openai-chat-serving@2": "benchmark.method.openai-chat-serving@2",
+  "openai-chat-serving@1": "benchmark.method.openai-chat-serving@1",
+};
 
 /** Formats benchmark method id@version to a friendly name while retaining original identifier. */
 export function formatMethodName(method: string | null | undefined, t: Translator = benchmarkFallback): string {
   if (!method) return t("benchmark.Unknown");
+  const serving = SERVING_METHOD_KEYS[method];
+  if (serving) return `${t(serving)} (${method})`;
   const atIndex = method.lastIndexOf("@");
   const baseId = atIndex !== -1 ? method.slice(0, atIndex) : method;
   const version = atIndex !== -1 ? method.slice(atIndex + 1) : null;

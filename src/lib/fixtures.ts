@@ -103,4 +103,42 @@ export function syntheticServingSubmission(overrides: Partial<ServingPublicBench
   };
 }
 
+/**
+ * Contract-valid openai-chat-serving@2 fixture: every request reports exactly the
+ * fixed target. Synthetic evidence only; it describes no real model or engine.
+ */
+export function syntheticFixedOutputSubmission(target = 1024, overrides: Partial<ServingPublicBenchmarkSubmission> = {}): ServingPublicBenchmarkSubmission {
+  const historical = syntheticServingSubmission();
+  const concurrency = 2;
+  return syntheticServingSubmission({
+    submission_id: "00000000-0000-4000-8000-000000000004",
+    method: { id: "openai-chat-serving", version: 2 },
+    workload: { ...historical.workload, max_output_tokens: target, concurrencies: [concurrency], request_usage: true },
+    execution: {
+      ...historical.execution,
+      // ASCII-sorted request identities, including the declared fixed-output control.
+      settings: [
+        { target: "request", scope: [], name: "ignore_eos", value: true, unit: null, role: null },
+        { target: "request", scope: [], name: "max_tokens", value: target, unit: "tokens", role: null },
+        { target: "request", scope: [], name: "stream", value: true, unit: null, role: null },
+        { target: "request", scope: [], name: "stream_options.include_usage", value: true, unit: null, role: null },
+        { target: "request", scope: [], name: "temperature", value: 0, unit: null, role: null },
+      ],
+    },
+    measurements: {
+      status: "complete",
+      rows: [{
+        input_bytes: 4096, max_output_tokens: target, concurrency, repetition: 1,
+        first_output_ms: 50, first_content_ms: 50, first_reasoning_ms: null,
+        e2e_ms: 4000, content_bytes: target * 8, reasoning_bytes: 0, output_bytes: target * 8,
+        reported_prompt_tokens: null, reported_completion_tokens: target * concurrency, reported_cached_tokens: null,
+        reported_completion_tokens_by_request: [target, target],
+        usage_status: "partial", finish_reasons: ["length", "length"],
+        peak_memory_bytes: null, timing_source: "client", failed: false,
+      }],
+    },
+    ...overrides,
+  });
+}
+
 export { RECOVERY_FIXTURE };

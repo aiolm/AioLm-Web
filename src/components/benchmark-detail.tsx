@@ -19,6 +19,7 @@ import { buildRowColumns, isFailedRow } from "@/components/benchmark-detail-rows
 import { BenchmarkPointsPanel, ServingBenchmarkPointsPanel } from "@/components/benchmark-detail-points";
 import { formatMethodName, formatPromptLengths, formatWorkloadName } from "@/components/benchmark-explorer-format";
 import type { BenchmarkPoint } from "@/lib/benchmark-points";
+import { servingScopeOf, type ServingMeasurementScope } from "@/lib/benchmark-discovery";
 import { SERVING_METRIC_KEYS, servingMetricValues, type ServingMetricKey, type ServingBenchmarkPoint, type ServingBenchmarkRow } from "@aiolm/benchmark-contracts";
 import { ColumnHeading } from "./benchmark-i18n";
 import { servingMetricAbsence } from "./benchmark-evidence";
@@ -212,6 +213,7 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
   const retryCursor = rows === null ? null : rowsCursor;
   const { summary } = data;
   const serving = data.benchmark.schema_version === 3;
+  const servingScope = serving ? servingScopeOf(asRecord(data.benchmark.method)) : null;
   const workload = asRecord(data.benchmark.workload);
 
 
@@ -234,7 +236,7 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
         {/* What ran on which machine comes before any number read from it. */}
         <BenchmarkHardwareOverview benchmark={data.benchmark} />
         {serving
-          ? <ServingBenchmarkPointsPanel points={summary.serving_points ?? []} memoryScope={asRecord(data.benchmark.execution)?.memory_scope} requestUsage={workload?.request_usage} />
+          ? <ServingBenchmarkPointsPanel points={summary.serving_points ?? []} memoryScope={asRecord(data.benchmark.execution)?.memory_scope} requestUsage={workload?.request_usage} scope={servingScope} />
           : <BenchmarkPointsPanel points={summary.points ?? []} truncated={summary.points_truncated ?? false} />}
         <div className="detail-context-grid">
           <div className="detail-fact">
@@ -282,6 +284,7 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
             pageCount={pageCount}
             onPage={setVisiblePage}
             schemaVersion={data.benchmark.schema_version}
+            servingScope={servingScope}
             requestUsage={workload?.request_usage}
             memoryScope={asRecord(data.benchmark.execution)?.memory_scope}
           />
@@ -380,6 +383,7 @@ function RowsPreview({
   pageCount,
   onPage,
   schemaVersion,
+  servingScope,
   requestUsage,
   memoryScope,
 }: {
@@ -390,6 +394,7 @@ function RowsPreview({
   pageCount: number;
   onPage: (page: number) => void;
   schemaVersion: unknown;
+  servingScope: ServingMeasurementScope | null;
   requestUsage: unknown;
   memoryScope: unknown;
 }): React.JSX.Element {
@@ -403,7 +408,7 @@ function RowsPreview({
   });
   if (rows.length === 0 || filtered.length === 0) return <p className="muted">{t("benchmark.No rows.")}</p>;
   if (visible.length === 0) return <p className="muted">{t("benchmark.No rows on this page.")}</p>;
-  const columns = buildRowColumns(visible, t, showDetailed, schemaVersion);
+  const columns = buildRowColumns(visible, t, showDetailed, schemaVersion, servingScope);
   return (
     <div>
       <div className="detail-rows-toolbar">

@@ -19,7 +19,7 @@ accounts in v1.
   desktop app can open the page with a single-use handoff
   ([management handoff](docs/management-handoff.md)).
 - API: the wire contract is the OpenAPI document shipped by
-  `@aiolm/benchmark-contracts` 0.10.0
+  `@aiolm/benchmark-contracts` 0.11.0
   (`node_modules/@aiolm/benchmark-contracts/schema/openapi.json`). Routes:
   `POST /v1/upload-sessions`, `POST .../verify`, `GET ...`, `POST /v1/benchmark-runs`,
   `GET /v1/benchmark-runs`, `GET /v1/benchmark-runs/<id>`, `GET .../measurements`,
@@ -145,23 +145,27 @@ See `docs/deployment.md` and `docs/operations.md`.
 ## Contracts
 
 Validation, recovery encoding, and the schema/OpenAPI surface come from
-`@aiolm/benchmark-contracts` 0.10.0, installed from the vendored archive
-`vendor/aiolm-benchmark-contracts-0.10.0.tgz` and integrity-pinned in
+`@aiolm/benchmark-contracts` 0.11.0, installed from the vendored archive
+`vendor/aiolm-benchmark-contracts-0.11.0.tgz` and integrity-pinned in
 `package-lock.json`. The website re-exports that package rather than keeping a
 second copy of the rules, and never imports app sources at runtime. Details and
 the upgrade procedure in `docs/contracts-integration.md`.
 
-Contract 0.10.0 preserves legacy schema1/2 and accepts schema3
-`openai-chat-serving@1` results from any connected streaming text-chat engine,
-including an unknown public identity. New measurements distinguish exact input
-UTF-8 bytes, client-observed content/reasoning timing and optional reported
-token/cache counts. They do not claim cold cache or forced output length.
+Contract 0.11.0 preserves legacy schema1/2 and schema3 `openai-chat-serving@1`
+results, and accepts `openai-chat-serving@2` fixed-output results from any
+connected streaming text-chat engine that declares a fixed-output control,
+including an unknown public identity. Measurements distinguish exact input
+UTF-8 bytes and client-observed content/reasoning timing. In @2 every request
+reported exactly one of the eight shared output-token targets (1k–200k, with
+1k = 1,024) and each row keeps those per-request counts; @1 only capped output
+and its token/cache counts stay optional. Neither claims a cold cache.
 Public runtime identity and typed settings never derive from local connection
-IDs, process names or reference-file hashes/sizes. Discovery defaults to the
-new method; token-based results require explicit `measurement=legacy`.
+IDs, process names or reference-file hashes/sizes. Discovery defaults to fixed
+output; historical caps require explicit `measurement=openai-chat-serving@1` and
+token-based results require explicit `measurement=legacy`.
 Apply migration015 with the dedicated migration owner before deploying; it
 adds 13 generated identity columns without rewriting payloads or broadening
-runtime permissions.
+runtime permissions. Fixed output needs no further migration.
 
 ## Moderation
 

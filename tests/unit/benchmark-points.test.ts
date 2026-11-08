@@ -245,7 +245,8 @@ describe("shared API serving points", () => {
     const points = summarizeServingPoints([base(), { ...base(), max_output_tokens: 256 }]);
     expect(servingPointId(4096, 1, 128)).toBe("b4096/c1/o128");
     expect(parseServingPointId("b4096/c1/o128")).toEqual({ input_bytes: 4096, concurrency: 1, max_output_tokens: 128 });
-    for (const id of ["4096/1", "b4096/c1", "b4096/c0/o128", "b0/c1/o128", "b4096/c1/o0", "b04096/c1/o128", "b9007199254740992/c1/o128"]) {
+    expect(parseServingPointId("b4096/c1/o204800")).toEqual({ input_bytes: 4096, concurrency: 1, max_output_tokens: 204800 });
+    for (const id of ["4096/1", "b4096/c1", "b4096/c0/o128", "b0/c1/o128", "b4096/c1/o0", "b04096/c1/o128", "b9007199254740992/c1/o128", "b4096/c1/o204801"]) {
       expect(parseServingPointId(id)).toBeNull();
     }
     expect(defaultServingPoint(points)).toBe(points[0]);

@@ -5,10 +5,12 @@ import { ColumnHeading } from "./benchmark-i18n";
 import type { BenchmarkPoint } from "@/lib/benchmark-points";
 import { SERVING_METRIC_KEYS, type ServingBenchmarkPoint, type ServingMetricKey } from "@aiolm/benchmark-contracts";
 import { servingMetricColumns } from "./benchmark-detail-rows";
+import { FIXED_OUTPUT_MEASUREMENT, type ServingMeasurementScope } from "@/lib/benchmark-discovery";
 import { servingMetricAbsence } from "./benchmark-evidence";
 import {
   formatDuration,
   formatPointLabel,
+  formatServingPointLabel,
   formatPromptLength,
   formatSecondsSpread,
   formatLatency,
@@ -196,17 +198,21 @@ function MeasuredCell({ value, spread }: { value: string; spread: string | null 
 }
 
 /** Schema3 keeps the shared metric-specific sample counts and byte operating points. */
-export function ServingBenchmarkPointsPanel({ points, memoryScope, requestUsage }: {
+export function ServingBenchmarkPointsPanel({ points, memoryScope, requestUsage, scope }: {
   points: readonly ServingBenchmarkPoint[];
   memoryScope: unknown;
   requestUsage?: unknown;
+  /** Fixed output reads exact reported tokens; a historical cap or unknown method does not. */
+  scope: ServingMeasurementScope | null;
 }): React.JSX.Element {
   const { t } = useI18n();
   const [selectedIndex, setSelectedIndex] = useState(0);
   if (points.length === 0) return <p className="muted detail-points-empty">{t("benchmark.This result published no measurement that names an operating point, so there is no speed to report.")}</p>;
   const selected = points[Math.min(selectedIndex, points.length - 1)]!;
+  const fixed = scope === FIXED_OUTPUT_MEASUREMENT;
   const columns = servingMetricColumns(t);
-  const label = (point: ServingBenchmarkPoint): string => `${point.input_bytes} B / c${point.concurrency} / max ${point.max_output_tokens} tok`;
+  const cards = servingMetricColumns(t, fixed);
+  const label = (point: ServingBenchmarkPoint): string => formatServingPointLabel(point.input_bytes, point.concurrency, point.max_output_tokens, scope);
   const spread = (point: ServingBenchmarkPoint, key: ServingMetricKey, format: (value: unknown) => string): string | null => {
     const stat = point[key];
     return stat ? t("benchmark.{range} · n={samples}", { range: `${format(stat.min)}–${format(stat.max)}`, samples: stat.samples }) : null;
@@ -216,12 +222,12 @@ export function ServingBenchmarkPointsPanel({ points, memoryScope, requestUsage 
       <legend className="detail-chip-legend">{t("benchmark.Measured operating points")}</legend>
       <div className="detail-chip-row">{points.map((point, index) => <button type="button" className={point === selected ? "detail-chip detail-chip-on" : "detail-chip"} aria-pressed={point === selected} key={`${point.input_bytes}/${point.concurrency}/${point.max_output_tokens}`} onClick={() => setSelectedIndex(index)}>{label(point)}</button>)}</div>
     </fieldset>
-    <p className="muted detail-point-reading" role="status">{t("benchmark.Reading {point} over {samples} repetitions; output tokens are a requested maximum.", { point: label(selected), samples: selected.samples })}</p>
-    <p className="muted">{t("benchmark.Client-observed text and reasoning bytes are not tokens. First output is the first observed text or reasoning; reported token and cache counts may be unknown.")}</p>
+    <p className="muted detail-point-reading" role="status">{t(fixed ? "benchmark.Reading {point} over {samples} repetitions; every request reported exactly this many output tokens." : "benchmark.Reading {point} over {samples} repetitions; output tokens are a requested maximum.", { point: label(selected), samples: selected.samples })}</p>
+    <p className="muted">{t(fixed ? "benchmark.Output token rate divides the exact engine-reported completion tokens by the client-observed batch duration. Text and reasoning bytes are observed separately and are not tokens." : "benchmark.Client-observed text and reasoning bytes are not tokens. First output is the first observed text or reasoning; reported token and cache counts may be unknown.")}</p>
     {selected.output_bytes?.max === 0 ? <p className="muted">{t("benchmark.No output was observed. Zero bytes is known; first-output latency is unknown.")}</p> : null}
     <p className="muted">{t("benchmark.Memory scope")}: {memoryScope === "owned_process_tree" ? t("benchmark.Owned process tree") : memoryScope === "owned_root_process" ? t("benchmark.Owned root process") : memoryScope === "unavailable" ? t("benchmark.Unavailable for this process scope") : t("benchmark.Value not recorded")}{typeof memoryScope === "string" ? ` (${memoryScope})` : ""}.</p>
     <div className="detail-performance-grid">
-      {columns.map((column) => {
+      {cards.map((column) => {
         const key = column.key as ServingMetricKey;
         const stat = selected[key];
         return <div className="detail-metric-card" key={key}>
@@ -238,7 +244,7 @@ export function ServingBenchmarkPointsPanel({ points, memoryScope, requestUsage 
       <table className="data detail-points-table">
         <caption className="detail-points-caption">{t("benchmark.Every operating point this result measured. Each value is the median of that point's repetitions, with the range they covered below it.")}</caption>
         <thead><tr>
-          <th scope="col">{t("benchmark.Input UTF-8 bytes")}</th><th scope="col">{t("benchmark.Concurrency")}</th><th scope="col">{t("benchmark.Maximum output token request")}</th><th scope="col">{t("benchmark.Repetitions")}</th>
+          <th scope="col">{t("benchmark.Input UTF-8 bytes")}</th><th scope="col">{t("benchmark.Concurrency")}</th><th scope="col">{t(fixed ? "benchmark.fixedOutputTokens" : "benchmark.Maximum output token request")}</th><th scope="col">{t("benchmark.Repetitions")}</th>
           {columns.map((column) => <th scope="col" key={column.key}><ColumnHeading label={column.label} unit={column.unit} /></th>)}
         </tr></thead>
         <tbody>{points.map((point, index) => <tr key={`${point.input_bytes}/${point.concurrency}/${point.max_output_tokens}`} className={point === selected ? "detail-point-row detail-point-row-on" : "detail-point-row"}>

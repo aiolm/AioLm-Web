@@ -1,4 +1,4 @@
-import { GLOBAL_SEARCH_FILTER_KEYS, MODEL_INFO_SEARCH_KEYS, MODEL_QUERY_INFO_KEYS, POINT_OPTION_FIELD, RANGE_FILTER_KEYS, TEXT_FILTER_KEYS, TEXT_FILTER_MAX_LENGTH, type BenchmarkFilters, type OptionField, type TextFilterKey, type SettingDescriptor } from "../lib/benchmark-discovery";
+import { DEFAULT_MEASUREMENT, GLOBAL_SEARCH_FILTER_KEYS, MODEL_INFO_SEARCH_KEYS, MODEL_QUERY_INFO_KEYS, POINT_OPTION_FIELD, RANGE_FILTER_KEYS, TEXT_FILTER_KEYS, TEXT_FILTER_MAX_LENGTH, servingMethodVersion, type BenchmarkFilters, type OptionField, type TextFilterKey, type SettingDescriptor } from "../lib/benchmark-discovery";
 import { POINT_METRIC_KEYS, type PointMetric } from "../lib/benchmark-points";
 import type { ListCursor } from "../lib/pagination";
 
@@ -34,8 +34,9 @@ const pointRows = (old: boolean) => `jsonb_array_elements(case when jsonb_typeof
 function pointMatch(input: string, concurrency: string, cap?: string): string {
   return `jsonb_typeof(point->'${cap ? "input_bytes" : "prompt_tokens"}') = 'number' and (point->>'${cap ? "input_bytes" : "prompt_tokens"}')::double precision = ${input} and jsonb_typeof(point->'concurrency') = 'number' and (point->>'concurrency')::double precision = ${concurrency}${cap ? ` and jsonb_typeof(point->'max_output_tokens') = 'number' and (point->>'max_output_tokens')::double precision = ${cap}` : ""}`;
 }
-export function pointMetricExpression(metric: PointMetric | "output_bytes_per_second", input: string, concurrency: string, cap?: string): string {
-  if (metric !== "output_bytes_per_second" && !POINT_METRIC_KEYS.includes(metric)) throw new Error("Unknown point metric.");
+type ServingSortMetric = "output_bytes_per_second" | "reported_tokens_per_second";
+export function pointMetricExpression(metric: PointMetric | ServingSortMetric, input: string, concurrency: string, cap?: string): string {
+  if (metric !== "output_bytes_per_second" && metric !== "reported_tokens_per_second" && !POINT_METRIC_KEYS.includes(metric)) throw new Error("Unknown point metric.");
   return `(select (point->'${metric}'->>'median')::double precision from ${pointRows(!cap)} where ${pointMatch(input, concurrency, cap)} and jsonb_typeof(point->'${metric}'->'median') = 'number' limit 1)`;
 }
 type Bind = (value: string | number | null) => string;
@@ -44,7 +45,7 @@ export function sortExpression(filters: BenchmarkFilters, bind: Bind): string | 
   if (sort.startsWith("context_")) return numericExpression("context");
   if (sort.startsWith("input_bytes_")) return numericExpression("input_bytes");
   if (sort.startsWith("vram_")) return numericExpression("vram");
-  const metric = sort === "throughput_desc" ? "tg_tps" : sort === "output_rate_desc" ? "output_bytes_per_second" : sort === "duration_asc" ? "e2e_ms" : null;
+  const metric = sort === "throughput_desc" ? "tg_tps" : sort === "token_rate_desc" ? "reported_tokens_per_second" : sort === "output_rate_desc" ? "output_bytes_per_second" : sort === "duration_asc" ? "e2e_ms" : null;
   const input = legacy(filters) ? filters.point_tokens : filters.point_bytes;
   if (!metric || input === undefined || filters.point_concurrency === undefined) return null;
   return pointMetricExpression(metric, bind(input), bind(filters.point_concurrency), !legacy(filters) && filters.point_max_tokens !== undefined ? bind(filters.point_max_tokens) : undefined);
@@ -60,7 +61,9 @@ export function discoverySql(filters: BenchmarkFilters) {
   const values: (string | number | null)[] = [];
   const bind: Bind = value => { values.push(value); return `$${values.length}`; };
   const match = (field: SingleTextField, pattern: string) => ARRAY_TEXT_PATHS[field] ? `(${textExpression(field)} ilike ${pattern} and exists (select 1 from jsonb_array_elements_text(coalesce(${ARRAY_TEXT_PATHS[field]}, '[]'::jsonb)) as element(value) where value ilike ${pattern}))` : `${textExpression(field)} ilike ${pattern}`;
-  const clauses = ["deleted = false", "hidden = false", legacy(filters) ? "(benchmark->>'schema_version')::integer in (1, 2)" : "(benchmark->>'schema_version')::integer = 3 and method_id = 'openai-chat-serving' and method_version = 1"];
+  const scope = filters.measurement ?? DEFAULT_MEASUREMENT;
+  // The method version is a trusted constant of the scope, matching the partial (method_id, method_version) index.
+  const clauses = ["deleted = false", "hidden = false", scope === "legacy" ? "(benchmark->>'schema_version')::integer in (1, 2)" : `(benchmark->>'schema_version')::integer = 3 and method_id = 'openai-chat-serving' and method_version = ${servingMethodVersion(scope)}`];
   for (const key of TEXT_FILTER_KEYS) {
     if (!filters[key]) continue;
     if (key === "weight_bits") { clauses.push(`${textExpression(key)} = ${bind(filters[key]!)}`); continue; }

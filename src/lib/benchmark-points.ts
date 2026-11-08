@@ -1,4 +1,5 @@
 import {
+  MAX_SERVING_OUTPUT_TOKENS,
   SERVING_METRIC_KEYS,
   type ServingBenchmarkPoint,
   type ServingMetricKey,
@@ -273,6 +274,6 @@ export function parseServingPointId(value: string): Pick<ServingBenchmarkPoint, 
   const concurrency = wholeCount(Number(match[2]));
   const max_output_tokens = wholeCount(Number(match[3]));
   if (input_bytes === null || concurrency === null || max_output_tokens === null ||
-      input_bytes < 256 || input_bytes > 1048576 || concurrency > 64 || max_output_tokens > 65536) return null;
+      input_bytes < 256 || input_bytes > 1048576 || concurrency > 64 || max_output_tokens > MAX_SERVING_OUTPUT_TOKENS) return null;
   return { input_bytes, concurrency, max_output_tokens };
 }

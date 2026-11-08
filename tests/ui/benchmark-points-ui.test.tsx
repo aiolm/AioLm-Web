@@ -13,7 +13,7 @@ import {
 } from "@/components/benchmark-explorer-state";
 import type { BenchmarkPoint } from "@/lib/benchmark-points";
 import { summarizeBenchmark } from "@/lib/summary";
-import { syntheticServingSubmission } from "@/lib/fixtures";
+import { syntheticFixedOutputSubmission, syntheticServingSubmission } from "@/lib/fixtures";
 
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams("") }));
 
@@ -174,7 +174,7 @@ describe("reading engine-neutral serving points", () => {
     expect(html).toContain("sglang");
   });
   it("keeps caps distinct rather than reading a different serving point", () => {
-    const html = render(<BenchmarkExplorerTable items={[serving]} compare={[]} basis={{ input_bytes: 4096, concurrency: 1, max_output_tokens: 256 }} onToggleComparison={() => {}} />);
+    const html = render(<BenchmarkExplorerTable items={[serving]} compare={[]} basis={{ input_bytes: 4096, concurrency: 1, max_output_tokens: 256, scope: "openai-chat-serving@1" }} onToggleComparison={() => {}} />);
     expect(html).not.toContain("20.0 B/s");
     expect(html).not.toContain("50.0 ms");
   });
@@ -186,5 +186,14 @@ describe("reading engine-neutral serving points", () => {
     expect(html).not.toContain("Infinity");
     expect(html).not.toContain("NaN");
     expect(html).not.toContain(">0.0 B/s<");
+  });
+  it("reads fixed output as exact reported tok/s and never at a historical cap basis", () => {
+    const fixed: ExplorerItem = { public_id: "fixed", revision: 1, created_at: "2026-01-02T03:04:05.000Z", summary: summarizeBenchmark(syntheticFixedOutputSubmission(1024)) };
+    // 2 requests x 1024 exact tokens over 4 s.
+    const html = render(<BenchmarkExplorerTable items={[fixed]} compare={[]} basis={{ input_bytes: 4096, concurrency: 2, max_output_tokens: 1024, scope: "openai-chat-serving@2" }} onToggleComparison={() => {}} />);
+    expect(html).toContain("512.0 tok/s");
+    expect(html).not.toContain(" B/s<");
+    const otherMethod = render(<BenchmarkExplorerTable items={[fixed]} compare={[]} basis={{ input_bytes: 4096, concurrency: 2, max_output_tokens: 1024, scope: "openai-chat-serving@1" }} onToggleComparison={() => {}} />);
+    expect(otherMethod).not.toContain("512.0 tok/s");
   });
 });

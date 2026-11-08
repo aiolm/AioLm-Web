@@ -24,6 +24,7 @@ import { ServingBenchmarkPointsPanel } from "@/components/benchmark-detail-point
 import { summarizeBenchmark } from "@/lib/summary";
 import { summarizeServingPoints } from "@/lib/benchmark-points";
 import { servingBenchmark, sourcedServingBenchmark } from "../inference-benchmarks";
+import { syntheticFixedOutputSubmission, syntheticServingSubmission } from "@/lib/fixtures";
 
 const fetched = vi.hoisted(() => ({ data: null as unknown }));
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams("") }));
@@ -302,7 +303,7 @@ describe("serving detail and comparison", () => {
       { ...row, repetition: 0, output_bytes: 0, content_bytes: 0, reasoning_bytes: 0, first_output_ms: null, first_content_ms: null, first_reasoning_ms: null, reported_prompt_tokens: null, reported_completion_tokens: null, reported_cached_tokens: null },
       { ...row, repetition: 1, output_bytes: 0, content_bytes: 0, reasoning_bytes: 0, first_output_ms: null, first_content_ms: null, first_reasoning_ms: null, reported_prompt_tokens: 10, reported_completion_tokens: 0, reported_cached_tokens: null },
     ]);
-    const html = render(<ServingBenchmarkPointsPanel points={points} memoryScope="unavailable" />);
+    const html = render(<ServingBenchmarkPointsPanel points={points} memoryScope="unavailable" scope="openai-chat-serving@1" />);
     expect(html).toContain("No output was observed");
     expect(html).toContain("Observed reasoning");
     expect(html).toContain("Reported completion tokens");
@@ -318,17 +319,43 @@ describe("serving detail and comparison", () => {
     const left = makeItem("left", a), right = makeItem("right", b);
     expect(servingComparisonSignature(left)).toBe(servingComparisonSignature(right));
     const first = left.summary.serving_points![0]!;
-    const exact = render(<BenchmarkExplorerComparison items={[left, right]} basis={{ input_bytes: first.input_bytes, concurrency: first.concurrency, max_output_tokens: first.max_output_tokens }} onClear={() => {}} onRemove={() => {}} />);
+    const exact = render(<BenchmarkExplorerComparison items={[left, right]} basis={{ input_bytes: first.input_bytes, concurrency: first.concurrency, max_output_tokens: first.max_output_tokens, scope: "openai-chat-serving@1" }} onClear={() => {}} onRemove={() => {}} />);
     expect(exact).toContain("Reported token rate");
     expect(exact).toContain("b".repeat(40));
     expect(exact).toContain(a.workload.inputs[0]!.sha256);
     expect(exact).not.toContain("Selected results differ in method");
-    const missing = render(<BenchmarkExplorerComparison items={[left]} basis={{ input_bytes: first.input_bytes, concurrency: first.concurrency, max_output_tokens: first.max_output_tokens + 1 }} onClear={() => {}} onRemove={() => {}} />);
+    const missing = render(<BenchmarkExplorerComparison items={[left]} basis={{ input_bytes: first.input_bytes, concurrency: first.concurrency, max_output_tokens: first.max_output_tokens + 1, scope: "openai-chat-serving@1" }} onClear={() => {}} onRemove={() => {}} />);
     expect(missing).toContain("Not measured at this point");
     b.workload.inputs[0]!.sha256 = "c".repeat(64);
     const different = makeItem("different", b);
     expect(servingComparisonSignature(left)).not.toBe(servingComparisonSignature(different));
     const html = render(<BenchmarkExplorerComparison items={[left, different]} onClear={() => {}} onRemove={() => {}} />);
     expect(html).toContain("Selected results differ in method");
+  });
+
+  it("never presents fixed output and a historical cap at the same tuple as one method", () => {
+    const fixed: ExplorerItem = { public_id: "fixed", revision: 1, created_at: "2026-01-02T03:04:05.000Z", summary: summarizeBenchmark(syntheticFixedOutputSubmission(1024)) };
+    const capSubmission = syntheticServingSubmission();
+    capSubmission.workload = { ...capSubmission.workload, max_output_tokens: 1024, concurrencies: [2] };
+    capSubmission.measurements.rows = [{ ...capSubmission.measurements.rows[0]!, concurrency: 2, max_output_tokens: 1024, finish_reasons: ["stop", "stop"], e2e_ms: 100, output_bytes: 1000, content_bytes: 1000, reasoning_bytes: 0 }];
+    const cap: ExplorerItem = { public_id: "cap", revision: 1, created_at: "2026-01-02T03:04:05.000Z", summary: summarizeBenchmark(capSubmission) };
+    expect(servingComparisonSignature(fixed)).not.toBe(servingComparisonSignature(cap));
+    const html = render(<BenchmarkExplorerComparison items={[fixed, cap]} basis={{ input_bytes: 4096, concurrency: 2, max_output_tokens: 1024, scope: "openai-chat-serving@2" }} onClear={() => {}} onRemove={() => {}} />);
+    expect(html).toContain(t("benchmark.Fixed-output and historical output-cap results measure different work. Their token rates, durations and byte rates are not a same-method comparison."));
+    expect(html).toContain(t("benchmark.Different measurement method; not read at this basis point"));
+    // The fixed column reads 2 x 1024 exact tokens over 4 s; the cap column's 10000 B/s is not read at this basis.
+    expect(html).toContain("512.0");
+    expect(html).not.toContain("10000.0");
+    expect(render(<BenchmarkExplorerComparison items={[fixed]} onClear={() => {}} onRemove={() => {}} />)).not.toContain(t("benchmark.Different measurement method; not read at this basis point"));
+  });
+
+  it("leads fixed-output detail with the exact reported token rate and keeps byte observations", () => {
+    const points = summarizeServingPoints(syntheticFixedOutputSubmission(204800).measurements.rows);
+    const html = render(<ServingBenchmarkPointsPanel points={points} memoryScope="unavailable" scope="openai-chat-serving@2" />);
+    // The first metric read is the primary one; the full point table keeps the shared order after it.
+    expect(html.indexOf(t("benchmark.Reported token rate"))).toBeLessThan(html.indexOf(t("benchmark.First observed output")));
+    expect(html).toContain(t("benchmark.Observed output rate"));
+    const cap = render(<ServingBenchmarkPointsPanel points={points} memoryScope="unavailable" scope="openai-chat-serving@1" />);
+    expect(cap.indexOf(t("benchmark.First observed output"))).toBeLessThan(cap.indexOf(t("benchmark.Reported token rate")));
   });
 });

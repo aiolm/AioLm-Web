@@ -7,23 +7,32 @@ The readiness probe checks that every required migration is present.
 
 ## Common API serving queries
 
-`measurement=openai-chat-serving@1` is the default list scope. It selects only
-schema3 and the exact method/version, not a list of supported engine names.
-`measurement=legacy` explicitly selects schema1/2, including null old methods.
-Byte parameters and legacy token parameters cannot be mixed; invalid combinations
-return 400 rather than silently reinterpreting units.
+`measurement=openai-chat-serving@2` (fixed output) is the default list scope.
+Every accepted @2 request reported exactly the requested output tokens, so its
+`max_output_tokens` is an exact target, not a cap. `measurement=openai-chat-serving@1`
+explicitly selects historical output-cap results, where `max_output_tokens` was only
+a request limit. Each serving scope selects only schema3 and that exact
+method/version, not a list of supported engine names; @1 and @2 are never mixed in
+one list, basis point or same-method comparison. `measurement=legacy` explicitly
+selects schema1/2, including null old methods. Byte parameters and legacy token
+parameters cannot be mixed; invalid combinations return 400 rather than silently
+reinterpreting units. Accepted records are read as stored: no migration, rounding
+or reinterpretation of @1 caps as fixed output.
 
-The browser treats explicit default Common API scope as the default, not an
-active condition chip; Legacy remains an explicit condition. Search stays first
+The browser treats explicit default fixed-output scope as the default, not an
+active condition chip; the historical output-cap and Legacy scopes remain explicit
+conditions. Search stays first
 and detailed conditions start closed. Search text is limited to 120 trimmed
 Unicode code points: an overlong query disables submission and explains that
 length limit in the selected locale, without truncating or resetting the input.
 
 The list endpoint retains `{items,next_cursor}`, with 25 items by default and a
-maximum of 100. Cursor binding includes `engine-neutral-serving-v1`, method scope,
-canonical conditions and sort. Old, changed-filter or changed-scope cursors return
-400; clients recover by requesting the first page. Missing values sort last,
-with creation time/public ID as deterministic tie-breakers.
+maximum of 100. Cursor binding includes `engine-neutral-serving-v1`, method scope
+(the default included), canonical conditions and sort. Old, changed-filter or
+changed-scope cursors return 400; cursors minted while @1 was the implicit default
+therefore no longer match a default request. Clients recover by requesting the
+first page. Missing values sort last, with creation time/public ID as
+deterministic tie-breakers.
 
 ### Identity and workload filters
 
@@ -37,6 +46,15 @@ only from declared GGUF weight metadata, not names or runtime/KV settings.
 Scalar metadata is defined once in browser-safe `FILTER_DEFINITIONS`. The same
 definitions drive parsing and explorer controls; engine selection never clears
 generic conditions or disables another engine's fields.
+
+Desktop output-token and repetition presets are execution-UI choices. Fixed-output
+(@2) admission requires one of the shared package's eight `FIXED_OUTPUT_TOKENS`
+(1k–200k with 1k = 1,024) and exact per-request evidence; historical @1 records keep
+any accepted value. `max_output_tokens` and `repetitions` remain exact range
+filters in every serving scope, including accepted historical values outside those
+presets. No recorded value is rounded to a preset. Serving operating points still
+match the full `(input_bytes, concurrency, max_output_tokens)` tuple, and metric
+sample counts retain the observed repetitions.
 
 ### Recorded facts and missing information
 
@@ -135,7 +153,7 @@ rather than overlapping adjacent values or shrinking the shared type scale.
 | Range key (`_min` / `_max`) | Recorded meaning |
 | --- | --- |
 | `input_bytes` | Maximum configured `workload.inputs[].bytes`, not the largest completed point |
-| `max_output_tokens` | Requested output-token cap |
+| `max_output_tokens` | Exact fixed output tokens per request (@2) or requested output-token cap (@1) |
 | `max_concurrency` | Maximum configured client concurrency |
 | `repetitions` | Configured repetitions |
 | `model_size` | Recorded weight size in bytes |
@@ -153,21 +171,36 @@ summary backfill is required.
 ### Serving points and sorting
 
 Supply all of `point_bytes`, `point_concurrency`, `point_max_tokens`, or none.
-`point_only=1` requires all three. Facet point IDs are `b4096/c4/o128`.
-The cap is part of point identity; bytes are never treated as prompt tokens.
+`point_only=1` requires all three. Facet point IDs are `b4096/c4/o1024`.
+Output tokens are part of point identity; bytes are never treated as prompt tokens.
+In the fixed-output scope `point_max_tokens` must be one of the shared
+`FIXED_OUTPUT_TOKENS` (upper bound `MAX_SERVING_OUTPUT_TOKENS`, 204800); a
+non-preset value returns 400 because no accepted @2 record can carry it. The
+historical cap scope keeps @1's admitted bound and accepts any positive value up
+to 65536. Range filters on `max_output_tokens` stay broad in every scope.
 
 Serving sorts are `newest`, `oldest`, `input_bytes_asc`, `input_bytes_desc`,
-`vram_asc`, `vram_desc`, `output_rate_desc`, and `duration_asc`. The last two
-require the complete point triple and read its median `output_bytes_per_second`
-or `e2e_ms`. Input sorts read the maximum configured input, exactly like its
-range filters and cursor values. They do not rank independent hardware/engine
-quality or average across different workloads.
+`vram_asc`, `vram_desc`, `output_rate_desc`, and `duration_asc`; the fixed-output
+scope also offers `token_rate_desc`. Point sorts require the complete point
+triple and read its median `reported_tokens_per_second` (fixed output only),
+`output_bytes_per_second` or `e2e_ms`. `token_rate_desc` is rejected in the
+historical cap and legacy scopes: @1 completion counters were optional and not
+fixed, and legacy token aggregates are never used. Input sorts read the maximum
+configured input, exactly like its range filters and cursor values. They do not
+rank independent hardware/engine quality or average across different workloads.
 
 `summary.serving_points` uses the shared package's 13 metric keys and
 `{median,min,max,samples}` statistics. Unknown observations are excluded per
 metric, not replaced by zero. Zero duration or non-finite derived rates remain
 null; positive-duration zero output has a known zero byte rate. Legacy points
-remain exclusively in `summary.points`.
+remain exclusively in `summary.points`. Fixed-output displays lead with the
+reported output token rate and keep observed byte metrics; historical @1 displays
+keep the observed byte rate as their speed and label `max_output_tokens` as a cap.
+
+Accepted @2 rows carry `reported_completion_tokens_by_request` (one exact count
+per launch slot). Measurement chunks store accepted rows unchanged, so the
+measurements endpoint returns that evidence; detailed row tables show it only for
+rows that carry it. Older snapshots, revisions and checksums are never rewritten.
 
 ### Typed execution-option conditions
 
@@ -238,9 +271,19 @@ backfill. Tombstoning `benchmark` nulls all generated identity columns.
 Engine-name and variant substring searches are not promised to be index-backed;
 the fixed trigram set remains the seven columns specified by this migration.
 
+Fixed output adds no migration. The generated `method_version` column is an
+unconstrained integer, so @2 reads the same partial `(method_id, method_version,
+created_at desc, public_id desc)` index as @1 with an equality on the constant
+scope version. No table constraint bounds `max_output_tokens` or row evidence;
+those bounds belong to the installed package's admission validation. Existing
+@1 summaries, chunks, revisions and checksums are read unchanged.
+
 Schema3 host hardware is scoped `aiolm_host`; attached/unknown compute has
 unavailable engine memory, never proxy RSS. Detail/comparison views show method,
-exact input hashes/bytes, cap, corpus, warmup and usage-request differences.
+exact input hashes/bytes, output tokens (exact or cap by method), corpus, warmup
+and usage-request differences. A comparison that mixes @1 and @2 says they
+measure different work, and a serving basis point chosen in one scope is not
+read from results of the other method.
 Repository/revision is provenance, not a content digest or proof of unchanged
 weights. Existing receipts, hashes, chunking and management flows are unchanged.
 

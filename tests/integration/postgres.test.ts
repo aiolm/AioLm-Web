@@ -5,7 +5,7 @@ import postgres from "postgres";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { PublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
 import { randomBase64Url32, sha256HexUtf8 } from "@/lib/crypto";
-import { syntheticSubmission, syntheticServingSubmission } from "@/lib/fixtures";
+import { syntheticFixedOutputSubmission, syntheticSubmission, syntheticServingSubmission } from "@/lib/fixtures";
 import { pythonBenchmark } from "../inference-benchmarks";
 import { summarizeBenchmark, type BenchmarkSummary } from "@/lib/summary";
 import { weightBits } from "@/lib/weight-bits";
@@ -1640,6 +1640,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
   it.each([
     ...(["llama.cpp", "vllm", "mlx-vlm", "vllm-metal"] as const).map(engine => ({ generation: "legacy" as const, engine })),
     ...(["llama.cpp", "vllm", "mlx-vlm", "sglang", null] as const).map(engine => ({ generation: "serving" as const, engine })),
+    ...(["llama.cpp", "vllm", null] as const).map(engine => ({ generation: "fixed" as const, engine })),
   ].map((fixture, index) => ({ ...fixture, ip: `10.30.30.${index + 1}` })))("serves the authenticated $generation $engine HTTP publish flow against the real database", async ({ generation, engine, ip }) => {
     const s = need();
     if (!s || !db) return;
@@ -1664,6 +1665,8 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       let benchmark;
       if (generation === "serving") {
         benchmark = syntheticServingSubmission({ submission_id: submissionId, runtime: { name: engine, version: null, backend: null, variant: null, build: null, plugin_version: null } });
+      } else if (generation === "fixed") {
+        benchmark = syntheticFixedOutputSubmission(204800, { submission_id: submissionId, runtime: { name: engine, version: null, backend: null, variant: null, build: null, plugin_version: null } });
       } else if (engine === "llama.cpp") {
         benchmark = syntheticSubmission({ submission_id: submissionId });
       } else if (engine === "vllm" || engine === "mlx-vlm" || engine === "vllm-metal") {
@@ -1726,6 +1729,8 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       expect(stored?.benchmark).toMatchObject({ runtime: benchmark.runtime, model: benchmark.model, execution: benchmark.execution });
       expect(stored?.summary.setup?.runtime).toBe(benchmark.runtime.name);
       if (engine === "vllm-metal") expect(stored?.summary.setup).toMatchObject({ runtime_variant: "vllm-metal", runtime_plugin_version: "0.30.0" });
+      // Accepted fixed-output rows keep their per-request evidence unchanged in chunk storage.
+      if (generation === "fixed") expect((await s.getRowSlice(submissionId, 0, 10)).rows).toEqual(JSON.parse(JSON.stringify(benchmark.measurements.rows)));
       // Accepted replay without a fresh permit returns the same receipt.
       const replay = await submit(ownerSecret, false);
       expect(replay.status).toBe(200);
@@ -1743,6 +1748,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
   });
   describe("engine-neutral serving discovery and management", () => {
     const descriptor: SettingDescriptor = { target: "launch", scope: [], name: "batch", unit: null, role: null };
+    const historicalCap = { measurement: "openai-chat-serving@1" } as const;
     const memory = new InMemoryBenchmarkStore();
     const ids: string[] = [];
 
@@ -1809,7 +1815,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       ];
       const published = [];
       for (const [label, env] of cases) {
-        const fixture = syntheticServingSubmission({ environment: env });
+        const fixture = syntheticFixedOutputSubmission(1024, { environment: env });
         fixture.runtime.version = "host-inventory-regression";
         const retained = summarizeBenchmark(fixture);
         delete retained.setup!.host_gpus;
@@ -1848,7 +1854,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     });
 
     it.each(["llama.cpp", "vllm", "mlx-vlm", "sglang", null])("accepts and manages %s with canonical generated identity and tombstone erasure", async name => {
-      const fixture = syntheticServingSubmission();
+      const fixture = syntheticFixedOutputSubmission();
       fixture.runtime = { name, version: "1", variant: "arbitrary-safe", build: "build", plugin_version: "plugin", backend: null };
       fixture.model = { format: "unknown", status: "sha256", sha256: "b".repeat(64), size_bytes: 1234,
         source: { kind: "huggingface", repository: "Example/Model", revision: "c".repeat(40) } };
@@ -1887,7 +1893,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       const values: Array<SettingValue | null> = [2, 64, false, 0, [1, 2], [2, 1], null];
       const runs = [];
       for (const value of values) {
-        const fixture = syntheticServingSubmission();
+        const fixture = syntheticFixedOutputSubmission();
         fixture.execution.settings.push({ ...descriptor, value: Array.isArray(value) ? [...value] : value },
           { ...descriptor, scope: ["serve"], value: 64 });
         runs.push(await publish(fixture));
@@ -1912,7 +1918,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     });
 
     it("keeps context roles, scopes and units exact without aliasing typed settings into legacy fields", async () => {
-      const fixture = syntheticServingSubmission();
+      const fixture = syntheticFixedOutputSubmission();
       const context: SettingDescriptor = { target: "launch", scope: [], name: "ctx-size", unit: "tokens", role: "context.total_tokens" };
       fixture.execution.settings.push(
         { ...context, value: 32768 },
@@ -1936,11 +1942,11 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
 
     it("returns thirty typed C-ordered distinct visible facet values and respects every provided condition", async () => {
       for (let i = 0; i < 31; i++) {
-        const fixture = syntheticServingSubmission();
+        const fixture = syntheticFixedOutputSubmission();
         fixture.execution.settings.push({ ...descriptor, value: i });
         await publish(fixture);
       }
-      const fixture = syntheticServingSubmission();
+      const fixture = syntheticFixedOutputSubmission();
       fixture.execution.settings.push({ ...descriptor, value: 0 });
       await publish(fixture);
       const options = await store!.listOptions("setting_value", "", {}, descriptor);
@@ -1957,12 +1963,12 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     it("preserves canonical numeric exponents, string whitespace, arrays and overlimit omission before facet pagination", async () => {
       const values: SettingValue[] = [1e21, 1.1e21, 1e20, 1e-7, 0, false, "a  b", "a b", [1e21, 1e-7], [1e-7, 1e21]];
       for (const value of values) {
-        const fixture = syntheticServingSubmission();
+        const fixture = syntheticFixedOutputSubmission();
         fixture.execution.settings.push({ ...descriptor, value });
         await publish(fixture);
       }
       const oversized = { ...descriptor, name: "b".repeat(64), scope: Array.from({ length: 8 }, (_, i) => `${i}${"a".repeat(63)}`) };
-      const fixture = syntheticServingSubmission();
+      const fixture = syntheticFixedOutputSubmission();
       fixture.execution.settings.push({ ...oversized, value: "가".repeat(128) });
       await publish(fixture);
       for (const query of ["", "1e+21", "a  b", "[1e-7", "false"]) {
@@ -1970,13 +1976,13 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       }
       expect((await store!.listOptions("setting_value", "", {}, oversized)).options).toEqual([]);
       expect(await store!.listOptions("setting", "", {})).toEqual(await memory.listOptions("setting", "", {}));
-      const hidden = await publish(syntheticServingSubmission({ execution: { topology: "unknown", memory_scope: "unavailable", settings: [{ ...descriptor, value: "hidden" }] } }));
+      const hidden = await publish(syntheticFixedOutputSubmission(1024, { execution: { topology: "unknown", memory_scope: "unavailable", settings: [{ ...descriptor, value: "hidden" }] } }));
       await store!.setHidden(hidden.submission_id, true);
       memory.runs.get(hidden.public_id)!.hidden = true;
       expect(await store!.listOptions("setting_value", "", {}, descriptor)).toEqual(await memory.listOptions("setting_value", "", {}, descriptor));
     });
 
-    it("uses configured maximum inputs and exact serving point medians for sorting and cursor paging", async () => {
+    it("keeps historical caps in their own scope for configured inputs, exact cap medians and cursor paging", async () => {
       for (const [bytes, cap, duration] of [[16384, 128, 200], [8192, 128, 400], [4096, 256, 100]] as const) {
         const fixture = syntheticServingSubmission();
         fixture.workload.inputs.push({ bytes, sha256: "b".repeat(64) });
@@ -1988,9 +1994,10 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
         fixture.measurements.rows = fixture.workload.inputs.map(input => ({ ...measured, input_bytes: input.bytes }));
         await publish(fixture);
       }
-      expect((await parity({ input_bytes_max: 8192 })).items).toHaveLength(2);
+      expect((await parity({ ...historicalCap, input_bytes_max: 8192 })).items).toHaveLength(2);
+      expect((await parity({ input_bytes_max: 8192 })).items).toEqual([]);
       for (const sort of ["input_bytes_asc", "input_bytes_desc", "output_rate_desc", "duration_asc"] as const) {
-        const filters: BenchmarkFilters = { sort, point_bytes: 4096, point_concurrency: 1, point_max_tokens: 128 };
+        const filters: BenchmarkFilters = { ...historicalCap, sort, point_bytes: 4096, point_concurrency: 1, point_max_tokens: 128 };
         const expected = (await parity(filters)).items.map(run => run.public_id), actual = [];
         let cursor: ListCursor | null = null;
         do {
@@ -2000,13 +2007,47 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
         } while (cursor);
         expect(actual).toEqual(expected);
       }
-      expect((await parity({ point_bytes: 4096, point_concurrency: 1, point_max_tokens: 128, point_only: true })).items).toHaveLength(2);
-      for (const query of ["point_bytes=4096", "point_bytes=4096&point_concurrency=1", "point_tokens=512&point_concurrency=1", "context_min=1", "sort=output_rate_desc", "measurement=legacy&input_bytes_min=1"]) {
+      expect((await parity({ ...historicalCap, point_bytes: 4096, point_concurrency: 1, point_max_tokens: 128, point_only: true })).items).toHaveLength(2);
+      expect(await store!.listOptions("point", "", historicalCap)).toEqual(await memory.listOptions("point", "", historicalCap));
+      for (const query of ["point_bytes=4096", "point_bytes=4096&point_concurrency=1", "point_tokens=512&point_concurrency=1", "context_min=1", "sort=output_rate_desc", "measurement=legacy&input_bytes_min=1", "measurement=openai-chat-serving@1&sort=token_rate_desc&point_bytes=4096&point_concurrency=1&point_max_tokens=128"]) {
         expect(() => parseFilters(new URLSearchParams(query))).toThrow();
       }
     });
+    it("ranks fixed output by exact reported tok/s in SQL and memory, including 200k, without mixing historical caps", async () => {
+      const published = new Map<string, string>();
+      for (const [label, target, duration] of [["fast", 1024, 1000], ["slow", 1024, 2000], ["largest", 204800, 400000]] as const) {
+        const fixture = syntheticFixedOutputSubmission(target);
+        fixture.measurements.rows[0]!.e2e_ms = duration;
+        published.set(label, (await publish(fixture)).public_id);
+      }
+      const cap = syntheticServingSubmission();
+      cap.workload = { ...cap.workload, max_output_tokens: 1024, concurrencies: [2] };
+      cap.measurements.rows = [{ ...cap.measurements.rows[0]!, concurrency: 2, max_output_tokens: 1024, e2e_ms: 1, finish_reasons: ["length", "length"], reported_completion_tokens: 4096, usage_status: "partial" }];
+      const capRun = await publish(cap);
+      for (const sort of ["token_rate_desc", "output_rate_desc", "duration_asc"] as const) {
+        const filters: BenchmarkFilters = { sort, point_bytes: 4096, point_concurrency: 2, point_max_tokens: 1024 };
+        const expected = (await parity(filters)).items.map(run => run.public_id), actual = [];
+        expect(expected).not.toContain(capRun.public_id);
+        let cursor: ListCursor | null = null;
+        do {
+          const page = await store!.listRuns(filters, 1, cursor);
+          actual.push(...page.items.map(run => run.public_id));
+          cursor = page.next_cursor ? decodeDiscoveryCursor(page.next_cursor, filters) : null;
+        } while (cursor);
+        expect(actual).toEqual(expected);
+      }
+      expect((await parity({ sort: "token_rate_desc", point_bytes: 4096, point_concurrency: 2, point_max_tokens: 1024, point_only: true })).items.map(run => run.public_id)).toEqual([published.get("fast"), published.get("slow")]);
+      expect((await parity({ sort: "token_rate_desc", point_bytes: 4096, point_concurrency: 2, point_max_tokens: 204800, point_only: true })).items.map(run => run.public_id)).toEqual([published.get("largest")]);
+      expect((await parity({ max_output_tokens_min: 204800 })).items.map(run => run.public_id)).toEqual([published.get("largest")]);
+      expect(await store!.listOptions("point", "", {})).toEqual(await memory.listOptions("point", "", {}));
+      expect((await parity({ ...historicalCap, point_bytes: 4096, point_concurrency: 2, point_max_tokens: 1024, point_only: true })).items.map(run => run.public_id)).toEqual([capRun.public_id]);
+      // Per-request evidence survives chunk storage exactly as accepted.
+      expect((await store!.getRowSlice(capRun.submission_id, 0, 10)).rows[0]).not.toHaveProperty("reported_completion_tokens_by_request");
+      const largest = memory.runs.get(published.get("largest")!)!;
+      expect((await store!.getRowSlice(largest.submission_id, 0, 10)).rows[0]).toMatchObject({ reported_completion_tokens_by_request: [204800, 204800] });
+    });
     it("finds an undescribed model by its complete SHA and preserves missing derived rates", async () => {
-      const fixture = syntheticServingSubmission();
+      const fixture = syntheticFixedOutputSubmission();
       fixture.model = { format: "unknown", status: "sha256", sha256: "d".repeat(64), size_bytes: null };
       fixture.measurements.rows[0] = { ...fixture.measurements.rows[0]!, content_bytes: 1, reasoning_bytes: 0, output_bytes: 1, e2e_ms: 1e-320 };
       const first = await publish(fixture);
@@ -2016,7 +2057,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       const condition = { ...descriptor, op: "eq" as const, value: 2 };
       const other = { ...descriptor, scope: ["serve"], op: "eq" as const, value: 64 };
       for (const run of [first, second]) {
-        const benchmark = syntheticServingSubmission();
+        const benchmark = syntheticFixedOutputSubmission();
         benchmark.execution.settings.push({ ...descriptor, value: 2 }, { ...descriptor, scope: ["serve"], value: 64 });
         await publish(benchmark);
         expect(run.summary.serving_points![0]!.reported_tokens_per_second).toBeNull();

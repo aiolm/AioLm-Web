@@ -5,7 +5,7 @@ import {
   parseFilters, parseOptionsQuery, parseSettingCondition, parseSettingDescriptor, sortValue,
   type BenchmarkFilters, type SettingCondition, type SettingDescriptor,
 } from "@/lib/benchmark-discovery";
-import { syntheticServingSubmission, syntheticSubmission } from "@/lib/fixtures";
+import { syntheticFixedOutputSubmission, syntheticServingSubmission, syntheticSubmission } from "@/lib/fixtures";
 import { summarizeBenchmark } from "@/lib/summary";
 import { decodeDiscoveryCursor, discoveryBinding, encodeCursor, encodeDiscoveryCursor } from "@/lib/pagination";
 import { InMemoryBenchmarkStore } from "@/server/memory-store";
@@ -19,25 +19,30 @@ function params(conditions: SettingCondition[], other: Record<string, string> = 
   for (const condition of conditions) search.append("setting", canonicalSettingCondition(condition));
   return search;
 }
-function stored(id: string, benchmark: PublicBenchmarkSubmission = syntheticServingSubmission()): StoredRun {
+function stored(id: string, benchmark: PublicBenchmarkSubmission = syntheticFixedOutputSubmission()): StoredRun {
   return { public_id: id, submission_id: id, benchmark, summary: summarizeBenchmark(benchmark), description_md: "", owner_hash: "private", body_sha256: "private", revision: 1, hidden: false, deleted: false, row_count: benchmark.measurements.rows.length, byte_size: 1, created_at: "2026-01-01T00:00:00.000Z", updated_at: "2026-01-01T00:00:00.000Z" };
 }
 function withSettings(id: string, entries: Array<{ value: RecordedSetting["value"] } & Partial<SettingDescriptor>>) {
-  const benchmark = syntheticServingSubmission();
+  const benchmark = syntheticFixedOutputSubmission();
   benchmark.execution.settings = entries.map(entry => ({ ...descriptor, ...entry }));
   return stored(id, benchmark);
 }
+const historicalCap = { measurement: "openai-chat-serving@1" } as const;
 
 describe("engine-neutral query boundary", () => {
-  it("defaults to serving, permits explicit legacy, and never translates token conditions", () => {
+  it("defaults to fixed output, keeps the historical cap and legacy explicit, and never translates token conditions", () => {
     expect(parseFilters(new URLSearchParams())).toEqual({});
-    expect(parseFilters(new URLSearchParams("measurement=openai-chat-serving@1"))).toEqual({});
+    expect(parseFilters(new URLSearchParams("measurement=openai-chat-serving@2"))).toEqual({});
+    expect(parseFilters(new URLSearchParams("measurement=openai-chat-serving@1"))).toEqual(historicalCap);
     expect(parseFilters(new URLSearchParams("measurement=legacy&context_min=512&point_tokens=512&point_concurrency=1"))).toEqual({ measurement: "legacy", context_min: 512, point_tokens: 512, point_concurrency: 1 });
-    for (const query of ["measurement=other", "context_min=512", "parallel_min=1", "threads_min=1", "gpu_layers_min=0", "cache_type_k=f16", "point_tokens=512&point_concurrency=1", "sort=throughput_desc", "sort=context_asc", "measurement=legacy&input_bytes_min=4096", "measurement=legacy&request_usage=0", "measurement=legacy&point_bytes=4096&point_concurrency=1&point_max_tokens=128", "measurement=legacy&sort=output_rate_desc"]) expect(() => parseFilters(new URLSearchParams(query)), query).toThrow();
+    for (const query of ["measurement=other", "context_min=512", "parallel_min=1", "threads_min=1", "gpu_layers_min=0", "cache_type_k=f16", "point_tokens=512&point_concurrency=1", "sort=throughput_desc", "sort=context_asc", "measurement=legacy&input_bytes_min=4096", "measurement=legacy&request_usage=0", "measurement=legacy&point_bytes=4096&point_concurrency=1&point_max_tokens=128", "measurement=legacy&sort=output_rate_desc", "measurement=legacy&sort=token_rate_desc", "measurement=openai-chat-serving@1&point_bytes=4096&point_concurrency=1&point_max_tokens=128&sort=token_rate_desc"]) expect(() => parseFilters(new URLSearchParams(query)), query).toThrow();
   });
-  it("requires an entire serving point and enforces its bounds for sorting", () => {
-    expect(parseFilters(new URLSearchParams("point_bytes=4096&point_concurrency=4&point_max_tokens=128&point_only=1&sort=output_rate_desc"))).toEqual({ point_bytes: 4096, point_concurrency: 4, point_max_tokens: 128, point_only: true, sort: "output_rate_desc" });
-    for (const query of ["point_bytes=4096", "point_concurrency=4&point_max_tokens=128", "point_only=1", "point_only=true", "sort=duration_asc", "sort=output_rate_desc", "point_bytes=255&point_concurrency=1&point_max_tokens=128", "point_bytes=4096&point_concurrency=65&point_max_tokens=128", "point_bytes=4096&point_concurrency=1&point_max_tokens=65537"]) expect(() => parseFilters(new URLSearchParams(query)), query).toThrow();
+  it("requires an entire serving point, a fixed preset in the fixed scope, and the shared output bound", () => {
+    expect(parseFilters(new URLSearchParams("point_bytes=4096&point_concurrency=4&point_max_tokens=1024&point_only=1&sort=token_rate_desc"))).toEqual({ point_bytes: 4096, point_concurrency: 4, point_max_tokens: 1024, point_only: true, sort: "token_rate_desc" });
+    expect(parseFilters(new URLSearchParams("point_bytes=4096&point_concurrency=1&point_max_tokens=204800&sort=output_rate_desc"))).toEqual({ point_bytes: 4096, point_concurrency: 1, point_max_tokens: 204800, sort: "output_rate_desc" });
+    expect(parseFilters(new URLSearchParams("measurement=openai-chat-serving@1&point_bytes=4096&point_concurrency=4&point_max_tokens=128&sort=output_rate_desc"))).toEqual({ ...historicalCap, point_bytes: 4096, point_concurrency: 4, point_max_tokens: 128, sort: "output_rate_desc" });
+    expect(parseFilters(new URLSearchParams("measurement=openai-chat-serving@1&point_bytes=4096&point_concurrency=1&point_max_tokens=65536"))).toMatchObject({ point_max_tokens: 65536 });
+    for (const query of ["point_bytes=4096", "point_concurrency=4&point_max_tokens=1024", "point_only=1", "point_only=true", "sort=duration_asc", "sort=output_rate_desc", "sort=token_rate_desc", "point_bytes=4096&point_concurrency=1&point_max_tokens=128", "point_bytes=4096&point_concurrency=1&point_max_tokens=1000", "point_bytes=255&point_concurrency=1&point_max_tokens=1024", "point_bytes=4096&point_concurrency=65&point_max_tokens=1024", "point_bytes=4096&point_concurrency=1&point_max_tokens=204801", "measurement=openai-chat-serving@1&point_bytes=4096&point_concurrency=1&point_max_tokens=65537", "measurement=openai-chat-serving@1&point_bytes=4096&point_concurrency=1&point_max_tokens=204800"]) expect(() => parseFilters(new URLSearchParams(query)), query).toThrow();
   });
   it("parses new integer ranges, nullable identities and strict booleans", () => {
     expect(parseFilters(new URLSearchParams("input_bytes_min=4096&max_output_tokens_max=128&max_concurrency_min=4&model_size_min=0&ram_max=9007199254740991&physical_cores_min=0&repetitions_max=100&warmup=0&request_usage=1&runtime=sglang&runtime_variant=experimental&model_format=unknown"))).toMatchObject({ input_bytes_min: 4096, max_output_tokens_max: 128, max_concurrency_min: 4, model_size_min: 0, physical_cores_min: 0, warmup: false, request_usage: true, runtime: "sglang", model_format: "unknown" });
@@ -50,8 +55,9 @@ describe("engine-neutral query boundary", () => {
     expect(parseSettingCondition(range(-1, 3))).toEqual(range(-1, 3));
   });
   it("rejects unknown keys, missing nullable descriptor fields and unsafe values", () => {
-    const { unit: _unit, ...missingUnit } = descriptor;
-    const { role: _role, ...missingRole } = descriptor;
+    const missingUnit = { ...descriptor }, missingRole = { ...descriptor };
+    Reflect.deleteProperty(missingUnit, "unit");
+    Reflect.deleteProperty(missingRole, "role");
     for (const value of [null, [], { ...eq(1), extra: 1 }, { ...missingUnit, op: "eq", value: 1 }, { ...missingRole, op: "eq", value: 1 }, { ...eq(1), scope: Array(9).fill("serve") }, { ...eq(1), name: "bad/name" }, { ...eq(1), unit: "GB" }, { ...eq(1), role: "context" }, { ...eq(1), value: null }, { ...eq(1), value: Infinity }, { ...eq(1), value: Array(65).fill(1) }, { ...eq(1), value: [true] }, eq("-flag"), eq("private/path"), eq("x".repeat(129)), { ...descriptor, op: "range" }, { ...descriptor, op: "range", min: null }, { ...range(2, 1) }, { ...range(1, 2), value: 1 }]) expect(() => parseSettingCondition(value), JSON.stringify(value)).toThrow();
     expect(() => parseSettingDescriptor({ ...descriptor, value: 1 })).toThrow();
     expect(() => parseSettingCondition("{" )).toThrow();
@@ -72,30 +78,31 @@ describe("engine-neutral query boundary", () => {
     expect(parseOptionsQuery(request)).toEqual({ field: "setting_value", query: "", setting: descriptor, filters: { runtime: "sglang", setting: parseFilters(params(conditions)).setting } });
     expect(parseOptionsQuery(params(conditions, { field: "setting" })).filters.setting).toHaveLength(2);
     expect(parseOptionsQuery(new URLSearchParams("field=runtime&runtime=old&model_format=unknown")).filters).toEqual({ model_format: "unknown" });
-    expect(parseOptionsQuery(new URLSearchParams("field=point&point_bytes=4096&point_concurrency=1&point_max_tokens=128&point_only=1")).filters).toEqual({});
+    expect(parseOptionsQuery(new URLSearchParams("field=point&point_bytes=4096&point_concurrency=1&point_max_tokens=1024&point_only=1")).filters).toEqual({});
     for (const query of ["field=q", "field=unknown", "field=setting_value", "field=setting&option_setting={}", "measurement=legacy&field=setting"]) expect(() => parseOptionsQuery(new URLSearchParams(query))).toThrow();
   });
 });
 
 describe("canonical memory discovery", () => {
   it.each(["llama.cpp", "vllm", "mlx-vlm", "sglang", null])("accepts %s with unknown format, arbitrary variant and optional observations", async name => {
-    const store = new InMemoryBenchmarkStore(), benchmark = syntheticServingSubmission();
+    const store = new InMemoryBenchmarkStore(), benchmark = syntheticFixedOutputSubmission();
     benchmark.runtime.name = name; benchmark.runtime.variant = "experimental";
     store.runs.set("run", stored("run", benchmark));
     expect((await store.listRuns({}, 25, null)).items).toHaveLength(1);
     if (name) expect((await store.listOptions("runtime", "", {})).options).toEqual([{ value: name, count: 1 }]);
     else expect((await store.listOptions("runtime", "", {})).options).toEqual([]);
   });
-  it("selects legacy only explicitly and recovers absent identity from the accepted payload", async () => {
-    const store = new InMemoryBenchmarkStore(), legacy = stored("legacy", syntheticSubmission()), serving = stored("serving");
+  it("selects historical caps and legacy only explicitly and recovers absent identity from the accepted payload", async () => {
+    const store = new InMemoryBenchmarkStore(), legacy = stored("legacy", syntheticSubmission()), serving = stored("serving"), cap = stored("cap", syntheticServingSubmission());
     delete legacy.summary.identity; delete legacy.summary.schema_version;
-    store.runs.set("legacy", legacy); store.runs.set("serving", serving);
+    store.runs.set("legacy", legacy); store.runs.set("serving", serving); store.runs.set("cap", cap);
     expect((await store.listRuns({}, 25, null)).items.map(r => r.public_id)).toEqual(["serving"]);
+    expect((await store.listRuns(historicalCap, 25, null)).items.map(r => r.public_id)).toEqual(["cap"]);
     expect((await store.listRuns({ measurement: "legacy" }, 25, null)).items.map(r => r.public_id)).toEqual(["legacy"]);
     expect(legacy.summary.identity).toBeUndefined();
   });
   it("searches full SHA, repository/revision and all runtime identity fields without display parsing", () => {
-    const benchmark = syntheticServingSubmission();
+    const benchmark = syntheticFixedOutputSubmission();
     benchmark.model.sha256 = "d".repeat(64); benchmark.model.status = "sha256";
     benchmark.model.source = { kind: "huggingface", repository: "Org/model", revision: "e".repeat(40) };
     benchmark.runtime = { name: "sglang", version: "v9", backend: "GPU", build: "build7", variant: "variant9", plugin_version: "plugin4" };
@@ -111,11 +118,12 @@ describe("canonical memory discovery", () => {
     benchmark.workload.inputs.push({ bytes: 16384, sha256: "b".repeat(64) }); benchmark.workload.concurrencies = [1, 4];
     const summary = summarizeBenchmark(benchmark);
     expect(normalizeSetup(benchmark)).toMatchObject({ max_input_bytes: 16384, max_concurrency: 4, max_output_tokens: 128, request_usage: false });
-    expect(matchesFilters(summary, { input_bytes_max: 8192 })).toBe(false);
-    expect(matchesFilters(summary, { input_bytes_min: 16384, max_concurrency_min: 4, request_usage: false })).toBe(true);
-    expect(sortValue(summary, { sort: "input_bytes_asc" })).toBe(16384);
-    expect(sortValue(summary, { sort: "input_bytes_desc" })).toBe(16384);
-    expect(matchesFilters(summary, { point_bytes: 16384, point_concurrency: 1, point_max_tokens: 128, point_only: true })).toBe(false);
+    expect(matchesFilters(summary, { ...historicalCap, input_bytes_max: 8192 })).toBe(false);
+    expect(matchesFilters(summary, { ...historicalCap, input_bytes_min: 16384, max_concurrency_min: 4, request_usage: false })).toBe(true);
+    expect(matchesFilters(summary, { input_bytes_min: 16384 })).toBe(false);
+    expect(sortValue(summary, { ...historicalCap, sort: "input_bytes_asc" })).toBe(16384);
+    expect(sortValue(summary, { ...historicalCap, sort: "input_bytes_desc" })).toBe(16384);
+    expect(matchesFilters(summary, { ...historicalCap, point_bytes: 16384, point_concurrency: 1, point_max_tokens: 128, point_only: true })).toBe(false);
   });
   it("matches one exact setting element, including unit/role/scope and array order", () => {
     const summary = withSettings("run", [{ value: 2 }, { value: 64, scope: ["serve"] }, { value: [1, 2], name: "array" }, { value: false, name: "enabled" }, { value: 0, name: "zero" }, { value: null, name: "missing" }]).summary;
@@ -149,7 +157,7 @@ describe("canonical memory discovery", () => {
     expect(run.summary.setup).toMatchObject({ context_size: null, parallel: null, cache_type_k: null, cache_type_v: null });
   });
   it("enriches list and detail from the run's own host inventory while preserving selected-only filters and options", async () => {
-    const store = new InMemoryBenchmarkStore(), benchmark = syntheticServingSubmission();
+    const store = new InMemoryBenchmarkStore(), benchmark = syntheticFixedOutputSubmission();
     benchmark.environment!.cpu.name = "Distinct Host CPU";
     const hostGpu = { name: "Integrated Host GPU", vendor: "Host Vendor", vram_mb: null, integrated: true, driver: null };
     benchmark.environment!.installed_gpus = [hostGpu];
@@ -229,24 +237,54 @@ describe("canonical memory discovery", () => {
 });
 
 describe("serving point sort and cursor boundary", () => {
-  it("sorts the exact point median and leaves a different cap missing", async () => {
+  it("sorts a historical cap point by its byte rate in its own scope and leaves a different cap missing", async () => {
     const store = new InMemoryBenchmarkStore();
     for (const [id, e2e, bytes, cap] of [["fast", 100, 20, 128], ["slow", 200, 10, 128], ["different-cap", 1, 100, 256]] as const) {
       const benchmark = syntheticServingSubmission();
       benchmark.measurements.rows = [{ ...benchmark.measurements.rows[0], e2e_ms: e2e, output_bytes: bytes, content_bytes: bytes, reasoning_bytes: 0, max_output_tokens: cap }];
       store.runs.set(id, stored(id, benchmark));
     }
-    const filters: BenchmarkFilters = { point_bytes: 4096, point_concurrency: 1, point_max_tokens: 128, sort: "output_rate_desc" };
+    const filters: BenchmarkFilters = { ...historicalCap, point_bytes: 4096, point_concurrency: 1, point_max_tokens: 128, sort: "output_rate_desc" };
     expect((await store.listRuns(filters, 10, null)).items.map(r => r.public_id)).toEqual(["fast", "slow", "different-cap"]);
     expect((await store.listRuns({ ...filters, sort: "duration_asc" }, 10, null)).items.map(r => r.public_id)).toEqual(["fast", "slow", "different-cap"]);
     const first = await store.listRuns(filters, 1, null), next = await store.listRuns(filters, 1, decodeDiscoveryCursor(first.next_cursor, filters));
     expect(first.items[0].public_id).toBe("fast"); expect(next.items[0].public_id).toBe("slow");
-    expect((await store.listOptions("point", "", {})).options.map(o => o.value)).toEqual(["b4096/c1/o128", "b4096/c1/o256"]);
+    expect((await store.listOptions("point", "", historicalCap)).options.map(o => o.value)).toEqual(["b4096/c1/o128", "b4096/c1/o256"]);
+    // Historical caps never appear in the default fixed-output scope.
+    expect((await store.listRuns({}, 10, null)).items).toEqual([]);
+    expect((await store.listOptions("point", "", {})).options).toEqual([]);
+  });
+  it("ranks fixed output by exact reported tok/s at one method and point, including 200k", async () => {
+    const store = new InMemoryBenchmarkStore();
+    for (const [id, e2e, target] of [["fast", 1000, 1024], ["slow", 2000, 1024], ["different-target", 1, 4096], ["largest", 400000, 204800]] as const) {
+      const benchmark = syntheticFixedOutputSubmission(target);
+      benchmark.measurements.rows = [{ ...benchmark.measurements.rows[0]!, e2e_ms: e2e }];
+      store.runs.set(id, stored(id, benchmark));
+    }
+    // The same tuple measured only as a historical cap is a different method.
+    const cap = syntheticServingSubmission();
+    cap.workload.max_output_tokens = 1024; cap.workload.concurrencies = [2];
+    cap.measurements.rows = [{ ...cap.measurements.rows[0]!, concurrency: 2, max_output_tokens: 1024, e2e_ms: 1, finish_reasons: ["length", "length"], reported_completion_tokens: 4096, usage_status: "partial" }];
+    store.runs.set("cap", stored("cap", cap));
+    const filters: BenchmarkFilters = { point_bytes: 4096, point_concurrency: 2, point_max_tokens: 1024, sort: "token_rate_desc" };
+    // Results without this point sort last, newest/ID-descending, exactly like other missing values.
+    expect((await store.listRuns(filters, 10, null)).items.map(r => r.public_id)).toEqual(["fast", "slow", "largest", "different-target"]);
+    expect(sortValue(store.runs.get("fast")!.summary, filters)).toBe(2048);
+    expect(sortValue(store.runs.get("slow")!.summary, filters)).toBe(1024);
+    expect(sortValue(store.runs.get("different-target")!.summary, filters)).toBeNull();
+    const first = await store.listRuns(filters, 1, null), next = await store.listRuns(filters, 1, decodeDiscoveryCursor(first.next_cursor, filters));
+    expect(first.items[0].public_id).toBe("fast"); expect(next.items[0].public_id).toBe("slow");
+    expect((await store.listRuns({ ...filters, point_only: true }, 10, null)).items.map(r => r.public_id)).toEqual(["fast", "slow"]);
+    const largest = { point_bytes: 4096, point_concurrency: 2, point_max_tokens: 204800, point_only: true, sort: "token_rate_desc" } as const;
+    expect((await store.listRuns(largest, 10, null)).items.map(r => r.public_id)).toEqual(["largest"]);
+    expect(sortValue(store.runs.get("largest")!.summary, largest)).toBe(1024);
+    expect((await store.listOptions("point", "", {})).options.map(o => o.value)).toEqual(["b4096/c2/o1024", "b4096/c2/o4096", "b4096/c2/o204800"]);
+    expect((await store.listRuns({ ...historicalCap, point_bytes: 4096, point_concurrency: 2, point_max_tokens: 1024, point_only: true }, 10, null)).items.map(r => r.public_id)).toEqual(["cap"]);
   });
   it("pages configured input sorts with missing last, newest timestamp and descending ID ties", async () => {
     const store = new InMemoryBenchmarkStore();
     for (const id of ["a", "b", "newer", "small", "missing"]) {
-      const benchmark = syntheticServingSubmission();
+      const benchmark = syntheticFixedOutputSubmission();
       if (id !== "small") benchmark.workload.inputs.push({ bytes: 16384, sha256: "b".repeat(64) });
       const run = stored(id, benchmark);
       if (id === "newer") run.created_at = "2026-01-02T00:00:00.000Z";
@@ -266,10 +304,10 @@ describe("serving point sort and cursor boundary", () => {
   });
   it("binds sorted/deduplicated canonical conditions and default scope stably", () => {
     const filters: BenchmarkFilters = { setting: [eq(false), range(0, 10)] };
-    expect(discoveryBinding(filters)).toBe(discoveryBinding({ measurement: "openai-chat-serving@1", setting: [range(0, 10), eq(false), eq(false)] }));
+    expect(discoveryBinding(filters)).toBe(discoveryBinding({ measurement: "openai-chat-serving@2", setting: [range(0, 10), eq(false), eq(false)] }));
     const token = encodeDiscoveryCursor("2026-01-01T00:00:00Z", "a", filters, null);
     expect(decodeDiscoveryCursor(token, { setting: [range(0, 10), eq(false)] })?.publicId).toBe("a");
-    for (const changed of [{ setting: [eq(true), range(0, 10)] }, { measurement: "legacy" }, { point_bytes: 4096, point_concurrency: 1, point_max_tokens: 256 } ] as BenchmarkFilters[]) expect(() => decodeDiscoveryCursor(token, changed)).toThrow();
+    for (const changed of [{ setting: [eq(true), range(0, 10)] }, { measurement: "legacy" }, { ...historicalCap, setting: [eq(false), range(0, 10)] }, { point_bytes: 4096, point_concurrency: 1, point_max_tokens: 4096 } ] as BenchmarkFilters[]) expect(() => decodeDiscoveryCursor(token, changed)).toThrow();
     expect(() => decodeDiscoveryCursor(encodeCursor("2026-01-01T00:00:00Z", "a"), {})).toThrow();
   });
 });

@@ -30,6 +30,7 @@ import {
   formatServingMetric,
 } from "./benchmark-explorer-format";
 import { defaultPoint, findPoint, pointMedian, defaultServingPoint, findServingPoint, type BenchmarkPoint, type ServingBenchmarkPoint } from "@/lib/benchmark-points";
+import { FIXED_OUTPUT_MEASUREMENT, summaryServingScope } from "@/lib/benchmark-discovery";
 import { formatWeightPrecision, modelPublisher, modelValue } from "./benchmark-model-identity";
 import { selectedGpuRecord, servingMetricAbsence } from "./benchmark-evidence";
 import { BenchmarkModelInformation } from "./benchmark-model-information";
@@ -92,7 +93,7 @@ function MetricCell({ value, spread }: { value: string; spread: string | null })
   );
 }
 
-function servingSpread(key: "first_output_ms" | "output_bytes_per_second", point: ServingBenchmarkPoint | null, t: Translator): string | null {
+function servingSpread(key: "first_output_ms" | "output_bytes_per_second" | "reported_tokens_per_second", point: ServingBenchmarkPoint | null, t: Translator): string | null {
   const stat = point?.[key];
   if (!point || !stat) return null;
   if (stat.min === stat.max) return stat.samples === point.samples ? null : `n=${stat.samples}`;
@@ -119,6 +120,9 @@ export function BenchmarkExplorerTable({
   const legacyBasis = basis && "prompt_tokens" in basis ? basis : null;
   const basisLabel = legacyBasis ? formatPointLabel(legacyBasis.prompt_tokens, legacyBasis.concurrency) : null;
   const servingBasis = basis && "input_bytes" in basis ? basis : null;
+  // Fixed output reports an exact token count per request, so its speed is reported tok/s;
+  // historical output-cap rows keep their client-observed byte rate.
+  const fixedOutput = items.length > 0 && items.every(item => summaryServingScope(item.summary) === FIXED_OUTPUT_MEASUREMENT);
   if (items.every(item => item.summary.schema_version === 3)) return <table className="explorer-table">
     <caption className="explorer-table-caption">{t("benchmark.Client-observed API measurements. Sorting is not an independently verified hardware or engine ranking.")}</caption>
     <thead className="explorer-table-head">
@@ -136,7 +140,7 @@ export function BenchmarkExplorerTable({
           <ColumnHeading label={t("benchmark.First output")} />
         </th>
         <th scope="col" className="explorer-head-cell explorer-head-numeric explorer-head-decode">
-          <ColumnHeading label={t("benchmark.Observed output B/s")} />
+          <ColumnHeading label={t(fixedOutput ? "benchmark.Reported output tok/s" : "benchmark.Observed output B/s")} />
         </th>
         <th scope="col" className="explorer-head-cell explorer-head-setup">
           <ColumnHeading label={t("benchmark.Test conditions")} />
@@ -145,7 +149,9 @@ export function BenchmarkExplorerTable({
     </thead>
     <tbody className="explorer-table-body">{items.map(item => {
       const summary = item.summary;
-      const shown = servingBasis ? findServingPoint(summary.serving_points, servingBasis.input_bytes, servingBasis.concurrency, servingBasis.max_output_tokens) : defaultServingPoint(summary.serving_points);
+      const fixed = summaryServingScope(summary) === FIXED_OUTPUT_MEASUREMENT;
+      const rateKey = fixed ? "reported_tokens_per_second" : "output_bytes_per_second";
+      const shown = servingBasis ? servingBasis.scope === summaryServingScope(summary) ? findServingPoint(summary.serving_points, servingBasis.input_bytes, servingBasis.concurrency, servingBasis.max_output_tokens) : null : defaultServingPoint(summary.serving_points);
       const selected = isCompared(compare, item.public_id);
       const identity = { model: summary.model_label, hardware: summary.hardware_label };
       const gpuList = extractGpuList(summary);
@@ -161,9 +167,9 @@ export function BenchmarkExplorerTable({
         <th scope="row" aria-label={summary.model_label} className="explorer-cell explorer-cell-identity explorer-cell-model"><Link className="explorer-detail-link" href={localizedPath(locale, `${explorerDetailHref(item.public_id)}${search ? `?${search}` : ""}`)}>{summary.model_label}</Link><FactList className="explorer-model-facts" facts={[{ key: "format", label: t("benchmark.Model format"), value: summary.identity?.model_format ?? t("benchmark.Unknown") }, { key: "quantization", label: t("benchmark.Weight quantization"), value: formatWeightPrecision(summary.model_info ?? null, t) }]} /><BenchmarkModelInformation publicId={item.public_id} recordedName={summary.model_info?.name} compact /></th>
         <ExplorerCell label={t("benchmark.Hardware and engine")} className="explorer-cell-environment"><FactList className="explorer-environment-facts explorer-serving-environment" facts={environmentSummary} /></ExplorerCell>
         <ExplorerCell label={t("benchmark.First output")} className="explorer-cell-numeric explorer-cell-prefill"><MetricCell value={!shown ? t("benchmark.Not measured at this point") : shown.first_output_ms ? formatServingMetric("first_output_ms", shown.first_output_ms.median, t) : servingMetricAbsence("first_output_ms", { outputBytes: shown.output_bytes?.max }, t)} spread={servingSpread("first_output_ms", shown, t)} /></ExplorerCell>
-        <ExplorerCell label={t("benchmark.Observed output B/s")} className="explorer-cell-numeric explorer-cell-decode"><MetricCell value={!shown ? t("benchmark.Not measured at this point") : shown.output_bytes_per_second ? formatServingMetric("output_bytes_per_second", shown.output_bytes_per_second.median, t) : servingMetricAbsence("output_bytes_per_second", {}, t)} spread={servingSpread("output_bytes_per_second", shown, t)} /></ExplorerCell>
+        <ExplorerCell label={t(fixed ? "benchmark.Reported output tok/s" : "benchmark.Observed output B/s")} className="explorer-cell-numeric explorer-cell-decode"><MetricCell value={!shown ? t("benchmark.Not measured at this point") : shown[rateKey] ? formatServingMetric(rateKey, shown[rateKey]!.median, t) : servingMetricAbsence(rateKey, {}, t)} spread={servingSpread(rateKey, shown, t)} /></ExplorerCell>
         <ExplorerCell label={t("benchmark.Test conditions")} className="explorer-cell-setup">
-          <span className="explorer-setup-line">{shown ? t("benchmark.{bytes} B input · {concurrency} requests · max {tokens} output tokens", { bytes: shown.input_bytes, concurrency: shown.concurrency, tokens: shown.max_output_tokens }) : t("benchmark.Not measured at this point")}</span>
+          <span className="explorer-setup-line">{shown ? t(fixed ? "benchmark.{bytes} B input · {concurrency} requests · exactly {tokens} output tokens each" : "benchmark.{bytes} B input · {concurrency} requests · max {tokens} output tokens", { bytes: shown.input_bytes, concurrency: shown.concurrency, tokens: shown.max_output_tokens }) : t("benchmark.Not measured at this point")}</span>
           {shown ? <span className="explorer-setup-line">{t("benchmark.{count} measurements", { count: shown.samples })}</span> : null}
         </ExplorerCell>
       </tr>;

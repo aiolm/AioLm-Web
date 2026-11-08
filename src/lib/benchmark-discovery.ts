@@ -1,4 +1,4 @@
-import type { BenchmarkCorpus, PublicBenchmarkSubmission, RecordedSetting, ServingExecution } from "@aiolm/benchmark-contracts";
+import { FIXED_OUTPUT_TOKENS, HISTORICAL_CAP_MAX_OUTPUT_TOKENS, MAX_SERVING_OUTPUT_TOKENS, type BenchmarkCorpus, type PublicBenchmarkSubmission, type RecordedSetting, type ServingExecution } from "@aiolm/benchmark-contracts";
 import { findPoint, pointMedian, findServingPoint, servingPointMedian } from "./benchmark-points";
 import type { BenchmarkSummary } from "./summary";
 import { isWeightBitValue, weightBits } from "./weight-bits";
@@ -99,11 +99,47 @@ export const MODEL_INFO_SEARCH_KEYS = ["name", "architecture", "size_label", "qu
 export const MODEL_QUERY_INFO_KEYS = ["name", "repository", "revision", "artifact", "sha256"] as const;
 export const POINT_OPTION_FIELD = "point";
 export type OptionField = Exclude<TextFilterKey, "q"> | "point" | "setting" | "setting_value";
-export const SORT_VALUES = ["newest", "oldest", "input_bytes_asc", "input_bytes_desc", "vram_asc", "vram_desc", "output_rate_desc", "duration_asc", "context_asc", "context_desc", "throughput_desc"] as const;
+export const SORT_VALUES = ["newest", "oldest", "input_bytes_asc", "input_bytes_desc", "vram_asc", "vram_desc", "token_rate_desc", "output_rate_desc", "duration_asc", "context_asc", "context_desc", "throughput_desc"] as const;
 export type BenchmarkSort = typeof SORT_VALUES[number];
-export const MEASUREMENT_VALUES = ["openai-chat-serving@1", "legacy"] as const;
+/** Speed sorts are read at one complete operating point, never across a result's grid. */
+export const POINT_SORT_VALUES = ["token_rate_desc", "output_rate_desc", "throughput_desc", "duration_asc"] as const satisfies readonly BenchmarkSort[];
+/** Every request produced exactly the requested, engine-reported completion tokens. */
+export const FIXED_OUTPUT_MEASUREMENT = "openai-chat-serving@2";
+/** Historical serving scope: max_output_tokens was only a request cap. */
+export const OUTPUT_CAP_MEASUREMENT = "openai-chat-serving@1";
+export const MEASUREMENT_VALUES = [FIXED_OUTPUT_MEASUREMENT, OUTPUT_CAP_MEASUREMENT, "legacy"] as const;
 export type MeasurementScope = typeof MEASUREMENT_VALUES[number];
-export const DEFAULT_MEASUREMENT: MeasurementScope = "openai-chat-serving@1";
+export type ServingMeasurementScope = Exclude<MeasurementScope, "legacy">;
+export const DEFAULT_MEASUREMENT: MeasurementScope = FIXED_OUTPUT_MEASUREMENT;
+const SERVING_METHOD_VERSIONS: Record<ServingMeasurementScope, 1 | 2> = { [FIXED_OUTPUT_MEASUREMENT]: 2, [OUTPUT_CAP_MEASUREMENT]: 1 };
+/** Explorer addresses keep the default scope implicit; an unknown value is not a scope. */
+export function measurementScope(value: string | null | undefined): MeasurementScope {
+  return value && (MEASUREMENT_VALUES as readonly string[]).includes(value) ? value as MeasurementScope : DEFAULT_MEASUREMENT;
+}
+export function servingMethodVersion(scope: ServingMeasurementScope): 1 | 2 {
+  return SERVING_METHOD_VERSIONS[scope];
+}
+/** Serving scope of a recorded method; null for legacy and unknown methods. */
+export function servingScopeOf(method: { id?: unknown; version?: unknown } | null | undefined): ServingMeasurementScope | null {
+  if (method?.id !== "openai-chat-serving") return null;
+  return method.version === 2 ? FIXED_OUTPUT_MEASUREMENT : method.version === 1 ? OUTPUT_CAP_MEASUREMENT : null;
+}
+/** Accepted identity decides the scope; a display label is only read when identity was never stored. */
+export function summaryServingScope(summary: { schema_version?: number; identity?: { method_id: string | null; method_version: number | null } | null; method_label?: string }): ServingMeasurementScope | null {
+  if (summary.schema_version !== 3) return null;
+  if (summary.identity) return servingScopeOf({ id: summary.identity.method_id, version: summary.identity.method_version });
+  return summary.method_label === FIXED_OUTPUT_MEASUREMENT || summary.method_label === OUTPUT_CAP_MEASUREMENT ? summary.method_label : null;
+}
+/** Fixed-output points name one of the shared presets; historical caps keep any accepted value. */
+export function isServingOutputInScope(maxOutputTokens: number, scope: MeasurementScope): boolean {
+  if (scope === "legacy" || !Number.isSafeInteger(maxOutputTokens) || maxOutputTokens < 1) return false;
+  return scope === FIXED_OUTPUT_MEASUREMENT ? FIXED_OUTPUT_TOKENS.includes(maxOutputTokens) && maxOutputTokens <= MAX_SERVING_OUTPUT_TOKENS : maxOutputTokens <= HISTORICAL_CAP_MAX_OUTPUT_TOKENS;
+}
+/** Token units never cross into byte scopes; exact token rates exist only for fixed output. */
+export function sortAvailable(sort: string, scope: MeasurementScope): boolean {
+  if (scope === "legacy") return !sort.startsWith("input_bytes_") && sort !== "output_rate_desc" && sort !== "token_rate_desc";
+  return !sort.startsWith("context_") && sort !== "throughput_desc" && (sort !== "token_rate_desc" || scope === FIXED_OUTPUT_MEASUREMENT);
+}
 export interface BenchmarkPointSelection {
   point_tokens?: number; point_bytes?: number; point_concurrency?: number; point_max_tokens?: number; point_only?: boolean;
 }
@@ -194,9 +230,11 @@ export function matchesSetting(setting: RecordedSetting, condition: SettingCondi
 }
 export function parseFilters(search: URLSearchParams): BenchmarkFilters {
   if (search.toString().length > DISCOVERY_MAX_QUERY_BYTES) throw new DiscoveryQueryError("Encoded query must be at most 8192 bytes.");
-  const measurement = search.get("measurement") || DEFAULT_MEASUREMENT;
-  if (!MEASUREMENT_VALUES.includes(measurement as MeasurementScope)) throw new DiscoveryQueryError("Invalid measurement scope.");
-  const out: BenchmarkFilters = measurement === "legacy" ? { measurement: "legacy" } : {};
+  const requested = search.get("measurement") || DEFAULT_MEASUREMENT;
+  if (!(MEASUREMENT_VALUES as readonly string[]).includes(requested)) throw new DiscoveryQueryError("Invalid measurement scope.");
+  const measurement = requested as MeasurementScope;
+  // The default scope stays implicit, so an explicit default and an omitted one bind identically.
+  const out: BenchmarkFilters = measurement === DEFAULT_MEASUREMENT ? {} : { measurement };
   for (const key of TEXT_FILTER_KEYS) {
     const value = search.get(key)?.trim();
     if (key === "weight_bits" && value && (!isWeightBitValue(Number(value)) || String(Number(value)) !== value)) throw new DiscoveryQueryError("weight_bits must be a supported weight bit count.");
@@ -230,12 +268,12 @@ export function parseFilters(search: URLSearchParams): BenchmarkFilters {
     if (measurement === "legacy") throw new DiscoveryQueryError("Setting conditions require serving measurements.");
     out.setting = normalizeSettingConditions(settings.map(parseSettingCondition));
   }
-  Object.assign(out, parseBasisPoint(search, measurement as MeasurementScope));
+  Object.assign(out, parseBasisPoint(search, measurement));
   const sort = search.get("sort");
   if (sort && !SORT_VALUES.includes(sort as BenchmarkSort)) throw new DiscoveryQueryError("Invalid sort.");
   if (sort && sort !== "newest") out.sort = sort as BenchmarkSort;
-  if ((measurement === "legacy" && (sort?.startsWith("input_bytes_") || sort === "output_rate_desc")) || (measurement !== "legacy" && (sort?.startsWith("context_") || sort === "throughput_desc"))) throw new DiscoveryQueryError("Sort is not available in this measurement scope.");
-  if ((sort === "throughput_desc" || sort === "output_rate_desc" || sort === "duration_asc") && out.point_concurrency === undefined) throw new DiscoveryQueryError("This sort requires a complete operating point.");
+  if (sort && !sortAvailable(sort, measurement)) throw new DiscoveryQueryError("Sort is not available in this measurement scope.");
+  if ((POINT_SORT_VALUES as readonly string[]).includes(sort ?? "") && out.point_concurrency === undefined) throw new DiscoveryQueryError("This sort requires a complete operating point.");
   return out;
 }
 function parseBasisPoint(search: URLSearchParams, measurement: MeasurementScope): BenchmarkPointSelection {
@@ -251,7 +289,7 @@ function parseBasisPoint(search: URLSearchParams, measurement: MeasurementScope)
   const names = measurement === "legacy" ? ["point_tokens", "point_concurrency"] as const : ["point_bytes", "point_concurrency", "point_max_tokens"] as const;
   const count = names.filter(name => out[name] !== undefined).length;
   if (count > 0 && count !== names.length) throw new DiscoveryQueryError("Give all operating point coordinates together.");
-  if (measurement !== "legacy" && count && (out.point_bytes! < 256 || out.point_bytes! > 1048576 || out.point_concurrency! > 64 || out.point_max_tokens! > 65536)) throw new DiscoveryQueryError("Serving operating point is out of bounds.");
+  if (measurement !== "legacy" && count && (out.point_bytes! < 256 || out.point_bytes! > 1048576 || out.point_concurrency! > 64 || !isServingOutputInScope(out.point_max_tokens!, measurement))) throw new DiscoveryQueryError("Serving operating point is out of bounds.");
   const only = search.get("point_only");
   if (only !== null && only !== "" && only !== "0" && only !== "1") throw new DiscoveryQueryError("point_only must be 0 or 1.");
   if (only === "1") {
@@ -342,8 +380,8 @@ export function selectedPoint(summary: BenchmarkSummary, filters: BenchmarkFilte
   return filters.point_bytes === undefined || filters.point_max_tokens === undefined ? null : findServingPoint(summary.serving_points, filters.point_bytes, filters.point_concurrency, filters.point_max_tokens);
 }
 export function matchesFilters(summary: BenchmarkSummary, filters: BenchmarkFilters, workload?: PublicBenchmarkSubmission["workload"]): boolean {
-  const serving = summary.schema_version === 3 && summary.identity?.method_id === "openai-chat-serving" && summary.identity?.method_version === 1;
-  if ((filters.measurement ?? DEFAULT_MEASUREMENT) === "legacy" ? summary.schema_version === 3 : !serving) return false;
+  const scope = filters.measurement ?? DEFAULT_MEASUREMENT;
+  if (scope === "legacy" ? summary.schema_version === 3 : summaryServingScope(summary) !== scope) return false;
   return TEXT_FILTER_KEYS.every(k => !filters[k] || textValues(summary, k).some(v => k === "weight_bits" ? v === filters[k] : v.toLowerCase().includes(filters[k]!.toLowerCase()))) && RANGE_FILTER_KEYS.every(k => {
     const min = filters[`${k}_min`], max = filters[`${k}_max`];
     if (min === undefined && max === undefined) return true;
@@ -360,7 +398,7 @@ export function sortValue(summary: BenchmarkSummary, filters: BenchmarkFilters):
   if (sort.startsWith("context_")) return summary.setup?.prompt_length ?? null;
   if (sort.startsWith("input_bytes_")) return summary.setup?.max_input_bytes ?? null;
   if (sort.startsWith("vram_")) return summary.setup?.vram_mb ?? null;
-  if (sort !== "throughput_desc" && sort !== "output_rate_desc" && sort !== "duration_asc") return null;
+  if (!(POINT_SORT_VALUES as readonly string[]).includes(sort)) return null;
   if ((filters.measurement ?? DEFAULT_MEASUREMENT) === "legacy") return pointMedian(filters.point_tokens === undefined || filters.point_concurrency === undefined ? null : findPoint(summary.points, filters.point_tokens, filters.point_concurrency), sort === "throughput_desc" ? "tg_tps" : "e2e_ms");
-  return servingPointMedian(filters.point_bytes === undefined || filters.point_concurrency === undefined || filters.point_max_tokens === undefined ? null : findServingPoint(summary.serving_points, filters.point_bytes, filters.point_concurrency, filters.point_max_tokens), sort === "output_rate_desc" ? "output_bytes_per_second" : "e2e_ms");
+  return servingPointMedian(filters.point_bytes === undefined || filters.point_concurrency === undefined || filters.point_max_tokens === undefined ? null : findServingPoint(summary.serving_points, filters.point_bytes, filters.point_concurrency, filters.point_max_tokens), sort === "token_rate_desc" ? "reported_tokens_per_second" : sort === "output_rate_desc" ? "output_bytes_per_second" : "e2e_ms");
 }

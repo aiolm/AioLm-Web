@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import {
   DESCRIPTION_MAX_CODEPOINTS,
+  FIXED_OUTPUT_TOKENS,
+  MAX_SERVING_OUTPUT_TOKENS,
   PUBLICATION_MAX_ROWS,
   PUBLICATION_MAX_UTF8_BYTES,
   RECOVERY_FIXTURE,
@@ -19,7 +21,7 @@ import {
   validateDescriptionMd,
   validatePublicBenchmark,
 } from "@aiolm/benchmark-contracts";
-import { syntheticSubmission } from "../src/lib/fixtures";
+import { syntheticFixedOutputSubmission, syntheticServingSubmission, syntheticSubmission } from "../src/lib/fixtures";
 
 /**
  * Offline verification that this repository really consumes the versioned
@@ -33,7 +35,10 @@ import { syntheticSubmission } from "../src/lib/fixtures";
  *    bounds, `validatePublicBenchmark`, the publication snapshot round-trip,
  *    the recovery round-trip against `RECOVERY_FIXTURE`, origin normalization,
  *    and the recoverable/terminal service-error classification.
- * 4. The shared JSON Schema and OpenAPI documents resolve and parse.
+ * 4. Fixed-output policy (the eight output presets, the serving upper bound and
+ *    exact per-request evidence) is the package's, while historical output-cap
+ *    submissions remain valid in their own method version.
+ * 5. The shared JSON Schema and OpenAPI documents resolve and parse.
  *
  * Runs unconditionally in CI (`npm run contracts:check`). Set
  * CONTRACTS_TARBALL_PATH to additionally compare a candidate archive against
@@ -122,6 +127,39 @@ check("benchmark validation accepts a valid submission and rejects a broken one"
     rejected = true;
   }
   assert(rejected, "an unknown schema_version was accepted");
+});
+
+check("fixed-output policy comes from the package and historical caps stay valid", () => {
+  assert(JSON.stringify(FIXED_OUTPUT_TOKENS) === JSON.stringify([1024, 4096, 8192, 16384, 32768, 65536, 131072, 204800]), `fixed presets are ${JSON.stringify(FIXED_OUTPUT_TOKENS)}`);
+  assert(MAX_SERVING_OUTPUT_TOKENS === 204800, `serving output bound is ${MAX_SERVING_OUTPUT_TOKENS}`);
+  for (const target of FIXED_OUTPUT_TOKENS) validatePublicBenchmark(syntheticFixedOutputSubmission(target));
+  const historicalCap = (tokens: number) => {
+    const cap = syntheticServingSubmission();
+    cap.workload.max_output_tokens = tokens;
+    cap.execution.settings = cap.execution.settings.map(setting => setting.name === "max_tokens" ? { ...setting, value: tokens } : setting);
+    cap.measurements.rows = cap.measurements.rows.map(row => ({ ...row, max_output_tokens: tokens }));
+    return cap;
+  };
+  validatePublicBenchmark(historicalCap(65536));
+  const fixed = syntheticFixedOutputSubmission(204800);
+  const row = fixed.measurements.rows[0]!;
+  const invalid: Array<[string, unknown]> = [
+    ["missing per-request evidence", { ...fixed, measurements: { ...fixed.measurements, rows: [{ ...row, reported_completion_tokens_by_request: undefined }] } }],
+    ["an early stop", { ...fixed, measurements: { ...fixed.measurements, rows: [{ ...row, reported_completion_tokens_by_request: [204799, 204800], reported_completion_tokens: 409599 }] } }],
+    ["unequal counts with a matching sum", { ...fixed, measurements: { ...fixed.measurements, rows: [{ ...row, reported_completion_tokens_by_request: [204799, 204801] }] } }],
+    ["a non-preset target", syntheticFixedOutputSubmission(1000)],
+    ["a historical cap above 65536", historicalCap(65537)],
+    ["historical cap rows carrying fixed-output evidence", { ...syntheticServingSubmission(), measurements: { status: "complete", rows: syntheticServingSubmission().measurements.rows.map(r => ({ ...r, reported_completion_tokens_by_request: [128] })) } }],
+  ];
+  for (const [name, candidate] of invalid) {
+    let rejected = false;
+    try {
+      validatePublicBenchmark(JSON.parse(JSON.stringify(candidate)));
+    } catch {
+      rejected = true;
+    }
+    assert(rejected, `a submission with ${name} was accepted`);
+  }
 });
 
 check("publication snapshot round-trips through the package", () => {

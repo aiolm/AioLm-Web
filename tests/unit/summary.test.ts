@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { summarizeServingPoints, validatePublicBenchmark } from "@aiolm/benchmark-contracts";
-import { syntheticServingSubmission, syntheticSubmission } from "@/lib/fixtures";
+import { syntheticFixedOutputSubmission, syntheticServingSubmission, syntheticSubmission } from "@/lib/fixtures";
 import { normalizeIdentity, summarizeBenchmark, withCanonicalIdentity } from "@/lib/summary";
 import { servingBenchmark, sourcedServingBenchmark } from "../inference-benchmarks";
 
@@ -109,6 +109,16 @@ describe("API serving summary", () => {
     expect(summary.serving_points![0]!.reported_tokens_per_second).toBeNull();
     expect(JSON.stringify(summary)).not.toMatch(/Infinity|NaN/);
     expect(JSON.stringify(benchmark)).toBe(before);
+  });
+
+  it("summarizes accepted 200k fixed output as method v2 with exact reported token rates", () => {
+    const benchmark = validatePublicBenchmark(syntheticFixedOutputSubmission(204800));
+    const summary = summarizeBenchmark(benchmark);
+    expect(summary.identity).toMatchObject({ method_id: "openai-chat-serving", method_version: 2 });
+    expect(summary.method_label).toBe("openai-chat-serving@2");
+    expect(summary.setup).toMatchObject({ max_output_tokens: 204800, request_usage: true });
+    // 2 requests x 204800 exact tokens over 4 s.
+    expect(summary.serving_points![0]).toMatchObject({ max_output_tokens: 204800, reported_tokens_per_second: { median: 102400, min: 102400, max: 102400, samples: 1 } });
   });
 
   it("keeps legacy token points and means out of the serving measurement shape", () => {

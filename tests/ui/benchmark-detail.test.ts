@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { syntheticSubmission } from "@/lib/fixtures";
+import { syntheticFixedOutputSubmission, syntheticSubmission } from "@/lib/fixtures";
 import { pythonBenchmark, servingBenchmark, sourcedServingBenchmark } from "../inference-benchmarks";
 import {
   describeGpu,
@@ -160,6 +160,15 @@ describe("engine-neutral serving setup and measurements", () => {
     for (const key of ["ttft_ms", "tg_tps", "pp_tps", "tpot_ms", "prompt_tokens"]) expect(keys).not.toContain(key);
     expect(columns.find(column => column.key === "output_bytes")?.format(0)).toBe("0");
     expect(columns.find(column => column.key === "reported_completion_tokens")?.format(null)).toBe(DETAIL_MISSING);
+  });
+
+  it("shows exact per-request fixed-output evidence only for rows that carry it", () => {
+    const fixedRows = syntheticFixedOutputSubmission(204800).measurements.rows as unknown as Record<string, unknown>[];
+    const fixed = buildRowColumns(fixedRows, undefined, true, 3, "openai-chat-serving@2");
+    expect(fixed.find(column => column.key === "reported_completion_tokens_by_request")?.format(fixedRows[0]!.reported_completion_tokens_by_request)).toBe("204800, 204800");
+    const historical = buildRowColumns(servingBenchmark().measurements.rows as unknown as Record<string, unknown>[], undefined, true, 3, "openai-chat-serving@1");
+    expect(historical.map(column => column.key)).not.toContain("reported_completion_tokens_by_request");
+    expect(fixed.find(column => column.key === "max_output_tokens")?.label).not.toBe(historical.find(column => column.key === "max_output_tokens")?.label);
   });
 });
 

@@ -1,6 +1,7 @@
 import { formatCpuCores, runtimeVersionLabel } from "./benchmark-explorer-format";
 import type { Translator } from "@/i18n/types";
 import { benchmarkFallback } from "./benchmark-i18n";
+import { FIXED_OUTPUT_MEASUREMENT, servingScopeOf } from "@/lib/benchmark-discovery";
 /**
  * The reported test setup, grouped the way a reader checks one: which weights
  * ran, on what machine, under which operating system, with which runtime and
@@ -226,7 +227,7 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
           const item = asRecord(input);
           return `${displayText(item?.bytes, t)} B · ${displayText(item?.sha256, t)}`;
         }) : displayText(null, t) },
-        { label: t("benchmark.Maximum output token request"), unit: t("benchmark.tokens"), value: displayText(workload?.max_output_tokens, t) },
+        { label: t(servingScopeOf(method) === FIXED_OUTPUT_MEASUREMENT ? "benchmark.fixedOutputTokens" : "benchmark.Maximum output token request"), unit: t("benchmark.tokens"), value: displayText(workload?.max_output_tokens, t) },
         { label: t("benchmark.Concurrency"), value: joinList(workload?.concurrencies, t) },
         { label: t("benchmark.Repetitions"), value: displayText(workload?.repetitions, t) },
         { label: t("benchmark.Warmup"), value: displayText(workload?.warmup, t) },

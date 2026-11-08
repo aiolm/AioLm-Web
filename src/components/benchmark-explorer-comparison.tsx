@@ -14,10 +14,11 @@ import {
   type ExplorerItem,
   type ExplorerBasis,
 } from "./benchmark-explorer-state";
-import { formatLatency, formatDuration, formatMeasuredPoints, formatPointLabel, formatPromptLengths, formatSampleCount, formatThroughput, formatComparisonCpu, formatComparisonExecution, formatComparisonOs, formatComparisonRuntime, formatComparisonVram } from "./benchmark-explorer-format";
+import { formatLatency, formatDuration, formatMeasuredPoints, formatPointLabel, formatPromptLengths, formatSampleCount, formatServingPointLabel, formatThroughput, formatComparisonCpu, formatComparisonExecution, formatComparisonOs, formatComparisonRuntime, formatComparisonVram } from "./benchmark-explorer-format";
 import { defaultPoint, findPoint, pointMedian, type BenchmarkPoint } from "@/lib/benchmark-points";
 import { formatBaseModels, formatWeightPrecision, modelIdentityComparison, modelPublisher, modelValue } from "./benchmark-model-identity";
 import { defaultServingPoint, findServingPoint, type ServingBenchmarkPoint } from "@/lib/benchmark-points";
+import { FIXED_OUTPUT_MEASUREMENT, summaryServingScope } from "@/lib/benchmark-discovery";
 import { servingMetricColumns } from "./benchmark-detail-rows";
 import { asRecord, displayText, formatByteSize } from "./benchmark-detail-format";
 import type { ServingMetricKey } from "@aiolm/benchmark-contracts";
@@ -47,13 +48,22 @@ function shownPoint(item: ExplorerItem, basis: ExplorerBasis | null): BenchmarkP
   return basis ? findPoint(item.summary.points, basis.prompt_tokens, basis.concurrency) : defaultPoint(item.summary.points);
 }
 
+/** A serving basis belongs to one method scope; the same tuple under another method is different work. */
+function basisMethodMismatch(item: ExplorerItem, basis: ExplorerBasis | null): boolean {
+  return item.summary.schema_version === 3 && basis !== null && "input_bytes" in basis && summaryServingScope(item.summary) !== basis.scope;
+}
+
 function shownServingPoint(item: ExplorerItem, basis: ExplorerBasis | null): ServingBenchmarkPoint | null {
-  if (item.summary.schema_version !== 3 || (basis && "prompt_tokens" in basis)) return null;
+  if (item.summary.schema_version !== 3 || (basis && "prompt_tokens" in basis) || basisMethodMismatch(item, basis)) return null;
   return basis ? findServingPoint(item.summary.serving_points, basis.input_bytes, basis.concurrency, basis.max_output_tokens) : defaultServingPoint(item.summary.serving_points);
 }
 
-function servingLabel(point: ServingBenchmarkPoint): string {
-  return `${point.input_bytes} B / c${point.concurrency} / max ${point.max_output_tokens} tok`;
+function servingLabel(item: ExplorerItem, point: ServingBenchmarkPoint): string {
+  return formatServingPointLabel(point.input_bytes, point.concurrency, point.max_output_tokens, summaryServingScope(item.summary));
+}
+
+function unshownServingPoint(item: ExplorerItem, basis: ExplorerBasis | null, t: Translator): string {
+  return t(basisMethodMismatch(item, basis) ? "benchmark.Different measurement method; not read at this basis point" : "benchmark.Not measured at this point");
 }
 
 /** Source method and workload facts, never an engine name or a display label. */
@@ -66,7 +76,12 @@ export function servingComparisonSignature(item: ExplorerItem): string {
   ]);
 }
 
-function comparisonFields(t: Translator, locale: Locale, search: string, basis: ExplorerBasis | null, items: ExplorerItem[]): ComparisonField[] { return [
+function comparisonFields(t: Translator, locale: Locale, search: string, basis: ExplorerBasis | null, items: ExplorerItem[]): ComparisonField[] {
+  const scopes = new Set(items.filter(item => item.summary.schema_version === 3).map(item => summaryServingScope(item.summary)));
+  const outputLabel = scopes.size > 1 ? "Output tokens" : scopes.has(FIXED_OUTPUT_MEASUREMENT) ? "fixedOutputTokens" : "Maximum output token request";
+  // Fixed output leads with its exact reported token rate; historical output caps keep the shared order.
+  const orderedColumns = servingMetricColumns(t, scopes.size === 1 && scopes.has(FIXED_OUTPUT_MEASUREMENT));
+  return [
   { key: "catalog", label: t("benchmark.catalogTitle"), render: item => <BenchmarkModelInformation publicId={item.public_id} recordedName={item.summary.model_info?.name} /> },
   { key: "publisher", label: t("benchmark.Repository owner (recorded)"), render: (item) => modelValue(modelPublisher(item.summary.model_info ?? null), t) },
   { key: "quantization", label: t("benchmark.Weight quantization"), render: (item) => formatWeightPrecision(item.summary.model_info ?? null, t) },
@@ -92,9 +107,13 @@ function comparisonFields(t: Translator, locale: Locale, search: string, basis: 
     ["model_repository", "Repository (recorded)"], ["model_revision", "Source revision (recorded)"], ["app_version", "App version"],
   ] as const).map(([key, label]): ComparisonField => ({ key, label: t(`benchmark.${label}`), render: item => key === "model_size_bytes" ? formatByteSize(item.summary.identity?.[key], t) : item.summary.schema_version === 3 && item.summary.identity?.[key] == null ? t(key === "engine_variant" || key === "engine_plugin_version" ? "benchmark.Not recorded; applicability not declared" : "benchmark.Value not recorded") : displayText(item.summary.identity?.[key], t) })),
   ...(["inputs", "max_output_tokens", "corpus", "corpus_version", "warmup", "request_usage", "cache_policy"] as const).map((key): ComparisonField => ({
-    key, label: t(`benchmark.${({ inputs: "Input hashes", max_output_tokens: "Maximum output token request", corpus: "Corpus", corpus_version: "Corpus version", warmup: "Warmup", request_usage: "Request usage", cache_policy: "Cache policy" })[key]}`),
+    key, label: t(`benchmark.${({ inputs: "Input hashes", max_output_tokens: outputLabel, corpus: "Corpus", corpus_version: "Corpus version", warmup: "Warmup", request_usage: "Request usage", cache_policy: "Cache policy" })[key]}`),
     render: item => {
       const value = asRecord(item.summary.setup)?.[key];
+      if (key === "max_output_tokens" && scopes.size > 1) {
+        const scope = summaryServingScope(item.summary);
+        return scope === null ? displayText(value, t) : `${displayText(value, t)} · ${t(scope === FIXED_OUTPUT_MEASUREMENT ? "benchmark.Fixed output" : "benchmark.Output cap")}`;
+      }
       return key === "inputs" && Array.isArray(value) ? value.map(input => { const row = asRecord(input); return `${displayText(row?.bytes, t)} B · ${displayText(row?.sha256, t)}`; }).join("; ") : displayText(value, t);
     },
   })),
@@ -106,7 +125,7 @@ function comparisonFields(t: Translator, locale: Locale, search: string, basis: 
   {
     key: "measured-points",
     label: t("benchmark.Measured points"),
-    render: (item) => item.summary.schema_version === 3 ? item.summary.serving_points?.map(servingLabel).join(" · ") || t("benchmark.Unknown") : formatMeasuredPoints(item.summary.points) ?? t("benchmark.Unknown"),
+    render: (item) => item.summary.schema_version === 3 ? item.summary.serving_points?.map(point => servingLabel(item, point)).join(" · ") || t("benchmark.Unknown") : formatMeasuredPoints(item.summary.points) ?? t("benchmark.Unknown"),
   },
   {
     key: "shown-point",
@@ -114,7 +133,7 @@ function comparisonFields(t: Translator, locale: Locale, search: string, basis: 
     render: (item) => {
       if (item.summary.schema_version === 3) {
         const point = shownServingPoint(item, basis);
-        return point ? t("benchmark.{point} · n={samples}", { point: servingLabel(point), samples: point.samples }) : t("benchmark.Not measured at this point");
+        return point ? t("benchmark.{point} · n={samples}", { point: servingLabel(item, point), samples: point.samples }) : unshownServingPoint(item, basis, t);
       }
       const point = shownPoint(item, basis);
       return point
@@ -127,10 +146,10 @@ function comparisonFields(t: Translator, locale: Locale, search: string, basis: 
     { key: "throughput", label: t("benchmark.Decode (tok/s)"), render: (item: ExplorerItem) => formatThroughput(pointMedian(shownPoint(item, basis), "tg_tps")) },
     { key: "ttft", label: t("benchmark.TTFT (ms)"), render: (item: ExplorerItem) => formatLatency(pointMedian(shownPoint(item, basis), "ttft_ms")) },
   ] : []),
-  ...(items.some(item => item.summary.schema_version === 3) ? servingMetricColumns(t).map(column => ({
+  ...(items.some(item => item.summary.schema_version === 3) ? orderedColumns.map(column => ({
     key: column.key, label: column.unit ? `${column.label} (${column.unit})` : column.label, render: (item: ExplorerItem) => {
       const point = shownServingPoint(item, basis);
-      if (!point) return t("benchmark.Not measured at this point");
+      if (!point) return unshownServingPoint(item, basis, t);
       const key = column.key as ServingMetricKey;
       return point[key] ? column.format(point[key]?.median) : servingMetricAbsence(key, {
         requestUsage: item.summary.setup?.request_usage, memoryScope: item.summary.setup?.memory_scope,
@@ -178,6 +197,8 @@ export function BenchmarkExplorerComparison({
   const servingItems = items.filter(item => item.summary.schema_version === 3);
   const sameServingWorkload = servingItems.length === items.length && new Set(servingItems.map(servingComparisonSignature)).size === 1;
   const comparable = servingItems.length > 0 ? sameServingWorkload : compatibility.comparable;
+  // Fixed output and historical output caps are different methods, never one comparison.
+  const mixedServingMethods = new Set(servingItems.map(item => summaryServingScope(item.summary))).size > 1;
   // A single pick has nothing to differ from; the caveat is about the set.
   const identity = modelIdentityComparison(items.map((item) => item.summary.model_info ?? null));
   const differentArtifacts = items.length > 1 && (!identity.same || identity.unknown);
@@ -197,9 +218,14 @@ export function BenchmarkExplorerComparison({
           {t("benchmark.These results do not all name the same weights file, or do not say which file they ran. A difference between their numbers can come from the file rather than from the setup. This is about which file was measured and says nothing about how good any model is.")}
         </p>
       ) : null}
+      {mixedServingMethods ? (
+        <p className="explorer-comparison-caveat">
+          {t("benchmark.Fixed-output and historical output-cap results measure different work. Their token rates, durations and byte rates are not a same-method comparison.")}
+        </p>
+      ) : null}
       {comparable ? null : (
         <p className="explorer-comparison-caveat">
-          {servingItems.length > 0 ? t("benchmark.Selected results differ in method, input bytes or hashes, output cap, corpus, warmup or usage request. Read each column on its own terms.") : t("benchmark.Not directly comparable. The selected results do not share one method and workload (methods: {methods}; workloads: {workloads}), so their numbers describe different work. Read each column on its own terms.", { methods: compatibility.methods.join(', '), workloads: compatibility.workloads.join(', ') })}
+          {servingItems.length > 0 ? t("benchmark.Selected results differ in method, input bytes or hashes, output tokens, corpus, warmup or usage request. Read each column on its own terms.") : t("benchmark.Not directly comparable. The selected results do not share one method and workload (methods: {methods}; workloads: {workloads}), so their numbers describe different work. Read each column on its own terms.", { methods: compatibility.methods.join(', '), workloads: compatibility.workloads.join(', ') })}
         </p>
       )}
       <div

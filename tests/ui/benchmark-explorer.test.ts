@@ -35,6 +35,7 @@ import {
   formatSampleCount,
   formatThroughput,
 } from "@/components/benchmark-explorer-format";
+import { parseFilters } from "@/lib/benchmark-discovery";
 
 /** Synthetic results: fabricated labels only, no published model names or file paths. */
 function result(id: string, overrides: Partial<ExplorerSummary> = {}): ExplorerItem {
@@ -502,14 +503,28 @@ describe("serving point and condition links", () => {
     expect(buildExplorerSearch(parseExplorerLocation(reverse.toString()))).toBe(canonical);
     expect(parseExplorerLocation(canonical)).toEqual(location);
   });
-  it("keeps a complete byte/concurrency/cap tuple and requires it before ranking output rate", () => {
-    let state = explorerStateFromSearch("runtime=sglang");
+  it("keeps a complete historical byte/concurrency/cap tuple in its own scope and requires it before ranking output rate", () => {
+    let state = explorerStateFromSearch("measurement=openai-chat-serving@1&runtime=sglang");
     expect(explorerReducer(state, { type: "sort", value: "output_rate_desc" })).toBe(state);
     state = explorerReducer(state, { type: "basisPoint", value: "b4096/c4/o128" });
+    expect(explorerReducer(state, { type: "sort", value: "token_rate_desc" })).toBe(state);
     state = explorerReducer(state, { type: "sort", value: "output_rate_desc" });
-    expect(state.applied).toMatchObject({ point_bytes: "4096", point_concurrency: "4", point_max_tokens: "128", point_tokens: "", sort: "output_rate_desc" });
+    expect(state.applied).toMatchObject({ measurement: "openai-chat-serving@1", point_bytes: "4096", point_concurrency: "4", point_max_tokens: "128", point_tokens: "", sort: "output_rate_desc" });
     expect(parseExplorerLocation(buildExplorerSearch({ filters: state.applied, cursor: null })).filters).toEqual(state.applied);
     expect(explorerReducer(state, { type: "basisPoint", value: "" }).applied.sort).toBe("");
+  });
+  it("defaults to fixed output, accepts only preset output points and ranks them by exact token rate", () => {
+    let state = explorerStateFromSearch("runtime=sglang");
+    expect(state.applied.measurement).toBe("");
+    expect(explorerReducer(state, { type: "basisPoint", value: "b4096/c4/o128" })).toBe(state);
+    expect(explorerStateFromSearch("point_bytes=4096&point_concurrency=4&point_max_tokens=128&sort=token_rate_desc").applied).toMatchObject({ point_bytes: "", point_max_tokens: "", sort: "" });
+    state = explorerReducer(state, { type: "basisPoint", value: "b4096/c4/o204800" });
+    state = explorerReducer(state, { type: "sort", value: "token_rate_desc" });
+    expect(state.applied).toMatchObject({ point_bytes: "4096", point_concurrency: "4", point_max_tokens: "204800", sort: "token_rate_desc" });
+    expect(parseFilters(new URLSearchParams(buildExplorerSearch({ filters: state.applied, cursor: null })))).toMatchObject({ point_max_tokens: 204800, sort: "token_rate_desc" });
+    // Changing scope drops a basis and sort chosen for another method.
+    const changed = explorerReducer(state, { type: "draft", key: "measurement", value: "openai-chat-serving@1" });
+    expect(changed.draft).toMatchObject({ measurement: "openai-chat-serving@1", point_bytes: "", point_max_tokens: "", sort: "" });
   });
   it("refuses byte/token mixing and never uses an old token value as input bytes", () => {
     const serving = explorerStateFromSearch("context_min=128");
@@ -525,7 +540,7 @@ describe("serving point and condition links", () => {
     let state = explorerStateFromSearch("runtime=sglang");
     const pending = JSON.stringify({ _draft: { name: "batch", text: "-" } });
     state = explorerReducer(state, { type: "settings", value: [pending] });
-    state = explorerReducer(state, { type: "basisPoint", value: "b4096/c4/o128" });
+    state = explorerReducer(state, { type: "basisPoint", value: "b4096/c4/o1024" });
     expect(state.draft.setting).toEqual([pending]);
     expect(state.applied.setting).toEqual([]);
   });
