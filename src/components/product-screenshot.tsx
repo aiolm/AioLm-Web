@@ -1,6 +1,7 @@
 import { getImageProps } from "next/image";
 import type { Locale } from '@/i18n/config';
 import type { Translator } from '@/i18n/types';
+import { DESKTOP_RELEASE_VERSION, SCREENSHOT_SOURCE_VERSION } from '@/lib/desktop-release';
 import screenshots from '../../public/screenshots/current/manifest.json';
 
 /**
@@ -37,7 +38,7 @@ export function ProductScreenshot({ locale, t }: { locale: Locale; t: Translator
         <source media="(prefers-color-scheme: dark)" srcSet={dark} />
         <img {...light} alt={common.alt} className="home-screenshot-image" />
       </picture>
-      <figcaption className="home-screenshot-caption">{t('home.caption')}</figcaption>
+      <figcaption className="home-screenshot-caption">{t('home.caption', { version: DESKTOP_RELEASE_VERSION, captureVersion: SCREENSHOT_SOURCE_VERSION })}</figcaption>
     </figure>
   );
 }

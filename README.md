@@ -54,9 +54,11 @@ Apple silicon macOS 15+ through vllm-metal; MLX targets Apple silicon. Automatic
 external connections require a local OpenAI-compatible v1 server or an installed
 engine with a clear launch method, model and platform; advanced manual adapter
 registration remains available. Connecting does not enable unsupported
-modalities, exact-token benchmarks or portable bundles. Runtime probes do not
-certify inference quality; CPU-reference numerical verification is not offered
-in the current desktop app or public CLI.
+modalities, fixed-output benchmarks or portable bundles: new benchmarks need a
+declared output-length control, which only native llama.cpp, supported
+non-Metal vLLM and explicitly declaring custom probes provide. Runtime probes do
+not certify inference quality; CPU-reference numerical verification is not
+offered in the current desktop app or public CLI.
 
 ## Public pages
 
@@ -190,21 +192,29 @@ it never touches, and the real upper bound of the 24h cutoffs.
 `/<locale>/guides` provides installation, first conversation, engine selection and external inference engine setup in all four site languages. Instructions use the visible button names, direct platform download choices and one action per illustrated step. Technical details and validation limits remain in expandable sections. User-facing help stays on the site; GitHub hosts release downloads, source and license.
 
 The current screenshots were captured from the native macOS app built from
-desktop v0.3.4 source, not browser-only rendering. Keep
-`src/lib/desktop-release.ts` tied to the latest published installer assets.
-Advance that version only after the desktop release's exact-source CI, all four
-platform package builds and public-download verification pass. Installer links,
-checksum examples and the four localized guide notices share this value; it does
-not change the historical screenshot capture version.
+desktop v0.3.4 source (`SCREENSHOT_SOURCE_VERSION` in
+`src/lib/desktop-release.ts`), not browser-only rendering. Desktop v0.4.0
+reorganized several workspaces, so the homepage caption and the four localized
+guide notices state both versions until the images are recaptured; update
+`SCREENSHOT_SOURCE_VERSION` together with the screenshot manifest.
 
+Keep `DESKTOP_RELEASE_VERSION` in the same file tied to the latest published
+installer assets (currently v0.4.0). Advance that version only after the desktop
+release's exact-source CI, all four platform package builds and public-download
+verification pass. Installer links, checksum examples, the homepage source
+notice and the four localized guide notices share this value.
 
-The localized homepage and guides cover engine-neutral All formats/Trending
-search, GGUF and complete safetensors downloads, shared per-engine profiles,
-resource estimates and loaded-model actions. Internal chat is independent of
-the explicitly started API server; external clients use its URL, key and model
-ID. Personalization covers shared/AioLM AGENTS.md precedence and local skills,
-including their read-only instruction role and MCP's existing approval boundary.
-Startup update notices do not install an update automatically.
+The localized homepage and guides follow desktop v0.4.0: engine-neutral All
+formats/Trending search, GGUF and per-weight HF/MLX safetensors bundle downloads,
+the Library (loaded/saved sessions, model update checks with file reuse),
+Choose runtime → Choose profile → Adjust options, shared per-engine profiles,
+resource estimates and cancellable saved-session startup. Internal chat is
+independent of the explicitly started API server; external clients use its URL,
+key and model ID. Personalization covers selectable shared/AioLM AGENTS.md
+sources, their precedence and local skills, including their read-only
+instruction role and MCP's existing approval boundary. Fixed-output
+`openai-chat-serving@2` benchmark guidance names the engines with an output
+control. Startup update notices do not install an update automatically.
 
 AppImage instructions install `zenity` for MCP approval dialogs, alongside the
 CPU/FUSE dependencies. The guides also explain installer-triggered app exit,

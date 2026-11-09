@@ -10,6 +10,7 @@ import Link from "next/link";
 import { GITHUB_REPOSITORY_URL, GitHubMark } from "@/components/site-links";
 import { ProductScreenshot } from "@/components/product-screenshot";
 import { InstallSection } from "@/components/install-section";
+import { DESKTOP_RELEASE_VERSION } from "@/lib/desktop-release";
 import "@/components/home-redesign.css";
 
 /**
@@ -89,7 +90,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           <div className="home-install">
             <p className="home-install-label" aria-hidden="true">{t('home.installCommandTitle')}</p>
             <InstallSection locale={locale} messages={home} />
-            <p className="home-source-notice">{t('home.sourceNotice')}</p>
+            <p className="home-source-notice">{t('home.sourceNotice', { version: DESKTOP_RELEASE_VERSION })}</p>
           </div>
         </div>
       </section>
