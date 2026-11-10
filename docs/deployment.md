@@ -7,6 +7,13 @@ Connect the Vercel project to the website repository
 [aiolm/AioLm-Web](https://github.com/aiolm/AioLm-Web). The desktop app lives in
 [aiolm/AioLM](https://github.com/aiolm/AioLM).
 
+Production uses the existing GitHub → Vercel integration: a push to the website
+repository's `main` branch creates a production deployment. No new project,
+CLI linking or replacement secrets are needed for a content release. Desktop
+release updates must wait until the named desktop installer assets and
+checksums are publicly verified before pushing the website release commit.
+The website CI validates changes; it is not a separate deployment workflow.
+
 Set this public configuration pair in the production environment before building
 and deploying:
 
@@ -219,7 +226,7 @@ platform logs. Point an uptime monitor at it; read `config:check` when it turns 
       supplied from the operator secret store (they cannot be pulled back out of
       Vercel — see Validating configuration).
 - [ ] `vercel env ls production` shows exactly the intended keys.
-- [ ] Migrations applied (through `012_operating_points.sql`); roles
+- [ ] Migrations applied (through `015_engine_neutral_benchmarks.sql`); roles
        least-privilege; Data API disabled.
 - [ ] `GET /v1/readiness` returns `200 {"status":"ready"}` on the deployed origin.
 - [ ] `DATABASE_MIGRATION_URL` / `DATABASE_MODERATION_URL` are absent from the

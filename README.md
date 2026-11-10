@@ -193,28 +193,47 @@ it never touches, and the real upper bound of the 24h cutoffs.
 
 The current screenshots were captured from the native macOS app built from
 desktop v0.3.4 source (`SCREENSHOT_SOURCE_VERSION` in
-`src/lib/desktop-release.ts`), not browser-only rendering. Desktop v0.4.0
-reorganized several workspaces, so the homepage caption and the four localized
-guide notices state both versions until the images are recaptured; update
-`SCREENSHOT_SOURCE_VERSION` together with the screenshot manifest.
+`src/lib/desktop-release.ts`), not browser-only rendering. They remain historical
+illustrations of model, chat, installation and connection flows, not evidence of
+the v0.4.1 layout. The homepage caption and all localized guide notices disclose
+both versions. Keep the capture version unchanged unless native images are
+actually recaptured, and update their manifest hashes together with the assets.
 
 Keep `DESKTOP_RELEASE_VERSION` in the same file tied to the latest published
-installer assets (currently v0.4.0). Advance that version only after the desktop
+installer assets (v0.4.1 for this release update). Advance that version only after the desktop
 release's exact-source CI, all four platform package builds and public-download
 verification pass. Installer links, checksum examples, the homepage source
 notice and the four localized guide notices share this value.
 
-The localized homepage and guides follow desktop v0.4.0: engine-neutral All
-formats/Trending search, GGUF and per-weight HF/MLX safetensors bundle downloads,
-the Library (loaded/saved sessions, model update checks with file reuse),
-Choose runtime → Choose profile → Adjust options, shared per-engine profiles,
-resource estimates and cancellable saved-session startup. Internal chat is
-independent of the explicitly started API server; external clients use its URL,
-key and model ID. Personalization covers selectable shared/AioLM AGENTS.md
-sources, their precedence and local skills, including their read-only
-instruction role and MCP's existing approval boundary. Fixed-output
-`openai-chat-serving@2` benchmark guidance names the engines with an output
-control. Startup update notices do not install an update automatically.
+The localized homepage and guides follow desktop v0.4.1. They cover
+engine-neutral All formats/Trending search, GGUF and per-weight HF/MLX bundles,
+pause/resume with retained data and end-to-end digest checks, pending downloads
+in Discover, and independent engine installation during model downloads.
+Library sessions, model updates with file reuse, shared profiles and
+Choose runtime → Choose profile → Adjust options remain the execution flow.
+Closing settings during loading leaves the task running; explicit cancellation
+stops it. Wide workspaces and complete grouped options use the available window.
+Resource guidance distinguishes physical/shared memory pools, allocation,
+capacity overflow, stored files and binary byte units instead of equating
+file size, reclaimable cache and permanent RAM.
+
+External discovery uses executable headers rather than favored names, excludes
+non-launchable support files and requires explicit checking of installation
+candidates, including a sole preselected folder item. Only a sole running server
+may be checked automatically. Resolved command/address labels, help-derived
+grouped controls, literal-token launch arguments and protected/duplicate flag
+safeguards are described without claiming every engine/device is compatible.
+Previously verified models avoid a redundant temporary load/unload; readiness
+still checks the actual serving process and model identity.
+
+Internal chat is independent of the explicitly started API server. Personal
+AGENTS.md instructions retain their precedence and read-only role. Explicit
+skills work across engines; engines without declared tool calling omit the
+automatic catalog and read tool, and long catalog descriptions are shortened
+without losing the full entry point. MCP approvals are unchanged. The guides
+also explain close-to-tray and configurable login startup. Fixed-output
+`openai-chat-serving@2` guidance keeps its declared output-control requirements.
+Startup update notices do not install an update automatically.
 
 AppImage instructions install `zenity` for MCP approval dialogs, alongside the
 CPU/FUSE dependencies. The guides also explain installer-triggered app exit,

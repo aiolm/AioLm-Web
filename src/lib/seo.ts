@@ -12,7 +12,7 @@ export function publicMetadata(locale: Locale, path: string, title: string, desc
       type: 'website', siteName: 'AioLM', title, description, url,
       locale: intlLocales[locale].replace('-', '_'),
       alternateLocale: locales.filter(value => value !== locale).map(value => intlLocales[value].replace('-', '_')),
-      images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'AioLM — Local models. One workspace.' }],
+      images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'AioLM — Many engines. One workspace.' }],
     },
     twitter: { card: 'summary_large_image', title, description, images: ['/opengraph-image'] },
   };
