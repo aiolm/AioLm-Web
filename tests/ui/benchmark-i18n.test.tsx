@@ -214,15 +214,20 @@ it.each([
   expect(wrap("en", <BenchmarkExplorerComparison items={[listed, { ...listed, public_id: "other" }]} onRemove={() => {}} onClear={() => {}} />)).toContain(escape(`${name} ${label} · cuda`));
   const detail = { ...benchmark, runtime } as unknown as BenchmarkSetup;
   const fields = buildSetupGroups(detail).flatMap((group) => group.fields);
-  expect(fields.find((field) => field.label === "Runtime version")?.value).toBe(label);
+  expect(fields.find((field) => field.label === "Engine version")?.value).toBe(label);
   expect(wrap("en", <BenchmarkHardwareOverview benchmark={detail} />)).toContain(escape(`${name} ${label}`));
 });
 
-it("names an unrecorded runtime version as unknown on the detail page", () => {
-  const detail = { ...benchmark, runtime: { name: "llama.cpp", version: null, build: null, backend: null } } as unknown as BenchmarkSetup;
+it("names an unrecorded engine version as unknown and separates engine and runtime labels across locales on the detail page", () => {
+  const detail = { ...benchmark, schema_version: 3, method: { id: "openai-chat-serving", version: 2 },
+    runtime: { name: "vllm", version: null, build: "b100", variant: "vllm-metal", plugin_version: "0.30.0", backend: "metal" } } as unknown as BenchmarkSetup;
   for (const locale of locales) {
-    const fields = buildSetupGroups(detail, createTranslator(catalogs[locale])).flatMap((group) => group.fields);
-    expect(fields.find((field) => field.label === createTranslator(catalogs[locale])("benchmark.Runtime version"))?.value).toBe(createTranslator(catalogs[locale])("benchmark.Unknown"));
+    const t = createTranslator(catalogs[locale]);
+    const fields = buildSetupGroups(detail, t).flatMap((group) => group.fields);
+    expect(fields.find((field) => field.label === t("benchmark.runtime"))?.value).toBe("vllm");
+    expect(fields.find((field) => field.label === t("benchmark.runtimeVersion"))?.value).toBe(t("benchmark.Unknown"));
+    expect(fields.find((field) => field.label === t("benchmark.Runtime variant"))?.value).toBe("vllm-metal");
+    expect(fields.find((field) => field.label === t("benchmark.Runtime build"))?.value).toBe("b100");
+    expect(fields.find((field) => field.label === t("benchmark.Runtime plugin version"))?.value).toBe("0.30.0");
   }
 });
-

@@ -42,7 +42,7 @@ const messages = {
   "home.closing": "了解数据背后的配置",
   "home.closingDetail": "公开的基准测试包含测量方法、工作负载和硬件信息，便于比较不同配置。",
   "home.browse": "浏览基准测试",
-  "home.runtime": "运行时管理",
+  "home.runtime": "推理引擎管理",
   "home.runtimeDetail": "选择或注册推理引擎",
   "home.conversation": "本地对话",
   "home.conversationDetail": "结合个人指令、本地技能、项目、文档搜索和 MCP 工具聊天。未声明工具支持的引擎仍可普通聊天和显式调用技能；其他功能取决于引擎与模型。",

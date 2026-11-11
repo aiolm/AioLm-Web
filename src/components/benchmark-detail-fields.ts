@@ -204,8 +204,8 @@ export function buildSetupGroups(benchmark: BenchmarkSetup, t: Translator = benc
       id: "detail-setup-runtime",
       title: t("benchmark.Runtime and backend"),
       fields: [
-        { label: t("benchmark.Runtime"), value: displayText(runtime?.["name"], t) },
-        { label: t("benchmark.Runtime version"), value: displayText(serving ? runtime?.version : runtimeVersionLabel(runtime), t) },
+        { label: t("benchmark.runtime"), value: displayText(runtime?.["name"], t) },
+        { label: t("benchmark.runtimeVersion"), value: displayText(serving ? runtime?.version : runtimeVersionLabel(runtime), t) },
         ...(serving ? [
           { label: t("benchmark.Runtime variant"), value: runtime?.variant == null ? t("benchmark.Not recorded; applicability not declared") : displayText(runtime.variant, t) },
           { label: t("benchmark.Runtime build"), value: displayText(runtime?.build, t) },

@@ -41,7 +41,7 @@ const messages = {
   "home.closing": "Understand the setup behind the numbers",
   "home.closingDetail": "Published benchmarks include the measurement method, workload and hardware so configurations can be compared.",
   "home.browse": "Browse benchmarks",
-  "home.runtime": "Runtime management",
+  "home.runtime": "Inference engines",
   "home.runtimeDetail": "Choose or register an inference engine",
   "home.conversation": "Local conversations",
   "home.conversationDetail": "Chat, projects, document search and MCP tools, with personal instructions and local skills; capabilities depend on the engine and model.",

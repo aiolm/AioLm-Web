@@ -42,7 +42,7 @@ const messages = {
   "home.closing": "数値の背景にある実行環境を知る",
   "home.closingDetail": "公開ベンチマークには測定方法、ワークロード、ハードウェアが含まれ、構成を比較できます。",
   "home.browse": "ベンチマークを見る",
-  "home.runtime": "ランタイム管理",
+  "home.runtime": "推論エンジン管理",
   "home.runtimeDetail": "推論エンジンを選択・登録",
   "home.conversation": "ローカルでの会話",
   "home.conversationDetail": "個人用指示・明示的に選ぶローカルスキルで会話を調整。ツール非対応エンジンでも通常のチャットを使えます。プロジェクト・文書検索・MCPツールはエンジンとモデルの対応範囲で利用できます。",

@@ -54,7 +54,7 @@ describe("setup groups", () => {
     expect(valueOf(groups, "Per-sequence context allocation", "tokens")).toBe("4096");
     expect(labelsOf(groups)).toContain("Engine launch options");
     expect(labelsOf(groups)).not.toContain("llama-server options");
-    if (engine === "vllm-metal") expect(valueOf(groups, "Runtime version")).toBe("vllm-metal 0.30.0 · vLLM 0.30.0");
+    if (engine === "vllm-metal") expect(valueOf(groups, "Engine version")).toBe("vllm-metal 0.30.0 · vLLM 0.30.0");
   });
 
   it("shows the published launch one option per line, keeping each option with its value", () => {
@@ -125,7 +125,7 @@ describe("engine-neutral serving setup and measurements", () => {
     const benchmark = sourcedServingBenchmark(engine);
     benchmark.runtime.variant = "arbitrary-safe-variant";
     const groups = buildSetupGroups(publicSetup(benchmark));
-    expect(valueOf(groups, "Runtime")).toBe(engine ?? "Unknown");
+    expect(valueOf(groups, "Inference engine name")).toBe(engine ?? "Unknown");
     expect(valueOf(groups, "Runtime variant")).toBe("arbitrary-safe-variant");
     expect(valueOf(groups, "Source revision (recorded)")).toBe("b".repeat(40));
     expect(valueOf(groups, "Repository (recorded)")).toBe("synthetic-org/example-model");

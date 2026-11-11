@@ -42,7 +42,7 @@ const messages = {
   "home.closing": "수치와 함께 실행 환경도 살펴보세요",
   "home.closingDetail": "공개된 벤치마크에는 측정 방법, 워크로드, 하드웨어 정보가 포함되어 있어 실행 환경을 비교할 수 있습니다.",
   "home.browse": "벤치마크 둘러보기",
-  "home.runtime": "런타임 관리",
+  "home.runtime": "추론 엔진 관리",
   "home.runtimeDetail": "추론 엔진 선택 및 등록",
   "home.conversation": "로컬 대화",
   "home.conversationDetail": "개인 지침·로컬 스킬과 함께 채팅·프로젝트·문서 검색·MCP 도구를 사용하세요. 스킬 직접 호출은 모든 엔진에서 가능하며 미디어·도구 지원은 엔진과 모델에 따라 다릅니다.",
