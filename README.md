@@ -195,52 +195,58 @@ The current screenshots were captured from the native macOS app built from
 desktop v0.3.4 source (`SCREENSHOT_SOURCE_VERSION` in
 `src/lib/desktop-release.ts`), not browser-only rendering. They remain historical
 illustrations of model, chat, installation and connection flows, not evidence of
-the v0.4.1 layout. The homepage caption and all localized guide notices disclose
+the v0.4.3 layout. The homepage caption and all localized guide notices disclose
 both versions. Keep the capture version unchanged unless native images are
 actually recaptured, and update their manifest hashes together with the assets.
 
 Keep `DESKTOP_RELEASE_VERSION` in the same file tied to the latest published
-installer assets (v0.4.1 for this release update). Advance that version only after the desktop
+installer assets (v0.4.3 for this release update). Advance that version only after the desktop
 release's exact-source CI, all four platform package builds and public-download
 verification pass. Installer links, checksum examples, the homepage source
 notice and the four localized guide notices share this value.
 
-The localized homepage and guides follow desktop v0.4.1. They cover
-engine-neutral All formats/Trending search, GGUF and per-weight HF/MLX bundles,
-pause/resume with retained data and end-to-end digest checks, pending downloads
-in Discover, and independent engine installation during model downloads.
-Library sessions, model updates with file reuse, shared profiles and
-Choose runtime → Choose profile → Adjust options remain the execution flow.
-Closing settings during loading leaves the task running; explicit cancellation
-stops it. Wide workspaces and complete grouped options use the available window.
-Resource guidance distinguishes physical/shared memory pools, allocation,
-capacity overflow, stored files and binary byte units instead of equating
-file size, reclaimable cache and permanent RAM.
+The localized homepage and guides follow desktop v0.4.3. They cover
+engine-neutral All formats/Trending search with repository-read retry, GGUF and
+per-weight HF/MLX bundles, pause/resume with retained data and end-to-end digest
+checks, pending downloads in Discover, and independent engine installation during
+model downloads. Library Saved sessions, header/Chat default-session controls,
+supporting-file search reveal, model updates with file reuse, shared profiles,
+automatic first-available runtime selection and Choose runtime → Choose profile →
+Adjust options remain the execution flow. Save profile & start closes the editor
+automatically for background launch with Cancel and failure recovery; wide
+workspaces, primary CLI/JSON option titles and grouped controls use the
+available window. Resource guidance distinguishes physical/shared memory pools,
+allocation, capacity overflow, stored files and binary byte units instead of
+equating file size, reclaimable cache and permanent RAM.
 
 External discovery uses executable headers rather than favored names, excludes
 non-launchable support files and requires explicit checking of installation
 candidates, including a sole preselected folder item. Only a sole running server
 may be checked automatically. Resolved command/address labels, help-derived
 grouped controls, literal-token launch arguments and protected/duplicate flag
-safeguards are described without claiming every engine/device is compatible.
-Previously verified models avoid a redundant temporary load/unload; readiness
-still checks the actual serving process and model identity.
+safeguards, Command and help tools, Recheck options and launch-time
+unchanged-help re-confirmation are described without claiming every
+engine/device is compatible. Previously verified models avoid a redundant
+temporary load/unload; readiness still checks the actual serving process and
+model identity, and Windows DLL load failures are surfaced explicitly.
+Standard managed Python runtime installs (non-Metal vLLM and mlx-vlm) require
+binary wheels only without falling back to source builds.
 
-Internal chat is independent of the explicitly started API server. Personal
-AGENTS.md instructions retain their precedence and read-only role. Explicit
-skills work across engines; engines without declared tool calling omit the
-automatic catalog and read tool, and long catalog descriptions are shortened
-without losing the full entry point. MCP approvals are unchanged. The guides
-also explain close-to-tray and configurable login startup. Fixed-output
+Internal chat is independent of the explicitly started API server, which also
+translates Anthropic Messages and OpenAI Responses function tools when supported
+by the engine and enforces loopback Host and connection limits. Chat scopes
+pending turns, tool approvals and errors to the owning conversation, and MCP
+server first launches, desktop help execution, project document bindings and
+unpicked manifest paths require native OS approval. Personal AGENTS.md
+instructions retain their precedence and read-only role. Explicit skills work
+across engines; engines without declared tool calling omit the automatic
+catalog and read tool, and long catalog descriptions are shortened without
+losing the full entry point. The guides also explain verification-first
+installs (with one-liners as convenience alternatives), close-to-tray,
+configurable login startup, CLI `runtime discover`/`connect` and log compaction,
+and 60-second clipboard clearing for copied recovery codes. Fixed-output
 `openai-chat-serving@2` guidance keeps its declared output-control requirements.
 Startup update notices do not install an update automatically.
-
-AppImage instructions install `zenity` for MCP approval dialogs, alongside the
-CPU/FUSE dependencies. The guides also explain installer-triggered app exit,
-macOS Keychain/PATH caveats, local benchmark-profile creation, lost-key recovery
-limits and the boundaries of llama.cpp resource estimates. Literal interface
-labels follow the desktop locale catalogs rather than independent translations.
-
 The desktop's public-benchmark explorer is an unprivileged, private-browsing
 window loading the existing website directly, not an iframe or a second explorer
 implementation. Its app-owned toolbar offers profile creation on a public
