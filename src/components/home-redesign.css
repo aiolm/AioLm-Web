@@ -152,9 +152,72 @@
 
 .home-section-body .home-actions { margin-block-start: 4px; }
 
+.home-section-note {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--fs-body-compact);
+  line-height: var(--lh-compact);
+  text-wrap: pretty;
+}
+
+/* -------------------------------------------------------- engine cards ---- */
+
+.home-engine-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-engine-card {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+}
+
+.home-engine-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.home-engine-card .home-engine-title {
+  font-size: var(--fs-group);
+  font-weight: var(--fw-heading);
+  line-height: var(--lh-group);
+  letter-spacing: var(--tracking-normal);
+}
+
+.home-engine-meta {
+  color: var(--ui-accent);
+  font-size: var(--fs-support);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-support);
+}
+
+.home-engine-detail {
+  color: var(--ui-muted);
+  font-size: var(--fs-body-compact);
+  line-height: var(--lh-compact);
+  text-wrap: pretty;
+}
+
 /* ----------------------------------------------------------- workflow ---- */
 
 .home-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -163,25 +226,29 @@
 
 .home-step {
   display: grid;
-  grid-template-columns: 2rem minmax(0, 1fr);
-  gap: 4px 12px;
-  padding-block: 16px;
-  border-block-end: 1px solid var(--ui-border);
+  gap: 12px;
+  align-content: start;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
 }
 
-.home-step:first-child { padding-block-start: 0; }
-
-.home-step:last-child { padding-block-end: 0; border-block-end: 0; }
-
-.home-step-number {
-  color: var(--ui-faint);
-  font-family: var(--font-mono);
-  font-size: var(--fs-support);
-  font-variant-numeric: tabular-nums;
-  line-height: var(--lh-group);
+.home-step-art {
+  display: flex;
+  align-items: center;
 }
 
-.home-step-copy { display: grid; gap: 4px; min-width: 0; }
+.visual-art { display: block; height: auto; }
+.visual-surface { fill: var(--ui-surface-muted); stroke: var(--ui-border); stroke-width: 1.25; }
+.visual-accent-surface { fill: var(--ui-accent-soft); stroke: var(--ui-border-accent); stroke-width: 1.25; }
+.visual-accent-stroke { stroke: var(--ui-accent); }
+.visual-accent-fill { fill: var(--ui-accent); }
+.visual-muted-stroke { stroke: var(--ui-faint); }
+.visual-muted-fill { fill: var(--ui-border-accent); }
+
+.home-step-copy { display: grid; gap: 6px; min-width: 0; }
 
 .home-step .home-step-title {
   font-size: var(--fs-group);
@@ -191,13 +258,11 @@
 }
 
 .home-step-detail {
-  max-width: 48rem;
   color: var(--ui-muted);
-  font-size: var(--fs-body);
-  line-height: var(--lh-body);
+  font-size: var(--fs-body-compact);
+  line-height: var(--lh-compact);
   text-wrap: pretty;
 }
-
 /* ---------------------------------------------------------------- faq ---- */
 
 .home-faq-list { min-width: 0; border-block-start: 1px solid var(--ui-border); }
@@ -290,9 +355,15 @@
 
   .home-hero-intro { padding-block-start: 8px; }
 
-  .home-section { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); padding-block: 48px; }
+  .home-section { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); padding-block: 48px; }
+
+  .home-workflow { grid-template-columns: minmax(0, 1fr); gap: 20px; }
 
   .home-closing { padding-block: 48px 64px; }
+}
+
+@media (max-width: 56rem) {
+  .home-steps { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 40rem) {
@@ -314,8 +385,9 @@
 
   .home-section { padding-block: 32px; }
 
-  .home-closing { padding-block: 32px 48px; }
+  .home-engine-grid { grid-template-columns: minmax(0, 1fr); }
 
+  .home-closing { padding-block: 32px 48px; }
   .home-closing .button { flex: 1 1 100%; }
 }
 

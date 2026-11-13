@@ -336,12 +336,14 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
 
         <details className="explorer-guide">
         <summary><span id="explorer-guide-title" className="explorer-guide-title">{t("benchmark.Compare like for like")}</span></summary>
-        <p className="explorer-guide-text">{t("benchmark.Match the model fingerprint, hardware, workload and measurement method before reading anything into a difference. Results published with a different method or workload measured different work.")}</p>
-        <p className="explorer-guide-text">{t("benchmark.Common API measurements use client-observed timing and UTF-8 output bytes, including reasoning. Historical output-cap token counters are optional and are not decode timing. Cache is as configured.")}</p>
-        <p className="explorer-guide-text">{t("benchmark.Fixed-output results are the default scope: every request reported exactly the requested output tokens, so output tokens per second compare like for like only at the same method and operating point. Historical output-cap results keep their own scope and are never mixed with fixed output.")}</p>
-        <p className="explorer-guide-text">{t("benchmark.Each metric shows the shared point median, range and observed sample count. Missing measurements stay unknown; neither bytes nor missing token counters are converted to tokens.")}</p>
-        <p className="explorer-guide-text">{t("benchmark.Serving points require input UTF-8 bytes, concurrency and output tokens together. Legacy token points remain in the explicit legacy scope. Configured input filters do not claim that every point completed.")}</p>
-        <p className="explorer-guide-text">{t("benchmark.A missing measurement is shown as an em dash (—), never as a zero. Sorting does not make different setups directly comparable.")}</p>
+        <ul className="explorer-guide-list">
+          <li className="explorer-guide-text">{t("benchmark.Match the model fingerprint, hardware, workload and measurement method before reading anything into a difference. Results published with a different method or workload measured different work.")}</li>
+          <li className="explorer-guide-text">{t("benchmark.Common API measurements use client-observed timing and UTF-8 output bytes, including reasoning. Historical output-cap token counters are optional and are not decode timing. Cache is as configured.")}</li>
+          <li className="explorer-guide-text">{t("benchmark.Fixed-output results are the default scope: every request reported exactly the requested output tokens, so output tokens per second compare like for like only at the same method and operating point. Historical output-cap results keep their own scope and are never mixed with fixed output.")}</li>
+          <li className="explorer-guide-text">{t("benchmark.Each metric shows the shared point median, range and observed sample count. Missing measurements stay unknown; neither bytes nor missing token counters are converted to tokens.")}</li>
+          <li className="explorer-guide-text">{t("benchmark.Serving points require input UTF-8 bytes, concurrency and output tokens together. Legacy token points remain in the explicit legacy scope. Configured input filters do not claim that every point completed.")}</li>
+          <li className="explorer-guide-text">{t("benchmark.A missing measurement is shown as an em dash (—), never as a zero. Sorting does not make different setups directly comparable.")}</li>
+        </ul>
         </details>
         </div>
       </div>

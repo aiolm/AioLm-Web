@@ -10,9 +10,9 @@ import Link from "next/link";
 import { GITHUB_REPOSITORY_URL, GitHubMark } from "@/components/site-links";
 import { ProductScreenshot } from "@/components/product-screenshot";
 import { InstallSection } from "@/components/install-section";
+import { WorkflowStepArt } from "@/components/visual-diagrams";
 import { DESKTOP_RELEASE_VERSION } from "@/lib/desktop-release";
 import "@/components/home-redesign.css";
-
 /**
  * Server-rendered product introduction. InstallSection owns platform tabs and
  * clipboard actions; download links and FAQ disclosures keep native semantics.
@@ -34,19 +34,28 @@ const PRODUCT_NAME_EXPANDED = 'All-in-One LM';
 
 const STEPS = [
   {
+    art: "model",
     title: "home.choose",
     detail: "home.chooseDetail",
   },
   {
+    art: "runtime",
     title: "home.run",
     detail: "home.runDetail",
   },
   {
+    art: "benchmark",
     title: "home.measure",
     detail: "home.measureDetail",
   },
 ] as const;
 
+const ENGINES = [
+  { id: "llama", title: "home.engineLlamaTitle", meta: "home.engineLlamaMeta", detail: "home.engineLlamaDetail" },
+  { id: "vllm", title: "home.engineVllmTitle", meta: "home.engineVllmMeta", detail: "home.engineVllmDetail" },
+  { id: "mlx", title: "home.engineMlxTitle", meta: "home.engineMlxMeta", detail: "home.engineMlxDetail" },
+  { id: "external", title: "home.engineExternalTitle", meta: "home.engineExternalMeta", detail: "home.engineExternalDetail" },
+] as const;
 export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
@@ -102,11 +111,20 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       <section className="site-shell home-section" aria-labelledby="engines-title">
         <header className="home-section-head">
           <h2 className="home-section-title" id="engines-title">{t('home.enginesTitle')}</h2>
+          <p className="home-section-note">{t('home.enginesNote')}</p>
         </header>
         <div className="home-section-body">
-          <p className="home-section-detail">{t('home.enginesBuiltin')}</p>
-          <p className="home-section-detail">{t('home.enginesExternal')}</p>
-          <p className="home-section-detail">{t('home.enginesHelp')}</p>
+          <ul className="home-engine-grid">
+            {ENGINES.map((engine) => (
+              <li className="home-engine-card" key={engine.id}>
+                <div className="home-engine-head">
+                  <h3 className="home-engine-title">{t(engine.title)}</h3>
+                  <span className="home-engine-meta">{t(engine.meta)}</span>
+                </div>
+                <p className="home-engine-detail">{t(engine.detail)}</p>
+              </li>
+            ))}
+          </ul>
           <div className="home-actions">
             <Link className="home-text-link" href={localizedPath(locale, '/guides/compatibility')}>{t('home.enginesGuide')}<ArrowIcon /></Link>
             <Link className="home-text-link" href={localizedPath(locale, '/guides/adapters')}>{t('home.adaptersGuide')}<ArrowIcon /></Link>
@@ -121,10 +139,11 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
         </header>
 
         <ol className="home-steps">
-          {STEPS.map((step, index) => (
+          {STEPS.map((step) => (
             <li className="home-step" key={step.title}>
-              {/* The list already conveys order; the visible number is decorative. */}
-              <span className="home-step-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              <div className="home-step-art">
+                <WorkflowStepArt step={step.art} />
+              </div>
               <div className="home-step-copy">
                 <h3 className="home-step-title">{t(step.title)}</h3>
                 <p className="home-step-detail">{t(step.detail)}</p>
@@ -133,7 +152,6 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           ))}
         </ol>
       </section>
-
       <section className="site-shell home-section home-faq" aria-labelledby="faq-title" id="faq">
         <header className="home-section-head">
           <h2 className="home-section-title" id="faq-title">{t('home.faqTitle')}</h2>

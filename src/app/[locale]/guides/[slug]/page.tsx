@@ -12,7 +12,7 @@ import { InstallSection, InstallSecurityWarning } from '@/components/install-sec
 import { GITHUB_REPOSITORY_URL } from '@/components/site-links';
 import { InstallerDownloads } from '@/components/installer-downloads';
 import { DESKTOP_RELEASE_VERSION } from '@/lib/desktop-release';
-
+import { GuideDiagram } from '@/components/visual-diagrams';
 type Params = Promise<{ locale: string; slug: string }>;
 function isGuide(slug: string): slug is GuideSlug { return guideSlugs.some(value => value === slug); }
 export function generateStaticParams() { return guideSlugs.map(slug => ({ slug })); }
@@ -41,12 +41,13 @@ export default async function GuidePage({ params }: { params: Params }) {
       {hasScreenshots && <p className="guide-screen-notice">{content.screenshotNotice}</p>}
       {guide.sections.map(section => <section className="guide-section" key={section.id} id={section.id} aria-labelledby={`title-${section.id}`}>
         <h2 id={`title-${section.id}`} tabIndex={-1}>{section.title}</h2>
+        {section.diagram && <GuideDiagram id={section.diagram} locale={locale} />}
         {section.downloads && <InstallerDownloads os={section.downloads} />}
         {slug === 'install' && ['windows', 'macos'].includes(section.id) && section.note && <InstallSecurityWarning locale={locale}>{section.note}</InstallSecurityWarning>}
         {section.body?.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
+        {section.points && <ul className="guide-points">{section.points.map(point => <li key={point}>{point}</li>)}</ul>}
         {slug === 'install' && section.id === 'commands' && installMessages && <InstallSection locale={locale} messages={installMessages} showDownloads={false} />}
         {section.links?.map(link => <p key={link.href}><Link href={link.href}>{link.label} →</Link></p>)}
-        {section.steps && <ol>{section.steps.map(step => <li key={step}>{step}</li>)}</ol>}
         {section.table && <div className="guide-table-wrap"><table className="guide-table" aria-label={section.title}>
           <thead><tr>{section.table.headers.map(header => <th key={header} scope="col">{header}</th>)}</tr></thead>
           <tbody>{section.table.rows.map(row => <tr key={row[0]}>{row.map((cell, index) => index === 0 ? <th key={index} scope="row">{cell}</th> : <td key={index}>{cell}</td>)}</tr>)}</tbody>

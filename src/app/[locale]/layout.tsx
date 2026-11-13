@@ -32,9 +32,9 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   if (!isLocale(locale)) notFound();
   const [site, common] = await Promise.all([getMessages(locale, 'site'), getMessages(locale, 'common')]);
   const t = createTranslator(site);
-  return <html lang={locale} data-palette="13"><head>
+  return <html lang={locale} data-palette="13" suppressHydrationWarning><head>
     <meta name="color-scheme" content="light dark" />
-  </head><body>
+  </head><body suppressHydrationWarning>
     <I18nProvider locale={locale} messages={{ ...site, ...common }}>
       <a className="skip-link" href="#main">{t('site.skip')}</a>
       <SiteHeader locale={locale} t={t} />

@@ -16,7 +16,7 @@ const messages = {
   "verify.required": "Complete the verification step first, then continue.",
   "verify.done": "Verified. Return to the app; it will continue automatically.",
   "verify.title": "Verify publishing",
-  "verify.intro": "This confirms you are human before the benchmark is accepted. No account needed; the app keeps your owner credential and never shares it with this page.",
+  "verify.intro": "Quick human check before publishing. Your owner credential stays in the desktop app.",
   "verify.sending": "Verifying…",
   "verify.continue": "Verify and continue",
   "manage.noSession": "No active session. Choose a backup file or open management again from the app.",
@@ -45,9 +45,9 @@ const messages = {
   "manage.clearFailed": "Could not clear the session right now. Nothing was cleared — try again.",
   "manage.clearNetwork": "Could not reach the server. Nothing was cleared — try again.",
   "manage.title": "Manage a published benchmark",
-  "manage.intro": "Choose the backup files saved by the AioLM app, or open this page from the app. No key needs to be typed: a file's code is sent only when you open it and is never placed in the address bar.",
+  "manage.intro": "Pick saved AioLM backup files or open this page from the app. Nothing is placed in the URL or saved by the browser.",
   "manage.code": "Recovery code",
-  "manage.codeHint": "Starts with aiolm-recovery-v1. — keep it private. Use this only when you have no backup file.",
+  "manage.codeHint": "Starts with aiolm-recovery-v1. Keep private; use only if you don’t have a backup file.",
   "manage.opening": "Opening…",
   "manage.open": "Open management session",
   "manage.record": "Your record",
@@ -69,7 +69,7 @@ const messages = {
   "manage.delete": "Delete benchmark",
   "manage.clear": "Clear session",
   "manage.files": "Backup files",
-  "manage.filesHint": "Select one or more aiolm-recovery-….txt backup files. They are read in this tab only, kept in memory until you leave the page, and never saved by the browser.",
+  "manage.filesHint": "Pick one or more aiolm-recovery-….txt files (read in memory in this tab only).",
   "manage.filesClear": "Forget these files",
   "manage.fileSaved": "Saved",
   "manage.fileSubmission": "Submission",
@@ -85,7 +85,7 @@ const messages = {
   "manage.fileStatus.gone": "This benchmark has been deleted",
   "manage.confirmSwitch": "Open another result and discard your unsaved changes?",
   "manage.pasteTitle": "Paste a recovery code instead",
-  "manage.handoffFailed": "The link from the app has expired or was already used. Open the management page again from the app, or choose a backup file."
+  "manage.handoffFailed": "This app link expired or was already used. Reopen from AioLM or pick a backup file.",
 };
 
 export type Catalog = { [K in keyof typeof messages]: string };

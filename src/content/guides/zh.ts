@@ -1,251 +1,462 @@
 import type { GuideContent } from './types';
 import { DESKTOP_RELEASE_VERSION, SCREENSHOT_SOURCE_VERSION } from '@/lib/desktop-release';
+
 const content: GuideContent = {
-  title: 'AioLM 使用指南', description: '第一次使用？先安装应用，再对照图片逐个点击按钮，在自己的电脑上开始 AI 对话。',
-  navigation: '使用指南', onPage: '本页目录', related: '接着看', download: '查看全部下载文件',
-  screenshotNotice: `说明依据已发布的 v${DESKTOP_RELEASE_VERSION} 版本。截图取自基于 v${SCREENSHOT_SOURCE_VERSION} 源码构建的原生 macOS 应用，因此部分 v${DESKTOP_RELEASE_VERSION} 界面和标签有所不同。这些截图不验证其他平台、所有引擎或更新安装。`,
-  enlarge: '放大查看', close: '关闭',
+  title: 'AioLM 使用指南',
+  description: '精简说明：快速完成安装、引擎准备、模型下载与本地对话。',
+  navigation: '使用指南',
+  onPage: '本页目录',
+  related: '接着看',
+  download: '查看全部下载文件',
+  screenshotNotice: `说明基于 v${DESKTOP_RELEASE_VERSION}。截图来自 v${SCREENSHOT_SOURCE_VERSION} macOS 版本，部分标签和布局有所不同。`,
+  enlarge: '放大查看',
+  close: '关闭',
   panHint: '左右滑动可查看图片其他部分。',
   guides: {
-    install: { title: '安装应用', description: '先下载并核对安装程序的校验和，或使用下方便捷命令。只需按照对应的Windows、Mac或Linux部分操作。', sections: [
-      { id: 'commands', title: '用命令安装', body: ['在下方选择操作系统并复制便捷命令。Windows 和 Mac 命令会直接执行下载的脚本，不会先验证脚本本身（脚本会校验安装程序的 SHA-256）。如需先手动校验安装程序，请在下方对应平台部分下载安装文件与 checksums.txt。Linux 需要先下载 DEB 文件。'] },
-      { id: 'windows', title: '在 Windows 上安装', downloads: 'windows', steps: ['从同一发布版本下载 x64-setup.exe（或 MSI）和 checksums.txt，并核对 SHA-256 校验和。', '仅在确认匹配后双击下载的文件，按安装窗口提示完成操作。', '完成后从开始菜单打开 AioLM。'], note: 'Windows安装程序没有发布者签名，可能会显示安全警告。安装前请确认来自AioLM官方发布，并核对文件校验和。', more: [{ title: '什么时候使用 MSI？', body: ['公司或学校的部署工具、Windows Installer 有要求时才使用 MSI。个人安装请选择上方 EXE。安装包适用于 Windows x64。在 install.ps1 中，MSI 退出码 3010（需要重启）和 1641（已开始重启）按安装成功处理。'] }] },
-      { id: 'macos', title: '在 Mac 上安装', downloads: 'macos', steps: ['打开 Apple 菜单 → 关于本机。芯片显示 Apple M1、M2 等时选择 aarch64.dmg；处理器显示 Intel 时选择 x64.dmg。', '从同一发布版本下载 DMG 和 checksums.txt，将 shasum -a 256 的结果与 checksums.txt 对比后，再打开 DMG 并将 AioLM 拖到“应用程序”文件夹。', '打开AioLM。如果macOS阻止打开，请先核对官方发布和校验和，再前往系统设置 → 隐私与安全性 → 仍要打开（在 macOS 13 和 14 上也可按住 Control 点按应用并选择打开）。'], note: '需要macOS 13.3或更新版本。应用采用ad-hoc签名且未经Apple公证，可能会显示安全警告。安装前请核对官方发布和文件校验和。' },
-      { id: 'linux', title: '在 Linux 上安装', downloads: 'linux', body: ['适用于 Ubuntu 24.04+ 的 x86_64 电脑。第一次使用建议选择 DEB。'], steps: ['下载 DEB 和 checksums.txt，核对 sha256sum 后双击 DEB 或在下载目录运行上方 Linux 命令。', '完成后从应用菜单打开 AioLM。'], more: [{ title: '点击 DEB 后没有安装窗口', body: ['下载目录中只保留要安装的那一个版本的DEB。在该目录打开终端，运行上方安装选项卡中的Linux命令。'] }, { title: '使用 AppImage，不安装软件包', body: ['将 AppImage 放在固定目录，验证校验和后运行下方命令。移动文件后需要重新注册菜单入口。zenity 用于 MCP 工具审批对话框，AppImage 不包含它；无法打开审批对话框时不会执行工具，调用会失败。', '如需菜单入口，从同一版本下载并验证 register-linux-desktop.py，然后运行 python3 register-linux-desktop.py --appimage <文件>。切换到 DEB 前用 --remove 移除入口。需要 Python 3。'], code: 'sudo apt install libgomp1 libfuse2t64 zenity\nchmod +x ./AioLM_*.AppImage\n./AioLM_*.AppImage' }] },
-      { id: 'first-open', title: '应用打开后', body: ['看到下方语言选择界面就准备好了。选择简体中文并点击继续。已有设置的用户会直接进入工作区。'], image: 'language', caption: "选择语言后，接着阅读“开始第一次对话”。" },
-      { id: 'verify', title: '检查下载文件', body: ['请使用官方下载文件。如需进一步确认文件没有损坏，可展开下面的方法。'], more: [{ title: '用校验和检查文件', body: ['从安装包所在的同一版本下载 checksums.txt。校验和是文件的识别值。将命令的完整结果与相同文件名的 SHA-256 比较；不一致就停止安装。校验和不能代替发布者签名。', 'Windows 请将下方文件名换成实际下载的名称。Mac 使用 shasum -a 256 加文件路径，Linux 使用 sha256sum。'], code: `Get-FileHash -Algorithm SHA256 .\\AioLM_${DESKTOP_RELEASE_VERSION}_x64-setup.exe` }] },
-      {"id": "updates", "title": "应用更新", "body": ["每次启动桌面应用时检查一次 GitHub 公开版本。新稳定版通知的查看更新打开设置 → 常规 → 应用更新，也可手动检查。失败不影响正常使用，自动检查不会自动安装。", "保存工作并确认下载并安装。核对发布的 SHA-256 后才停止管理任务并打开安装文件，随后退出应用。完成安装后请重新打开 AioLM。Mac 更新后代码身份改变，可能再次请求访问基准分享凭据等 Keychain 项目。自行完成 Windows 或 Linux DEB 安装；Mac 使用下载的 DMG 替换应用。AppImage 和手动安装使用发布下载。", "替换保留对话和设置。备份 ~/.aiolm（Windows: %USERPROFILE%\\.aiolm）或 AIOLM_HOME 及模型。NSIS 可明确删除数据；MSI、DEB 卸载和 Mac 移到废纸篓会保留数据。强制结束可能留下模型进程，请正常退出。"], "image": "updates", "caption": "设置中的应用更新界面。检查更新不会自动安装。"},
-      { id: 'general', title: '设置、托盘与工作区', body: ['在设置 → 服务器中配置登录时自动启动。通常关闭窗口只会将应用隐藏到系统托盘，不会退出；需要停止应用管理的模型进程和 API 服务器时，请使用退出命令。', '宽窗口中的聊天、设置、模型列表和选项列会利用可用工作区。窄窗口或较矮窗口保留可滚动内容与独立底部操作区；长说明和资源估算不会遮住字段或启动按钮。', '文件大小、内存和下载数据量统一使用 B、KiB、MiB、GiB、TiB，每级为前一级的 1,024 倍，而非十进制 GB。下载速度使用相同字节单位加 /s，表示每秒传输量；与其他工具比较时请先统一单位。'] },
-    ] },
-    'getting-started': { title: '开始第一次对话', description: "模型是AI数据，引擎负责运行模型。请选择适合设备和模型格式的引擎，再按以下步骤操作。", sections: [
-      { id: 'language', title: '1. 选择语言', body: ['选择简体中文并点击继续。首次安装会从这里开始；已经完成设置的用户可跳到第 4 步。'], image: 'language', caption: '按钮和说明会随所选语言一起切换。' },
-      { id: 'theme', title: '2. 选择界面颜色', body: ['选择浅色、深色或跟随系统，然后继续。以后可以在设置中更改。'], image: 'theme', caption: '选中主题后可立即预览。' },
-      { id: 'folder', title: '3. 选择模型保存位置', body: ['保留默认目录，或点击选择文件夹换一个位置。点击开始使用 AioLM 进入工作区。现在还没有模型文件也没关系。'], image: 'folder', caption: '不要照抄示例路径，请选择自己电脑上的目录。' },
-      {"id":"engine","title":"4. 准备运行 AI 的引擎","body":["打开左侧推理引擎，比较操作系统、设备和模型格式要求后选择引擎。引擎清单在各运行时条目上显示实际安装或注册的版本；可执行文件检查会在安装、注册、导入、设置检查和启动验证期间自动运行（已安装的 llama.cpp 构建不再提供手动检查按钮）。标准托管 vLLM（非 Metal）和 mlx-vlm 安装仅使用二进制 wheel，不会回退到源码构建；若缺少兼容 wheel，请自行准备并注册外部解释器。","llama.cpp PR 构建会以当前用户权限编译第三方代码，请确认来源与代码可信后再批准。桌面端所有 help 发现调用也需要针对确切程序路径、参数、工作目录与环境的原生 OS 批准（未更改的已批准命令可复用）。","llama.cpp 正式版与 PR 安装以及便携包导入/导出一次只运行一个。其他安装和删除操作会等待该操作完成或取消；该操作保留自己的进度和取消控件。"],"image":"llama-install","caption":"原生 macOS 的 llama.cpp Metal 运行时界面，展示已安装版本与可用更新。请确认设备要求；这不表示优先推荐该引擎或已验证其他引擎。","note":"推理引擎是引擎类型，运行时是已安装的运行环境。请先确认设备支持条件，并查看外部引擎连接指南。llama.cpp PR 构建会以当前用户权限编译第三方代码，请先审查来源、变更可信度和构建工具链。","links":[{"href":"/zh/guides/adapters#find","label":"查看外部引擎连接步骤"}]},
-      {"id": "download", "title": "5. 搜索并下载小模型", "body": ["“发现”默认显示所有格式和 Trending，也可按下载量、点赞或最近更新排序。搜索、模型下载与引擎安装相互独立，无需等引擎安装完成再下载模型。打开仓库查看模型说明、许可、内存和文件；若读取仓库文件失败，可在详情区域点击重试仅刷新该仓库。", "选择 HF/MLX Safetensors 权重文件时，会一并下载该模型的配置、分词器和所有必需分片，不包含其他模型或量化版本的权重。单个权重文件并不等于完整模型。根目录有权重的仓库仍可下载原有的完整数据快照，GGUF 标准分片也整组下载。其他格式不一定能在应用下载，不下载用于执行的远程 Python 或模型代码。可以下载不等于运行兼容。", "下载任务显示进度、速度与预计剩余时间，可暂停和继续。中断的传输可从“发现”中的待完成下载按最初选定的仓库版本继续。公开摘要可用时会校验完整文件；无摘要的文件会重新下载，不拼接无法验证的数据。GitHub 与 Hugging Face 传输要求每次重定向（最多 10 跳）均使用 HTTPS 和受信任主机。丢弃待完成任务只删除临时数据，保留完整文件。", "浏览和下载不改变引擎或执行设置。完成后点击配置并运行，打开当前引擎和运行时设置并确认兼容性；关闭该设置窗口不会删除已下载文件。"], "image": "model-files", "caption": "选择下载项之前，请检查仓库和可用模型文件。"},
-      {"id": "library", "title": "6. 使用库", "body": ["库依次显示折叠的已保存会话、模型文件夹、搜索/筛选控件和本地模型；引擎筛选与执行选择独立。默认会话在标题栏和聊天中控制，不会在库中重复列为已加载模型列表。在始终显示的文件夹行中使用浏览更改库位置。点击模型名称或模型设置可预览其设置；路径、复制、删除和更新控件位于单独的文件操作行。仅投影器文件不能作为主模型启动。若搜索结果仅命中隐藏的辅助文件，可在保留搜索词与引擎筛选的同时点击显示模型辅助文件查看。分片 GGUF 使用不带分片计数的统一显示名称，但保留原始文件名和所有分片，并仍用首个分片的原始路径启动。", "库 → 已保存的会话显示命名会话（包含正在加载、已加载或失败的未保存会话）的状态、实际模型和引擎，并提供启动、停止和取消操作；详情包含端口、进程 ID、活动请求和运行时日志。失败在该行、错误横幅和聊天中显示错误与运行时日志。启动已保存会话时可在聊天或库中取消，并显示为已取消，而非请求失败。已停止的命名会话仍保留，卸载也保留模型设置。", "库扫描后，AioLM 会检查已下载模型的上游更新；检查更新可刷新结果。只有确认存在更新的文件集时才显示更新，并标明需要下载和可复用的大小。请先停止所有模型会话。未变更的文件会复用，模型路径和设置保持不变；但单文件权重（如单个 GGUF 文件）变更时会完整下载。更新不会加载模型。"], "image": "model-library", "caption": "库中的会话与本地模型。打开模型，先配置再运行。"},
-      {"id": "model", "title": "7. 保存设置并启动", "body": ["模型设置按选择运行时 → 选择预设 → 调整选项的顺序进行：先选择推理引擎和已安装运行时，再选择该引擎的预设，然后选择本地模型并调整支持的上下文、内存、GPU、采样、推理、投影器、草稿模型、LoRA 和高级参数。当所选引擎已有已安装或已注册运行时且当前未选择时，选择器会自动选用清单中的首个可用项（保留已有选择；基准记录导入仍需明确选择并确认目标运行时）。下载或预览模型不会启动它，也不会停止运行中的服务器。不完整分片会在启动前拒绝。", "每个引擎有共享预设和可编辑的默认预设，不局限单个模型。保存预设不重载；保存配置并启动、重启或切换会立即显示准备反馈，保存预设与目标后自动关闭设置窗口，并在后台继续检查和加载。后台启动任务显示取消和失败后的检查已保存模型设置入口（同一目标的新启动会替换上一条失败记录，并标明退出状态或缺失/损坏的 Windows DLL）。仅请求选项可影响后续请求，服务器选项需要重载。先完成或取消活动响应。", "选项控件以所选运行时的主 CLI 参数（仅请求选项为实际 JSON 键）为主标题、翻译说明为副标题，悬停说明保留完整 CLI 签名与别名；简单选项按窗口宽度自适应多列，JSON、词元列表、本地路径、重复及多值编辑器保持全宽。非 llama.cpp 引擎的过期选项警告旁提供重新检查选项（详情加载失败时提供重试）。加载及预热最多允许十分钟，不受请求超时设置控制。", "分别查看 VRAM、运行辅助 RAM、RAM 卸载和 SSD 卸载，展开“估算详情”查看总量和假设。估算仅适用于 llama.cpp；Python 引擎、不支持的架构或 row/tensor split 等无法可靠估算的设置显示无法估算，而不是零。部分 Qwen 混合架构受支持，不能把所有循环架构一概排除。容量是物理内存池总量，不是当前可用内存；系统 RAM 指操作系统可使用的总量。共享 GPU 内存与 RAM 重叠，不会相加为两个独立物理池，也不显示重复计算的 VRAM + RAM 总量。可回收的操作系统文件缓存不计为永久占用的 RAM。数值使用 IEC 字节单位（如 MiB、GiB）；与系统监视器比较时请统一单位。卸载非零本身不是容量警告，应查看具体容量超限提示。"], "image": "model-settings", "caption": `启动前检查所选引擎、运行时、模型与执行设置（v${DESKTOP_RELEASE_VERSION} 充分利用宽窗口空间）。`},
-      {"id": "chat", "title": "8. 在已加载会话中聊天", "body": ["选择聊天，在聊天标题栏的会话选择器中选择回答的会话，然后发送简短问题。顶部栏设置默认执行目标；为对话选择会话不会改变它。内部聊天不需要 API 服务器。图片、音频、视频和工具需要模型与运行时共同支持。", "对话设置包含文档检索和可选本地预处理：使用运行中的语音会话转写音频，或用本地 ffmpeg 为视觉模型抽取视频帧。帧不包含视频音轨。非 WAV 语音输入需要本地 ffmpeg。检索可使用兼容嵌入模型，或明确选择关键词搜索，不会静默换用其他引擎。项目文档绑定需要原生文件访问权限（通过原生选择器/拖放选择，或确认允许项目文档后保存于 document-grants.json）。", "工具审批、进度、错误和上下文提示仅显示在发起请求的对话中，在浏览其他对话时提供返回原对话按钮，避免在错误对话中误审批、停止或发送。所选 MCP 工具在发现前显示尚未加载，发现不再找到时显示不可用；只发送已解析的工具，每次调用仍需审批，且 MCP 服务器首次启动还需与命令、参数、环境和工作目录绑定的原生 OS 批准（编辑 MCP 命令保留空格，有未保存修改时切换会提示确认）。对话更改无法保存时，聊天会在当前会话中保留更改并提供重试保存；请检查存储空间和文件夹权限。"], "image": "chat", "caption": "与真实本地模型的聊天。文本响应并不验证其他模态支持。"},
-      {"id": "api", "title": "API 服务器与模型生命周期", "body": ["在外部集成 → API 服务器独立启动外部监听器，从模型库或会话加载模型。选择 OpenAI 或 Anthropic 示例，复制页面显示的基础 URL、API 密钥和模型 ID。两种协议共用一个回环监听器（初始 127.0.0.1:8080），不再使用单独的 8081 网关。当已加载引擎支持函数调用时，Anthropic Messages 和 OpenAI Responses 会将函数工具转换为 Chat Completions API（支持流式调用、工具结果轮次、Responses previous_response_id 与无状态重发；不支持的内置 Responses 工具会被拒绝）。", "监听器要求回环 Host 头（127.0.0.1、localhost 或 [::1]，否则返回 HTTP 421），限制最多 64 个活动连接并约束浏览器预检头。没有模型也可运行监听器，但推理返回 HTTP 503；请求不会自动加载模型。停止 API 保留内部聊天和模型；卸载模型保留监听器和密钥。替换或卸载前先完成或取消响应，空闲卸载同时考虑聊天和 API 请求。", "全局端口只在 API 页面设置。运行时保存仅重启监听器，停止时在下次启动生效。密钥在应用运行期间跨模型重载和监听器重启保持有效，重开应用后更新。模型进程使用独立私有端口和凭据。自动启动仅加载模型，真正退出应用停止两者。"]},
-      {"id": "personalization", "title": "个性化与技能", "body": ["在设置 → 个性化的要应用的指令文件中，可选择共享 ~/.agents/AGENTS.md、AioLM ~/.aiolm/AGENTS.md（或 AIOLM_HOME）、两者或都不选；默认两者均启用。选择自动保存并应用于下一个新轮次，停用的文件不会读取。两者都应用时先读共享文件，冲突时以 AioLM 文件为准；对话或项目提示更具体。重试及工具后续请求沿用原轮次指令。", "要编辑的指令文件单独选择编辑器中的文件：保存只写该文件，重新加载会确认丢弃草稿，并保护外部修改。偏好备份和重置涵盖应用中的选择，不包含文件本身。", "指令文件的选择不控制技能。将带 name、description frontmatter 的 SKILL.md 放在 ~/.agents/skills/ 或 ~/.aiolm/skills/ 的独立目录。同名以 AioLM 为准。指令文件和每个技能文件上限为 64 KiB，生效技能最多 128 个。目录中的描述超过 1,024 个字符时会截短，但技能仍可用，完整入口文件仍可读取。外部修改后刷新列表。", "引擎声明支持工具调用时，模型可通过 aiolm_read_skill 读取已发现技能。未声明支持时，请求会省略技能目录和此工具，让普通聊天仍可工作。无论使用哪个引擎，都可在输入框选择技能或用 $skill-name 显式调用；同时选择并提及同一技能只会应用一次。技能只提供指令，不自动执行脚本或开放无限文件、Shell 权限，MCP 审批不变。", "从 Finder/Dock 启动不会读取 Shell 启动文件。若 MCP 的 npx/node 仅由 nvm 等加入 Shell PATH，请在配置中指定工具绝对路径，并确认使用 #!/usr/bin/env node 的脚本也能找到 node。指令和技能会发送到选定聊天端点，不写入对话系统提示或偏好导出。"]},
-      {"id":"benchmarks","title":"基准、历史与可选分享","body":["AioLM 是 GUI 适配器，不是推理引擎。新基准使用 openai-chat-serving@2 固定输出 API 基准进行历史、导出、发布和管理。每个请求都必须精确生成所选的输出词元数（1k–200k，1k = 1,024，默认1k）。引擎必须声明固定输出控制（原生 llama.cpp 的 ignore_eos、受支持的非 Metal vLLM 的 min_tokens，或自定义运行时声明的控制）并报告输出词元数；否则运行会被阻止或失败，不会退回为输出上限方式。vllm-metal 和 MLX 没有此类控制。开始前请停止运行会话。默认 UTF-8 输入为4,096/16,384字节，输出1k词元，并发1/2/4，重复1次。输入字节不是输入词元。预热可选（默认开启），运行相同的固定工作负载；始终请求用量。保留所选启动配置的上下文、并发容量、缓存和thinking等设置；不会扩大上下文，因此上下文必须容纳输入和输出。客户端并发与服务器容量不同。缓存按配置使用，不保证冷缓存。在关键设置中接受刷新的运行时选项会重新执行目标支持检查，不会更改配置或自动开始基准。","时间及文本、reasoning输出字节由客户端观测。固定输出速度为引擎报告的输出词元数（每个请求都必须等于目标）除以批次耗时；提前结束、超出或缺失计数会使该批次失败，此前已完成的批次会保留。缓存词元数由引擎自行报告，可能未知。首次输出指最先观测到的文本或reasoning，不是词元时间戳。只比较相同方法、输入哈希与字节、并发数、输出词元及条件。早先的 openai-chat-serving@1 结果只限制输出上限，保留在独立的旧版范围；旧版词元、冷缓存方法也单独保留。两者都不是相同的测量。这不证明回答质量，也不是独立验证的排名。","历史保留中断前完成的测量，丢弃取消中的测量。验证错误、不支持的目标或在测量开始前取消不会产生失败历史记录。历史和复制位于结果工具栏；导出与管理中包含Excel、CSV导出及配置创建和删除。删除本地历史不删除公开结果。根据记录设置创建配置时，需选择目标引擎、运行时并确认预览。仅导入兼容的已记录启动设置，不复制请求设置、模型文件或安装。缺失或不支持的设置会提示，不从当前配置还原。再次导入保留已有用户编辑。","检查分享内容后明确发布，可能需要浏览器验证。排除本地路径、提示词、凭据和设备标识。在已分享结果管理 → 在网站上管理中修改说明或删除。所有者密钥保存在OS凭据存储中；请私密保管恢复码或备份，没有备份时丢失的密钥无法恢复。复制的恢复码若剪贴板内容未变，会在 60 秒后自动清除。"]},
-      {"id": "cli", "title": "CLI 与便携运行时", "body": ["aiolm-cli 随桌面应用提供。Windows 的 aiolm-cli.exe 位于 aiolm.exe 旁；Mac 为 /Applications/AioLM.app/Contents/MacOS/aiolm-cli（或 ~/Applications 下）。Linux/macOS 使用 ./aiolm-cli。CLI 使用 runtime list、runtime select <backend> <build> 后再 server start/status/logs/stop。两个标识一起验证，失败不改变设置。无头服务器故意不启用 API 密钥认证，只绑定回环地址；仅在可信电脑使用，不要暴露或转发端口。这不同于桌面 API 服务器。server logs 仅读取最新的 1 MiB，并在日志文件超过 2 MiB 时压缩到末尾 1 MiB。", "外部引擎连接使用 runtime discover [folder]（不执行候选程序查找本地 API 与文件夹入口）、runtime connect <candidate-id> <model-id> [folder] [--command <word>]...（验证聊天与流式响应并保存）以及 runtime register-manifest <manifest.json>。runtime probe 支持原生和 Python 引擎；缺少可选 llama-bench 不使原生预检失败。标准托管 vLLM（非 Metal）和 mlx-vlm 安装仅使用二进制 wheel，不回退到源码构建。Python runtime export/import 打包固定版本 wheel 和哈希，不含模型；需要兼容操作系统、架构、ABI 和基础 Python，在新隔离环境安装并检查。先停止无头服务器。config set 仅接受类型明确的非秘密值并在保存前验证完整配置（若同时设置两个批大小，ubatch_size 不得超过 batch_size，同时调低时请先降低 ubatch_size）。config set provider_options 替换完整引擎选项映射，请保留其他引擎项。"]},
-    ] },
-    compatibility: { title: '选择适合电脑的引擎', description: "比较操作系统、设备、内存与模型格式后选择引擎，同时确认安装条件和实际验证状态。", sections: [
-      { id: 'engines', title: '打开引擎列表', body: ['点击左侧推理引擎。标有“此设备不可用”的引擎不要选择。'], image: 'engines', caption: '推理引擎界面。选择前请检查安装状态和设备支持条件。' },
-      {"id":"choose","title":"应该选哪一个？","table":{"headers":["引擎","适用情况"],"rows":[["llama.cpp","在支持的Windows、Mac或Linux程序中使用GGUF时"],["vLLM","已经准备好受支持的 Linux 加速器环境"],["vLLM · vllm-metal","在 Apple 芯片 Mac、macOS 15+ 上使用 vLLM"],["MLX","在 Apple 芯片 Mac 上使用 MLX 模型"],["外部推理引擎","准备单独安装的引擎，并确认设备、模型和本地连接要求"]]},"note":"Intel Mac 无法使用 MLX 或 vllm-metal，请先检查安装界面的要求。"},
-      {"id": "models", "title": "模型格式与运行时要求", "body": ["llama.cpp 使用 GGUF；vLLM、MLX 通常需要完整 config、tokenizer、processor 和 safetensors。受支持 vLLM GGUF 也可能需要相邻配置和 tokenizer。可选配套下载使用同一不可变修订，不保证兼容。Metal GGUF 仅限 dense qwen2/qwen3/llama、单个未分片文件、匹配配置和 tokenizer 以及支持的张量类型。", "标准托管 Linux vLLM（非 Metal）与 mlx-vlm 安装仅使用二进制 wheel（pip --only-binary=:all:，不回退到源码构建）；缺少兼容 wheel 时请自行准备外部环境并注册解释器。托管 Linux vLLM 安装 CUDA 依赖；ROCm 需要另备兼容环境和驱动，应用不安装系统显卡驱动。vllm-metal 需要 Apple 芯片、macOS15+、原生 arm64 Python3.12 及匹配的官方 wheel；Intel、Rosetta、原生Windows、WSL和远程执行不是对应本地目标。MLX也需要Apple芯片及兼容Python，便携包不会让不支持的硬件变为支持。", "嵌入模型使用嵌入会话，支持的 Whisper、Qwen3-ASR 使用语音会话。Whisper 支持转写和翻译，Qwen3-ASR 仅转写；非WAV输入需要本地ffmpeg。应检查实际任务支持和依赖，而非仅看文件名。"], "image": "discover", "caption": "模型发现独立于所选执行引擎搜索模型仓库。"},
-      { id: 'limits', title: '仍需确认的地方', body: ['图片、音频、视频和工具需要模型与引擎同时支持。注册引擎不会自动启用所有功能。'], more: [{ title: `v${DESKTOP_RELEASE_VERSION} 验证范围与已知问题`, body: ['新的固定输出基准只能在声明输出长度控制的引擎上运行：原生 llama.cpp 和受支持的非 Metal vLLM。vllm-metal、MLX 和自动外部连接无法运行；此前的结果仍可查看。', 'v0.3.2 中报告的 SmolVLM 图片、视频内容质量问题（F09）尚未确认修复。', '安装包构建通过，不表示所有设备上的推理或完整的 Linux 验收都已验证。当前应用和公开CLI不提供与CPU参考的数值比较。便携包的引擎专属支持限制仍单独保留。'] }] },
-    ] },
-    adapters: {
-      "title": "连接外部推理引擎",
-      "description": "自动查找 → 检查所选项目 → 选择模型 → 连接。仅在需要手动配置启动方式时展开下方高级指南。",
-      "sections": [
+    install: {
+      title: '安装应用',
+      description: '校验文件哈希后在 Windows、Mac 或 Linux 上安装 AioLM。',
+      sections: [
         {
-          "id": "prepare",
-          "title": "连接前请确认",
-          "body": [
-            "自动连接针对本机运行的OpenAI兼容v1服务器。不论开发语言，均使用相同约定，不会自动转换其他通信协议。",
-            "基本三步无需创建连接设置文件或填写引擎ID，只有使用所选模型验证实际连接后才会保存。"
-          ]
-        },
-        {
-          "id": "find",
-          "title": "1. 自动查找",
-          "body": [
-            "打开推理引擎 → 添加推理引擎 → 自动查找。发现的项目只是候选而非已验证连接。浏览引擎清单不会改变执行引擎。",
-            "未找到时，点击选择安装文件夹，选择引擎所在的安装目录即可，无需选择可执行文件或配置文件。文件夹发现依据可执行文件的二进制格式头，而不是文件名或引擎名称偏好；DLL、共享库、目标文件等已证实不能独立启动的支持文件不会列出。",
-            "若程序通过子命令提供模型服务，检查会仅使用 --help 读取其文档列出的命令。有多个启动方式时，在启动命令中按程序自身的描述选择，再点击检查所选命令；所选命令会显示在模型选择上方。",
-            "模型会话正在运行、启动或停止，或有其他运行时操作进行中时，发现和注册会被锁定。流程会列出受影响的会话，并提供打开模型库以停止或取消它们。某一步失败时，进度指示会显示是发现、检查还是连接验证失败；重新发现失败时保留已检查的候选和模型选择。"
+          id: 'commands',
+          title: '安装流程概览',
+          diagram: 'install-flow',
+          body: ['在下方按操作系统选择快捷命令或核验后的安装包进行安装。'],
+          points: [
+            'Windows/Mac 快捷命令会校验下载到的安装程序 SHA-256，但脚本本身未提前核验即运行。',
+            '如需先完全手动校验，请在下方对应系统部分下载安装文件与 checksums.txt。',
+            'Linux 需先下载 DEB 包，再在所在目录执行安装命令。',
           ],
-          "note": "按来源、入口路径和监听地址区分候选，选择后点击检查所选项目，再选择模型。唯一的运行中服务器可自动检查；安装文件夹中只有一项时仅预选，仍需明确点击检查所选项目，因为检查会运行程序。桌面端所有 help 执行都需要针对确切命令、参数、目录与环境的原生 OS 批准（取消会撤回待处理提示）。多项中仅选择不会执行。失败或取消后可不重新发现而重试检查。请只选择可信安装。",
-          "image": "auto-find",
-          "caption": "自动查找界面。选择找到的项目；未找到时请选择安装文件夹。"
         },
         {
-          "id": "choose-model",
-          "title": "2. 选择模型",
-          "body": [
-            "在要使用的模型中点击选择模型，选择所需模型。对于正在运行的服务器，从该服务器提供的模型列表中选择。",
-            "没有可选模型时，请在服务器上准备模型，或向AioLM添加模型后重新检查。"
+          id: 'windows',
+          title: '在 Windows 上安装',
+          downloads: 'windows',
+          steps: [
+            '从同一版本下载 x64-setup.exe（或 MSI）和 checksums.txt。',
+            '比对 SHA-256 一致后再运行安装程序。',
+            '安装完成后从开始菜单打开 AioLM。',
           ],
-          "image": "auto-model",
-          "caption": "模型选择界面。从所选运行中的服务器提供的模型中选择。"
+          note: '安装包未签名，可能显示安全提醒。运行前请确认来自官方发布并核对 SHA-256。',
+          more: [{
+            title: 'MSI 与静默安装说明',
+            body: ['企业分发适用 Windows x64 MSI，个人电脑建议 EXE。install.ps1 将 MSI 退出码 3010（需重启）和 1641（已触发重启）视为安装成功。'],
+          }],
         },
         {
-          "id": "connect",
-          "title": "3. 连接",
-          "body": [
-            "点击连接，AioLM 会验证所选模型的实际聊天响应与完整流式响应。对于由应用启动的程序，还会确认模型路由及监听端口属于所启动的进程。只有检查通过后才在应用内保存连接信息，无需创建设置文件。验证后，请在执行配置中选择此引擎和模型并运行。",
-            "注册成功不改变已有模型设置或预设；请在设置中明确选择新引擎和模型。连接已运行服务器使用 AioLM 管理的本地代理；停止连接只停止代理和请求，不停止原服务器或容器。外部程序、脚本或连接数据变更后需重新注册。",
-            "自动连接以文档中的启动命令或已连接服务器地址标识，不用内部连接 ID 或未知版本占位；应用启动时即可解析引擎名称，无需先打开引擎管理或设置。",
+          id: 'macos',
+          title: '在 Mac 上安装',
+          downloads: 'macos',
+          steps: [
+            '打开 Apple 菜单 → 关于本机：Apple 芯片选 aarch64.dmg，Intel 选 x64.dmg。',
+            '下载 DMG 与 checksums.txt，核对 shasum -a 256 后将 AioLM 拖入“应用程序”。',
+            '若首次打开被阻止，请在系统设置 → 隐私与安全性 → 仍要打开（macOS 13–14 可 Control-点击 → 打开）。',
           ],
-          "note": "文本连接检查不代表已验证图像、音频、视频、工具调用的支持情况或回答内容的质量。自动连接也不会声明新的固定输出基准所需的输出长度控制。",
-          "image": "auto-connect",
-          "caption": "连接结果界面。所选模型通过响应与流式传输检查后，才会保存为已连接。"
+          note: '需要 macOS 13.3+。应用未经 Apple 公证，打开前请先核对 SHA-256。',
         },
         {
-          "id": "options",
-          "title": "配置托管连接的启动选项",
-          "body": [
-            "AioLM 管理启动的自动连接会从所选引擎命令的实际帮助生成分组选项，以主 CLI 标志或 JSON 键为主标题并保留说明和控件；简单控件使用多列布局，JSON、词元列表、路径与重复/多值编辑器保持全宽。已记录选项请使用对应控件或命令与帮助工具中的导入命令，语法存在歧义时必须明确确认。",
-            "控件下方的附加启动参数接收独立的字面量参数，包括含空格的路径，不执行 Shell 语法；已记录选项、重复标志和应用管理的模型、地址、端口及认证绑定会被拒绝。已连接的外部服务器仍由自身管理启动设置。",
-            "若已审核的 help 与运行时标识不再一致（PATH 等未变的继承环境变量不计入标识），启动时会再次运行一次已审核的 help 命令，若解析结果完全一致则沿用审核。仅当准确的可执行文件路径、参数、实际工作目录和环境均与此前已批准的记录一致时，help 执行才会跳过原生确认提示；只要其中任一执行输入发生变化，都需要重新进行原生批准。若 help 已变更或存在仅针对旧构建的选项确认，则会停止启动并要求重新检查选项（详情加载失败可重试，命令/目录/解码设置在高级下）。已验证且配置未变的自动连接无需临时加载卸载。保存配置并启动会在保存后自动关闭窗口，并在后台运行检查与加载（支持取消和失败后的检查已保存模型设置，标明退出状态或缺失/损坏的 Windows DLL）。"
-          ]
-        },
-        {
-          "id": "unconfirmed",
-          "title": "无法验证连接时",
-          "body": [
-            "通信约定不同、启动命令或目标模型不明确、需要认证密钥时，不会标为自动连接成功。请查看显示原因，启动本地服务器，或在知道准确设置时使用高级方式。",
-            "此流程不会安装引擎，也不保证所有引擎、设备和模型都能运行。未通过实际检查的项目会保持未验证状态。"
+          id: 'linux',
+          title: '在 Linux 上安装',
+          downloads: 'linux',
+          body: ['适用于 Ubuntu 24.04+ x86_64，推荐优先选用 DEB 包。'],
+          steps: [
+            '下载 DEB 与 checksums.txt，核对 sha256sum 后双击或运行 sudo apt install ./AioLM_*_amd64.deb。',
+            '从应用菜单启动 AioLM。',
           ],
-          "links": [
+          more: [
             {
-              "href": "/zh/guides/adapters#files",
-              "label": "高级手动注册文件说明"
-            }
-          ],
-          "more": [
+              title: '双击 DEB 未弹出安装窗口',
+              body: ['目录中只保留目标版本的 DEB，在终端执行上方 apt 命令。'],
+            },
             {
-              "title": "使用容器运行的引擎呢？",
-              "body": [
-                "已经运行的容器服务器如果提供相同的本地OpenAI兼容v1约定，就可以作为连接对象。",
-                "自动创建和管理容器或守护进程尚未实现，找到容器并不代表可以管理它。"
-              ]
-            }
-          ]
+              title: '使用便携 AppImage',
+              body: [
+                '将 AppImage 放入固定目录并校验后，安装 libgomp1、libfuse2t64 与 zenity（用于 MCP 工具审批弹窗）。',
+                '如需菜单入口，下载并校验 register-linux-desktop.py，运行 python3 register-linux-desktop.py --appimage <文件>（改用 DEB 前加 --remove）。',
+              ],
+              code: 'sudo apt install libgomp1 libfuse2t64 zenity\nchmod +x ./AioLM_*.AppImage\n./AioLM_*.AppImage',
+            },
+          ],
         },
         {
-          "id": "files",
-          "title": "高级：手动注册使用哪些文件？",
-          "table": {
-            "headers": [
-              "已有内容",
-              "选择文件与位置"
+          id: 'first-open',
+          title: '首次启动',
+          body: ['首次打开需选择语言、主题和模型目录；已有配置会直接进入工作区。'],
+          image: 'language',
+          caption: '首次启动语言选择界面。',
+        },
+        {
+          id: 'verify',
+          title: '核对文件校验和',
+          body: ['运行安装程序前，请与同一发布版本中的 checksums.txt 比对 SHA-256。'],
+          more: [{
+            title: '各平台 SHA-256 校验命令',
+            body: ['Windows 用下方 PowerShell 命令，Mac 用 shasum -a 256，Linux 用 sha256sum。若不一致请勿运行。'],
+            code: `Get-FileHash -Algorithm SHA256 .\\AioLM_${DESKTOP_RELEASE_VERSION}_x64-setup.exe`,
+          }],
+        },
+        {
+          id: 'updates',
+          title: '应用更新与托盘驻留',
+          points: [
+            '启动时检查一次 GitHub 发布并通知，不会自动安装（手动检查位于设置 → 常规 → 应用更新）。',
+            '下载并安装前先核对发布 SHA-256，再停止任务并打开安装包（AppImage 需手动更新）。',
+            '关闭窗口默认隐藏到系统托盘，点击退出才会停止托管进程。数据保存在 ~/.aiolm（Windows 为 %USERPROFILE%\\.aiolm）或 AIOLM_HOME。',
+          ],
+          image: 'updates',
+          caption: '设置中的应用更新界面。',
+          more: [{
+            title: '卸载与数据保留说明',
+            body: ['仅 NSIS 卸载提供清除数据选项；MSI、DEB 与 Mac 移入废纸篓均保留会话与设置。Mac 更新后可能需重新授权 Keychain。'],
+          }],
+        },
+      ],
+    },
+    'getting-started': {
+      title: '开始第一次对话',
+      description: '按序完成初始设置、引擎准备、模型下载并开始本地聊天。',
+      sections: [
+        {
+          id: 'language',
+          title: '1. 选择语言与初始设置',
+          diagram: 'setup-flow',
+          body: ['选择简体中文并点击继续；已完成设置的用户可直接跳到第 4 步。'],
+          image: 'language',
+          caption: '界面文案会立即切换为所选语言。',
+        },
+        {
+          id: 'theme',
+          title: '2. 选择界面主题',
+          body: ['选择浅色、深色或跟随系统，后续可在设置中修改。'],
+          image: 'theme',
+          caption: '初始主题预览。',
+        },
+        {
+          id: 'folder',
+          title: '3. 选择模型目录',
+          body: ['保留默认路径或选择本地文件夹，点击开始使用 AioLM。'],
+          image: 'folder',
+          caption: '请选择本机实际存在的目录。',
+        },
+        {
+          id: 'engine',
+          title: '4. 准备推理引擎',
+          body: ['在左侧推理引擎查看系统与硬件条件，安装或连接所需运行时。'],
+          points: [
+            '列表显示实际安装或注册的版本，并在安装、注册、检查与启动时自动校验可执行文件（无手动检查按钮）。',
+            '若当前环境不支持自动安装 vLLM 或 mlx-vlm，请自行准备 Python 环境并注册。',
+            '桌面端执行 help 需要对确切程序、参数、目录和环境进行原生 OS 批准；PR 源码构建会以当前用户权限编译。',
+          ],
+          image: 'llama-install',
+          caption: '原生 macOS llama.cpp Metal 运行时界面。',
+          links: [{ href: '/zh/guides/adapters#find', label: '查看外部引擎连接步骤' }],
+        },
+        {
+          id: 'download',
+          title: '5. 搜索并下载模型',
+          body: ['“发现”独立于当前所选引擎，按 Trending 等排序搜索全格式 Hugging Face 仓库。'],
+          points: [
+            '选择 HF/MLX Safetensors 权重时只拉取所需配置、分词器和分片；GGUF 分片也会自动成组下载。',
+            '支持实时速度与剩余时间、暂停/继续（已暂停的下载）、完整文件摘要校验，以及单条仓库文件读取重试。',
+            '下载模型期间可并行安装推理引擎。',
+          ],
+          image: 'model-files',
+          caption: '下载前可查看模型说明与文件大小。',
+          more: [{
+            title: '下载与重定向安全限制',
+            body: ['不会自动下载并执行远程 Python 代码。GitHub 与 Hugging Face 传输要求所有重定向（最多 10 跳）均使用 HTTPS 和受信任主机；无摘要文件续传时将重新下载。'],
+          }],
+        },
+        {
+          id: 'library',
+          title: '6. 在库中管理会话与文件',
+          body: ['默认会话由标题栏与聊天控制，命名会话与本地文件在库 → 已保存的会话管理。'],
+          points: [
+            '点击模型或模型设置可预览配置，路径、复制、删除和更新操作在独立文件操作行。',
+            '若搜索仅命中隐藏的辅助文件，可点击显示模型辅助文件查看而不丢失当前筛选。',
+            '上游更新会复用未变更文件（需先停止所有会话；单文件 GGUF 变更需完整重下）。',
+          ],
+          image: 'model-library',
+          caption: '已保存会话与本地模型库视图。',
+        },
+        {
+          id: 'model',
+          title: '7. 配置、保存并启动',
+          diagram: 'memory-pools',
+          body: ['按选择运行时 → 选择预设 → 调整选项配置；若未选运行时，将自动选用首个可用项。'],
+          points: [
+            '保存配置并启动后设置窗口会自动关闭，并在后台执行检查与加载（支持取消及失败后的检查已保存模型设置）。',
+            '选项标题为主 CLI 参数或 JSON 键（悬停看完整签名）；简单控件自动分栏，复杂编辑器保持全宽。',
+            '请分开查看显存、运行内存、内存卸载与 SSD 卸载；共享内存设备不会重复叠加总和。',
+          ],
+          image: 'model-settings',
+          caption: `历史 v${SCREENSHOT_SOURCE_VERSION} 设置截图；v${DESKTOP_RELEASE_VERSION} 会充分利用宽窗口分栏。`,
+          more: [{
+            title: '内存估算、过期帮助与超时说明',
+            body: [
+              'llama.cpp 估算覆盖受支持架构（含部分 Qwen 混合架构），不支持时显示无法估算而非零。可回收的系统文件缓存不计入常驻内存。',
+              '非 llama.cpp 引擎帮助过期时提供重新检查选项（及详情加载失败重试）。启动与预热上限为 10 分钟；Windows 提前退出时会提示缺失或损坏的 DLL。',
             ],
-            "rows": [
-              [
-                "AioLM连接设置包",
-                "由提供方预先编写的输入表单，例如*.setup.json。解压整个文件夹后导入设置，并保留配套的启动和检查程序。"
-              ],
-              [
-                "完整的注册JSON",
-                "仅在有提供方或开发者准备好的文件时，使用高级：导入注册文件（manifest）。*.engine.json只是文件名示例，手动注册不需要此文件。"
-              ],
-              [
-                "服务器可执行程序",
-                "在手动注册中选择真正的服务器，如engine-server.exe或engine-server。不要选择安装程序或应用快捷方式。"
-              ],
-              [
-                "Python脚本或模块",
-                "选择安装引擎所用环境中的python.exe（Windows）或bin/python（Mac/Linux），再在下方添加脚本或模块参数。"
-              ],
-              [
-                "模型或普通配置",
-                ".gguf、.safetensors模型在注册后的模型选择中指定。deployment.json等配置仅在适配器要求时选择；它们与AioLM的连接设置和注册JSON不同。"
-              ]
-            ]
-          },
-          "note": "手动注册无需自行创建*.engine.json。填写表单并注册成功后，AioLM会在内部保存注册信息，不会另行导出.engine.json。仅选择可执行文件不会生成这两种输入JSON，修改JSON文件名也不会改变其内容。",
-          "body": [
-            "此表用于高级手动注册。自动连接基本三步不需要准备这些设置文件。"
-          ]
+          }],
         },
         {
-          "id": "advanced",
-          "title": "高级：手动设置启动方式",
-          "body": [
-            `需要手动配置已知启动方式时，可展开下列说明。图片取自 v${SCREENSHOT_SOURCE_VERSION}，用于说明高级注册流程，不代表 v${DESKTOP_RELEASE_VERSION} 的当前界面。`
+          id: 'chat',
+          title: '8. 在已加载会话中聊天',
+          body: ['打开聊天，在顶部会话选择器指定回答会话即可发送消息（无需启动 API 服务器）。'],
+          points: [
+            '工具审批、进度与错误严格限定在发起对话中，查看其他对话时会提示返回原对话以防误操作。',
+            '对话设置支持文档检索与本地 ffmpeg 音视频预处理；项目文档绑定需经原生文件权限确认。',
+            'MCP 服务器首次启动需原生 OS 批准（编辑命令保留空格并在丢弃未保存修改前提示确认）。',
           ],
-          "more": [
-            {
-              "title": "打开手动注册界面",
-              "body": [
-                "停止运行中的模型，点击推理引擎 → 添加推理引擎，然后展开自动连接下方的“高级：手动设置启动方式”。通过原生文件选择器选择的清单会在当前会话获得路径授权；手动输入或未授权的路径需经过展示 probe 与启动命令的原生确认。"
-              ],
-              "image": "adapter-add",
-              "caption": "打开高级注册表单的位置。需要自行输入启动方式时使用。"
-            },
-            {
-              "title": "导入已经收到的连接设置文件",
-              "steps": [
-                "点击导入AioLM连接设置 (.json)，然后选择解压文件夹中的AioLM专用*.setup.json（绑定到当前会话原生选择器的导入令牌）。",
-                "按提供方说明指定程序、目录和文件，检查命令后点击检查安装并继续，再确认帮助信息。"
-              ],
-              "code": "解压后的适配器文件夹/\n  engine.setup.json  ← 导入时选择\n  prepare.py        ← 一起保留\n  probe.py          ← 一起保留",
-              "body": [
-                "向提供方索取AioLM setup v1 JSON、配套设置/probe程序、支持的操作系统、所需运行环境和模型格式及应选择的可执行文件。没有适配器时，需要开发者按通用约定实现连接。"
-              ]
-            },
-            {
-              "title": "填写程序的启动方式",
-              "body": [
-                "在可执行文件或解释器 → 浏览中按上表选择程序。Python脚本使用添加文件参数；模块使用添加参数，将-m和实际模块名称分别填入两个参数栏。",
-                "填写显示名称、引擎ID（custom.*格式，如custom.my-engine）和运行时ID（如local-1），然后点击下一步。不清楚模型/端口选项或probe时，请先向提供方确认。",
-                "引擎提供OpenAI兼容HTTP/SSE时选择直接提供，否则需要转换格式的bridge。选择独立bridge，并按提供方说明设置程序、参数和引擎JSON argv环境变量。普通控制台输入输出不会自动变成HTTP服务器。",
-                "若提供方命令为“python -m vendor_engine.serve”，选择对应Python，将参数分别填写。请将示例模块名替换为实际安装的模块。"
-              ],
-              "image": "adapter-setup",
-              "caption": "手动注册界面。检查已安装程序的路径和参数；模型响应需要另外检查。",
-              "code": "可执行文件：环境中的python.exe或bin/python\n参数1：-m\n参数2：vendor_engine.serve"
-            },
-            {
-              "title": "查看程序帮助",
-              "body": [
-                "点击发现帮助以读取所选程序的选项。失败时检查文件、Python环境和必需依赖。帮助显示成功不等于模型推理成功。"
-              ],
-              "image": "adapter-help",
-              "caption": "高级注册中的帮助检查步骤。显示选项不代表模型能够回答，仍需进行响应检查。"
-            },
-            {
-              "title": "设置模型连接和兼容性检查",
-              "body": [
-                "按提供方说明设置模型和端口选项，不要假设所有引擎都使用--model和--port。导入的值也应检查。",
-                "兼容性检查程序请选择AioLM专用probe。Python probe应选择Python，再将probe.py路径、{model}等分别添加为参数。普通引擎可执行文件不能代替probe。",
-                "probe以JSON返回schema_version: 1、已注册的engine_id/runtime_id、模型路径、支持状态与能力。不支持的模型必须保持失败状态。HTTP/SSE、健康检查路径及模型/端口/认证传递方法须匹配实际服务器，不能通过显示名称或修改扩展名代替。"
-              ],
-              "image": "adapter-check",
-              "caption": "在高级注册中检查模型与端口连接、兼容性与健康检查，以及支持的模型格式。"
-            },
-            {
-              "title": "检查、保存并运行实际模型",
-              "steps": [
-                "点击检查注册内容 → 注册。成功后，连接信息会自动保存在应用中。在模型选择中指定新引擎/运行时及支持的模型文件或完整模型文件夹。",
-                "通过模型兼容性检查后运行，确认能回答简短问题、取消生成后再次提问、停止及重启。"
-              ],
-              "image": "adapter-review",
-              "caption": "高级注册中的最后确认。保存注册后，请运行模型并检查回答。",
-              "body": []
-            }
-          ]
+          image: 'chat',
+          caption: '本地模型聊天界面。',
         },
         {
-          "id": "trouble",
-          "title": "连接失败时",
-          "more": [
-            {
-              "title": "找不到Python或文件",
-              "body": [
-                "请选择安装引擎所用环境中的Python。保留包含配套文件的完整文件夹，不要只移动JSON。程序或适配器移动/更改后，请重新导入、检查帮助和兼容性并注册。"
-              ]
-            },
-            {
-              "title": "已注册但模型无法运行",
-              "body": [
-                "检查模型格式、完整文件、内存和引擎依赖，查看兼容性结果与服务器错误日志。注册不会自动增加未支持的图片、音频或工具能力。"
-              ]
-            },
-            {
-              "title": "移除注册会删除引擎或模型吗？",
-              "body": [
-                "删除外部注册不会删除引擎和模型文件；删除托管运行时只删除应用自身的安装。启用确认时，删除前会先列出受影响的默认、预设、模型和已保存会话选择；这些选择仍会保存，但在重新配置前不可用。密钥应通过提供方说明的环境变量传递。新的固定输出基准需要声明 capabilities.fixed_output 并支持流式用量的 probe；此前的结果仍可查看。外部引擎仍不支持便携包；应用与公开CLI不提供CPU参考数值比较。"
-              ]
-            }
-          ]
+          id: 'api',
+          title: '本地 API 服务器',
+          body: ['在外部集成 → API 服务器独立启停。OpenAI（含 Responses 工具）与 Anthropic Messages 共用 127.0.0.1:8080。'],
+          points: [
+            '强制校验回环 Host 头（否则返回 421）与 64 个连接上限；未加载模型时返回 HTTP 503。',
+            '当引擎支持函数调用时，自动将 Responses 与 Anthropic 函数工具转换到 Chat Completions。',
+          ],
+          more: [{
+            title: 'API 密钥周期与 macOS Dock PATH',
+            body: ['密钥在应用退出前持续有效；停止 API 不影响内部聊天。Mac 从 Finder/Dock 启动不会读取 Shell 配置，nvm 等工具请填写绝对路径。'],
+          }],
         },
-      ]
+        {
+          id: 'personalization',
+          title: '个性化指令与技能',
+          body: ['在设置 → 个性化管理 ~/.agents/AGENTS.md 与 ~/.aiolm/AGENTS.md 指令及本地技能。'],
+          points: [
+            '同名冲突时以 AioLM 文件和技能为准；$skill-name 显式调用兼容所有引擎。',
+            '仅当引擎声明支持工具调用时，才会向模型暴露 aiolm_read_skill 自动读取工具。',
+          ],
+          more: [{
+            title: '大小限制与编辑保护',
+            body: ['单文件上限 64 KiB，有效技能最多 128 个（超 1,024 字符的描述会截短）。指令和技能仅发送给对话端点，不写入偏好导出。'],
+          }],
+        },
+        {
+          id: 'benchmarks',
+          title: '基准测试与公开分享',
+          body: ['新基准在支持输出长度控制的引擎（原生 llama.cpp、受支持非 Metal vLLM）上运行固定输出 API 测试。'],
+          points: [
+            'vllm-metal、MLX 与自动外部连接不可运行固定输出基准；历史上限与旧版词元结果分开保留。',
+            '开始前需停止活动会话；接受刷新的关键设置仅重跑目标支持检查，不会自动启动测试。',
+            '通过“在网站上管理”编辑说明或删除；复制的恢复码未变时 60 秒后从剪贴板自动清除。',
+          ],
+          more: [{
+            title: '测量说明与配置导入',
+            body: ['耗时与输出字节由客户端观测，每次请求都必须精确输出目标词元数。从结果创建预设仅导入兼容启动设置，不下载模型。'],
+          }],
+        },
+        {
+          id: 'cli',
+          title: 'CLI 与便携运行时',
+          body: ['aiolm-cli 随安装包附带（Mac 位于 AioLM.app/Contents/MacOS/aiolm-cli）。'],
+          code: 'aiolm-cli runtime list\naiolm-cli runtime select <backend> <build>\naiolm-cli server start|status|logs|stop\naiolm-cli runtime discover [folder]\naiolm-cli runtime connect <candidate-id> <model-id> [folder]',
+          more: [{
+            title: 'CLI 配置、日志与便携包',
+            body: [
+              '无头服务器默认无密钥绑定回环地址，请仅在可信电脑使用。server logs 仅保留最新日志末尾。',
+              'config set 会在保存前校验配置。托管 Python 仅使用预构建安装包；runtime export/import 仅打包依赖而不含模型。',
+            ],
+          }],
+        },
+      ],
+    },
+    compatibility: {
+      title: '选择适合电脑的引擎',
+      description: '通过对比表快速查看各引擎的系统支持、模型格式与基准能力。',
+      sections: [
+        {
+          id: 'engines',
+          title: '查看引擎列表',
+          body: ['打开左侧推理引擎，跳过标有“此设备不可用”的条目。'],
+          image: 'engines',
+          caption: '推理引擎列表及设备兼容性状态。',
+        },
+        {
+          id: 'choose',
+          title: '引擎兼容性对比表',
+          table: {
+            headers: ['引擎', '适用平台 · 模型格式 · 固定输出基准'],
+            rows: [
+              ['llama.cpp', 'Windows · macOS · Linux · GGUF · 支持固定输出'],
+              ['vLLM', '受支持 Linux CUDA/ROCm · Safetensors · 支持固定输出（非 Metal）'],
+              ['vLLM · vllm-metal', 'Apple 芯片 macOS 15+ · Safetensors / 窄范围 GGUF · 不支持'],
+              ['MLX', 'Apple 芯片 macOS · MLX Safetensors · 不支持'],
+              ['外部推理引擎', '本地 OpenAI v1 服务或安装目录 · 聊天/流式验证 · 不支持'],
+            ],
+          },
+          note: 'Intel Mac 仅支持 CPU 版 llama.cpp，无法使用 MLX 或 vllm-metal。',
+        },
+        {
+          id: 'models',
+          title: '模型格式与 Python 环境',
+          points: [
+            'llama.cpp 使用 GGUF；vLLM 与 MLX 需要完整 config、tokenizer、processor 与 safetensors 文件。',
+            '自动安装 vLLM 与 mlx-vlm 仅使用预构建安装包；若无匹配包，请自行准备并注册外部 Python 环境。',
+            '嵌入模型使用嵌入会话，Whisper 与 Qwen3-ASR 使用语音会话（非 WAV 音频需本地 ffmpeg）。',
+          ],
+          image: 'discover',
+          caption: '模型发现独立于所选执行引擎。',
+        },
+        {
+          id: 'limits',
+          title: '验证范围与已知问题',
+          body: ['多模态与工具调用需模型和引擎同时支持。'],
+          more: [{
+            title: `v${DESKTOP_RELEASE_VERSION} 验证范围与已知问题`,
+            body: [
+              '固定输出基准仅支持声明输出长度控制的原生 llama.cpp 与受支持非 Metal vLLM。',
+              'v0.3.2 报告的 SmolVLM 图像/视频质量问题（F09）尚未确认修复。',
+              '桌面端与公开 CLI 均不提供基于 CPU 参考的数值对比验证。',
+            ],
+          }],
+        },
+      ],
+    },
+    adapters: {
+      title: '连接外部推理引擎',
+      description: '自动查找 → 检查项目 → 选择模型 → 连接，四步接入本地引擎。',
+      sections: [
+        {
+          id: 'prepare',
+          title: '连接流程概览',
+          diagram: 'adapter-flow',
+          body: ['无需手写配置文件，即可连接本机 OpenAI 兼容 v1 服务或安装目录。'],
+        },
+        {
+          id: 'find',
+          title: '1. 查找与原生批准',
+          body: ['打开推理引擎 → 添加推理引擎 → 自动查找，或点击选择安装文件夹。'],
+          points: [
+            '文件夹扫描仅识别可直接启动的程序（自动排除 DLL 等库文件），不偏袒特定引擎名称。',
+            '唯一的运行中服务可自动检查；安装文件夹候选项则必须手动点击检查所选项目。',
+            '桌面端执行 help 需针对确切命令、参数、目录和环境进行原生 OS 批准（取消操作会同步撤回待处理弹窗）。',
+          ],
+          note: '有模型会话运行或存在其他运行时任务时，发现与注册会被锁定。',
+          image: 'auto-find',
+          caption: '自动查找界面。',
+        },
+        {
+          id: 'choose-model',
+          title: '2. 选择模型',
+          body: ['从运行中服务返回的模型列表或文件夹模式下的本地模型库中选择。'],
+          points: ['若程序通过子命令提供服务，请在启动命令中选择一项并点击检查所选命令。'],
+          image: 'auto-model',
+          caption: '外部引擎模型选择界面。',
+        },
+        {
+          id: 'connect',
+          title: '3. 连接与实时验证',
+          body: ['点击连接，验证真实聊天回复与流式传输通过后再保存到应用内。'],
+          points: [
+            '连接运行中服务使用 AioLM 本地代理；停止连接只关闭代理，不会关闭原服务。',
+            '自动连接不会声明固定输出基准控制，也不代表已验证多模态或工具支持。',
+          ],
+          image: 'auto-connect',
+          caption: '连接验证完成界面。',
+        },
+        {
+          id: 'launch-options',
+          title: '选项配置与 Help 重检',
+          body: ['托管连接根据所选命令的实际帮助生成分组选项编辑器。'],
+          points: [
+            '简单控件采用响应式多栏，JSON、词元列表、路径与重复编辑器保持全宽，并提供命令与帮助工具。',
+            '若已审核的 help 与运行时标识不再一致（PATH 等未变的继承环境变量不计入标识），启动时会再次运行一次已审核的 help 命令，若解析结果完全一致则沿用审核。仅当准确的可执行文件路径、参数、实际工作目录和环境均与此前已批准的记录一致时，help 执行才会跳过原生确认提示；只要其中任一执行输入发生变化，都需要重新进行原生批准。',
+            '若 help 已变更或存在仅针对旧构建的选项确认，则会停止启动并要求重新检查选项。保存配置并启动会自动关闭弹窗并在后台运行检查与加载。',
+          ],
+          more: [{
+            title: '附加启动参数与外部托管服务',
+            body: ['附加启动参数按字面量传递且不执行 Shell，拒绝重复或应用保留标志。已在运行的服务不在 AioLM 内修改启动参数。'],
+          }],
+        },
+        {
+          id: 'unconfirmed',
+          title: '无法验证连接时',
+          body: ['协议不兼容、缺少认证密钥或启动命令不明确时，将显示原因并保持未确认状态。'],
+          links: [{ href: '/zh/guides/adapters#files', label: '高级手动注册文件说明' }],
+          more: [{
+            title: '容器引擎',
+            body: ['已在运行的容器只要暴露本地 OpenAI v1 接口即可连接；应用不负责创建或管理容器。'],
+          }],
+        },
+        {
+          id: 'files',
+          title: '高级：手动注册文件说明',
+          body: ['仅当自动查找无法覆盖、需手动绑定程序时参考下表。'],
+          table: {
+            headers: ['文件类型', '用途说明'],
+            rows: [
+              ['*.setup.json', '提供方编写的输入配方（需与配套脚本放在同一目录）'],
+              ['注册清单 (*.engine.json)', '仅在导入现成完整注册 JSON 时使用'],
+              ['服务器可执行文件', '真正的服务端程序（切勿选择安装器或快捷方式）'],
+              ['Python 解释器', '引擎所在环境中的 python.exe 或 bin/python'],
+              ['模型与引擎配置', '注册后选择（如 .gguf、.safetensors、deployment.json）'],
+            ],
+          },
+          note: '手动填写表单并注册成功后会保存在应用内部，无需自行创建 .engine.json。',
+        },
+        {
+          id: 'advanced',
+          title: '高级：手动注册步骤',
+          body: ['仅在需要手动配置可执行程序、桥接器或探针脚本时展开查看。'],
+          more: [
+            {
+              title: '1. 打开手动注册与路径授权',
+              body: ['停止模型 → 添加推理引擎 → 展开高级配置。通过原生文件选择器选取的清单会获得当前会话授权；手动输入路径则需确认弹窗展示 probe 与启动命令。'],
+              image: 'adapter-add',
+              caption: '高级手动注册入口。',
+            },
+            {
+              title: '2. 导入连接配方 (*.setup.json)',
+              steps: ['选择导入 AioLM 连接设置 (.json)（与当前会话选择器令牌绑定）。', '填好路径后点击检查安装并继续。'],
+              code: '解压目录/\n  engine.setup.json\n  prepare.py\n  probe.py',
+              body: ['请保留同一目录下的所有配套脚本。'],
+            },
+            {
+              title: '3. 填写执行程序与参数',
+              body: ['选择程序或 Python 解释器，填好 custom.<引擎>、运行时 ID，并选择直连 HTTP 或独立桥接。'],
+              image: 'adapter-setup',
+              caption: '手动程序与参数表单。',
+              code: '可执行文件: bin/python\n参数 1: -m\n参数 2: vendor_engine.serve',
+            },
+            {
+              title: '4. 发现帮助与探针',
+              body: ['运行发现帮助，绑定模型/端口参数及 AioLM JSON 探针（schema_version: 1）。'],
+              image: 'adapter-help',
+              caption: '帮助发现步骤。',
+            },
+            {
+              title: '5. 检查绑定与兼容性',
+              body: ['确认探针 JSON、健康检查路径与 HTTP/SSE 支持后保存注册。'],
+              image: 'adapter-check',
+              caption: '绑定与探针兼容性检查。',
+            },
+            {
+              title: '6. 保存并测试运行',
+              steps: ['点击检查注册内容 → 注册。', '选中新引擎并运行模型，验证对话、取消和重启。'],
+              image: 'adapter-review',
+              caption: '最终注册确认界面。',
+              body: [],
+            },
+          ],
+        },
+        {
+          id: 'trouble',
+          title: '常见问题排查',
+          more: [
+            { title: '找不到 Python 或文件', body: ['请选择引擎虚拟环境中的 Python，并保留完整目录结构。'] },
+            { title: '已注册但无法启动', body: ['核对模型格式、完整权重文件、内存占用及服务端日志。'] },
+            { title: '移除注册的影响', body: ['删除外部注册仅移除 AioLM 内部记录，不会删除原引擎或模型文件。'] },
+          ],
+        },
+      ],
     },
   },
 };
+
 export default content;

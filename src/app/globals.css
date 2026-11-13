@@ -1040,13 +1040,20 @@ th[style*="text-align: right"] .bilingual-header {
 
 .explorer-guide-title { font-size: var(--fs-group); font-weight: var(--fw-heading); }
 
-.explorer-guide-text {
+.explorer-guide-list {
   grid-column: 2;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 8px 0 0;
+  padding-inline-start: 20px;
+}
+
+.explorer-guide-text {
   min-width: 0;
   color: var(--ui-muted);
   font-size: var(--fs-body);
 }
-
 .explorer-guide-term { color: var(--ui-ink); font-weight: var(--fw-semibold); }
 
 /* --------------------------------------------- explorer empty state ------ */

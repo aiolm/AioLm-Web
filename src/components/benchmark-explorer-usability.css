@@ -212,8 +212,8 @@
 .explorer-guide > summary::after { content: ""; flex: none; width: 7px; height: 7px; margin-inline: 8px; border-right: 1.5px solid var(--ui-muted); border-bottom: 1.5px solid var(--ui-muted); transform: rotate(45deg); transition: transform 150ms ease; }
 .explorer-guide[open] > summary::after { transform: rotate(225deg); }
 .explorer-compact .explorer-guide-title { font-size: var(--fs-group); font-weight: var(--fw-heading); line-height: var(--lh-group); letter-spacing: var(--tracking-heading); }
-.explorer-compact .explorer-guide-text { max-width: 80ch; margin-block: 0 12px; color: var(--ui-muted); font-size: var(--fs-body); line-height: var(--lh-body); }
-
+.explorer-compact .explorer-guide-list { display: grid; gap: 8px; margin: 4px 0 12px; padding-inline-start: 18px; }
+.explorer-compact .explorer-guide-text { max-width: 80ch; margin: 0; color: var(--ui-muted); font-size: var(--fs-body); line-height: var(--lh-body); }
 /* ------------------------------------------------- option conditions ----- */
 .explorer-setting-editor,
 .explorer-setting-row,

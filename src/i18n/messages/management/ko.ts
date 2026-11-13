@@ -18,7 +18,7 @@ const messages = {
   "verify.required": "먼저 인증을 완료한 후 계속하세요.",
   "verify.done": "인증되었습니다. 앱으로 돌아가면 자동으로 계속됩니다.",
   "verify.title": "게시 인증",
-  "verify.intro": "벤치마크를 접수하기 전에 사람인지 확인합니다. 계정은 필요하지 않으며, 소유자 인증 정보는 앱에 보관되고 이 페이지에 공유되지 않습니다.",
+  "verify.intro": "게시 전 간단한 확인 단계입니다. 소유자 키는 데스크톱 앱에만 보관됩니다.",
   "verify.sending": "인증 중…",
   "verify.continue": "인증하고 계속",
   "manage.noSession": "활성 세션이 없습니다. 백업 파일을 선택하거나 앱에서 관리 페이지를 다시 여세요.",
@@ -47,9 +47,9 @@ const messages = {
   "manage.clearFailed": "지금은 세션을 해제할 수 없습니다. 해제되지 않았으니 다시 시도하세요.",
   "manage.clearNetwork": "서버에 연결할 수 없습니다. 해제되지 않았으니 다시 시도하세요.",
   "manage.title": "게시된 벤치마크 관리",
-  "manage.intro": "AioLM 앱이 저장한 백업 파일을 선택하거나 앱에서 이 페이지를 여세요. 키를 직접 입력할 필요가 없으며, 파일의 코드는 열 때만 전송되고 주소 표시줄에 포함되지 않습니다.",
+  "manage.intro": "저장된 AioLM 백업 파일을 선택하거나 앱에서 여세요. 코드는 URL이나 브라우저에 저장되지 않습니다.",
   "manage.code": "복구 코드",
-  "manage.codeHint": "aiolm-recovery-v1.으로 시작합니다. 타인에게 공개하지 마세요. 백업 파일이 없을 때만 사용하세요.",
+  "manage.codeHint": "aiolm-recovery-v1.으로 시작합니다. 백업 파일이 없을 때만 비공개로 사용하세요.",
   "manage.opening": "여는 중…",
   "manage.open": "관리 세션 열기",
   "manage.record": "내 기록",
@@ -71,7 +71,7 @@ const messages = {
   "manage.delete": "벤치마크 삭제",
   "manage.clear": "세션 해제",
   "manage.files": "백업 파일",
-  "manage.filesHint": "aiolm-recovery-….txt 백업 파일을 하나 이상 선택하세요. 이 탭에서만 읽고, 페이지를 떠날 때까지 메모리에만 보관하며, 브라우저에 저장하지 않습니다.",
+  "manage.filesHint": "aiolm-recovery-….txt 백업 파일을 선택하세요(이 탭 메모리에서만 읽습니다).",
   "manage.filesClear": "파일 목록 지우기",
   "manage.fileSaved": "저장",
   "manage.fileSubmission": "제출",
@@ -87,7 +87,7 @@ const messages = {
   "manage.fileStatus.gone": "삭제된 벤치마크입니다",
   "manage.confirmSwitch": "다른 결과를 열고 저장하지 않은 변경 사항을 버릴까요?",
   "manage.pasteTitle": "대신 복구 코드 붙여넣기",
-  "manage.handoffFailed": "앱에서 연 링크가 만료되었거나 이미 사용되었습니다. 앱에서 관리 페이지를 다시 열거나 백업 파일을 선택하세요."
+  "manage.handoffFailed": "앱 링크가 만료되었거나 이미 사용되었습니다. 앱에서 다시 열거나 백업 파일을 선택하세요.",
 } satisfies Catalog;
 
 export default messages;

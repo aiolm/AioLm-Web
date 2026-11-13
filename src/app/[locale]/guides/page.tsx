@@ -7,7 +7,7 @@ import { getGuides } from '@/content/guides';
 import { guideSlugs } from '@/content/guides/types';
 import { GuideTableOfContents } from '@/components/guide-table-of-contents';
 import { GuideLayout } from '@/components/guide-layout';
-
+import { GuideCardIcon } from '@/components/visual-diagrams';
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
@@ -24,9 +24,12 @@ export default async function Guides({ params }: { params: Promise<{ locale: str
     <GuideTableOfContents label={content.onPage} sections={guideSlugs.map(slug => ({ id: `guide-${slug}`, title: content.guides[slug].title }))} />
     <div className="guide-body"><ol className="guide-list">
       {guideSlugs.map((slug, index) => <li key={slug} id={`guide-${slug}`}><Link href={localizedPath(locale, `/guides/${slug}`)}>
-        <span className="guide-list-number" aria-hidden="true">0{index + 1}</span>
-        <div><h2 id={`title-guide-${slug}`} tabIndex={-1}>{content.guides[slug].title}</h2><p>{content.guides[slug].description}</p></div>
-        <span className="guide-list-arrow" aria-hidden="true">→</span>
+        <div className="guide-list-top">
+          <span className="guide-list-icon-wrap"><GuideCardIcon slug={slug} /></span>
+          <span className="guide-list-number" aria-hidden="true">0{index + 1}</span>
+          <span className="guide-list-arrow" aria-hidden="true">→</span>
+        </div>
+        <div className="guide-list-copy"><h2 id={`title-guide-${slug}`} tabIndex={-1}>{content.guides[slug].title}</h2><p>{content.guides[slug].description}</p></div>
       </Link></li>)}
     </ol></div>
     </article>

@@ -316,10 +316,10 @@ function SetupSection({ benchmark }: { benchmark: BenchmarkSetup }): React.JSX.E
     <section className="card" aria-labelledby="env-title">
       <h2 id="env-title">{t("benchmark.Test setup (as reported)")}</h2>
       <p className="muted">{t("benchmark.These values were sent with the publication and are shown as reported. They are not independently verified.")}</p>
-      <p className="muted">{t("benchmark.recordedModelSourceExplanation")}</p>
       {groups.map((group) => (
         <details className="detail-group" key={group.id}>
           <summary className="detail-group-title" id={group.id}>{group.title}</summary>
+          {group.id === "detail-setup-model" ? <p className="muted">{t("benchmark.recordedModelSourceExplanation")}</p> : null}
           {group.notes?.map(note => <p className="muted" key={note}>{note}</p>)}
           <dl className="kv" aria-labelledby={group.id}>
             {group.fields.map((field) => (

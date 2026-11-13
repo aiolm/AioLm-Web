@@ -18,7 +18,7 @@ const messages = {
   "verify.required": "先に認証を完了してから続行してください。",
   "verify.done": "認証が完了しました。アプリに戻ると自動的に続行します。",
   "verify.title": "公開を認証",
-  "verify.intro": "ベンチマークの受理前に、人間であることを確認します。アカウントは不要です。所有者の認証情報はアプリに保管され、このページには共有されません。",
+  "verify.intro": "公開前の簡単な確認です。所有者キーはデスクトップアプリ内にのみ保管されます。",
   "verify.sending": "認証中…",
   "verify.continue": "認証して続行",
   "manage.noSession": "有効なセッションがありません。バックアップファイルを選択するか、アプリから管理ページを開き直してください。",
@@ -47,9 +47,9 @@ const messages = {
   "manage.clearFailed": "現在、セッションを解除できません。解除されていないため、再試行してください。",
   "manage.clearNetwork": "サーバーに接続できません。解除されていないため、再試行してください。",
   "manage.title": "公開済みベンチマークの管理",
-  "manage.intro": "AioLM アプリが保存したバックアップファイルを選択するか、アプリからこのページを開いてください。キーを入力する必要はありません。ファイルのコードは開くときにだけ送信され、アドレスバーには表示されません。",
+  "manage.intro": "保存済みの AioLM バックアップファイルを選ぶかアプリから開いてください。コードは URL やブラウザに保存されません。",
   "manage.code": "復旧コード",
-  "manage.codeHint": "aiolm-recovery-v1. で始まります。他人に公開しないでください。バックアップファイルがない場合にのみ使用してください。",
+  "manage.codeHint": "aiolm-recovery-v1. で始まります。バックアップファイルがない場合のみ非公開で使用してください。",
   "manage.opening": "開始中…",
   "manage.open": "管理セッションを開始",
   "manage.record": "あなたの記録",
@@ -71,7 +71,7 @@ const messages = {
   "manage.delete": "ベンチマークを削除",
   "manage.clear": "セッションを解除",
   "manage.files": "バックアップファイル",
-  "manage.filesHint": "aiolm-recovery-….txt のバックアップファイルを 1 つ以上選択してください。このタブ内でのみ読み取り、ページを離れるまでメモリにだけ保持し、ブラウザには保存しません。",
+  "manage.filesHint": "aiolm-recovery-….txt バックアップファイルを選択します（このタブのメモリ内のみで読み取ります）。",
   "manage.filesClear": "ファイル一覧を消去",
   "manage.fileSaved": "保存",
   "manage.fileSubmission": "送信",
@@ -87,7 +87,7 @@ const messages = {
   "manage.fileStatus.gone": "削除されたベンチマークです",
   "manage.confirmSwitch": "別の結果を開き、保存していない変更を破棄しますか？",
   "manage.pasteTitle": "代わりに復旧コードを貼り付け",
-  "manage.handoffFailed": "アプリから開いたリンクは期限切れか、すでに使用されています。アプリから管理ページを開き直すか、バックアップファイルを選択してください。"
+  "manage.handoffFailed": "アプリのリンクが期限切れか使用済みです。アプリから開き直すかバックアップファイルを選んでください。",
 } satisfies Catalog;
 
 export default messages;

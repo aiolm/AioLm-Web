@@ -18,7 +18,7 @@ const messages = {
   "verify.required": "请先完成验证再继续。",
   "verify.done": "验证成功。请返回应用，应用将自动继续。",
   "verify.title": "发布验证",
-  "verify.intro": "在接受基准测试之前，确认您是真人。无需账户；所有者凭据保存在应用中，不会与此页面共享。",
+  "verify.intro": "发布前的人机验证。所有者凭据仅保存在桌面应用中。",
   "verify.sending": "正在验证…",
   "verify.continue": "验证并继续",
   "manage.noSession": "没有有效会话。请选择备份文件，或从应用重新打开管理页面。",
@@ -47,9 +47,9 @@ const messages = {
   "manage.clearFailed": "当前无法清除会话。未清除任何内容，请重试。",
   "manage.clearNetwork": "无法连接服务器。未清除任何内容，请重试。",
   "manage.title": "管理已发布的基准测试",
-  "manage.intro": "请选择 AioLM 应用保存的备份文件，或从应用打开此页面。无需手动输入密钥；文件中的代码仅在打开时发送，绝不会放入地址栏。",
+  "manage.intro": "选择 AioLM 保存的备份文件或从应用打开。恢复代码不会写入地址栏或浏览器存储。",
   "manage.code": "恢复代码",
-  "manage.codeHint": "以 aiolm-recovery-v1. 开头，请勿泄露。仅在没有备份文件时使用。",
+  "manage.codeHint": "以 aiolm-recovery-v1. 开头，请妥善保密；仅在无备份文件时使用。",
   "manage.opening": "正在开启…",
   "manage.open": "开启管理会话",
   "manage.record": "您的记录",
@@ -71,7 +71,7 @@ const messages = {
   "manage.delete": "删除基准测试",
   "manage.clear": "清除会话",
   "manage.files": "备份文件",
-  "manage.filesHint": "选择一个或多个 aiolm-recovery-….txt 备份文件。文件仅在此标签页中读取，离开页面前只保存在内存中，浏览器不会保存。",
+  "manage.filesHint": "选择一个或多个 aiolm-recovery-….txt 备份文件（仅在当前标签页内存中读取）。",
   "manage.filesClear": "清除文件列表",
   "manage.fileSaved": "保存于",
   "manage.fileSubmission": "提交",
@@ -87,7 +87,7 @@ const messages = {
   "manage.fileStatus.gone": "该基准测试已被删除",
   "manage.confirmSwitch": "打开其他结果并放弃未保存的更改吗？",
   "manage.pasteTitle": "改为粘贴恢复代码",
-  "manage.handoffFailed": "从应用打开的链接已过期或已被使用。请从应用重新打开管理页面，或选择备份文件。"
+  "manage.handoffFailed": "应用链接已过期或已使用。请从应用重新打开或选择备份文件。",
 } satisfies Catalog;
 
 export default messages;

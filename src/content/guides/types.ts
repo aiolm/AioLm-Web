@@ -2,6 +2,8 @@ export const guideSlugs = ['install', 'getting-started', 'compatibility', 'adapt
 export type GuideSlug = typeof guideSlugs[number];
 export const guideImageIds = ['language', 'theme', 'folder', 'engines', 'llama-install', 'discover', 'model-files', 'model-library', 'model-settings', 'chat', 'updates', 'adapter-add', 'adapter-setup', 'adapter-help', 'adapter-check', 'adapter-review', 'auto-find', 'auto-model', 'auto-connect'] as const;
 export type GuideImageId = typeof guideImageIds[number];
+export const guideDiagramIds = ['install-flow', 'setup-flow', 'memory-pools', 'adapter-flow'] as const;
+export type GuideDiagramId = typeof guideDiagramIds[number];
 export type GuideTable = { headers: string[]; rows: string[][] };
 export type GuideMore = {
   title: string;
@@ -15,11 +17,13 @@ export type GuideSection = {
   id: string;
   title: string;
   body?: string[];
+  points?: string[];
   links?: Array<{ href: string; label: string }>;
   steps?: string[];
   code?: string;
   note?: string;
   table?: GuideTable;
+  diagram?: GuideDiagramId;
   image?: GuideImageId;
   caption?: string;
   downloads?: 'windows' | 'macos' | 'linux';
