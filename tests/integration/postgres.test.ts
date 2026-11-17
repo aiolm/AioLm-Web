@@ -5,12 +5,11 @@ import postgres from "postgres";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { PublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
 import { randomBase64Url32, sha256HexUtf8 } from "@/lib/crypto";
-import { syntheticFixedOutputSubmission, syntheticSubmission, syntheticServingSubmission } from "@/lib/fixtures";
-import { pythonBenchmark } from "../inference-benchmarks";
+import { syntheticSubmission } from "@/lib/fixtures";
 import { summarizeBenchmark, type BenchmarkSummary } from "@/lib/summary";
 import { weightBits } from "@/lib/weight-bits";
 import weightEncodings from "@/lib/weight-encodings.json";
-import { normalizeModelInfo } from "@/lib/model-info";
+import { normalizeModelInfo, type BenchmarkModelInfo } from "@/lib/model-info";
 import { mintUploadPermit, ownerHashFor, permitExpiryForSession } from "@/lib/permits";
 import { applyMigrations } from "@/server/migrations";
 import { PostgresBenchmarkStore } from "@/server/postgres-store";
@@ -23,7 +22,7 @@ import { GET as pollUploadSession } from "@/app/v1/upload-sessions/[id]/route";
 import { GET as listBenchmarkRuns, POST as submitBenchmarkRun } from "@/app/v1/benchmark-runs/route";
 import { GET as getReadiness } from "@/app/v1/readiness/route";
 import { InMemoryBenchmarkStore } from "@/server/memory-store";
-import { parseFilters, canonicalSettingDescriptor, type SettingDescriptor, type SettingValue, type BenchmarkFilters } from "@/lib/benchmark-discovery";
+import { parseFilters, canonicalSettingDescriptor, type BenchmarkSetup, type SettingDescriptor, type SettingValue, type BenchmarkFilters } from "@/lib/benchmark-discovery";
 import { decodeDiscoveryCursor, type ListCursor } from "@/lib/pagination";
 
 /**
@@ -192,46 +191,81 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     type Summary = ReturnType<typeof summarizeBenchmark>;
     type Page = { items: Array<{ public_id: string; summary: Summary }>; next_cursor: string | null };
     let runtimeDb: postgres.Sql;
-    const setup = {
-      os: "TestOS", arch: "x64", cpu: "Test CPU", cores: 8,
-      vendors: ["Vendor A"], gpus: ["GPU A"], vram_mb: 8192,
+    const baseline = summarizeBenchmark(syntheticSubmission());
+    const setup: BenchmarkSetup = {
+      ...baseline.setup,
+      os: "TestOS", arch: "x64", cpu: "Test CPU", cores: 8, physical_cores: 4,
+      ram_bytes: 16 * 1024 ** 3, vendors: ["Vendor A"], gpus: ["GPU A"], vram_mb: 8192,
       runtime: "test-runtime", runtime_version: "1", backend: "test-backend", mode: "selected",
-      context_size: 16896, prompt_length: 4096, parallel: 2, threads: 4, gpu_layers: -1,
-      flash_attention: "on", cache_type_k: "f16", cache_type_v: "q8", split_mode: "layer",
+      max_input_bytes: 4096, max_concurrency: 1, max_output_tokens: 128,
+      repetitions: 1, warmup: false, request_usage: false,
+      inputs: [{ bytes: 4096, sha256: "a".repeat(64) }], concurrencies: [1],
     };
 
-    // A summary carrying contract 0.3.0 model metadata, publisher included, exactly
-    // as summarizeBenchmark and migration 010 store it.
-    const modelInfo = (overrides: Record<string, unknown> = {}) => ({
+    // A summary carrying current model metadata, exactly as normalizeModelInfo
+    // stores it at acceptance. Empty strings and malformed values stay null.
+    const modelInfo = (overrides: Partial<BenchmarkModelInfo> = {}): BenchmarkModelInfo => ({
       format: "GGUF", name: "Example 8B", architecture: "qwen2", size_label: "8B", quantization: "Q4_K_M",
       file_type: 15, quantized_by: "Quantizer Org", repository: "Publisher-Org/example-8B-GGUF",
-      base_models: ["Upstream-Org/example-8B", "Other-Org/mixin-2B"], artifact: "q4/example-8B-Q4_K_M.gguf",
-      source: "gguf+huggingface", publisher: "Publisher-Org", sha256: "c".repeat(64), identity_status: "sha256",
-      ...overrides });
+      revision: null, base_models: ["Upstream-Org/example-8B", "Other-Org/mixin-2B"],
+      artifact: "q4/example-8B-Q4_K_M.gguf", source: "gguf+huggingface",
+      publisher: "Publisher-Org", sha256: "c".repeat(64), identity_status: "sha256",
+      ...overrides,
+    });
 
-    async function seed(id: string, group: string, overrides: Record<string, unknown> = {},
-      flags: { hidden?: boolean; deleted?: boolean; created?: string } = {}): Promise<void> {
+    type SummaryOverrides = Partial<Omit<Summary, "setup">> & { setup?: Partial<BenchmarkSetup> };
+
+    async function seed(
+      id: string,
+      group: string,
+      overrides: SummaryOverrides = {},
+      flags: { hidden?: boolean; deleted?: boolean; created?: string } = {},
+      benchmarkOverrides: Partial<PublicBenchmarkSubmission> = {},
+    ): Promise<void> {
       if (!db) throw new Error("integration database unavailable");
-      const summary = { ...summarizeBenchmark(syntheticSubmission()), model_label: group,
-        setup: { ...setup }, ...overrides };
-      const benchmark = syntheticSubmission();
-      benchmark.runtime = { ...benchmark.runtime, name: summary.setup.runtime as "llama.cpp", version: summary.setup.runtime_version, backend: summary.setup.backend };
-      benchmark.environment!.execution = {
-        mode: "selected", selection_complete: true,
-        selected_gpus: summary.setup.gpus.map((name, index) => ({ name,
-          vendor: summary.setup.vendors[index] ?? summary.setup.vendors[0] ?? null,
-          vram_mb: null, driver: null, integrated: false,
-        })),
+      const benchmark = syntheticSubmission(benchmarkOverrides);
+      const stored = summarizeBenchmark(benchmark);
+      const mergedSetup: BenchmarkSetup = { ...setup, ...overrides.setup };
+      benchmark.runtime = {
+        name: mergedSetup.runtime, version: mergedSetup.runtime_version, backend: mergedSetup.backend,
+        build: mergedSetup.runtime_build, variant: mergedSetup.runtime_variant,
+        plugin_version: mergedSetup.runtime_plugin_version,
+      };
+      if (benchmark.environment) {
+        benchmark.environment.execution = {
+          mode: (mergedSetup.mode ?? "unknown") as NonNullable<PublicBenchmarkSubmission["environment"]>["execution"]["mode"],
+          selection_complete: mergedSetup.execution_selection_complete ?? true,
+          selected_gpus: mergedSetup.gpus.map((name, index) => ({
+            name, vendor: mergedSetup.vendors[index] ?? mergedSetup.vendors[0] ?? null,
+            vram_mb: null, driver: null, integrated: false,
+          })),
+        };
+      }
+      const summary: Summary = {
+        ...stored,
+        ...overrides,
+        model_label: group,
+        identity: {
+          ...stored.identity,
+          engine_name: benchmark.runtime.name,
+          engine_version: benchmark.runtime.version,
+          engine_variant: benchmark.runtime.variant,
+          engine_build: benchmark.runtime.build,
+          engine_plugin_version: benchmark.runtime.plugin_version,
+          ...(overrides.identity ?? {}),
+        },
+        setup: mergedSetup,
       };
       await db`insert into bench.benchmark_runs
         (submission_id, public_id, owner_hash, body_sha256, benchmark, summary, hidden, deleted, created_at)
         values (${randomUUID()}, ${id}, ${"0".repeat(64)}, ${"1".repeat(64)},
-          ${db.json(JSON.parse(JSON.stringify(benchmark)) as postgres.JSONValue)}, ${db.json(JSON.parse(JSON.stringify(summary)) as postgres.JSONValue)}, ${flags.hidden ?? false},
+          ${db.json(JSON.parse(JSON.stringify(benchmark)) as postgres.JSONValue)},
+          ${db.json(JSON.parse(JSON.stringify(summary)) as postgres.JSONValue)}, ${flags.hidden ?? false},
           ${flags.deleted ?? false}, ${flags.created ?? "2026-01-01T00:00:00.000Z"})`;
     }
 
     async function request(query: Record<string, string>, options = false): Promise<Response> {
-      const url = `http://localhost:3000/v1/benchmark-runs${options ? "/options" : ""}?${new URLSearchParams({ measurement: "legacy", ...query })}`;
+      const url = `http://localhost:3000/v1/benchmark-runs${options ? "/options" : ""}?${new URLSearchParams(query)}`;
       if (options) {
         const { GET } = await import("@/app/v1/benchmark-runs/options/route");
         return GET(new Request(url));
@@ -255,13 +289,28 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
 
     beforeAll(async () => {
       runtimeDb = postgres(runtimeUrl, { max: 1, prepare: false, ssl: false });
-      await seed("discovery-range-hit", "discovery-range");
-      await seed("discovery-range-low", "discovery-range", { setup: { ...setup,
-        prompt_length: 1024, vram_mb: 1024, cores: 2, parallel: 1, threads: 1, gpu_layers: 0 } });
-      await seed("discovery-range-high", "discovery-range", { setup: { ...setup,
-        prompt_length: 8192, vram_mb: 16384, cores: 16, parallel: 8, threads: 16, gpu_layers: 32 } });
-      await seed("discovery-range-unknown", "discovery-range", { setup: { ...setup,
-        prompt_length: null, vram_mb: null, cores: null, parallel: null, threads: null, gpu_layers: null } });
+      const ranges = {
+        low: { input: 1024, cap: 32, concurrency: 1, vram: 1024, cores: 2, physical: 1, ram: 1024 ** 3, modelSize: 1_000_000 },
+        hit: { input: 4096, cap: 64, concurrency: 4, vram: 8192, cores: 8, physical: 4, ram: 16 * 1024 ** 3, modelSize: 8_000_000_000 },
+        high: { input: 16384, cap: 128, concurrency: 16, vram: 16384, cores: 16, physical: 8, ram: 32 * 1024 ** 3, modelSize: 16_000_000_000 },
+        unknown: { input: null, cap: 1, concurrency: 64, vram: null, cores: null, physical: null, ram: null, modelSize: null },
+      };
+      for (const [label, values] of Object.entries(ranges)) {
+        await seed(`discovery-range-${label}`, "discovery-range", {
+          setup: {
+            ...setup,
+            max_input_bytes: values.input as number,
+            max_output_tokens: values.cap,
+            max_concurrency: values.concurrency,
+            vram_mb: values.vram,
+            cores: values.cores,
+            physical_cores: values.physical,
+            ram_bytes: values.ram,
+          },
+          identity: { ...baseline.identity, model_size_bytes: values.modelSize },
+        }, {}, { model: { ...syntheticSubmission().model, size_bytes: values.modelSize } });
+      }
+      await seed("discovery-point-maxima", "discovery-point", { setup: { ...setup, max_input_bytes: 16384 } });
       await seed("discovery-vendor-pair", "discovery-vendor-pair", { setup: { ...setup,
         vendors: ["Vendor A", "Vendor B"], gpus: ["Mixed GPU A", "Mixed GPU B"] } });
       for (let i = 0; i < 35; i++) {
@@ -272,20 +321,19 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       await seed("discovery-option-hidden", "discovery-options", { setup: { ...setup, gpus: ["Hidden GPU"] } }, { hidden: true });
       await seed("discovery-option-deleted", "discovery-options", { setup: { ...setup, gpus: ["Deleted GPU"] } }, { deleted: true });
       for (const [id, value, created] of [
-        ["a", 10, "2026-01-01"], ["b", 10, "2026-01-01"],
-        ["c", 10, "2026-01-02"], ["d", 20, "2026-01-01"], ["e", null, "2026-01-03"],
+        ["a", 1000, "2026-01-01"], ["b", 1000, "2026-01-01"],
+        ["c", 1000, "2026-01-02"], ["d", 2000, "2026-01-01"], ["e", null, "2026-01-03"],
         ["f", null, "2026-01-03"],
       ] as const) {
-        // The two speed sorts read the basis point, so the value under test
-        // lives on the point. "e" measured the point but reported no value and
-        // "f" never measured it; both are missing for those sorts and sort last,
-        // which the retained means below deliberately do not decide.
-        const stat = value === null ? null : { median: value, min: value, max: value };
+        // The speed sorts read one serving point, so the value under test lives
+        // on that point. "e" measured the point but reported no value and "f"
+        // never measured it; both sort last for the point metrics.
+        const stat = value === null ? null : { median: value, min: value, max: value, samples: 1 };
         await seed(`discovery-sort-${id}`, "discovery-sort", {
-          setup: { ...setup, prompt_length: value, vram_mb: value }, mean_tg_tps: value, mean_e2e_ms: value,
-          points: id === "f" ? [] : [{
-            prompt_tokens: 512, concurrency: 1, generation_length: 128, samples: 1,
-            pp_tps: null, tg_tps: stat, ttft_ms: null, e2e_ms: stat,
+          setup: { ...setup, max_input_bytes: value as number, vram_mb: value },
+          serving_points: id === "f" ? [] : [{
+            ...baseline.serving_points[0]!,
+            reported_tokens_per_second: stat, output_bytes_per_second: stat, e2e_ms: stat,
           }],
         }, { created: `${created}T00:00:00.000Z` });
       }
@@ -303,37 +351,49 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     afterAll(async () => { if (runtimeDb) await runtimeDb.end({ timeout: 5 }); });
 
     it.each([
-      ["context", "4096"], ["vram", "8192"], ["cores", "8"],
-      ["parallel", "2"], ["threads", "4"], ["gpu_layers", "-1"],
+      ["input_bytes", 4096], ["vram", 8192], ["cores", 8], ["physical_cores", 4],
+      ["ram", 16 * 1024 ** 3], ["model_size", 8_000_000_000],
     ])("applies inclusive %s ranges and excludes unknown values", async (field, value) => {
-      const result = await page({ model: "discovery-range", [`${field}_min`]: value, [`${field}_max`]: value });
+      const text = String(value);
+      const result = await page({ model: "discovery-range", [`${field}_min`]: text, [`${field}_max`]: text });
       expect(result.items.map((item) => item.public_id)).toEqual(["discovery-range-hit"]);
-      const lower = await page({ model: "discovery-range", [`${field}_min`]: value });
-      const upper = await page({ model: "discovery-range", [`${field}_max`]: value });
+      const lower = await page({ model: "discovery-range", [`${field}_min`]: text });
+      const upper = await page({ model: "discovery-range", [`${field}_max`]: text });
       expect(lower.items.map((item) => item.public_id)).not.toContain("discovery-range-unknown");
       expect(upper.items.map((item) => item.public_id)).not.toContain("discovery-range-unknown");
       expect(lower.items.map((item) => item.public_id)).toContain("discovery-range-high");
       expect(upper.items.map((item) => item.public_id)).not.toContain("discovery-range-high");
     });
 
-    it("reads context ranges from the configured input length, never from the runtime allocation", async () => {
-      // Every seeded run allocates 16896 tokens and none was configured to send an input that long.
-      expect((await page({ model: "discovery-range", context_min: "16896" })).items).toEqual([]);
-      expect((await page({ model: "discovery-range", context_min: "4096", context_max: "4096" })).items
-        .map((item) => item.public_id)).toEqual(["discovery-range-hit"]);
-      const ascending = await page({ model: "discovery-range", sort: "context_asc" });
-      expect(ascending.items.map((item) => item.public_id)).toEqual([
-        "discovery-range-low", "discovery-range-hit", "discovery-range-high", "discovery-range-unknown"]);
-      expect(ascending.items.every((item) => item.summary.setup?.context_size === 16896)).toBe(true);
+    it.each([["max_output_tokens", 64], ["max_concurrency", 4]])(
+      "applies inclusive %s ranges against configured maxima", async (field, value) => {
+        const text = String(value);
+        expect((await page({ model: "discovery-range", [`${field}_min`]: text, [`${field}_max`]: text }))
+          .items.map((item) => item.public_id)).toEqual(["discovery-range-hit"]);
+        const lower = await page({ model: "discovery-range", [`${field}_min`]: text });
+        const upper = await page({ model: "discovery-range", [`${field}_max`]: text });
+        expect(lower.items.map((item) => item.public_id)).toContain("discovery-range-high");
+        expect(upper.items.map((item) => item.public_id)).not.toContain("discovery-range-high");
+      });
+
+    it("filters configured input maxima independently from measured operating points", async () => {
+      expect((await page({ model: "discovery-point", input_bytes_min: "16384" })).items
+        .map((item) => item.public_id)).toEqual(["discovery-point-maxima"]);
+      expect((await page({ model: "discovery-point", point_bytes: "16384", point_concurrency: "1",
+        point_max_tokens: "128", point_only: "1" })).items).toEqual([]);
+      expect((await page({ model: "discovery-point", point_bytes: "4096", point_concurrency: "1",
+        point_max_tokens: "128", point_only: "1" })).items.map((item) => item.public_id))
+        .toEqual(["discovery-point-maxima"]);
+      expect((await request({ point_bytes: "4096", point_concurrency: "1", point_max_tokens: "129" })).status).toBe(400);
     });
 
     it.each(["NaN", "Infinity", "1.5", "9007199254740992", "-2"])("rejects invalid numeric filter %s", async (value) => {
-      expect((await request({ context_min: value })).status).toBe(400);
-      expect((await request({ field: "gpu", context_min: value }, true)).status).toBe(400);
+      expect((await request({ input_bytes_min: value })).status).toBe(400);
+      expect((await request({ field: "gpu", input_bytes_min: value }, true)).status).toBe(400);
     });
 
     it("rejects inverted ranges and unsupported option fields", async () => {
-      expect((await request({ threads_min: "8", threads_max: "2" })).status).toBe(400);
+      expect((await request({ max_concurrency_min: "8", max_concurrency_max: "2" })).status).toBe(400);
       expect((await request({ field: "owner_hash" }, true)).status).toBe(400);
     });
 
@@ -441,16 +501,16 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
 
     it.each([
       ["newest", "fecdba"], ["oldest", "abdcef"],
-      ["context_asc", "cbadfe"], ["context_desc", "dcbafe"],
+      ["input_bytes_asc", "cbadfe"], ["input_bytes_desc", "dcbafe"],
       ["vram_asc", "cbadfe"], ["vram_desc", "dcbafe"],
-      ["throughput_desc", "dcbafe"], ["duration_asc", "cbadfe"],
+      ["token_rate_desc", "dcbafe"], ["output_rate_desc", "dcbafe"], ["duration_asc", "cbadfe"],
     ])("pages %s across value, timestamp, ID and null ties without gaps", async (sort, order) => {
       const ids: string[] = [];
       let cursor: string | null = null;
-      // Ranking measured speed names the point it ranks at; the other orders read
-      // configuration and need none.
-      const basis: Record<string, string> = ["throughput_desc", "duration_asc"].includes(sort)
-        ? { point_tokens: "512", point_concurrency: "1" } : {};
+      // Ranking measured speed names the serving point it ranks at; the other
+      // orders read configured setup and need none.
+      const basis: Record<string, string> = ["token_rate_desc", "output_rate_desc", "duration_asc"].includes(sort)
+        ? { point_bytes: "4096", point_concurrency: "1", point_max_tokens: "128" } : {};
       for (let i = 0; i < 8; i++) {
         const result = await page({ model: "discovery-sort", sort, limit: "1", ...basis, ...(cursor ? { cursor } : {}) });
         ids.push(...result.items.map((item) => item.public_id));
@@ -462,73 +522,20 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       expect(new Set(ids).size).toBe(6);
     });
 
-    it("persists selected GPU totals without inventing unknown or installed-device specs", async () => {
-      if (!store) throw new Error("integration database unavailable");
-      const base = syntheticSubmission();
-      const gpu = { name: "Measured GPU", vendor: "Measured Vendor", vram_mb: 4096, driver: null, integrated: false };
-      const environment = { ...base.environment!, installed_gpus: [
-        { name: "Installed Only", vendor: "Installed Vendor", vram_mb: 65536, driver: null, integrated: false },
-      ], execution: { mode: "selected" as const, selected_gpus: [gpu, gpu], selection_complete: true } };
-      const cases: Array<[string, typeof base.environment]> = [
-        ["multi", environment],
-        ["missing", { ...environment, execution: { ...environment.execution,
-          selected_gpus: [gpu, { ...gpu, name: "Unknown Memory", vram_mb: null }] } }],
-        ["incomplete", { ...environment, execution: { ...environment.execution, selection_complete: false } }],
-        ["cpu", { ...environment, execution: { mode: "cpu" as const, selected_gpus: [], selection_complete: true } }],
-        ["absent", null],
-      ];
-      for (const [label, env] of cases) {
-        const submissionId = randomUUID(), ownerSecret = randomBase64Url32();
-        const benchmark = syntheticSubmission({ submission_id: submissionId, environment: env,
-          runtime: { ...base.runtime, backend: "discovery-devices" } });
-        const body = JSON.stringify({ benchmark, description_md: "integration" });
-        const hash = sha256HexUtf8(body);
-        const permit = await verifiedSession(submissionId, ownerSecret, hash);
-        const args = acceptArgs(submissionId, ownerSecret, permit, GENEROUS_QUOTA);
-        expect((await store.acceptRunAtomic({ ...args, public_id: `discovery-device-${label}`,
-          body_sha256: hash, benchmarkMeta: { ...benchmark, measurements: { ...benchmark.measurements, rows: [] } },
-          summary: summarizeBenchmark(benchmark), rows: benchmark.measurements.rows,
-          byte_size: Buffer.byteLength(body),
-        })).outcome).toBe("created");
-      }
-      const all = await page({ backend: "discovery-devices" });
-      expect(all.items).toHaveLength(5);
-      const byId = new Map(all.items.map((item) => [item.public_id, item.summary.setup]));
-      expect(byId.get("discovery-device-multi")).toMatchObject({
-        vram_mb: 8192, vendors: ["Measured Vendor"], gpus: ["Measured GPU"],
-      });
-      for (const label of ["missing", "incomplete", "cpu", "absent"]) {
-        expect(byId.get(`discovery-device-${label}`)?.vram_mb).toBeNull();
-      }
-      expect(byId.get("discovery-device-absent")).toMatchObject({ cpu: null, cores: null, os: null,
-        vendors: [], gpus: [], backend: "discovery-devices", context_size: 2048, parallel: 1 });
-      expect((await page({ backend: "discovery-devices", vram_min: "0" })).items.map((item) => item.public_id))
-        .toEqual(["discovery-device-multi"]);
-      expect((await page({ backend: "discovery-devices", gpu: "Installed Only" })).items).toEqual([]);
-      expect((await options({ field: "vendor", backend: "discovery-devices" })).options)
-        .toEqual([{ value: "Measured Vendor", count: 3 }]);
-      expect((await options({ field: "gpu", backend: "discovery-devices", option_query: "Installed" })).options).toEqual([]);
-      for (const item of all.items) {
-        expect(item).not.toHaveProperty("benchmark");
-        expect(item).not.toHaveProperty("owner_hash");
-        expect(item).not.toHaveProperty("submission_id");
-      }
-    });
-
     it("rejects cursors reused with a different sort or filter", async () => {
-      const first = await page({ model: "discovery-sort", sort: "context_asc", limit: "1" });
+      const first = await page({ model: "discovery-sort", sort: "input_bytes_asc", limit: "1" });
       expect(first.next_cursor).toBeTruthy();
-      for (const changed of ([{ sort: "context_desc", model: "discovery-sort" },
-        { sort: "context_asc", model: "discovery-range" },
-        { sort: "context_asc", model: "discovery-sort", cores_min: "2" }] as Array<Record<string, string>>)) {
+      for (const changed of ([{ sort: "input_bytes_desc", model: "discovery-sort" },
+        { sort: "input_bytes_asc", model: "discovery-range" },
+        { sort: "input_bytes_asc", model: "discovery-sort", cores_min: "2" }] as Array<Record<string, string>>)) {
         expect((await request({ ...changed, cursor: first.next_cursor! })).status).toBe(400);
       }
     });
   });
 
-  it("backfills existing selected-device summaries with fractional MiB and missing environments", async () => {
+  it("retires every pre-contract benchmark record and the legacy discovery indexes", async () => {
     if (!admin) throw new Error("integration database unavailable");
-    const scratchName = `aiolm_web_backfill_${randomUUID().replace(/-/g, "")}`;
+    const scratchName = `aiolm_web_retire_${randomUUID().replace(/-/g, "")}`;
     await admin.unsafe(`CREATE DATABASE "${scratchName}"`);
     const scratchUrl = new URL(ADMIN_URL!);
     scratchUrl.pathname = `/${scratchName}`;
@@ -536,276 +543,60 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     try {
       await scratch`create schema bench`;
       await scratch`create table bench.schema_migrations (filename text primary key, sha256 text not null)`;
-      for (const name of REQUIRED_MIGRATIONS.filter((name) => name < "008_benchmark_discovery.sql")) {
+      for (const name of REQUIRED_MIGRATIONS.filter((name) => name < "016_single_benchmark_method.sql")) {
         await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", name), "utf8"));
       }
-      const base = syntheticSubmission();
-      const gpu = { name: "Fractional GPU", vendor: "Test Vendor", vram_mb: 4096.5, driver: null, integrated: false };
-      const benchmarks = [
-        syntheticSubmission({ environment: { ...base.environment!, execution: {
-          mode: "selected", selected_gpus: [gpu, gpu], selection_complete: true,
-        } } }),
-        syntheticSubmission({ environment: null }),
-      ];
-      for (const [index, benchmark] of benchmarks.entries()) {
-        const { setup: omittedSetup, ...legacy } = summarizeBenchmark(benchmark);
-        void omittedSetup;
-        await scratch`insert into bench.benchmark_runs
-          (submission_id, public_id, owner_hash, body_sha256, benchmark, summary)
-          values (${randomUUID()}, ${`legacy-${index}`}, ${"0".repeat(64)}, ${"1".repeat(64)},
-            ${scratch.json(JSON.parse(JSON.stringify(benchmark)) as postgres.JSONValue)}, ${scratch.json(JSON.parse(JSON.stringify(legacy)) as postgres.JSONValue)})`;
-      }
-      await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", "008_benchmark_discovery.sql"), "utf8"));
-      const rows = await scratch<Array<{ summary: ReturnType<typeof summarizeBenchmark> }>>`
-        select summary from bench.benchmark_runs order by public_id`;
-      // 008 is immutable: newer application-only setup projections are not backfilled.
-      expect(rows.map((row) => row.summary.setup)).toEqual(benchmarks.map((benchmark) => {
-        const setup = { ...summarizeBenchmark(benchmark).setup! };
-        for (const key of ["prompt_length", "ram_bytes", "physical_cores", "runtime_build", "runtime_variant", "runtime_plugin_version", "repetitions", "warmup", "corpus", "corpus_version", "host_gpus", "execution_selection_complete"] as const) delete setup[key];
-        return setup;
-      }));
-      expect(rows[0]!.summary.setup?.vram_mb).toBe(8193);
-      expect(rows[1]!.summary.setup?.vram_mb).toBeNull();
-    } finally {
-      await scratch.end({ timeout: 5 });
-      await admin.unsafe(`DROP DATABASE "${scratchName}"`);
-    }
-  });
-
-  it("backfills configured input context and prefill from retained chunks without recomputing curated summaries", async () => {
-    if (!admin) throw new Error("integration database unavailable");
-    const MIGRATION = "009_input_context.sql";
-    const scratchName = `aiolm_web_measured_${randomUUID().replace(/-/g, "")}`;
-    await admin.unsafe(`CREATE DATABASE "${scratchName}"`);
-    const scratchUrl = new URL(ADMIN_URL!);
-    scratchUrl.pathname = `/${scratchName}`;
-    const scratch = postgres(scratchUrl.toString(), { max: 1, prepare: false, ssl: false });
-    try {
-      await scratch`create schema bench`;
-      await scratch`create table bench.schema_migrations (filename text primary key, sha256 text not null)`;
-      for (const name of REQUIRED_MIGRATIONS.filter((name) => name < MIGRATION)) {
-        await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", name), "utf8"));
-      }
-
-      const base = syntheticSubmission();
-      const row = (overrides: Partial<(typeof base)["measurements"]["rows"][number]>) =>
-        ({ ...base.measurements.rows[0]!, ...overrides });
-      const measured = syntheticSubmission({
-        workload: { ...base.workload, prompt_lengths: [4096, 512, 4096, 1024, 0, 512.5, 2 ** 53] },
-        execution: { ...base.execution, context_size: 16896 },
-        measurements: { status: "partial", rows: [
-          row({ pp_tps: 123.45 }), row({ pp_tps: 0.1 }), row({ pp_tps: 9999, failed: true }),
-          row({ pp_tps: null }), row({ pp_tps: 0.2 }), row({ pp_tps: 987.654321 }), row({ pp_tps: 7 }),
-        ] },
-      });
-      const unrecorded = syntheticSubmission({
-        workload: { ...base.workload, prompt_lengths: [] },
-        execution: { ...base.execution, context_size: 8704 },
-        measurements: { status: "complete", rows: [] },
-      });
-      // Production keeps metadata on the run row and measurement rows in chunks.
-      const metaOf = (b: typeof base) => JSON.parse(JSON.stringify({ ...b, measurements: { ...b.measurements, rows: [] } }));
-      // What 008 left behind: an operator-curated label and a setup with no input length.
-      const curated = (b: typeof base, label: string) => {
-        const { prompt_lengths, mean_pp_tps, setup, ...rest } = summarizeBenchmark(b);
-        void prompt_lengths; void mean_pp_tps;
-        const { prompt_length, ...legacySetup } = setup!;
-        void prompt_length;
-        return { ...rest, model_label: label, setup: legacySetup };
-      };
-
-      const submissionIds = new Map<string, string>();
-      for (const [publicId, benchmark, label] of [
-        ["measured", measured, "Curated Model A"], ["unrecorded", unrecorded, "Curated Model B"],
-      ] as const) {
-        const submissionId = randomUUID();
-        submissionIds.set(publicId, submissionId);
-        await scratch`insert into bench.benchmark_runs
-          (submission_id, public_id, owner_hash, body_sha256, benchmark, summary, hidden, row_count, byte_size)
-          values (${submissionId}, ${publicId}, ${"0".repeat(64)}, ${"1".repeat(64)},
-            ${scratch.json(metaOf(benchmark) as postgres.JSONValue)}, ${scratch.json(JSON.parse(JSON.stringify(curated(benchmark, label))) as postgres.JSONValue)},
-            ${publicId === "measured"}, ${benchmark.measurements.rows.length}, ${4096})`;
-        const chunked = benchmark.measurements.rows;
-        for (const [index, slice] of [chunked.slice(0, 4), chunked.slice(4)].entries()) {
-          if (slice.length === 0) continue;
-          await scratch`insert into bench.benchmark_chunks (submission_id, chunk_index, rows) values (${submissionId}, ${index},
-            ${scratch.json(JSON.parse(JSON.stringify(slice)) as postgres.JSONValue)})`;
-        }
-      }
+      const benchmark = syntheticSubmission();
+      const submissionId = randomUUID();
       await scratch`insert into bench.benchmark_runs
-        (submission_id, public_id, owner_hash, body_sha256, benchmark, summary, deleted)
-        values (${randomUUID()}, 'tombstone', ${"2".repeat(64)}, ${"3".repeat(64)}, null, null, true)`;
-
-      await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", MIGRATION), "utf8"));
-
-      type Stored = { public_id: string; summary: ReturnType<typeof summarizeBenchmark> | null; benchmark: unknown;
-        owner_hash: string; body_sha256: string; row_count: number; byte_size: number };
-      const stored = new Map((await scratch<Stored[]>`
-        select public_id, summary, benchmark, owner_hash, body_sha256, row_count, byte_size
-        from bench.benchmark_runs`).map((r) => [r.public_id, r]));
-
-      // The hidden run is enriched too, and the curated label survives the merge.
-      expect(stored.get("measured")!.summary).toEqual({ ...summarizeBenchmark(measured), model_label: "Curated Model A" });
-      // Non-integer, non-positive and unsafe entries are dropped, matching the helper.
-      expect(stored.get("measured")!.summary!.prompt_lengths).toEqual([512, 1024, 4096]);
-      expect(stored.get("measured")!.summary!.setup!.prompt_length).toBe(4096);
-      // Prefill averages the five rows that measured it across both chunks; the failed
-      // row and the one that reported none are skipped, bit-for-bit with the helper.
-      expect(stored.get("measured")!.summary!.mean_pp_tps).toBe(summarizeBenchmark(measured).mean_pp_tps);
-      expect(stored.get("measured")!.summary!.mean_pp_tps).toBeCloseTo(223.6808642, 7);
-      // The raw runtime allocation survives exactly and is never read as an input length.
-      expect(stored.get("measured")!.summary!.setup!.context_size).toBe(16896);
-
-      // A workload that recorded no input length stays unknown rather than copying the allocation.
-      expect(stored.get("unrecorded")!.summary).toEqual({ ...summarizeBenchmark(unrecorded), model_label: "Curated Model B" });
-      expect(stored.get("unrecorded")!.summary!.prompt_lengths).toEqual([]);
-      expect(stored.get("unrecorded")!.summary!.setup!.prompt_length).toBeNull();
-      expect(stored.get("unrecorded")!.summary!.mean_pp_tps).toBeNull();
-      expect(stored.get("unrecorded")!.summary!.setup!.context_size).toBe(8704);
-
-      // Raw metadata, chunks, hashes, capacity counters and the tombstone are left as they were.
-      expect(stored.get("measured")!.benchmark).toEqual(metaOf(measured));
-      expect(stored.get("measured")!.owner_hash).toBe("0".repeat(64));
-      expect(stored.get("measured")!.body_sha256).toBe("1".repeat(64));
-      expect(stored.get("measured")!.row_count).toBe(7);
-      expect(stored.get("measured")!.byte_size).toBe(4096);
-      expect(stored.get("tombstone")!.summary).toBeNull();
-      expect(stored.get("tombstone")!.benchmark).toBeNull();
-      const chunks = await scratch<Array<{ rows: unknown[] }>>`
-        select rows from bench.benchmark_chunks where submission_id = ${submissionIds.get("measured")!} order by chunk_index`;
-      expect(chunks).toHaveLength(2);
-      expect(chunks.flatMap((c) => c.rows)).toEqual(JSON.parse(JSON.stringify(measured.measurements.rows)));
-
-      const indexes = (await scratch<Array<{ indexname: string }>>`
+        (submission_id, public_id, owner_hash, body_sha256, benchmark, summary, row_count, byte_size)
+        values (${submissionId}, ${"retired"}, ${"0".repeat(64)}, ${"1".repeat(64)},
+          ${scratch.json(JSON.parse(JSON.stringify(benchmark)) as postgres.JSONValue)},
+          ${scratch.json(JSON.parse(JSON.stringify(summarizeBenchmark(benchmark))) as postgres.JSONValue)}, 1, 4096)`;
+      await scratch`insert into bench.benchmark_chunks (submission_id, chunk_index, rows)
+        values (${submissionId}, 0, ${scratch.json(JSON.parse(JSON.stringify(benchmark.measurements.rows)) as postgres.JSONValue)})`;
+      await scratch`insert into bench.upload_sessions
+        (session_id, submission_id, body_sha256, owner_hash, status, expires_at)
+        values (${randomUUID()}, ${submissionId}, ${"1".repeat(64)}, ${"0".repeat(64)}, 'verified', now() + interval '5 minutes')`;
+      await scratch`insert into bench.reports (id, target_submission_id, reason)
+        values (${randomUUID()}, ${submissionId}, 'retired')`;
+      await scratch`insert into bench.audit_log (actor, action, target) values ('operator', 'hide', ${submissionId})`;
+      await scratch`insert into bench.quota_buckets (key, count, bytes, rows, window_start, expires_at)
+        values ('it:retired', 1, 0, 0, now(), now() + interval '1 hour')`;
+      const before = (await scratch<Array<{ indexname: string }>>`
         select indexname from pg_indexes where schemaname = 'bench' and tablename = 'benchmark_runs'`)
-        .map((r) => r.indexname);
-      expect(indexes).toContain("benchmark_discovery_prompt_length_asc");
-      expect(indexes).toContain("benchmark_discovery_prompt_length_desc");
-      expect(indexes).not.toContain("benchmark_discovery_context_asc");
-      expect(indexes).not.toContain("benchmark_discovery_context_desc");
+        .map((row) => row.indexname);
+      expect(before).toContain("benchmark_discovery_prompt_length_asc");
+
+      await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", "016_single_benchmark_method.sql"), "utf8"));
+
+      const counts = (await scratch<Array<{ runs: number; chunks: number; sessions: number; reports: number; audits: number; quotas: number }>>`
+        select
+          (select count(*)::int from bench.benchmark_runs) as runs,
+          (select count(*)::int from bench.benchmark_chunks) as chunks,
+          (select count(*)::int from bench.upload_sessions) as sessions,
+          (select count(*)::int from bench.reports) as reports,
+          (select count(*)::int from bench.audit_log) as audits,
+          (select count(*)::int from bench.quota_buckets) as quotas`)[0]!;
+      expect(counts).toEqual({ runs: 0, chunks: 0, sessions: 0, reports: 0, audits: 1, quotas: 1 });
+
+      const after = (await scratch<Array<{ indexname: string }>>`
+        select indexname from pg_indexes where schemaname = 'bench' and tablename = 'benchmark_runs'`)
+        .map((row) => row.indexname);
+      for (const name of ["benchmark_discovery_throughput_desc", "benchmark_discovery_duration_asc",
+        "benchmark_discovery_parallel_asc", "benchmark_discovery_threads_asc", "benchmark_discovery_gpu_layers_asc",
+        "benchmark_discovery_prompt_length_asc", "benchmark_discovery_prompt_length_desc",
+        "benchmark_discovery_flash_attention_trgm", "benchmark_discovery_cache_type_k_trgm",
+        "benchmark_discovery_cache_type_v_trgm", "benchmark_discovery_split_mode_trgm"]) {
+        expect(after).not.toContain(name);
+      }
+      for (const name of ["benchmark_runs_serving_method_visible", "benchmark_runs_model_size_visible",
+        "benchmark_runs_recorded_settings_visible"]) expect(after).toContain(name);
     } finally {
       await scratch.end({ timeout: 5 });
       await admin.unsafe(`DROP DATABASE "${scratchName}"`);
     }
   });
-
-  it("backfills operating points from retained chunks with the same arithmetic the helper uses", async () => {
-    if (!admin) throw new Error("integration database unavailable");
-    const MIGRATION = "012_operating_points.sql";
-    const scratchName = `aiolm_web_points_${randomUUID().replace(/-/g, "")}`;
-    await admin.unsafe(`CREATE DATABASE "${scratchName}"`);
-    const scratchUrl = new URL(ADMIN_URL!);
-    scratchUrl.pathname = `/${scratchName}`;
-    const scratch = postgres(scratchUrl.toString(), { max: 1, prepare: false, ssl: false });
-    try {
-      await scratch`create schema bench`;
-      await scratch`create table bench.schema_migrations (filename text primary key, sha256 text not null)`;
-      for (const name of REQUIRED_MIGRATIONS.filter((name) => name < MIGRATION)) {
-        await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", name), "utf8"));
-      }
-
-      const base = syntheticSubmission();
-      const row = (overrides: Partial<(typeof base)["measurements"]["rows"][number]>) =>
-        ({ ...base.measurements.rows[0]!, ...overrides });
-      // A real grid: two input lengths against two concurrencies, repeated, with
-      // an even repetition count so the interpolated median is exercised, plus
-      // the rows both implementations have to skip in the same way.
-      const gridded = syntheticSubmission({
-        measurements: { status: "complete", rows: [
-          row({ prompt_tokens: 512, concurrency: 1, tg_tps: 0.1, e2e_ms: 1000, ttft_ms: 40 }),
-          row({ prompt_tokens: 512, concurrency: 1, tg_tps: 0.3, e2e_ms: 1200, ttft_ms: 60 }),
-          row({ prompt_tokens: 512, concurrency: 4, tg_tps: 61.5, pp_tps: null }),
-          row({ prompt_tokens: 4096, concurrency: 1, tg_tps: 45.25, e2e_ms: 8000 }),
-          row({ prompt_tokens: 4096, concurrency: 1, tg_tps: 44.75, e2e_ms: 8400 }),
-          row({ prompt_tokens: 4096, concurrency: 1, tg_tps: 12, e2e_ms: 30000 }),
-          row({ prompt_tokens: 4096, concurrency: 1, tg_tps: 9999, e2e_ms: 1, failed: true }),
-          row({ prompt_tokens: 1.5, tg_tps: 9999 }),
-          row({ concurrency: 0, tg_tps: 9999 }),
-        ] },
-      });
-      const unmeasured = syntheticSubmission({ measurements: { status: "complete", rows: [] } });
-      const metaOf = (b: typeof base) => JSON.parse(JSON.stringify({ ...b, measurements: { ...b.measurements, rows: [] } }));
-      // What a pre-012 row looks like: an operator-curated label and no points.
-      const curated = (b: typeof base, label: string) => {
-        const { points, points_truncated, ...rest } = summarizeBenchmark(b);
-        void points; void points_truncated;
-        return { ...rest, model_label: label };
-      };
-
-      const submissionIds = new Map<string, string>();
-      for (const [publicId, benchmark, label] of [
-        ["gridded", gridded, "Curated Model A"], ["unmeasured", unmeasured, "Curated Model B"],
-      ] as const) {
-        const submissionId = randomUUID();
-        submissionIds.set(publicId, submissionId);
-        await scratch`insert into bench.benchmark_runs
-          (submission_id, public_id, owner_hash, body_sha256, benchmark, summary, hidden, row_count, byte_size)
-          values (${submissionId}, ${publicId}, ${"0".repeat(64)}, ${"1".repeat(64)},
-            ${scratch.json(metaOf(benchmark) as postgres.JSONValue)},
-            ${scratch.json(JSON.parse(JSON.stringify(curated(benchmark, label))) as postgres.JSONValue)},
-            ${publicId === "gridded"}, ${benchmark.measurements.rows.length}, ${4096})`;
-        // Split across chunks: a point's repetitions must aggregate across them.
-        const chunked = benchmark.measurements.rows;
-        for (const [index, slice] of [chunked.slice(0, 4), chunked.slice(4)].entries()) {
-          if (slice.length === 0) continue;
-          await scratch`insert into bench.benchmark_chunks (submission_id, chunk_index, rows) values (${submissionId}, ${index},
-            ${scratch.json(JSON.parse(JSON.stringify(slice)) as postgres.JSONValue)})`;
-        }
-      }
-      await scratch`insert into bench.benchmark_runs
-        (submission_id, public_id, owner_hash, body_sha256, benchmark, summary, deleted)
-        values (${randomUUID()}, 'tombstone', ${"2".repeat(64)}, ${"3".repeat(64)}, null, null, true)`;
-
-      await scratch.unsafe(readFileSync(join(process.cwd(), "sql", "migrations", MIGRATION), "utf8"));
-
-      type Stored = { public_id: string; summary: ReturnType<typeof summarizeBenchmark> | null; benchmark: unknown;
-        owner_hash: string; body_sha256: string; row_count: number; byte_size: number };
-      const stored = new Map((await scratch<Stored[]>`
-        select public_id, summary, benchmark, owner_hash, body_sha256, row_count, byte_size
-        from bench.benchmark_runs`).map((r) => [r.public_id, r]));
-
-      // The hidden run is enriched too, and the curated label survives the merge.
-      // Equality here is the whole point: percentile_cont(0.5) and the helper's
-      // interpolation produce the same doubles for the same rows.
-      expect(stored.get("gridded")!.summary).toEqual({ ...summarizeBenchmark(gridded), model_label: "Curated Model A" });
-      const points = stored.get("gridded")!.summary!.points!;
-      expect(points.map((point) => [point.prompt_tokens, point.concurrency, point.samples]))
-        .toEqual([[512, 1, 2], [512, 4, 1], [4096, 1, 3]]);
-      // Two repetitions interpolate; 0.1 + (0.3 - 0.1) * 0.5 is not (0.1 + 0.3) / 2.
-      expect(points[0]!.tg_tps).toEqual({ median: 0.1 + (0.3 - 0.1) * 0.5, min: 0.1, max: 0.3 });
-      expect(points[0]!.e2e_ms).toEqual({ median: 1100, min: 1000, max: 1200 });
-      // A metric no row of the point reported stays unknown; the others still aggregate.
-      expect(points[1]!.pp_tps).toBeNull();
-      expect(points[1]!.tg_tps!.median).toBe(61.5);
-      // The failed row is skipped, so one cold repetition does not join the point.
-      expect(points[2]!.samples).toBe(3);
-      expect(points[2]!.tg_tps).toEqual({ median: 44.75, min: 12, max: 45.25 });
-      expect(stored.get("gridded")!.summary!.points_truncated).toBe(false);
-      // The retained mixed means are stored data and are left exactly as they were.
-      expect(stored.get("gridded")!.summary!.mean_tg_tps).toBe(summarizeBenchmark(gridded).mean_tg_tps);
-
-      // A run whose rows named no point reads as "measured no point", not as pre-012.
-      expect(stored.get("unmeasured")!.summary).toEqual({ ...summarizeBenchmark(unmeasured), model_label: "Curated Model B" });
-      expect(stored.get("unmeasured")!.summary!.points).toEqual([]);
-      expect(stored.get("unmeasured")!.summary!.points_truncated).toBe(false);
-
-      // Raw metadata, chunks, hashes, capacity counters and the tombstone are left as they were.
-      expect(stored.get("gridded")!.benchmark).toEqual(metaOf(gridded));
-      expect(stored.get("gridded")!.owner_hash).toBe("0".repeat(64));
-      expect(stored.get("gridded")!.body_sha256).toBe("1".repeat(64));
-      expect(stored.get("gridded")!.row_count).toBe(9);
-      expect(stored.get("gridded")!.byte_size).toBe(4096);
-      expect(stored.get("tombstone")!.summary).toBeNull();
-      expect(stored.get("tombstone")!.benchmark).toBeNull();
-      const chunks = await scratch<Array<{ rows: unknown[] }>>`
-        select rows from bench.benchmark_chunks where submission_id = ${submissionIds.get("gridded")!} order by chunk_index`;
-      expect(chunks.flatMap((c) => c.rows)).toEqual(JSON.parse(JSON.stringify(gridded.measurements.rows)));
-    } finally {
-      await scratch.end({ timeout: 5 });
-      await admin.unsafe(`DROP DATABASE "${scratchName}"`);
-    }
-  });
-
   it("enriches summaries that recorded model metadata and leaves every other run exactly as it was", async () => {
     if (!admin) throw new Error("integration database unavailable");
     const MIGRATION = "010_model_metadata.sql";
@@ -824,7 +615,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       // Contract 0.3.0 metadata attached directly: the vendored 0.2.0 types do not
       // carry the optional block yet, and validating it is the contracts package's job.
       const withMetadata = (metadata: unknown) => syntheticSubmission({
-        model: { status: "sha256", sha256: "c".repeat(64), size_bytes: 4096, metadata } as never });
+        model: { format: "gguf", status: "sha256", sha256: "c".repeat(64), size_bytes: 4096, metadata } as never });
       const complete = withMetadata({
         format: "GGUF", name: "Example 8B", architecture: "qwen2", size_label: "8B", quantization: "Q4_K_M",
         file_type: 15, quantized_by: "Quantizer Org", repository: "Publisher-Org/example-8B-GGUF",
@@ -920,10 +711,10 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       // tombstone are all left exactly as they were.
       for (const publicId of ["described", "messy", "backslash", "sourceless", "undescribed"]) {
         const row = stored.get(publicId)!;
-        expect(row.summary!.prompt_lengths).toEqual([512]);
-        expect(row.summary!.setup!.prompt_length).toBe(512);
-        expect(row.summary!.setup!.context_size).toBe(2048);
-        expect(row.summary!.mean_pp_tps).toBe(100);
+        expect(row.summary!.setup!.max_input_bytes).toBe(4096);
+        expect(row.summary!.setup!.max_output_tokens).toBe(128);
+        expect(row.summary!.setup!.max_concurrency).toBe(1);
+        expect(row.summary!.serving_points).toHaveLength(1);
         expect(row.owner_hash).toBe("0".repeat(64));
         expect(row.body_sha256).toBe("1".repeat(64));
         expect(row.row_count).toBe(1);
@@ -970,7 +761,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       const recorded = syntheticSubmission({ environment: { ...base.environment!, system_memory_bytes: 32 * 1024 ** 3 } });
       for (const [id, benchmark] of [["recorded", recorded], ["legacy", base]] as const) {
         const summary = summarizeBenchmark(benchmark);
-        delete summary.setup!.ram_bytes;
+        delete (summary.setup as Partial<typeof summary.setup>).ram_bytes;
         await scratch`insert into bench.benchmark_runs (submission_id,public_id,owner_hash,body_sha256,benchmark,summary)
           values (${randomUUID()},${id},${"0".repeat(64)},${"1".repeat(64)},
           ${scratch.json(JSON.parse(JSON.stringify(benchmark)))},${scratch.json(JSON.parse(JSON.stringify(summary)))})`;
@@ -1063,6 +854,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       "013_gpu_hardware_labels.sql",
       "014_weight_bits.sql",
       "015_engine_neutral_benchmarks.sql",
+      "016_single_benchmark_method.sql",
     ]);
   });
 
@@ -1072,12 +864,18 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     const names = idx.map((r) => r.indexname as string);
     // Keyset pagination ordering is index-backed.
     expect(names).toContain("benchmark_runs_created_idx");
-    // The context condition reads the configured input length, so that is what is indexed;
-    // 009 removed the raw-allocation indexes 008 had created for the old expression.
-    expect(names).toContain("benchmark_discovery_prompt_length_asc");
-    expect(names).toContain("benchmark_discovery_prompt_length_desc");
-    expect(names).not.toContain("benchmark_discovery_context_asc");
-    expect(names).not.toContain("benchmark_discovery_context_desc");
+    // Current setup, canonical identity and recorded-settings filters stay indexed.
+    expect(names).toContain("benchmark_discovery_vram_asc");
+    expect(names).toContain("benchmark_discovery_cores_asc");
+    expect(names).toContain("benchmark_runs_serving_method_visible");
+    expect(names).toContain("benchmark_runs_model_size_visible");
+    expect(names).toContain("benchmark_runs_recorded_settings_visible");
+    // 016 removed indexes over summaries that no current record carries.
+    for (const legacy of ["benchmark_discovery_throughput_desc", "benchmark_discovery_duration_asc",
+      "benchmark_discovery_parallel_asc", "benchmark_discovery_threads_asc", "benchmark_discovery_gpu_layers_asc",
+      "benchmark_discovery_prompt_length_asc", "benchmark_discovery_prompt_length_desc"]) {
+      expect(names).not.toContain(legacy);
+    }
     const ext = await db`select count(*)::text as n from pg_extension where extname = 'pg_trgm'`;
     if ((ext[0]!.n as string) !== "0") {
       for (const name of [
@@ -1176,7 +974,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     expect(page.rows).toHaveLength(1000);
     expect(page.total).toBe(2500);
     expect(page.nextOffset).toBe(2000);
-    const listed = await s.listRuns({ measurement: "legacy" }, 25, null);
+    const listed = await s.listRuns({}, 25, null);
     const item = listed.items.find((i) => i.public_id === (created as { run: { public_id: string } }).run.public_id);
     expect(item).toBeDefined();
     expect(item).not.toHaveProperty("submission_id");
@@ -1636,119 +1434,111 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     expect(footprint.bytes).toBeGreaterThan(0);
     expect(footprint.rows).toBeGreaterThan(0);
   });
+  it.each(["llama.cpp", "vllm", "mlx-vlm", "sglang", null].map((engine, index) => ({ engine, ip: `10.30.30.${index + 1}` })))(
+    "serves the authenticated $engine HTTP publish flow against the real database",
+    async ({ engine, ip }) => {
+      const s = need();
+      if (!s || !db) return;
+      // Route handlers read deployment config from the environment; point them
+      // at this test's secrets/origin for the duration of the flow.
+      const saved = new Map<string, string | undefined>();
+      const setEnv = (key: string, value: string): void => {
+        if (!saved.has(key)) saved.set(key, process.env[key]);
+        process.env[key] = value;
+      };
+      setEnv("NODE_ENV", "test");
+      setEnv("SYNTHETIC_TEST_MODE", "1");
+      setEnv("SERVICE_ORIGIN", "http://localhost:3000");
+      setEnv("PERMIT_HMAC_SECRET", PERMIT_SECRET);
+      setEnv("QUOTA_HMAC_SECRET", QUOTA_SECRET);
+      setEnv("MANAGEMENT_HMAC_SECRET", MGMT_SECRET);
+      setEnv("TEST_FIXTURE_TURNSTILE_TOKEN", "test-turnstile-ok");
+      __setTestStore(s);
+      try {
+        const submissionId = randomUUID();
+        const ownerSecret = randomBase64Url32();
+        const benchmark = syntheticSubmission({
+          submission_id: submissionId,
+          runtime: { name: engine, version: null, backend: null, variant: null, build: null, plugin_version: null },
+        });
+        const body = JSON.stringify({ benchmark, description_md: "http-flow" });
+        const bodySha = sha256HexUtf8(body);
+        const headers = (extra: Record<string, string> = {}): Headers =>
+          new Headers({ "x-synthetic-test-ip": ip, ...extra });
+        const auth = { authorization: `Bearer ${ownerSecret}` };
 
-  it.each([
-    ...(["llama.cpp", "vllm", "mlx-vlm", "vllm-metal"] as const).map(engine => ({ generation: "legacy" as const, engine })),
-    ...(["llama.cpp", "vllm", "mlx-vlm", "sglang", null] as const).map(engine => ({ generation: "serving" as const, engine })),
-    ...(["llama.cpp", "vllm", null] as const).map(engine => ({ generation: "fixed" as const, engine })),
-  ].map((fixture, index) => ({ ...fixture, ip: `10.30.30.${index + 1}` })))("serves the authenticated $generation $engine HTTP publish flow against the real database", async ({ generation, engine, ip }) => {
-    const s = need();
-    if (!s || !db) return;
-    // Route handlers read deployment config from the environment; point them
-    // at this test's secrets/origin for the duration of the flow.
-    const saved = new Map<string, string | undefined>();
-    const setEnv = (key: string, value: string): void => {
-      if (!saved.has(key)) saved.set(key, process.env[key]);
-      process.env[key] = value;
-    };
-    setEnv("NODE_ENV", "test");
-    setEnv("SYNTHETIC_TEST_MODE", "1");
-    setEnv("SERVICE_ORIGIN", "http://localhost:3000");
-    setEnv("PERMIT_HMAC_SECRET", PERMIT_SECRET);
-    setEnv("QUOTA_HMAC_SECRET", QUOTA_SECRET);
-    setEnv("MANAGEMENT_HMAC_SECRET", MGMT_SECRET);
-    setEnv("TEST_FIXTURE_TURNSTILE_TOKEN", "test-turnstile-ok");
-    __setTestStore(s);
-    try {
-      const submissionId = randomUUID();
-      const ownerSecret = randomBase64Url32();
-      let benchmark;
-      if (generation === "serving") {
-        benchmark = syntheticServingSubmission({ submission_id: submissionId, runtime: { name: engine, version: null, backend: null, variant: null, build: null, plugin_version: null } });
-      } else if (generation === "fixed") {
-        benchmark = syntheticFixedOutputSubmission(204800, { submission_id: submissionId, runtime: { name: engine, version: null, backend: null, variant: null, build: null, plugin_version: null } });
-      } else if (engine === "llama.cpp") {
-        benchmark = syntheticSubmission({ submission_id: submissionId });
-      } else if (engine === "vllm" || engine === "mlx-vlm" || engine === "vllm-metal") {
-        benchmark = pythonBenchmark(engine, submissionId);
-      } else {
-        throw new Error("Invalid legacy fixture engine.");
-      }
-      const body = JSON.stringify({ benchmark, description_md: "http-flow" });
-      const bodySha = sha256HexUtf8(body);
-      const headers = (extra: Record<string, string> = {}): Headers =>
-        new Headers({ "x-synthetic-test-ip": ip, ...extra });
-      const auth = { authorization: `Bearer ${ownerSecret}` };
-
-      const created = await createUploadSession(
-        new Request("http://localhost:3000/v1/upload-sessions", {
-          method: "POST",
-          headers: headers({ ...auth, "content-type": "application/json" }),
-          body: JSON.stringify({ submission_id: submissionId, body_sha256: bodySha }),
-        }),
-      );
-      expect(created.status).toBe(201);
-      const { session_id: sessionId } = (await created.json()) as { session_id: string };
-
-      const verified = await verifyUploadSession(
-        new Request(`http://localhost:3000/v1/upload-sessions/${sessionId}/verify`, {
-          method: "POST",
-          headers: headers({ "content-type": "application/json" }),
-          body: JSON.stringify({ token: "test-turnstile-ok" }),
-        }),
-        { params: Promise.resolve({ id: sessionId }) },
-      );
-      expect(verified.status).toBe(200);
-
-      const polled = await pollUploadSession(
-        new Request(`http://localhost:3000/v1/upload-sessions/${sessionId}`, { headers: headers(auth) }),
-        { params: Promise.resolve({ id: sessionId }) },
-      );
-      expect(polled.status).toBe(200);
-      const { permit, status } = (await polled.json()) as { permit?: string; status: string };
-      expect(status).toBe("verified");
-      expect(permit).toBeTruthy();
-
-      const submit = (secret: string, withPermit: boolean): Promise<Response> =>
-        submitBenchmarkRun(
-          new Request("http://localhost:3000/v1/benchmark-runs", {
+        const created = await createUploadSession(
+          new Request("http://localhost:3000/v1/upload-sessions", {
             method: "POST",
-            headers: headers({
-              authorization: `Bearer ${secret}`,
-              "content-type": "application/json",
-              "idempotency-key": submissionId,
-              ...(withPermit ? { "x-upload-permit": permit! } : {}),
-            }),
-            body,
+            headers: headers({ ...auth, "content-type": "application/json" }),
+            body: JSON.stringify({ submission_id: submissionId, body_sha256: bodySha }),
           }),
         );
-      const first = await submit(ownerSecret, true);
-      expect(first.status).toBe(201);
-      const receipt = (await first.json()) as { id: string };
-      const stored = await s.getRunByPublicId(receipt.id);
-      expect(stored?.benchmark).toMatchObject({ runtime: benchmark.runtime, model: benchmark.model, execution: benchmark.execution });
-      expect(stored?.summary.setup?.runtime).toBe(benchmark.runtime.name);
-      if (engine === "vllm-metal") expect(stored?.summary.setup).toMatchObject({ runtime_variant: "vllm-metal", runtime_plugin_version: "0.30.0" });
-      // Accepted fixed-output rows keep their per-request evidence unchanged in chunk storage.
-      if (generation === "fixed") expect((await s.getRowSlice(submissionId, 0, 10)).rows).toEqual(JSON.parse(JSON.stringify(benchmark.measurements.rows)));
-      // Accepted replay without a fresh permit returns the same receipt.
-      const replay = await submit(ownerSecret, false);
-      expect(replay.status).toBe(200);
-      expect(((await replay.json()) as { id: string }).id).toBe(receipt.id);
-      // Wrong owner is rejected against real stored hashes.
-      expect((await submit(randomBase64Url32(), true)).status).toBe(403);
-      await s.deleteRun(submissionId);
-    } finally {
-      __setTestStore(null);
-      for (const [key, value] of saved) {
-        if (value === undefined) delete process.env[key];
-        else process.env[key] = value;
+        expect(created.status).toBe(201);
+        const { session_id: sessionId } = (await created.json()) as { session_id: string };
+
+        const verified = await verifyUploadSession(
+          new Request(`http://localhost:3000/v1/upload-sessions/${sessionId}/verify`, {
+            method: "POST",
+            headers: headers({ "content-type": "application/json" }),
+            body: JSON.stringify({ token: "test-turnstile-ok" }),
+          }),
+          { params: Promise.resolve({ id: sessionId }) },
+        );
+        expect(verified.status).toBe(200);
+
+        const polled = await pollUploadSession(
+          new Request(`http://localhost:3000/v1/upload-sessions/${sessionId}`, { headers: headers(auth) }),
+          { params: Promise.resolve({ id: sessionId }) },
+        );
+        expect(polled.status).toBe(200);
+        const { permit, status } = (await polled.json()) as { permit?: string; status: string };
+        expect(status).toBe("verified");
+        expect(permit).toBeTruthy();
+
+        const submit = (secret: string, withPermit: boolean): Promise<Response> =>
+          submitBenchmarkRun(
+            new Request("http://localhost:3000/v1/benchmark-runs", {
+              method: "POST",
+              headers: headers({
+                authorization: `Bearer ${secret}`,
+                "content-type": "application/json",
+                "idempotency-key": submissionId,
+                ...(withPermit ? { "x-upload-permit": permit! } : {}),
+              }),
+              body,
+            }),
+          );
+        const first = await submit(ownerSecret, true);
+        expect(first.status).toBe(201);
+        const receipt = (await first.json()) as { id: string };
+        const stored = await s.getRunByPublicId(receipt.id);
+        expect(stored?.benchmark).toMatchObject({ runtime: benchmark.runtime, model: benchmark.model, execution: benchmark.execution });
+        expect(stored?.summary.setup.runtime).toBe(engine);
+        expect(stored?.summary.schema_version).toBe(4);
+        expect(stored?.summary.method_label).toBe("openai-chat-serving@5");
+        expect((await s.getRowSlice(submissionId, 0, 10)).rows).toEqual(JSON.parse(JSON.stringify(benchmark.measurements.rows)));
+        const [generated] = await db`select method_version from bench.benchmark_runs where submission_id = ${submissionId}`;
+        expect(generated!.method_version).toBe(5);
+        // Accepted replay without a fresh permit returns the same receipt.
+        const replay = await submit(ownerSecret, false);
+        expect(replay.status).toBe(200);
+        expect(((await replay.json()) as { id: string }).id).toBe(receipt.id);
+        // Wrong owner is rejected against real stored hashes.
+        expect((await submit(randomBase64Url32(), true)).status).toBe(403);
+        await s.deleteRun(submissionId);
+      } finally {
+        __setTestStore(null);
+        for (const [key, value] of saved) {
+          if (value === undefined) delete process.env[key];
+          else process.env[key] = value;
+        }
       }
-    }
-  });
+    },
+  );
+
   describe("engine-neutral serving discovery and management", () => {
     const descriptor: SettingDescriptor = { target: "launch", scope: [], name: "batch", unit: null, role: null };
-    const historicalCap = { measurement: "openai-chat-serving@1" } as const;
     const memory = new InMemoryBenchmarkStore();
     const ids: string[] = [];
 
@@ -1758,26 +1548,27 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       const body = JSON.stringify({ benchmark, description_md: "serving-integration" });
       const hash = sha256HexUtf8(body);
       const permit = await verifiedSession(submissionId, ownerSecret, hash);
-      const benchmarkMeta = benchmark.schema_version === 3
-        ? { ...benchmark, measurements: { status: benchmark.measurements.status, rows: [] } }
-        : { ...benchmark, measurements: { ...benchmark.measurements, rows: [] } };
       const args: AcceptArgs = {
         ...acceptArgs(submissionId, ownerSecret, permit, GENEROUS_QUOTA),
-        body_sha256: hash, benchmarkMeta,
-        rows: benchmark.measurements.rows, summary: summary ?? summarizeBenchmark(benchmark),
-        byte_size: Buffer.byteLength(body), row_count: benchmark.measurements.rows.length,
+        body_sha256: hash,
+        benchmarkMeta: { ...benchmark, measurements: { ...benchmark.measurements, rows: [] } },
+        rows: benchmark.measurements.rows,
+        summary: summary ?? summarizeBenchmark(benchmark),
+        byte_size: Buffer.byteLength(body),
+        row_count: benchmark.measurements.rows.length,
       };
       const accepted = await store!.acceptRunAtomic(args);
       expect(accepted.outcome).toBe("created");
       if (accepted.outcome !== "created") throw new Error("serving acceptance failed");
       ids.push(submissionId);
-      memory.runs.set(accepted.run.public_id, accepted.run);
+      memory.runs.set(accepted.run.submission_id, accepted.run);
       return accepted.run;
     }
 
     afterEach(async () => {
       for (const id of ids.splice(0)) await store!.deleteRun(id);
       memory.runs.clear();
+      memory.byPublic.clear();
     });
 
     async function parity(filters: BenchmarkFilters) {
@@ -1787,26 +1578,34 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       return sql;
     }
 
-    it("filters retained legacy workload facts without summary backfills", async () => {
+    it("filters configured workload facts without rewriting stored summaries", async () => {
       const fixture = syntheticSubmission();
-      fixture.runtime.version = "legacy-workload-facts";
+      fixture.runtime.version = "workload-facts";
+      fixture.workload = {
+        ...fixture.workload,
+        inputs: [{ bytes: 4096, sha256: "a".repeat(64) }, { bytes: 16384, sha256: "b".repeat(64) }],
+        concurrencies: [1, 4],
+        repetitions: 3,
+        request_usage: true,
+      };
       const run = await publish(fixture);
-      const retained = structuredClone(run.summary);
-      delete retained.setup!.repetitions;
-      delete retained.setup!.warmup;
-      await db!`update bench.benchmark_runs set summary = ${db!.json(JSON.parse(JSON.stringify(retained)) as postgres.JSONValue)} where submission_id = ${run.submission_id}`;
-      memory.runs.set(run.public_id, { ...run, summary: retained });
-      const filters: BenchmarkFilters = { measurement: "legacy", runtime_version: "legacy-workload-facts", repetitions_min: 1, repetitions_max: 1, warmup: false };
+      const filters: BenchmarkFilters = {
+        runtime_version: "workload-facts", input_bytes_min: 16384, max_concurrency_min: 4,
+        repetitions_min: 3, repetitions_max: 3, warmup: false, request_usage: true,
+      };
       expect((await parity(filters)).items.map(item => item.public_id)).toEqual([run.public_id]);
       expect((await parity({ ...filters, warmup: true })).items).toEqual([]);
-      expect((await parity({ ...filters, repetitions_min: 2, repetitions_max: 3 })).items).toEqual([]);
+      expect((await parity({ ...filters, repetitions_min: 4 })).items).toEqual([]);
+      expect((await parity({ ...filters, input_bytes_min: 16385 })).items).toEqual([]);
       expect(await store!.listOptions("runtime", "", filters)).toEqual(await memory.listOptions("runtime", "", filters));
+      const stored = await db!`select summary from bench.benchmark_runs where submission_id = ${run.submission_id}`;
+      expect(stored[0]!.summary).toEqual(JSON.parse(JSON.stringify(run.summary)));
     });
 
-    it("projects missing host inventory on LIST and DETAIL without rewriting stored payloads, metrics or selected GPU meanings", async () => {
+    it("returns stored host inventory on LIST and DETAIL without rewriting payloads or selected GPU meanings", async () => {
       const hostGpu = { name: "Integrated Host Device", vendor: "Host Inventory Vendor", vram_mb: null, driver: null, integrated: true };
       const selectedGpu = { name: "Selected Compute Device", vendor: "Compute Vendor", vram_mb: 4096, driver: "compute-driver", integrated: false };
-      const environment = syntheticServingSubmission().environment!;
+      const environment = syntheticSubmission().environment!;
       const cases: Array<[string, typeof environment | null]> = [
         ["uncollected", { ...environment, cpu: { name: "Distinct Host CPU", physical_cores: 8, logical_cores: 16 }, installed_gpus: [hostGpu], execution: { mode: "unknown", selected_gpus: [], selection_complete: false } }],
         ["selected", { ...environment, installed_gpus: [hostGpu], execution: { mode: "selected", selected_gpus: [selectedGpu], selection_complete: true } }],
@@ -1815,15 +1614,11 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       ];
       const published = [];
       for (const [label, env] of cases) {
-        const fixture = syntheticFixedOutputSubmission(1024, { environment: env });
+        const fixture = syntheticSubmission({ environment: env });
         fixture.runtime.version = "host-inventory-regression";
         const retained = summarizeBenchmark(fixture);
-        delete retained.setup!.host_gpus;
-        delete retained.setup!.execution_selection_complete;
-        if (label === "uncollected") retained.hardware_label = "unknown";
-        retained.serving_points![0]!.output_bytes_per_second = { median: 321, min: 123, max: 456, samples: 7 };
+        retained.serving_points[0]!.output_bytes_per_second = { median: 321, min: 123, max: 456, samples: 7 };
         const run = await publish(fixture, retained);
-        memory.byPublic.set(run.public_id, run.public_id);
         published.push({ label, run });
       }
       const before = await db!`select public_id, benchmark, summary, revision, body_sha256 from bench.benchmark_runs where submission_id = any(${ids}) order by public_id`;
@@ -1832,11 +1627,12 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       expect(listed.items).toEqual((await memory.listRuns(filters, 100, null)).items);
       for (const { label, run } of published) {
         const item = listed.items.find(item => item.public_id === run.public_id)!;
-        expect(item.summary.setup!.host_gpus).toEqual(label === "unavailable" ? null : label === "empty" ? [] : [hostGpu]);
-        expect(item.summary.setup!.execution_selection_complete).toBe(label === "unavailable" ? null : label !== "uncollected");
-        expect(item.summary.setup!.gpus).toEqual(label === "selected" ? ["Selected Compute Device"] : []);
-        expect(item.summary.setup!.vram_mb).toBe(label === "selected" ? 4096 : null);
-        expect(item.summary.serving_points![0]!.output_bytes_per_second).toEqual({ median: 321, min: 123, max: 456, samples: 7 });
+        expect(item.summary.setup.host_gpus).toEqual(label === "unavailable" ? null : label === "empty" ? [] : [hostGpu]);
+        expect(item.summary.setup.execution_selection_complete).toBe(label === "unavailable" ? null : label !== "uncollected");
+        expect(item.summary.setup.gpus).toEqual(label === "selected" ? ["Selected Compute Device"] : []);
+        expect(item.summary.setup.vram_mb).toBe(label === "selected" ? 4096 : null);
+        expect(item.summary.setup.max_input_bytes).toBe(4096);
+        expect(item.summary.serving_points[0]!.output_bytes_per_second).toEqual({ median: 321, min: 123, max: 456, samples: 7 });
         expect((await store!.getRunByPublicId(run.public_id))!.summary).toEqual(item.summary);
         expect((await store!.getRunBySubmission(run.submission_id))!.summary).toEqual(item.summary);
         expect((await memory.getRunByPublicId(run.public_id))!.summary).toEqual(item.summary);
@@ -1854,12 +1650,12 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     });
 
     it.each(["llama.cpp", "vllm", "mlx-vlm", "sglang", null])("accepts and manages %s with canonical generated identity and tombstone erasure", async name => {
-      const fixture = syntheticFixedOutputSubmission();
+      const fixture = syntheticSubmission();
       fixture.runtime = { name, version: "1", variant: "arbitrary-safe", build: "build", plugin_version: "plugin", backend: null };
       fixture.model = { format: "unknown", status: "sha256", sha256: "b".repeat(64), size_bytes: 1234,
         source: { kind: "huggingface", repository: "Example/Model", revision: "c".repeat(40) } };
       const run = await publish(fixture);
-      const columns = Object.keys(run.summary.identity!);
+      const columns = Object.keys(run.summary.identity);
       expect(columns).toHaveLength(13);
       const generated = await db!.unsafe(`select ${columns.join(", ")} from bench.benchmark_runs where submission_id = $1`, [run.submission_id]);
       expect({ ...generated[0], model_size_bytes: Number(generated[0]!.model_size_bytes) }).toEqual(run.summary.identity);
@@ -1893,7 +1689,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       const values: Array<SettingValue | null> = [2, 64, false, 0, [1, 2], [2, 1], null];
       const runs = [];
       for (const value of values) {
-        const fixture = syntheticFixedOutputSubmission();
+        const fixture = syntheticSubmission();
         fixture.execution.settings.push({ ...descriptor, value: Array.isArray(value) ? [...value] : value },
           { ...descriptor, scope: ["serve"], value: 64 });
         runs.push(await publish(fixture));
@@ -1918,7 +1714,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     });
 
     it("keeps context roles, scopes and units exact without aliasing typed settings into legacy fields", async () => {
-      const fixture = syntheticFixedOutputSubmission();
+      const fixture = syntheticSubmission();
       const context: SettingDescriptor = { target: "launch", scope: [], name: "ctx-size", unit: "tokens", role: "context.total_tokens" };
       fixture.execution.settings.push(
         { ...context, value: 32768 },
@@ -1934,19 +1730,22 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
         { ...context, name: "context_size" },
       ]) expect((await parity({ setting: [{ ...mismatch, op: "eq", value: 32768 }] })).items).toEqual([]);
       const listed = (await parity({ runtime_version: fixture.runtime.version! })).items.find(item => item.public_id === run.public_id)!;
-      expect(listed.summary.setup).toMatchObject({ context_size: null, parallel: null, cache_type_k: null, cache_type_v: null });
-      expect(listed.summary.setup!.settings).toEqual(fixture.execution.settings);
+      expect(listed.summary.setup).toMatchObject({ max_input_bytes: 4096, max_concurrency: 1, max_output_tokens: 128 });
+      for (const legacy of ["context_size", "parallel", "cache_type_k", "cache_type_v"]) {
+        expect(listed.summary.setup).not.toHaveProperty(legacy);
+      }
+      expect(listed.summary.setup.settings).toEqual(fixture.execution.settings);
       expect(await store!.listOptions("setting_value", "", {}, context)).toEqual({ options: [{ value: "32768", count: 1 }], has_more: false });
       expect(await store!.listOptions("setting_value", "", {}, context)).toEqual(await memory.listOptions("setting_value", "", {}, context));
     });
 
     it("returns thirty typed C-ordered distinct visible facet values and respects every provided condition", async () => {
       for (let i = 0; i < 31; i++) {
-        const fixture = syntheticFixedOutputSubmission();
+        const fixture = syntheticSubmission();
         fixture.execution.settings.push({ ...descriptor, value: i });
         await publish(fixture);
       }
-      const fixture = syntheticFixedOutputSubmission();
+      const fixture = syntheticSubmission();
       fixture.execution.settings.push({ ...descriptor, value: 0 });
       await publish(fixture);
       const options = await store!.listOptions("setting_value", "", {}, descriptor);
@@ -1963,12 +1762,12 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     it("preserves canonical numeric exponents, string whitespace, arrays and overlimit omission before facet pagination", async () => {
       const values: SettingValue[] = [1e21, 1.1e21, 1e20, 1e-7, 0, false, "a  b", "a b", [1e21, 1e-7], [1e-7, 1e21]];
       for (const value of values) {
-        const fixture = syntheticFixedOutputSubmission();
+        const fixture = syntheticSubmission();
         fixture.execution.settings.push({ ...descriptor, value });
         await publish(fixture);
       }
       const oversized = { ...descriptor, name: "b".repeat(64), scope: Array.from({ length: 8 }, (_, i) => `${i}${"a".repeat(63)}`) };
-      const fixture = syntheticFixedOutputSubmission();
+      const fixture = syntheticSubmission();
       fixture.execution.settings.push({ ...oversized, value: "가".repeat(128) });
       await publish(fixture);
       for (const query of ["", "1e+21", "a  b", "[1e-7", "false"]) {
@@ -1976,28 +1775,35 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       }
       expect((await store!.listOptions("setting_value", "", {}, oversized)).options).toEqual([]);
       expect(await store!.listOptions("setting", "", {})).toEqual(await memory.listOptions("setting", "", {}));
-      const hidden = await publish(syntheticFixedOutputSubmission(1024, { execution: { topology: "unknown", memory_scope: "unavailable", settings: [{ ...descriptor, value: "hidden" }] } }));
+      const hiddenFixture = syntheticSubmission();
+      hiddenFixture.execution.settings.push({ ...descriptor, value: "hidden" });
+      const hidden = await publish(hiddenFixture);
       await store!.setHidden(hidden.submission_id, true);
-      memory.runs.get(hidden.public_id)!.hidden = true;
+      memory.runs.get(hidden.submission_id)!.hidden = true;
       expect(await store!.listOptions("setting_value", "", {}, descriptor)).toEqual(await memory.listOptions("setting_value", "", {}, descriptor));
     });
 
-    it("keeps historical caps in their own scope for configured inputs, exact cap medians and cursor paging", async () => {
-      for (const [bytes, cap, duration] of [[16384, 128, 200], [8192, 128, 400], [4096, 256, 100]] as const) {
-        const fixture = syntheticServingSubmission();
-        fixture.workload.inputs.push({ bytes, sha256: "b".repeat(64) });
-        fixture.workload.inputs = [...new Map(fixture.workload.inputs.map(input => [input.bytes, input])).values()].sort((a, b) => a.bytes - b.bytes);
-        fixture.workload.max_output_tokens = cap;
-        fixture.measurements.rows[0]!.max_output_tokens = cap;
-        fixture.measurements.rows[0]!.e2e_ms = duration;
-        const measured = fixture.measurements.rows[0]!;
-        fixture.measurements.rows = fixture.workload.inputs.map(input => ({ ...measured, input_bytes: input.bytes }));
-        await publish(fixture);
+    it("ranks one complete operating point, keeps every cap in its own scope and pages identical in SQL and memory", async () => {
+      const published = new Map<string, string>();
+      for (const [label, duration, bytes, tokens, cap] of [
+        ["fast", 1000, 100, 100, 128], ["slow", 2000, 100, 50, 128], ["other-cap", 500, 1000, 1000, 64],
+      ] as const) {
+        const fixture = syntheticSubmission();
+        fixture.runtime.version = "point-scope-parity";
+        fixture.workload = { ...fixture.workload, max_output_tokens: cap };
+        fixture.measurements.rows = [{
+          ...fixture.measurements.rows[0]!, e2e_ms: duration, output_bytes: bytes,
+          reported_completion_tokens: tokens, max_output_tokens: cap,
+        }];
+        published.set(label, (await publish(fixture)).public_id);
       }
-      expect((await parity({ ...historicalCap, input_bytes_max: 8192 })).items).toHaveLength(2);
-      expect((await parity({ input_bytes_max: 8192 })).items).toEqual([]);
-      for (const sort of ["input_bytes_asc", "input_bytes_desc", "output_rate_desc", "duration_asc"] as const) {
-        const filters: BenchmarkFilters = { ...historicalCap, sort, point_bytes: 4096, point_concurrency: 1, point_max_tokens: 128 };
+      const common = { runtime_version: "point-scope-parity" };
+      expect((await parity(common)).items).toHaveLength(3);
+      const point: BenchmarkFilters = { ...common, point_bytes: 4096, point_concurrency: 1, point_max_tokens: 128, sort: "token_rate_desc" };
+      expect((await parity({ ...point, point_only: true })).items.map(run => run.public_id))
+        .toEqual([published.get("fast"), published.get("slow")]);
+      for (const sort of ["token_rate_desc", "output_rate_desc", "duration_asc"] as const) {
+        const filters: BenchmarkFilters = { ...point, sort };
         const expected = (await parity(filters)).items.map(run => run.public_id), actual = [];
         let cursor: ListCursor | null = null;
         do {
@@ -2006,62 +1812,41 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
           cursor = page.next_cursor ? decodeDiscoveryCursor(page.next_cursor, filters) : null;
         } while (cursor);
         expect(actual).toEqual(expected);
+        expect(actual).toEqual([published.get("fast"), published.get("slow"), published.get("other-cap")]);
       }
-      expect((await parity({ ...historicalCap, point_bytes: 4096, point_concurrency: 1, point_max_tokens: 128, point_only: true })).items).toHaveLength(2);
-      expect(await store!.listOptions("point", "", historicalCap)).toEqual(await memory.listOptions("point", "", historicalCap));
-      for (const query of ["point_bytes=4096", "point_bytes=4096&point_concurrency=1", "point_tokens=512&point_concurrency=1", "context_min=1", "sort=output_rate_desc", "measurement=legacy&input_bytes_min=1", "measurement=openai-chat-serving@1&sort=token_rate_desc&point_bytes=4096&point_concurrency=1&point_max_tokens=128"]) {
+      expect((await parity({ ...point, sort: "token_rate_desc", point_max_tokens: 64, point_only: true })).items
+        .map(run => run.public_id)).toEqual([published.get("other-cap")]);
+      expect((await parity({ ...point, max_output_tokens_min: 128 })).items.map(run => run.public_id))
+        .toEqual([published.get("fast"), published.get("slow")]);
+      expect(await store!.listOptions("point", "", common)).toEqual(await memory.listOptions("point", "", common));
+      expect((await store!.listOptions("point", "", common)).options.map(option => option.value))
+        .toEqual(["b4096/c1/o64", "b4096/c1/o128"]);
+      const first = await store!.listRuns(point, 1, null);
+      expect(() => decodeDiscoveryCursor(first.next_cursor!, { ...point, point_max_tokens: 64 })).toThrow();
+      for (const query of ["point_bytes=4096", "point_bytes=4096&point_concurrency=1", "point_tokens=512&point_concurrency=1",
+        "input_bytes_min=1&sort=output_rate_desc", "point_bytes=4096&point_concurrency=1&point_max_tokens=129"]) {
         expect(() => parseFilters(new URLSearchParams(query))).toThrow();
       }
     });
-    it("ranks fixed output by exact reported tok/s in SQL and memory, including 200k, without mixing historical caps", async () => {
-      const published = new Map<string, string>();
-      for (const [label, target, duration] of [["fast", 1024, 1000], ["slow", 1024, 2000], ["largest", 204800, 400000]] as const) {
-        const fixture = syntheticFixedOutputSubmission(target);
-        fixture.measurements.rows[0]!.e2e_ms = duration;
-        published.set(label, (await publish(fixture)).public_id);
-      }
-      const cap = syntheticServingSubmission();
-      cap.workload = { ...cap.workload, max_output_tokens: 1024, concurrencies: [2] };
-      cap.measurements.rows = [{ ...cap.measurements.rows[0]!, concurrency: 2, max_output_tokens: 1024, e2e_ms: 1, finish_reasons: ["length", "length"], reported_completion_tokens: 4096, usage_status: "partial" }];
-      const capRun = await publish(cap);
-      for (const sort of ["token_rate_desc", "output_rate_desc", "duration_asc"] as const) {
-        const filters: BenchmarkFilters = { sort, point_bytes: 4096, point_concurrency: 2, point_max_tokens: 1024 };
-        const expected = (await parity(filters)).items.map(run => run.public_id), actual = [];
-        expect(expected).not.toContain(capRun.public_id);
-        let cursor: ListCursor | null = null;
-        do {
-          const page = await store!.listRuns(filters, 1, cursor);
-          actual.push(...page.items.map(run => run.public_id));
-          cursor = page.next_cursor ? decodeDiscoveryCursor(page.next_cursor, filters) : null;
-        } while (cursor);
-        expect(actual).toEqual(expected);
-      }
-      expect((await parity({ sort: "token_rate_desc", point_bytes: 4096, point_concurrency: 2, point_max_tokens: 1024, point_only: true })).items.map(run => run.public_id)).toEqual([published.get("fast"), published.get("slow")]);
-      expect((await parity({ sort: "token_rate_desc", point_bytes: 4096, point_concurrency: 2, point_max_tokens: 204800, point_only: true })).items.map(run => run.public_id)).toEqual([published.get("largest")]);
-      expect((await parity({ max_output_tokens_min: 204800 })).items.map(run => run.public_id)).toEqual([published.get("largest")]);
-      expect(await store!.listOptions("point", "", {})).toEqual(await memory.listOptions("point", "", {}));
-      expect((await parity({ ...historicalCap, point_bytes: 4096, point_concurrency: 2, point_max_tokens: 1024, point_only: true })).items.map(run => run.public_id)).toEqual([capRun.public_id]);
-      // Per-request evidence survives chunk storage exactly as accepted.
-      expect((await store!.getRowSlice(capRun.submission_id, 0, 10)).rows[0]).not.toHaveProperty("reported_completion_tokens_by_request");
-      const largest = memory.runs.get(published.get("largest")!)!;
-      expect((await store!.getRowSlice(largest.submission_id, 0, 10)).rows[0]).toMatchObject({ reported_completion_tokens_by_request: [204800, 204800] });
-    });
+
     it("finds an undescribed model by its complete SHA and preserves missing derived rates", async () => {
-      const fixture = syntheticFixedOutputSubmission();
+      const fixture = syntheticSubmission();
       fixture.model = { format: "unknown", status: "sha256", sha256: "d".repeat(64), size_bytes: null };
-      fixture.measurements.rows[0] = { ...fixture.measurements.rows[0]!, content_bytes: 1, reasoning_bytes: 0, output_bytes: 1, e2e_ms: 1e-320 };
+      fixture.measurements.rows[0] = { ...fixture.measurements.rows[0]!, output_bytes: 1, e2e_ms: 1e-320 };
       const first = await publish(fixture);
       const second = await publish(fixture);
       expect((await parity({ model_query: "d".repeat(64) })).items).toHaveLength(2);
-      expect(first.summary.serving_points![0]!.output_bytes_per_second).toBeNull();
+      for (const run of [first, second]) {
+        expect(run.summary.serving_points[0]!.output_bytes_per_second).toBeNull();
+        expect(run.summary.serving_points[0]!.reported_tokens_per_second).toBeNull();
+      }
+      const withSettings = syntheticSubmission();
+      withSettings.execution.settings.push({ ...descriptor, value: 2 }, { ...descriptor, scope: ["serve"], value: 64 });
+      const accepted = await publish(withSettings);
+      expect(accepted.summary.serving_points[0]!.reported_tokens_per_second).toBeNull();
+      await publish(withSettings);
       const condition = { ...descriptor, op: "eq" as const, value: 2 };
       const other = { ...descriptor, scope: ["serve"], op: "eq" as const, value: 64 };
-      for (const run of [first, second]) {
-        const benchmark = syntheticFixedOutputSubmission();
-        benchmark.execution.settings.push({ ...descriptor, value: 2 }, { ...descriptor, scope: ["serve"], value: 64 });
-        await publish(benchmark);
-        expect(run.summary.serving_points![0]!.reported_tokens_per_second).toBeNull();
-      }
       const filters: BenchmarkFilters = { setting: [condition, other] };
       const page = await store!.listRuns(filters, 1, null);
       expect(page.next_cursor).not.toBeNull();

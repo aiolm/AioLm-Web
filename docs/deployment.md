@@ -216,7 +216,7 @@ platform logs. Point an uptime monitor at it; read `config:check` when it turns 
   `REQUIRED_MIGRATIONS`). The sole uploaded script is
   `scripts/check-design-system.mjs`, required by the build; operator scripts
   and the theme generator remain excluded. `package-lock.json` and
-  `vendor/aiolm-benchmark-contracts-0.11.0.tgz` stays in the upload — the build
+  `vendor/aiolm-benchmark-contracts-0.15.0.tgz` stays in the upload — the build
   installs the contracts package from that archive, and the checker uses the
   explicitly declared PostCSS development dependency.
 
@@ -226,7 +226,7 @@ platform logs. Point an uptime monitor at it; read `config:check` when it turns 
       supplied from the operator secret store (they cannot be pulled back out of
       Vercel — see Validating configuration).
 - [ ] `vercel env ls production` shows exactly the intended keys.
-- [ ] Migrations applied (through `015_engine_neutral_benchmarks.sql`); roles
+- [ ] Migrations applied (through `016_single_benchmark_method.sql`); roles
        least-privilege; Data API disabled.
 - [ ] `GET /v1/readiness` returns `200 {"status":"ready"}` on the deployed origin.
 - [ ] `DATABASE_MIGRATION_URL` / `DATABASE_MODERATION_URL` are absent from the

@@ -39,8 +39,7 @@ import {
 } from "./benchmark-explorer-state";
 import { settingConditionLabel } from "./benchmark-setting-editor";
 import { servingPointId } from "@/lib/benchmark-points";
-import { measurementScope, sortAvailable } from "@/lib/benchmark-discovery";
-import { formatPointLabel, formatServingPointLabel } from "./benchmark-explorer-format";
+import { formatServingPointLabel } from "./benchmark-explorer-format";
 
 
 /**
@@ -155,9 +154,8 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
   }, [data?.next_cursor, dispatch]);
 
   const items = data?.items ?? [];
-  const scope = measurementScope(state.applied.measurement);
   const basis = basisPointOf(state.applied);
-  const basisValue = basis ? "input_bytes" in basis ? servingPointId(basis.input_bytes, basis.concurrency, basis.max_output_tokens) : `${basis.prompt_tokens}/${basis.concurrency}` : "";
+  const basisValue = basis ? servingPointId(basis.input_bytes, basis.concurrency, basis.max_output_tokens) : "";
   const active = activeExplorerFilters(state.applied);
   const filtered = hasActiveExplorerFilters(state.applied);
   const clearable = filtered || hasActiveExplorerFilters(state.draft) || state.applied.sort !== "" || state.draft.sort !== "" || basis !== null;
@@ -171,9 +169,7 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
   const draftChanged = !sameExplorerFilters(normalizeExplorerFilters(state.draft), state.applied);
   const showResultControls = items.length > 0 || filtered || basis !== null || state.applied.sort !== "";
   const basisLabel = basis
-    ? "input_bytes" in basis
-      ? formatServingPointLabel(basis.input_bytes, basis.concurrency, basis.max_output_tokens, basis.scope)
-      : formatPointLabel(basis.prompt_tokens, basis.concurrency)
+    ? formatServingPointLabel(basis.input_bytes, basis.concurrency, basis.max_output_tokens)
     : t("benchmark.Each result's own leading point");
   const clearFilters = (): void => {
     dispatch({ type: "reset" });
@@ -209,7 +205,7 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
             </div>
             {searchTooLong ? <p id="explorer-search-error" className="explorer-validation" role="alert">{t("benchmark.Search must be at most {limit} characters.", { limit: EXPLORER_FILTER_MAX_LENGTH })}</p> : null}
             {draftRequestBlocked ? <p className="explorer-validation" role="alert">{t(`benchmark.${EXPLORER_QUERY_LIMIT_MESSAGE}`)}</p> : null}
-            {!filtersOpen && invalidDraft && !searchTooLong ? <p className="explorer-validation" role="alert">{t("benchmark.Check conditions before applying. Byte and legacy token conditions cannot be mixed.")}</p> : null}
+            {!filtersOpen && invalidDraft && !searchTooLong ? <p className="explorer-validation" role="alert">{t("benchmark.Check conditions before applying.")}</p> : null}
             <div id="explorer-detailed-filters" className="explorer-detailed-filters" hidden={!filtersOpen} aria-labelledby="explorer-detailed-title">
               <div className="explorer-filter-panel-header">
                 <h2 id="explorer-detailed-title" className="explorer-filter-panel-title">{t("benchmark.Detailed filters")}</h2>
@@ -258,7 +254,7 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
               <div className="explorer-field explorer-sort"><label className="explorer-field-label" id="explorer-sort-label" htmlFor="explorer-sort">{t("benchmark.Sort")}</label>
                 {/* Ranking measured speed needs a point to rank at, so those orders wait for one. */}
                 <UiSelect id="explorer-sort" form="explorer-filter-form" name="sort" labelledBy="explorer-sort-label" value={state.applied.sort || "newest"}
-                  options={Object.entries(EXPLORER_SORTS).filter(([value]) => sortAvailable(value, scope)).map(([value, label]) => ({ value, label: t(`benchmark.${label}`), disabled: isPointSort(value) && basis === null }))}
+                  options={Object.entries(EXPLORER_SORTS).map(([value, label]) => ({ value, label: t(`benchmark.${label}`), disabled: isPointSort(value) && basis === null }))}
                   onChange={value => dispatch({ type: "sort", value })} />
               </div>
             </div> : null}
@@ -266,7 +262,7 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
           {showResultControls ? <details className="explorer-measurement-controls">
             <summary>{t("benchmark.Match measurement conditions")}<span className="explorer-measurement-value">{basisLabel}</span></summary>
             <p className="explorer-field-hint">{t("benchmark.Applies immediately")} {t("benchmark.Results use each run's own measured point unless you choose one.")}</p>
-            <BenchmarkBasisPoint value={basisValue} scope={scope}
+            <BenchmarkBasisPoint value={basisValue}
               only={state.applied.point_only === "1"} optionsPath={ready ? buildExplorerPointOptionsPath(state.applied) : ""}
               onSelect={value => dispatch({ type: "basisPoint", value })}
               onOnlyChange={value => dispatch({ type: "pointOnly", value })} />
@@ -337,11 +333,12 @@ export function BenchmarkBrowser({ introduction }: { introduction?: ReactNode } 
         <details className="explorer-guide">
         <summary><span id="explorer-guide-title" className="explorer-guide-title">{t("benchmark.Compare like for like")}</span></summary>
         <ul className="explorer-guide-list">
-          <li className="explorer-guide-text">{t("benchmark.Match the model fingerprint, hardware, workload and measurement method before reading anything into a difference. Results published with a different method or workload measured different work.")}</li>
-          <li className="explorer-guide-text">{t("benchmark.Common API measurements use client-observed timing and UTF-8 output bytes, including reasoning. Historical output-cap token counters are optional and are not decode timing. Cache is as configured.")}</li>
-          <li className="explorer-guide-text">{t("benchmark.Fixed-output results are the default scope: every request reported exactly the requested output tokens, so output tokens per second compare like for like only at the same method and operating point. Historical output-cap results keep their own scope and are never mixed with fixed output.")}</li>
+          <li className="explorer-guide-text">{t("benchmark.Match the model fingerprint, hardware and workload before reading anything into a difference. Every result uses the same Cold Prompt serving method (openai-chat-serving@5).")}</li>
+          <li className="explorer-guide-text">{t("benchmark.Common API measurements use client-observed timing and UTF-8 output bytes, including reasoning. Read each result's recorded cache policy; missing cache facts remain unknown.")}</li>
+          <li className="explorer-guide-text">{t("benchmark.Cold Prompt isolates user inputs by run, point and request without workload warmup. Model loading and normal readiness are excluded. The method records input isolation; it does not verify that engine caches were empty.")}</li>
           <li className="explorer-guide-text">{t("benchmark.Each metric shows the shared point median, range and observed sample count. Missing measurements stay unknown; neither bytes nor missing token counters are converted to tokens.")}</li>
-          <li className="explorer-guide-text">{t("benchmark.Serving points require input UTF-8 bytes, concurrency and output tokens together. Legacy token points remain in the explicit legacy scope. Configured input filters do not claim that every point completed.")}</li>
+          <li className="explorer-guide-text">{t("benchmark.usageMetricsGuide")}</li>
+          <li className="explorer-guide-text">{t("benchmark.Serving points require input UTF-8 bytes, concurrency and output token cap together. Configured input filters do not claim that every point completed.")}</li>
           <li className="explorer-guide-text">{t("benchmark.A missing measurement is shown as an em dash (—), never as a zero. Sorting does not make different setups directly comparable.")}</li>
         </ul>
         </details>

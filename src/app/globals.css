@@ -1131,23 +1131,6 @@ th[style*="text-align: right"] .bilingual-header {
 .detail-rows-scroll { max-width: 100%; }
 .detail-device-list { display: grid; gap: 8px; margin: 0; padding-inline-start: 20px; overflow-wrap: break-word; }
 
-/* Commands preserve their syntax and scroll locally when a line is long. */
-.detail-command {
-  margin: 0;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--ui-border);
-  background: var(--ui-mono-bg);
-  color: var(--ui-mono-ink);
-  font-family: var(--font-mono);
-  font-size: var(--fs-code);
-  line-height: var(--lh-code);
-  white-space: pre;
-  overflow-x: auto;
-  word-break: normal;
-  overflow-wrap: normal;
-}
-
 .detail-rows { min-width: 40rem; }
 .detail-rows th { white-space: nowrap; }
 

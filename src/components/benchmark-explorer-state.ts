@@ -6,32 +6,31 @@
  * resets and comparison bounds are verified directly instead of through a DOM.
  */
 
-import { FILTER_DEFINITIONS, TEXT_FILTER_KEYS, TEXT_FILTER_MAX_LENGTH, RANGE_FILTER_KEYS, BOOLEAN_FILTER_KEYS, DEFAULT_MEASUREMENT, DISCOVERY_MAX_QUERY_BYTES, POINT_SORT_VALUES, compareCanonical, isServingOutputInScope, measurementScope, parseFilters, parseOptionsQuery, parseSettingCondition, canonicalSettingCondition, canonicalSettingDescriptor, sortAvailable, type SettingDescriptor, type BenchmarkSetup, type ServingMeasurementScope } from "@/lib/benchmark-discovery";
-import { parsePointId, parseServingPointId, type BenchmarkPoint, type ServingBenchmarkPoint } from "@/lib/benchmark-points";
+import { FILTER_DEFINITIONS, TEXT_FILTER_KEYS, TEXT_FILTER_MAX_LENGTH, RANGE_FILTER_KEYS, BOOLEAN_FILTER_KEYS, DISCOVERY_MAX_QUERY_BYTES, POINT_SORT_VALUES, compareCanonical, isServingOutputInScope, parseFilters, parseOptionsQuery, parseSettingCondition, canonicalSettingCondition, canonicalSettingDescriptor, type SettingDescriptor, type BenchmarkSetup } from "@/lib/benchmark-discovery";
+import { parseServingPointId, type ServingBenchmarkPoint } from "@/lib/benchmark-points";
 import type { BenchmarkModelInfo } from "./benchmark-model-identity";
 import type { BenchmarkIdentity } from "@/lib/summary";
 
 export const EXPLORER_NUMERIC_KEYS = RANGE_FILTER_KEYS.flatMap(key => [`${key}_min`, `${key}_max`] as const);
-export const EXPLORER_SORTS = { newest: "Newest first", oldest: "Oldest first", input_bytes_asc: "Input bytes: low to high", input_bytes_desc: "Input bytes: high to low", context_asc: "Input length: low to high", context_desc: "Input length: high to low", vram_asc: "VRAM: low to high", vram_desc: "VRAM: high to low", token_rate_desc: "Output tokens per second at the basis point: fastest first", output_rate_desc: "Observed output: fastest first", throughput_desc: "Decode at the basis point: fastest first", duration_asc: "Duration at the basis point: shortest first" } as const;
+export const EXPLORER_SORTS = { newest: "Newest first", oldest: "Oldest first", input_bytes_asc: "Input bytes: low to high", input_bytes_desc: "Input bytes: high to low", vram_asc: "VRAM: low to high", vram_desc: "VRAM: high to low", token_rate_desc: "Total token throughput at the basis point: fastest first", output_rate_desc: "Observed output: fastest first", duration_asc: "Duration at the basis point: shortest first" } as const;
 export const EXPLORER_POINT_SORTS = POINT_SORT_VALUES;
-export const EXPLORER_BASIS_KEYS = ["point_tokens", "point_bytes", "point_concurrency", "point_max_tokens"] as const;
-export const EXPLORER_FILTER_KEYS = [...TEXT_FILTER_KEYS, ...EXPLORER_NUMERIC_KEYS, ...BOOLEAN_FILTER_KEYS, ...EXPLORER_BASIS_KEYS, "measurement", "point_only", "sort"] as const;
+export const EXPLORER_BASIS_KEYS = ["point_bytes", "point_concurrency", "point_max_tokens"] as const;
+export const EXPLORER_FILTER_KEYS = [...TEXT_FILTER_KEYS, ...EXPLORER_NUMERIC_KEYS, ...BOOLEAN_FILTER_KEYS, ...EXPLORER_BASIS_KEYS, "point_only", "sort"] as const;
 export type ExplorerFilterKey = (typeof EXPLORER_FILTER_KEYS)[number];
 export type ExplorerFilters = Record<ExplorerFilterKey, string> & { setting: string[] };
-/** A serving basis names the method scope it was chosen in, so another method's same tuple is never read as it. */
-export type ExplorerBasis = { prompt_tokens: number; concurrency: number } | { input_bytes: number; concurrency: number; max_output_tokens: number; scope: ServingMeasurementScope };
+export type ExplorerBasis = { input_bytes: number; concurrency: number; max_output_tokens: number };
 export const EXPLORER_FILTER_LABELS: Record<ExplorerFilterKey, string> = Object.fromEntries([
   ...Object.entries(FILTER_DEFINITIONS).flatMap(([key, definition]) => definition.kind === "range"
     ? [[`${key}_min`, definition.label], [`${key}_max`, definition.label]]
     : [[key, definition.label]]),
-  ["measurement", "Measurement"], ["sort", "Sort"], ["point_tokens", "Basis input length"], ["point_bytes", "Input UTF-8 bytes"],
+  ["sort", "Sort"], ["point_bytes", "Input UTF-8 bytes"],
   ["point_concurrency", "Basis concurrency"], ["point_max_tokens", "Maximum output token request"], ["point_only", "Only results measured at the basis point"],
 ]) as Record<ExplorerFilterKey, string>;
 
 export function invalidExplorerRanges(filters: ExplorerFilters): string[] {
   return RANGE_FILTER_KEYS.filter(range => {
     const low = filters[`${range}_min`].trim(), high = filters[`${range}_max`].trim();
-    const invalid = (value: string) => value !== "" && (!/^-?\d+$/.test(value) || !Number.isSafeInteger(Number(value)) || Number(value) < (range === "gpu_layers" ? -1 : 0));
+    const invalid = (value: string) => value !== "" && (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value)));
     return invalid(low) || invalid(high) || (low !== "" && high !== "" && Number(low) > Number(high));
   });
 }
@@ -78,25 +77,21 @@ export const EXPLORER_COMPARE_LIMIT = 3;
 export const EXPLORER_CURSOR_MAX_LENGTH = 2048;
 
 export const EMPTY_EXPLORER_FILTERS = { ...Object.fromEntries(EXPLORER_FILTER_KEYS.map(key => [key, ""])), setting: [] } as unknown as ExplorerFilters;
-function normalizeValue(value: string, key: ExplorerFilterKey): string {
-  const trimmed = value.trim();
-  // An explicit Common API selection is the same scope as an omitted default.
-  return key === "measurement" && trimmed === DEFAULT_MEASUREMENT ? "" : trimmed;
+function normalizeValue(value: string): string {
+  return value.trim();
 }
 function normalizeSettings(settings: string[]): string[] {
   return [...new Set(settings.map(value => { try { return canonicalSettingCondition(parseSettingCondition(value)); } catch { return value; } }))].sort(compareCanonical);
 }
 export function normalizeExplorerFilters(filters: ExplorerFilters): ExplorerFilters {
-  return { ...Object.fromEntries(EXPLORER_FILTER_KEYS.map(key => [key, normalizeValue(filters[key] ?? "", key)])), setting: normalizeSettings(filters.setting ?? []) } as ExplorerFilters;
+  return { ...Object.fromEntries(EXPLORER_FILTER_KEYS.map(key => [key, normalizeValue(filters[key] ?? "")])), setting: normalizeSettings(filters.setting ?? []) } as ExplorerFilters;
 }
 export function sameExplorerFilters(a: ExplorerFilters, b: ExplorerFilters): boolean {
   return EXPLORER_FILTER_KEYS.every(key => a[key] === b[key]) && JSON.stringify(normalizeSettings(a.setting)) === JSON.stringify(normalizeSettings(b.setting));
 }
 export function basisPointOf(filters: ExplorerFilters): ExplorerBasis | null {
-  const scope = measurementScope(filters.measurement);
-  if (scope === "legacy") return parsePointId(`${filters.point_tokens}/${filters.point_concurrency}`);
   const point = parseServingPointId(`b${filters.point_bytes}/c${filters.point_concurrency}/o${filters.point_max_tokens}`);
-  return point && isServingOutputInScope(point.max_output_tokens, scope) ? { ...point, scope } : null;
+  return point && isServingOutputInScope(point.max_output_tokens) ? point : null;
 }
 
 export function isPointSort(sort: string): boolean {
@@ -140,11 +135,9 @@ export interface ExplorerLocation {
 }
 
 /**
- * Serving points require bytes, concurrency and output tokens (a fixed-output
- * preset or a historical cap); legacy points require tokens and concurrency.
- * Repair incomplete or unreadable tuples without ever reinterpreting a token
- * length as bytes. Point-ranked sorts need a whole tuple, and a sort that the
- * scope cannot read is dropped rather than sent.
+ * A basis point needs input bytes, concurrency and an in-range output cap.
+ * Repair an incomplete or unreadable tuple by dropping it, along with the
+ * point-ranked sort and point_only narrowing that depended on it.
  */
 function repairBasis(filters: ExplorerFilters): ExplorerFilters {
   const repaired = { ...filters };
@@ -153,7 +146,6 @@ function repairBasis(filters: ExplorerFilters): ExplorerFilters {
     repaired.point_only = "";
     if (isPointSort(repaired.sort)) repaired.sort = "";
   }
-  if (repaired.sort && !sortAvailable(repaired.sort, measurementScope(repaired.measurement))) repaired.sort = "";
   if (repaired.point_only !== "1") repaired.point_only = "";
   return repaired;
 }
@@ -162,7 +154,7 @@ function repairBasis(filters: ExplorerFilters): ExplorerFilters {
 export function parseExplorerLocation(search: string): ExplorerLocation {
   const params = new URLSearchParams(search);
   const filters: ExplorerFilters = { ...EMPTY_EXPLORER_FILTERS, setting: params.getAll("setting") };
-  for (const key of EXPLORER_FILTER_KEYS) filters[key] = normalizeValue(params.get(key) ?? "", key);
+  for (const key of EXPLORER_FILTER_KEYS) filters[key] = normalizeValue(params.get(key) ?? "");
   filters.setting = normalizeSettings(filters.setting);
   if (!(filters.sort in EXPLORER_SORTS) || filters.sort === "newest") filters.sort = "";
   return { filters: repairBasis(filters), cursor: sanitizeExplorerCursor(params.get("cursor")) };
@@ -172,7 +164,7 @@ export function parseExplorerLocation(search: string): ExplorerLocation {
 export function buildExplorerSearch(location: ExplorerLocation): string {
   const params = new URLSearchParams();
   for (const key of EXPLORER_FILTER_KEYS) {
-    const value = normalizeValue(location.filters[key] ?? "", key);
+    const value = normalizeValue(location.filters[key] ?? "");
     if (value) params.set(key, value);
   }
   for (const condition of normalizeSettings(location.filters.setting)) params.append("setting", condition);
@@ -242,7 +234,7 @@ export function readExplorerHistory(historyState: unknown): string[] {
 
 /** Public list fields used by the explorer. The list API exposes no submission ids and no local file paths; the repository-relative artifact filename is public when reported. */
 export interface ExplorerSummary {
-  schema_version?: 1 | 2 | 3;
+  schema_version: 4;
   model_label: string;
   hardware_label: string;
   method_label: string;
@@ -250,29 +242,13 @@ export interface ExplorerSummary {
   row_count: number;
   failed_rows: number;
   status: string;
-  mean_tg_tps: number | null;
-  mean_e2e_ms: number | null;
-  /** Mean prompt processing throughput over the successful rows. */
-  mean_pp_tps?: number | null;
-  /** Input lengths the run was configured with, sorted and deduplicated. */
-  prompt_lengths?: number[];
-  /**
-   * What the explorer reads: one entry per operating point the run measured.
-   * The mean_* fields above mix input lengths and concurrencies together, so
-   * they are no longer displayed. Absent on results stored before migration 012.
-   */
-  points?: BenchmarkPoint[];
-  points_truncated?: boolean;
-  /**
-   * Published model metadata. Absent on results stored before the metadata
-   * migration and null when the publication carried none, which the explorer
-   * reports as unknown rather than filling in from the curated label.
-   */
-  model_info?: BenchmarkModelInfo | null;
-  setup?: BenchmarkSetup;
-  identity?: BenchmarkIdentity;
-  input_unit?: "utf8_bytes";
-  serving_points?: ServingBenchmarkPoint[];
+  /** Published model metadata; null when the publication carried none, which the explorer reports as unknown. */
+  model_info: BenchmarkModelInfo | null;
+  setup: BenchmarkSetup;
+  identity: BenchmarkIdentity;
+  input_unit: "utf8_bytes";
+  /** One entry per operating point the run measured, in measured order. */
+  serving_points: ServingBenchmarkPoint[];
 }
 
 export interface ExplorerItem {
@@ -293,22 +269,6 @@ export function isCompared(compare: ExplorerItem[], publicId: string): boolean {
 
 export function canAddToComparison(compare: ExplorerItem[]): boolean {
   return compare.length < EXPLORER_COMPARE_LIMIT;
-}
-
-export interface ComparisonCompatibility {
-  comparable: boolean;
-  methods: string[];
-  workloads: string[];
-}
-
-/**
- * Results measured with a different method or workload describe different work.
- * The panel says so instead of presenting the numbers as a contest.
- */
-export function comparisonCompatibility(compare: ExplorerItem[]): ComparisonCompatibility {
-  const methods = [...new Set(compare.map((item) => item.summary.method_label))];
-  const workloads = [...new Set(compare.map((item) => item.summary.workload_label))];
-  return { comparable: methods.length <= 1 && workloads.length <= 1, methods, workloads };
 }
 
 export interface ExplorerState {
@@ -366,13 +326,7 @@ export function explorerReducer(state: ExplorerState, action: ExplorerAction): E
       };
     }
     case "draft": {
-      const draft = { ...state.draft, [action.key]: action.key === "measurement" ? normalizeValue(action.value, action.key) : action.value };
-      if (action.key === "measurement") {
-        for (const key of EXPLORER_BASIS_KEYS) draft[key] = "";
-        draft.point_only = "";
-        draft.sort = "";
-      }
-      return { ...state, draft };
+      return { ...state, draft: { ...state.draft, [action.key]: action.value } };
     }
     case "settings":
       return { ...state, draft: { ...state.draft, setting: action.value } };
@@ -383,7 +337,6 @@ export function explorerReducer(state: ExplorerState, action: ExplorerAction): E
     }
     case "sort": {
       const sort = action.value !== "newest" && Object.hasOwn(EXPLORER_SORTS, action.value) ? action.value : "";
-      if (sort && !sortAvailable(sort, measurementScope(state.applied.measurement))) return state;
       // Ranking measured speed needs a point to rank at; without one the order is refused.
       if (isPointSort(sort) && basisPointOf(state.applied) === null) return state;
       if (sort === state.applied.sort) return state;
@@ -393,15 +346,12 @@ export function explorerReducer(state: ExplorerState, action: ExplorerAction): E
     case "basisPoint": {
       // The basis decides which measurement every row reports, so it applies at
       // once like sorting does, without submitting unfinished filter edits.
-      const scope = measurementScope(state.applied.measurement);
-      const parsed = scope === "legacy" ? parsePointId(action.value) : parseServingPointId(action.value);
-      // A fixed-output basis names one of the shared presets; any other cap is no basis here.
-      const point = parsed && "max_output_tokens" in parsed && !isServingOutputInScope(parsed.max_output_tokens, scope) ? null : parsed;
+      const parsed = parseServingPointId(action.value);
+      const point = parsed && isServingOutputInScope(parsed.max_output_tokens) ? parsed : null;
       const next: ExplorerFilters = {
         ...state.applied,
-        point_tokens: point && "prompt_tokens" in point ? String(point.prompt_tokens) : "",
-        point_bytes: point && "input_bytes" in point ? String(point.input_bytes) : "",
-        point_max_tokens: point && "max_output_tokens" in point ? String(point.max_output_tokens) : "",
+        point_bytes: point ? String(point.input_bytes) : "",
+        point_max_tokens: point ? String(point.max_output_tokens) : "",
         point_concurrency: point ? String(point.concurrency) : "",
       };
       // Dropping the basis drops what point_only narrowed to and what the two

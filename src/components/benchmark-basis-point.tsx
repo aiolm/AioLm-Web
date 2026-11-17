@@ -1,9 +1,9 @@
 "use client";
 import { useI18n } from "@/i18n/client";
 import { useJsonFetch } from "./ui";
-import { parsePointId, parseServingPointId } from "@/lib/benchmark-points";
-import { DEFAULT_MEASUREMENT, FIXED_OUTPUT_MEASUREMENT, isServingOutputInScope, type MeasurementScope } from "@/lib/benchmark-discovery";
-import { formatPointLabel, formatServingPointLabel } from "./benchmark-explorer-format";
+import { parseServingPointId } from "@/lib/benchmark-points";
+import { isServingOutputInScope } from "@/lib/benchmark-discovery";
+import { formatServingPointLabel } from "./benchmark-explorer-format";
 import { UiSelect } from "./ui-select";
 import { EXPLORER_QUERY_LIMIT_MESSAGE, isExplorerRequestWithinBounds } from "./benchmark-explorer-state";
 
@@ -16,8 +16,7 @@ import { EXPLORER_QUERY_LIMIT_MESSAGE, isExplorerRequestWithinBounds } from "./b
  * is also what the two speed sorts rank at.
  *
  * The options are points measured under the other conditions, offered as complete
- * tuples: bytes/concurrency/output tokens for serving or tokens/concurrency for
- * legacy. Fixed-output tokens are exact; historical serving tokens are a cap.
+ * input bytes / concurrency / output token cap tuples; the cap is a request limit.
  * A restored selection remains available even when other filters contradict it.
  */
 
@@ -28,14 +27,12 @@ export interface BasisPointOption {
 
 export function BenchmarkBasisPoint({
   value,
-  scope = DEFAULT_MEASUREMENT,
   only,
   optionsPath,
   onSelect,
   onOnlyChange,
 }: {
   value: string;
-  scope?: MeasurementScope;
   only: boolean;
   optionsPath: string;
   onSelect: (value: string) => void;
@@ -44,11 +41,9 @@ export function BenchmarkBasisPoint({
   const { t } = useI18n();
   const requestBlocked = !isExplorerRequestWithinBounds(optionsPath);
   const { data, error } = useJsonFetch<{ options: BasisPointOption[]; has_more: boolean }>(requestBlocked ? null : optionsPath);
-  const legacy = scope === "legacy";
   const parse = (option: string) => {
-    if (legacy) return parsePointId(option);
     const point = parseServingPointId(option);
-    return point && isServingOutputInScope(point.max_output_tokens, scope) ? point : null;
+    return point && isServingOutputInScope(point.max_output_tokens) ? point : null;
   };
   const options = (data?.options ?? []).filter(option => parse(option.value) !== null);
   // A selection restored from a shared link stays selectable even if the
@@ -72,7 +67,7 @@ export function BenchmarkBasisPoint({
               ? t("benchmark.No measured points to choose from. Each result reports its own leading point.")
               : value
                 ? t("benchmark.Every row reports this point, so the speed columns answer the same question.")
-                : t(legacy ? "benchmark.Pick a point to read every result at the same input length and concurrency." : scope === FIXED_OUTPUT_MEASUREMENT ? "benchmark.Pick input UTF-8 bytes, concurrency and exact output tokens to read every result at the same fixed-output point." : "benchmark.Pick input UTF-8 bytes, concurrency and output token cap to read every result at the same serving point.")}
+                : t("benchmark.Pick input UTF-8 bytes, concurrency and output token cap to read every result at the same serving point.")}
           </p>
         </details>
         </div>
@@ -87,7 +82,7 @@ export function BenchmarkBasisPoint({
             { value: "", label: t("benchmark.Each result's own leading point") },
             ...selectable.map((option) => {
               const point = parse(option.value);
-              const label = point === null ? option.value : "input_bytes" in point ? formatServingPointLabel(point.input_bytes, point.concurrency, point.max_output_tokens, legacy ? null : scope) : formatPointLabel(point.prompt_tokens, point.concurrency);
+              const label = point === null ? option.value : formatServingPointLabel(point.input_bytes, point.concurrency, point.max_output_tokens);
               return { value: option.value, label: option.count > 0 ? t("benchmark.{point} ({count} results)", { point: label, count: String(option.count) }) : label };
             }),
           ]}

@@ -13,6 +13,7 @@ import { PATCH as editDescription } from "@/app/v1/benchmark-runs/[id]/descripti
 import { POST as createReport } from "@/app/v1/benchmark-runs/[id]/reports/route";
 import { POST as openMgmt, GET as readMgmt, DELETE as closeMgmt } from "@/app/v1/management-sessions/route";
 import { freshStore, setupTestEnv, testHeaders } from "./helpers";
+import { GET as listOptions } from "@/app/v1/benchmark-runs/options/route";
 import { pythonBenchmark } from "../inference-benchmarks";
 
 setupTestEnv();
@@ -76,6 +77,62 @@ describe("benchmark publish flow", () => {
     ownerSecret = randomBase64Url32();
   });
 
+  it.each([false, true])("publishes early completion with actual request_usage=%s through permit, replay, list, detail and rows", async requestUsage => {
+    const benchmark = syntheticSubmission();
+    if (requestUsage) {
+      benchmark.workload.request_usage = true;
+      benchmark.execution.settings.splice(2, 0, { target: "request", scope: [], name: "stream_options.include_usage", value: true, unit: null, role: null });
+      Object.assign(benchmark.measurements.rows[0]!, { reported_prompt_tokens: 55, reported_completion_tokens: 3, usage_status: "complete", prefill_tokens_per_second: 2750, decode_tokens_per_second: 50, tpot_ms: 20 });
+    }
+    const body = JSON.stringify({ benchmark, description_md: "합성 serving result." });
+    const { permit } = await verifiedPermit(ownerSecret, benchmark.submission_id, sha256HexUtf8(body));
+    const submit = (payload = body, secret = ownerSecret) => submitRun(new Request(`${ORIGIN}/v1/benchmark-runs`, {
+      method: "POST",
+      headers: testHeaders({ authorization: `Bearer ${secret}`, "content-type": "application/json", "x-upload-permit": permit, "idempotency-key": benchmark.submission_id }),
+      body: payload,
+    }));
+    expect((await submit(`${body} `)).status).toBe(403);
+    const first = await submit();
+    expect(first.status).toBe(201);
+    const { id } = await first.json();
+    expect((await submit()).status).toBe(200);
+    expect((await submit(body, randomBase64Url32())).status).toBe(403);
+    const detail = await (await getDetail(new Request(`${ORIGIN}/v1/benchmark-runs/${id}`), { params: Promise.resolve({ id }) })).json();
+    expect(detail.benchmark.method).toEqual({ id: "openai-chat-serving", version: 5 });
+    expect(detail.benchmark.workload.request_usage).toBe(requestUsage);
+    expect(detail.benchmark.execution).toEqual(benchmark.execution);
+    expect(detail.benchmark.workload).toEqual(benchmark.workload);
+    expect(detail.summary.setup.inputs).toEqual(benchmark.workload.inputs);
+    expect(detail.summary.setup.prompt_nonce).toBe(benchmark.workload.prompt_nonce);
+    expect(detail.summary.serving_points[0].reported_tokens_per_second).toEqual(requestUsage ? { median: 15, min: 15, max: 15, samples: 1 } : null);
+    expect(detail.summary.serving_points[0].tpot_ms).toEqual(requestUsage ? { median: 20, min: 20, max: 20, samples: 1 } : null);
+    const rows = await (await getRows(new Request(`${ORIGIN}/v1/benchmark-runs/${id}/measurements`), { params: Promise.resolve({ id }) })).json();
+    expect(rows.rows).toEqual(benchmark.measurements.rows);
+    const listed = await (await listRuns(new Request(`${ORIGIN}/v1/benchmark-runs`, { headers: testHeaders() }))).json();
+    expect(listed.items.map((item: { public_id: string }) => item.public_id)).toEqual([id]);
+    // A retired scope parameter is ignored like any unknown parameter.
+    const scoped = await (await listRuns(new Request(`${ORIGIN}/v1/benchmark-runs?measurement=openai-chat-serving%404`, { headers: testHeaders() }))).json();
+    expect(scoped.items.map((item: { public_id: string }) => item.public_id)).toEqual([id]);
+    const points = await (await listOptions(new Request(`${ORIGIN}/v1/benchmark-runs/options?field=point`, { headers: testHeaders() }))).json();
+    expect(points.options).toEqual([{ value: "b4096/c1/o128", count: 1 }]);
+  });
+
+  it.each([
+    ["a bare submission", () => JSON.stringify(syntheticSubmission())],
+    ["a retired method version", () => JSON.stringify({ benchmark: { ...syntheticSubmission(), method: { id: "openai-chat-serving", version: 4 } }, description_md: "" })],
+    ["a retired schema version", () => JSON.stringify({ benchmark: { ...syntheticSubmission(), schema_version: 3 }, description_md: "" })],
+  ])("rejects %s with 400 invalid_request before any session or quota is touched", async (_name, build) => {
+    const body = build();
+    const response = await submitRun(new Request(`${ORIGIN}/v1/benchmark-runs`, {
+      method: "POST",
+      headers: testHeaders({ authorization: `Bearer ${ownerSecret}`, "content-type": "application/json", "idempotency-key": SUBMISSION }),
+      body,
+    }));
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: { code: "invalid_request" } });
+    expect(store.runs.size).toBe(0);
+  });
+
   it.each(["vllm", "mlx-vlm", "vllm-metal"] as const)("publishes and reads %s without changing engine or model identity", async engine => {
     const benchmark = pythonBenchmark(engine);
     const body = JSON.stringify({ benchmark, description_md: "Synthetic multi-engine result." });
@@ -93,8 +150,8 @@ describe("benchmark publish flow", () => {
     expect(saved.benchmark.model).toEqual(benchmark.model);
     expect(saved.benchmark.execution).toEqual(benchmark.execution);
     expect(saved.summary.model_info).toBeNull();
-    expect(saved.summary.points[0].pp_tps).toBeNull();
-    const listed = await (await listRuns(new Request(`${ORIGIN}/v1/benchmark-runs?measurement=legacy&runtime=${benchmark.runtime.name}`, { headers: testHeaders() }))).json();
+    expect(saved.summary.serving_points[0].prefill_tokens_per_second).toBeNull();
+    const listed = await (await listRuns(new Request(`${ORIGIN}/v1/benchmark-runs?runtime=${benchmark.runtime.name}`, { headers: testHeaders() }))).json();
     expect(listed.items).toHaveLength(1);
     expect(listed.items[0].summary.setup.runtime).toBe(benchmark.runtime.name);
     if (engine === "vllm-metal") expect(listed.items[0].summary.setup).toMatchObject({ runtime_variant: "vllm-metal", runtime_plugin_version: "0.30.0" });
@@ -158,7 +215,7 @@ describe("benchmark publish flow", () => {
     expect(((await rows.json()) as { total: number }).total).toBe(1);
 
     // List carries public fields only, with filters + pagination.
-    const list = await listRuns(new Request(`${ORIGIN}/v1/benchmark-runs?measurement=legacy&limit=25&workload=code_python`));
+    const list = await listRuns(new Request(`${ORIGIN}/v1/benchmark-runs?limit=25&workload=code_python`));
     expect(list.status).toBe(200);
     const listJson = (await list.json()) as { items: Array<Record<string, unknown>> };
     expect(listJson.items.length).toBe(1);

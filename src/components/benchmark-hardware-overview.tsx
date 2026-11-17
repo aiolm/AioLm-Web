@@ -47,21 +47,25 @@ export function BenchmarkHardwareOverview({ benchmark }: { benchmark: BenchmarkS
   const cpu = asRecord(env?.cpu);
   const execution = asRecord(env?.execution);
   const runtime = asRecord(benchmark.runtime);
-  const rawGpus = benchmark.schema_version === 3
-    ? (Array.isArray(env?.installed_gpus) ? env.installed_gpus : []).map(asRecord).filter((gpu): gpu is Record<string, unknown> => gpu !== null)
-    : execution?.mode === "cpu" ? [] : Array.isArray(execution?.selected_gpus) ? execution.selected_gpus.map(asRecord).filter((gpu): gpu is Record<string, unknown> => gpu !== null) : [];
+  const rawGpus = (Array.isArray(env?.installed_gpus) ? env.installed_gpus : []).map(asRecord).filter((gpu): gpu is Record<string, unknown> => gpu !== null);
   const selectedNames = Array.isArray(execution?.selected_gpus) ? execution.selected_gpus.map(asRecord).filter((gpu): gpu is Record<string, unknown> => gpu !== null).map(gpu => displayText(gpu.name, t)) : [];
   const gpus = aggregateGpus(rawGpus);
   const osArch = [env?.os, env?.arch].filter(value => typeof value === "string").join(" · ");
-  const runtimeVersion = benchmark.schema_version === 3 ? (typeof runtime?.version === "string" ? runtime.version : null) : runtimeVersionLabel(runtime);
+  const runtimeVersion = runtimeVersionLabel({
+    name: runtime?.name,
+    version: runtime?.version,
+    build: runtime?.build,
+    variant: runtime?.variant,
+    plugin_version: runtime?.plugin_version,
+  });
 
   return (
     <section className="card detail-environment" aria-labelledby="hardware-overview-title">
       <h2 id="hardware-overview-title">{t("benchmark.Environment")}</h2>
-      {benchmark.schema_version === 3 ? <p className="muted">{t("benchmark.Host resources describe the AioLM host, not the attached engine or container allocation.")} {t("benchmark.Environment scope")}: {displayText(env?.scope, t)}</p> : null}
+      <p className="muted">{t("benchmark.Host resources describe the AioLM host, not the attached engine or container allocation.")} {t("benchmark.Environment scope")}: {displayText(env?.scope, t)}</p>
       <div className="detail-hardware-grid">
         <article className="detail-hardware-card">
-          <ColumnHeading label={t(benchmark.schema_version === 3 ? "benchmark.Installed host GPUs" : "benchmark.Selected graphics")} />
+          <ColumnHeading label={t("benchmark.Installed host GPUs")} />
           {gpus.length > 0 ? (
             <ul className="detail-hardware-gpus">
               {gpus.map(({ gpu, count }, index) => {
@@ -76,16 +80,16 @@ export function BenchmarkHardwareOverview({ benchmark }: { benchmark: BenchmarkS
                         <span className="detail-fact-value">{formatVramGb(gpu.vram_mb, t)}</span>
                       </div>
                     ) : null}
-                    {benchmark.schema_version === 3 && typeof gpu.integrated === "boolean" ? <div className="detail-fact"><span className="detail-fact-label">{t("benchmark.Integrated")}</span><span className="detail-fact-value">{displayText(gpu.integrated, t)}</span></div> : null}
-                    {benchmark.schema_version === 3 && gpu.vram_mb == null ? <div className="detail-fact"><span className="detail-fact-label">{t(gpu.integrated === true ? "benchmark.Reported GPU memory" : "benchmark.VRAM")}</span><span className="detail-fact-value">{reportedGpuMemory(gpu.vram_mb, gpu.integrated, t)}</span></div> : null}
+                    {typeof gpu.integrated === "boolean" ? <div className="detail-fact"><span className="detail-fact-label">{t("benchmark.Integrated")}</span><span className="detail-fact-value">{displayText(gpu.integrated, t)}</span></div> : null}
+                    {gpu.vram_mb == null ? <div className="detail-fact"><span className="detail-fact-label">{t(gpu.integrated === true ? "benchmark.Reported GPU memory" : "benchmark.VRAM")}</span><span className="detail-fact-value">{reportedGpuMemory(gpu.vram_mb, gpu.integrated, t)}</span></div> : null}
                   </li>
                 );
               })}
             </ul>
           ) : (
-            <strong>{benchmark.schema_version === 3 ? t(Array.isArray(env?.installed_gpus) ? "benchmark.None reported" : "benchmark.Host GPU inventory not recorded") : execution?.mode === "cpu" ? "CPU" : "—"}</strong>
+            <strong>{t(Array.isArray(env?.installed_gpus) ? "benchmark.None reported" : "benchmark.Host GPU inventory not recorded")}</strong>
           )}
-          {benchmark.schema_version === 3 ? <div className="detail-fact"><span className="detail-fact-label">{t("benchmark.Selected graphics")}</span><span className="detail-fact-value">{selectedGpuRecord(selectedNames, execution?.mode, execution?.selection_complete, t)}</span></div> : null}
+          <div className="detail-fact"><span className="detail-fact-label">{t("benchmark.Selected graphics")}</span><span className="detail-fact-value">{selectedGpuRecord(selectedNames, execution?.mode, execution?.selection_complete, t)}</span></div>
         </article>
 
         <article className="detail-hardware-card">
@@ -123,12 +127,10 @@ export function BenchmarkHardwareOverview({ benchmark }: { benchmark: BenchmarkS
                 {runtimeVersion ? ` ${runtimeVersion}` : ""}
               </span>
             </div>
-            {runtime?.backend || benchmark.schema_version === 3 ? (
-              <div className="detail-fact">
-                <span className="detail-fact-label">{t("benchmark.Backend")}</span>
-                <span className="detail-fact-value">{runtime?.backend ? displayText(runtime.backend, t) : t("benchmark.Backend identity not recorded")}</span>
-              </div>
-            ) : null}
+            <div className="detail-fact">
+              <span className="detail-fact-label">{t("benchmark.Backend")}</span>
+              <span className="detail-fact-value">{runtime?.backend ? displayText(runtime.backend, t) : t("benchmark.Backend identity not recorded")}</span>
+            </div>
             {osArch ? (
               <div className="detail-fact">
                 <span className="detail-fact-label">{t("benchmark.OS")}</span>

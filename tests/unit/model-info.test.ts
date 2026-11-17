@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { syntheticServingSubmission, syntheticSubmission } from "@/lib/fixtures";
+import { syntheticSubmission } from "@/lib/fixtures";
 import { modelLabelFor, normalizeModelInfo } from "@/lib/model-info";
 import { summarizeBenchmark } from "@/lib/summary";
-import type { LegacyPublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
+import type { PublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
 import { validatePublicBenchmark } from "@aiolm/benchmark-contracts";
 import { sourcedServingBenchmark } from "../inference-benchmarks";
 
 /** Invalid metadata fixtures exercise defensive display projection, not public acceptance. */
-function described(metadata: unknown, identity: Partial<LegacyPublicBenchmarkSubmission["model"]> = {}): LegacyPublicBenchmarkSubmission {
+function described(metadata: unknown, identity: Partial<PublicBenchmarkSubmission["model"]> = {}): PublicBenchmarkSubmission {
   const benchmark = syntheticSubmission();
-  benchmark.model = { ...benchmark.model, ...identity, metadata } as LegacyPublicBenchmarkSubmission["model"];
+  benchmark.model = { ...benchmark.model, format: "gguf", ...identity, metadata: metadata as PublicBenchmarkSubmission["model"]["metadata"] };
   return benchmark;
 }
 
@@ -26,7 +26,7 @@ const field = (metadata: Record<string, unknown>, key: string): unknown =>
 describe("model metadata", () => {
   it("publishes what was recorded and derives the publisher from the repository namespace alone", () => {
     expect(normalizeModelInfo(described(COMPLETE, { status: "sha256", sha256: "a".repeat(64) }))).toEqual({
-      ...COMPLETE, publisher: "publisher-org", sha256: "a".repeat(64), identity_status: "sha256",
+      ...COMPLETE, publisher: "publisher-org", revision: null, sha256: "a".repeat(64), identity_status: "sha256",
     });
     // general.quantized_by names whoever produced the quantized weights, which is
     // routinely a different party. Without a repository there is no publisher.
@@ -144,7 +144,7 @@ describe("engine-neutral model source", () => {
   });
 
   it.each(["llama.cpp", "vllm", "mlx-vlm", "sglang", null])("keeps GGUF metadata for %s based only on model format", (name) => {
-    const benchmark = syntheticServingSubmission();
+    const benchmark = syntheticSubmission();
     benchmark.runtime.name = name;
     benchmark.model = { format: "gguf", status: "sha256", sha256: "a".repeat(64), size_bytes: 1024,
       metadata: { ...COMPLETE, format: "GGUF", source: "gguf+huggingface" } };
@@ -171,7 +171,7 @@ describe("engine-neutral model source", () => {
       { kind: "huggingface" as const, repository: "org/model", revision: "B".repeat(40) },
       { kind: "huggingface" as const, repository: "org/model", revision: "main" },
     ]) {
-      const benchmark = syntheticServingSubmission();
+      const benchmark = syntheticSubmission();
       benchmark.model.source = source;
       expect(normalizeModelInfo(benchmark)).toBeNull();
     }

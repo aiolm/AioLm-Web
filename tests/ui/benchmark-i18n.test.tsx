@@ -21,39 +21,30 @@ import { buildSetupGroups, type BenchmarkSetup } from "@/components/benchmark-de
 import type { ExplorerItem } from "@/components/benchmark-explorer-state";
 import BenchmarksPage, { generateMetadata } from "@/app/[locale]/benchmarks/page";
 import BenchmarkPage, { generateMetadata as detailMetadata } from "@/app/[locale]/benchmarks/[id]/page";
+import { syntheticSubmission } from "@/lib/fixtures";
+import { summarizeBenchmark } from "@/lib/summary";
 
 const catalogs: Record<Locale, MessageCatalog> = { en, ko, ja, zh };
 const common: Record<Locale, MessageCatalog> = { en: commonEn, ko: commonKo, ja: commonJa, zh: commonZh };
 const state = vi.hoisted(() => ({ search: "model=synthetic-model&hardware=synthetic-device&cursor=abc_123", data: null as unknown, error: null as string | null }));
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(state.search), notFound: () => { throw new Error("not-found"); } }));
-vi.mock('@/server/public-benchmark', () => ({ getPublicBenchmark: async () => ({ state: 'public', data: { id: item.public_id, benchmark, summary: item.summary, description_md: '', revision: 1, created_at: item.created_at, updated_at: item.created_at } }) }));
+vi.mock('@/server/public-benchmark', () => ({ getPublicBenchmark: async () => ({ state: 'public', data: { id: item.public_id, benchmark: submission, summary: item.summary, description_md: '', revision: 1, created_at: item.created_at, updated_at: item.created_at } }) }));
 vi.mock("@/i18n/server", () => ({ getMessages: async (locale: Locale) => catalogs[locale] }));
 vi.mock("@/components/ui", async (importOriginal) => ({
   ...await importOriginal<typeof import("@/components/ui")>(),
   useJsonFetch: () => ({ data: state.data, error: state.error, reload: () => {} }),
 }));
-/**
- * The point values are what the pages must show. The mean_* fields carry
- * numbers that appear nowhere else, so a page that fell back to averaging the
- * whole grid again would print 999 and fail here rather than pass quietly.
- */
-const point = (prompt_tokens: number, concurrency: number, tg: number, pp: number) => ({
-  prompt_tokens, concurrency, generation_length: 128, samples: 3,
-  pp_tps: { median: pp, min: pp - 1, max: pp + 1 },
-  tg_tps: { median: tg, min: tg - 1, max: tg + 1 },
-  ttft_ms: { median: 340, min: 310, max: 360 },
-  e2e_ms: { median: 1234.6, min: 1200, max: 1300 },
-});
-const item: ExplorerItem = {
-  public_id: "synthetic-id", revision: 1, created_at: "2026-01-02T03:04:05.000Z",
-  summary: { model_label: "synthetic-model", hardware_label: "synthetic-device", method_label: "cold-prompt-serving@1", workload_label: "code_python", row_count: 12, failed_rows: 2, status: "partial", mean_tg_tps: 999, mean_e2e_ms: 999, mean_pp_tps: 999, prompt_lengths: [8192, 512, 4096], points: [point(512, 1, 42.25, 128.75), point(4096, 1, 21.5, 96.5)], points_truncated: false },
+
+const submission = syntheticSubmission();
+const summary = {
+  ...summarizeBenchmark(submission),
+  model_label: "synthetic-model",
+  hardware_label: "synthetic-device",
+  method_label: "openai-chat-serving@5",
+  workload_label: "code_python",
 };
-const benchmark = {
-  model: { status: "identified", sha256: "synthetic-checksum", size_bytes: 2048 },
-  runtime: { name: "synthetic-runtime", backend: "synthetic-backend" },
-  method: { id: "cold-prompt-serving", version: 1 }, workload: { corpus: "code_python", prompt_lengths: [128] },
-  environment: { os: "synthetic-os", cpu: { name: "synthetic-cpu", logical_cores: 4 }, execution: { mode: "gpu", selection_complete: true, selected_gpus: [{ name: "synthetic-device", vendor: "synthetic-vendor", integrated: false }] } },
-  execution: { settings: { flash_attention: "auto", cache_type_k: "q8_0" } }, app_version: "0.0.0", status: "partial",
+const item: ExplorerItem = {
+  public_id: "synthetic-id", revision: 1, created_at: "2026-01-02T03:04:05.000Z", summary,
 };
 const wrap = (locale: Locale, node: React.ReactNode) => renderToStaticMarkup(<I18nProvider locale={locale} messages={{ ...common[locale], ...catalogs[locale] }}>{node}</I18nProvider>);
 const escape = (text: string) => text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#x27;");
@@ -67,41 +58,58 @@ describe.each(locales)("benchmark localization: %s", locale => {
     const html = wrap(locale, <BenchmarkBrowser />);
     expect(html).toContain('action="/' + locale + '/benchmarks"');
     expect(html).toContain('value="synthetic-model"');
-    for (const key of ["model_query", "runtime", "runtime_version", "model_format", "input_bytes_min", "max_output_tokens_max", "warmup", "request_usage", "sort"]) expect(html).toContain('name="' + key + '"');
+    for (const key of ["model_query", "runtime", "runtime_version", "model_format", "input_bytes_min", "max_output_tokens_max", "warmup", "request_usage"]) expect(html).toContain('name="' + key + '"');
     expect(html).toContain('role="combobox"');
     expect(html).toContain('aria-autocomplete="list"');
     expect(html).toContain('aria-expanded="false"');
-    expect(html).toContain('type="hidden" form="explorer-filter-form" name="sort" value="newest"');
     expect(html).toContain('name="hardware"');
     expect(html).toContain('value="synthetic-device"');
+  });
+  it("renders the selected token-throughput sort without exposing an internal translation key", () => {
+    const previousSearch = state.search;
+    try {
+      state.search = "sort=token_rate_desc&point_bytes=4096&point_concurrency=1&point_max_tokens=128";
+      state.data = { items: [item], next_cursor: null };
+      const html = wrap(locale, <BenchmarkBrowser />);
+      expect(html).toContain(escape(t("benchmark.Total token throughput at the basis point: fastest first")));
+      expect(html).not.toContain("benchmark.");
+    } finally {
+      state.search = previousSearch;
+    }
+  });
+  it("names the single serving method and Cold Prompt cap semantics without inventing token usage", () => {
+    const browser = wrap(locale, <BenchmarkBrowser />);
+    expect(browser).toContain("openai-chat-serving@5");
+    expect(browser).toContain(escape(t("benchmark.Cold Prompt")));
+    const table = wrap(locale, <BenchmarkExplorerTable items={[item]} compare={[]} onToggleComparison={() => {}} />);
+    expect(table).toContain("60.0 B/s");
+    expect(table).not.toContain("tok/s</");
+    const fields = buildSetupGroups({ ...submission, status: submission.measurements.status }, t).flatMap(group => group.fields);
+    expect(fields.find(field => field.label === t("benchmark.Maximum output token request"))?.value).toBe("128");
+    expect(fields.find(field => field.label === t("benchmark.Warmup"))?.value).toBe(t("benchmark.No"));
+    expect(fields.find(field => field.label === t("benchmark.Request usage"))?.value).toBe(t("benchmark.No"));
+    expect(fields.find(field => field.label === t("benchmark.Cache policy"))?.value).toBe(t("benchmark.Cold Prompt"));
+    expect(fields.find(field => field.label === t("benchmark.Prompt nonce"))?.value).toBe(submission.workload.prompt_nonce);
   });
   it("preserves the locale and query filters in result links", () => {
     const html = wrap(locale, <BenchmarkExplorerTable items={[item]} compare={[]} onToggleComparison={() => {}} />);
     expect(html).toContain('/' + locale + '/benchmarks/synthetic-id?model=synthetic-model&amp;hardware=synthetic-device&amp;cursor=abc_123');
   });
-  it("renders every configured input length and never borrows the server context allocation", () => {
-    const summary = { ...item.summary, setup: {
-      os: "synthetic-os", arch: null, cpu: null, cores: 4, vendors: [], gpus: [], vram_mb: null,
-      runtime: "synthetic-runtime", runtime_version: "1.0", backend: null, mode: null,
-      context_size: 16896, parallel: null, threads: null, gpu_layers: null, flash_attention: null,
-      cache_type_k: null, cache_type_v: null, split_mode: null,
-    } };
-    const html = wrap(locale, <BenchmarkExplorerTable items={[{ ...item, summary }]} compare={[]} onToggleComparison={() => {}} />);
-    expect(html).toContain("synthetic-os");
-    expect(html).toContain("synthetic-runtime 1.0");
-    expect(html).toContain(escape(t("benchmark.Input context: {value}", { value: "512 · 4K · 8K" })));
-    // An unreported list stays unreported: the allocated context measures something else.
-    const unreported = wrap(locale, <BenchmarkExplorerTable items={[{ ...item, summary: { ...summary, prompt_lengths: undefined } }]} compare={[]} onToggleComparison={() => {}} />);
-    expect(unreported).toContain(escape(t("benchmark.Input context: {value}", { value: t("benchmark.Unknown") })));
-    expect(unreported).not.toContain("16896");
+  it("reads the measured operating point and its sample count, never a configured context allocation", () => {
+    const html = wrap(locale, <BenchmarkExplorerTable items={[item]} compare={[]} onToggleComparison={() => {}} />);
+    expect(html).toContain(escape(t("benchmark.{bytes} B input · {concurrency} requests · max {tokens} output tokens", { bytes: 4096, concurrency: 1, tokens: 128 })));
+    expect(html).toContain(escape(t("benchmark.{count} measurements", { count: 1 })));
+    // The allocated server context says nothing about what this run measured.
+    expect(html).not.toContain("16896");
   });
   it("preserves reported detail values and a filtered return link", () => {
-    state.data = { ...item, id: item.public_id, benchmark, description_md: "Synthetic user text", updated_at: item.created_at };
+    state.data = { id: item.public_id, benchmark: submission, summary: item.summary, description_md: "Synthetic user text", revision: 1, created_at: item.created_at, updated_at: item.created_at };
     const html = wrap(locale, <BenchmarkDetail publicId={item.public_id} />);
     expect(html).toContain('/' + locale + '/benchmarks?model=synthetic-model&amp;hardware=synthetic-device&amp;cursor=abc_123');
     expect(html).toContain("Synthetic user text");
-    expect(html).toContain("q8_0");
-    expect(html).toContain("auto");
+    expect(html).toContain("max_tokens");
+    expect(html).toContain("stream");
+    expect(html).toContain("temperature");
   });
   it("renders locale routes and advertises canonical locale alternates", async () => {
     const params = Promise.resolve({ locale, id: item.public_id });
@@ -124,7 +132,7 @@ it("renders multiple GPUs from hardware_label split when setup.gpus is missing",
     summary: {
       ...item.summary,
       hardware_label: "GPU Alpha + GPU Beta",
-      setup: undefined,
+      setup: { ...item.summary.setup, gpus: undefined } as unknown as ExplorerItem["summary"]["setup"],
     },
   };
   const html = wrap("en", <BenchmarkExplorerTable items={[fallbackItem]} compare={[]} onToggleComparison={() => {}} />);
@@ -140,11 +148,11 @@ it("aggregates duplicate identical GPUs into count x N in explorer table", () =>
       ...item.summary,
       hardware_label: "NVIDIA GeForce RTX 4090 + NVIDIA GeForce RTX 4090",
       setup: {
+        ...item.summary.setup,
         os: "synthetic-os", arch: "x86_64", cpu: "synthetic-cpu", cores: 8,
         vendors: ["NVIDIA"], gpus: ["NVIDIA GeForce RTX 4090"], vram_mb: 49152,
         runtime: "vllm", runtime_version: "0.6.2", backend: "cuda", mode: "gpu",
-        context_size: 8192, parallel: 1, threads: 1, gpu_layers: null,
-        flash_attention: "auto", cache_type_k: "f16", cache_type_v: "f16", split_mode: null,
+        execution_selection_complete: true,
       },
     },
   };
@@ -160,11 +168,11 @@ it("renders counts for duplicate GPUs alongside distinct GPUs", () => {
       ...item.summary,
       hardware_label: "NVIDIA GeForce RTX 4090 + NVIDIA GeForce RTX 4090 + NVIDIA GeForce RTX 3090",
       setup: {
+        ...item.summary.setup,
         os: "synthetic-os", arch: "x86_64", cpu: "synthetic-cpu", cores: 8,
         vendors: ["NVIDIA"], gpus: ["NVIDIA GeForce RTX 4090", "NVIDIA GeForce RTX 3090"], vram_mb: 73728,
         runtime: "vllm", runtime_version: "0.6.2", backend: "cuda", mode: "gpu",
-        context_size: 8192, parallel: 1, threads: 1, gpu_layers: null,
-        flash_attention: "auto", cache_type_k: "f16", cache_type_v: "f16", split_mode: null,
+        execution_selection_complete: true,
       },
     },
   };
@@ -175,16 +183,16 @@ it("renders counts for duplicate GPUs alongside distinct GPUs", () => {
 
 it("BenchmarkHardwareOverview aggregates identical GPUs, formats CPU topology, and falls back to runtime.build", () => {
   const gpu = { name: "RTX 4090", vendor: "NVIDIA", vram_mb: 24576, driver: "550", integrated: false };
-  const benchmarkWithHardware = {
-    ...benchmark,
+  const benchmarkWithHardware = syntheticSubmission({
     environment: {
-      os: "Ubuntu 24.04", arch: "x86_64",
+      scope: "aiolm_host", os: "Ubuntu 24.04", arch: "x86_64",
       cpu: { name: "Ryzen 9 7950X", physical_cores: 16, logical_cores: 32 },
-      execution: { mode: "selected", selected_gpus: [gpu, gpu] },
       system_memory_bytes: 68719476736,
+      installed_gpus: [gpu, gpu],
+      execution: { mode: "selected", selected_gpus: [gpu], selection_complete: true },
     },
-    runtime: { name: "llama.cpp", version: null, build: 3560, backend: "cuda" },
-  };
+    runtime: { name: "llama.cpp", version: null, build: "3560", backend: "cuda", variant: null, plugin_version: null },
+  });
   const html = wrap("en", <BenchmarkHardwareOverview benchmark={benchmarkWithHardware as unknown as BenchmarkSetup} />);
   expect(html).toContain("RTX 4090 x 2");
   expect(html).toContain("16 Core / 32 Thread");
@@ -201,26 +209,22 @@ it.each([
   { name: "vllm", version: "0.30.0", build: null, variant: "vllm-metal", plugin_version: "0.30.0", label: "vllm-metal 0.30.0 · vLLM 0.30.0" },
   { name: "MLX", version: "mlx-lm 0.21.0", build: "local-7", label: "mlx-lm 0.21.0(local-7)" },
 ])("shows $name $version / $build as $label in the table, comparison, detail and environment overview", ({ name, version, build, label, variant, plugin_version }) => {
-  const runtime = { name, version, build, backend: variant ? "metal" : "cuda", variant, plugin_version };
-  const summary = { ...item.summary, setup: {
-    os: "synthetic-os", arch: null, cpu: null, cores: null, vendors: [], gpus: [], vram_mb: null,
-    runtime: name, runtime_version: version, runtime_build: build, backend: "cuda", mode: null,
-    ...(variant ? { runtime_variant: variant, runtime_plugin_version: plugin_version } : {}),
-    context_size: null, parallel: null, threads: null, gpu_layers: null, flash_attention: null,
-    cache_type_k: null, cache_type_v: null, split_mode: null,
-  } };
-  const listed = { ...item, summary };
-  expect(wrap("en", <BenchmarkExplorerTable items={[listed]} compare={[]} onToggleComparison={() => {}} />)).toContain(escape(`${name} ${label}`));
-  expect(wrap("en", <BenchmarkExplorerComparison items={[listed, { ...listed, public_id: "other" }]} onRemove={() => {}} onClear={() => {}} />)).toContain(escape(`${name} ${label} · cuda`));
-  const detail = { ...benchmark, runtime } as unknown as BenchmarkSetup;
-  const fields = buildSetupGroups(detail).flatMap((group) => group.fields);
-  expect(fields.find((field) => field.label === "Engine version")?.value).toBe(label);
-  expect(wrap("en", <BenchmarkHardwareOverview benchmark={detail} />)).toContain(escape(`${name} ${label}`));
+  const runtime = { name, version, build, backend: variant ? "metal" : "cuda", variant: variant ?? null, plugin_version: plugin_version ?? null };
+  const benchmark = syntheticSubmission({ runtime });
+  const listed = { ...item, summary: summarizeBenchmark(benchmark) };
+  const engineLine = [name, version].filter(Boolean).join(" ");
+  expect(wrap("en", <BenchmarkExplorerTable items={[listed]} compare={[]} onToggleComparison={() => {}} />)).toContain(escape(`${name} · ${runtime.backend}`));
+  expect(wrap("en", <BenchmarkExplorerComparison items={[listed, { ...listed, public_id: "other" }]} onRemove={() => {}} onClear={() => {}} />)).toContain(escape(`${engineLine} · ${runtime.backend}`));
+  const fields = buildSetupGroups(benchmark as unknown as BenchmarkSetup).flatMap((group) => group.fields);
+  expect(fields.find((field) => field.label === "Engine version")?.value).toBe(version ?? "Unknown");
+  expect(fields.find((field) => field.label === "Runtime build")?.value).toBe(build ?? "Unknown");
+  expect(wrap("en", <BenchmarkHardwareOverview benchmark={benchmark as unknown as BenchmarkSetup} />)).toContain(escape(`${name} ${label}`));
 });
 
 it("names an unrecorded engine version as unknown and separates engine and runtime labels across locales on the detail page", () => {
-  const detail = { ...benchmark, schema_version: 3, method: { id: "openai-chat-serving", version: 2 },
-    runtime: { name: "vllm", version: null, build: "b100", variant: "vllm-metal", plugin_version: "0.30.0", backend: "metal" } } as unknown as BenchmarkSetup;
+  const detail = syntheticSubmission({
+    runtime: { name: "vllm", version: null, build: "b100", variant: "vllm-metal", plugin_version: "0.30.0", backend: "metal" },
+  }) as unknown as BenchmarkSetup;
   for (const locale of locales) {
     const t = createTranslator(catalogs[locale]);
     const fields = buildSetupGroups(detail, t).flatMap((group) => group.fields);

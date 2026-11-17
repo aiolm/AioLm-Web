@@ -126,7 +126,6 @@
 .benchmark-detail .detail-device-facts dt { font-size: var(--fs-support); line-height: var(--lh-support); }
 .benchmark-detail :is(.detail-hardware-card .detail-fact-label, .detail-hardware-card .detail-fact-value, .detail-metric-label, .detail-metric-spread, .detail-points > .muted) { min-width: 0; overflow-wrap: anywhere; white-space: normal; }
 .benchmark-detail .detail-device-list { min-width: 0; grid-template-columns: minmax(0, 1fr); overflow-wrap: anywhere; }
-.benchmark-detail .detail-command { max-width: 100%; overflow-x: auto; }
 
 @media (max-width: 900px) {
   .benchmark-detail .detail-environment .detail-hardware-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 0; }

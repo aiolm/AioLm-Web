@@ -1,5 +1,5 @@
-import { FIXED_OUTPUT_TOKENS, HISTORICAL_CAP_MAX_OUTPUT_TOKENS, MAX_SERVING_OUTPUT_TOKENS, type BenchmarkCorpus, type PublicBenchmarkSubmission, type RecordedSetting, type ServingExecution } from "@aiolm/benchmark-contracts";
-import { findPoint, pointMedian, findServingPoint, servingPointMedian } from "./benchmark-points";
+import { MAX_SERVING_OUTPUT_TOKENS, type BenchmarkCorpus, type PublicBenchmarkSubmission, type RecordedSetting, type ServingExecution } from "@aiolm/benchmark-contracts";
+import { findServingPoint, servingPointMedian } from "./benchmark-points";
 import type { BenchmarkSummary } from "./summary";
 import { isWeightBitValue, weightBits } from "./weight-bits";
 
@@ -8,82 +8,65 @@ export type BenchmarkHostGpu = NonNullable<PublicBenchmarkSubmission["environmen
 
 export interface BenchmarkSetup {
   os: string | null; arch: string | null; cpu: string | null; cores: number | null;
-  physical_cores?: number | null; ram_bytes?: number | null;
+  physical_cores: number | null; ram_bytes: number | null;
   vendors: string[]; gpus: string[]; vram_mb: number | null;
   /** Null means host environment unavailable; [] is a recorded empty inventory. */
-  host_gpus?: BenchmarkHostGpu[] | null;
-  execution_selection_complete?: boolean | null;
+  host_gpus: BenchmarkHostGpu[] | null;
+  execution_selection_complete: boolean | null;
   runtime: string | null; runtime_version: string | null; backend: string | null; mode: string | null;
-  runtime_build?: string | null; runtime_variant?: string | null; runtime_plugin_version?: string | null;
-  context_size: number | null; parallel: number | null; threads: number | null; gpu_layers: number | null;
-  flash_attention: string | null; cache_type_k: string | null; cache_type_v: string | null; split_mode: string | null;
-  /** Largest configured legacy input, in tokens; never a serving byte length. */
-  prompt_length?: number | null;
-  max_input_bytes?: number | null; max_concurrency?: number | null; max_output_tokens?: number | null;
-  repetitions?: number | null; warmup?: boolean | null; request_usage?: boolean | null;
-  settings?: RecordedSetting[];
+  runtime_build: string | null; runtime_variant: string | null; runtime_plugin_version: string | null;
+  max_input_bytes: number; max_concurrency: number; max_output_tokens: number;
+  repetitions: number; warmup: false; request_usage: boolean;
+  settings: RecordedSetting[];
   /** Bounded canonical recommendation strings, derived once from accepted settings. */
-  setting_facets?: SettingFacet[];
-  inputs?: Array<{ bytes: number; sha256: string }>;
-  corpus?: BenchmarkCorpus; corpus_version?: number | null; cache_policy?: "as_configured";
-  topology?: ServingExecution["topology"]; memory_scope?: ServingExecution["memory_scope"];
+  setting_facets: SettingFacet[];
+  inputs: Array<{ bytes: number; sha256: string }>;
+  corpus: BenchmarkCorpus; corpus_version: 2; cache_policy: "cold_prompt";
+  prompt_nonce: string;
+  concurrencies: number[];
+  topology: ServingExecution["topology"]; memory_scope: ServingExecution["memory_scope"];
 }
 
-export function normalizePromptLengths(values: readonly number[] | null | undefined): number[] {
-  return [...new Set((values ?? []).filter(v => Number.isSafeInteger(v) && v > 0))].sort((a, b) => a - b);
-}
-export function largestPromptLength(values: readonly number[] | null | undefined): number | null {
-  return normalizePromptLengths(values).at(-1) ?? null;
-}
-
-/** Browser-safe source of scalar filter names, groups, scope and display labels. */
+/** Browser-safe source of scalar filter names, groups and display labels. */
 export const FILTER_DEFINITIONS = {
-  q: { kind: "text", group: "model", scope: "all", label: "search" },
-  model: { kind: "text", group: "model", scope: "all", label: "model" },
-  model_query: { kind: "text", group: "model", scope: "all", label: "modelQuery" },
-  publisher: { kind: "text", group: "model", scope: "all", label: "publisher" },
-  weight_bits: { kind: "text", group: "model", scope: "all", label: "weightBits" },
-  quantization: { kind: "text", group: "model", scope: "all", label: "quantization" },
-  base_model: { kind: "text", group: "model", scope: "all", label: "baseModel" },
-  model_format: { kind: "text", group: "model", scope: "all", label: "modelFormat" },
-  model_sha256: { kind: "text", group: "model", scope: "all", label: "modelSha256" },
-  model_repository: { kind: "text", group: "model", scope: "all", label: "modelRepository" },
-  model_revision: { kind: "text", group: "model", scope: "all", label: "modelRevision" },
-  runtime: { kind: "text", group: "engine", scope: "all", label: "runtime" },
-  runtime_version: { kind: "text", group: "engine", scope: "all", label: "runtimeVersion" },
-  runtime_variant: { kind: "text", group: "engine", scope: "all", label: "runtimeVariant" },
-  runtime_build: { kind: "text", group: "engine", scope: "all", label: "runtimeBuild" },
-  runtime_plugin_version: { kind: "text", group: "engine", scope: "all", label: "runtimePluginVersion" },
-  app_version: { kind: "text", group: "engine", scope: "all", label: "appVersion" },
-  backend: { kind: "text", group: "engine", scope: "all", label: "backend" },
-  hardware: { kind: "text", group: "hardware", scope: "all", label: "hardware" },
-  vendor: { kind: "text", group: "hardware", scope: "all", label: "vendor" },
-  gpu: { kind: "text", group: "hardware", scope: "all", label: "gpu" },
-  cpu: { kind: "text", group: "hardware", scope: "all", label: "cpu" },
-  os: { kind: "text", group: "hardware", scope: "all", label: "os" },
-  arch: { kind: "text", group: "hardware", scope: "all", label: "arch" },
-  mode: { kind: "text", group: "hardware", scope: "all", label: "mode" },
-  method: { kind: "text", group: "measurement", scope: "all", label: "method" },
-  workload: { kind: "text", group: "measurement", scope: "all", label: "workload" },
-  flash_attention: { kind: "text", group: "engine", scope: "legacy", legacy: true, label: "flashAttention" },
-  cache_type_k: { kind: "text", group: "engine", scope: "legacy", legacy: true, label: "cacheTypeK" },
-  cache_type_v: { kind: "text", group: "engine", scope: "legacy", legacy: true, label: "cacheTypeV" },
-  split_mode: { kind: "text", group: "engine", scope: "legacy", legacy: true, label: "splitMode" },
-  input_bytes: { kind: "range", group: "measurement", scope: "serving", label: "inputBytes", unit: "bytes" },
-  max_output_tokens: { kind: "range", group: "measurement", scope: "serving", label: "maxOutputTokens", unit: "tokens" },
-  max_concurrency: { kind: "range", group: "measurement", scope: "serving", label: "maxConcurrency" },
-  model_size: { kind: "range", group: "model", scope: "all", label: "modelSize", unit: "bytes" },
-  ram: { kind: "range", group: "hardware", scope: "all", label: "ram", unit: "bytes" },
-  physical_cores: { kind: "range", group: "hardware", scope: "all", label: "physicalCores" },
-  repetitions: { kind: "range", group: "measurement", scope: "all", label: "repetitions" },
-  vram: { kind: "range", group: "hardware", scope: "all", label: "vram", unit: "MiB" },
-  cores: { kind: "range", group: "hardware", scope: "all", label: "cores" },
-  context: { kind: "range", group: "measurement", scope: "legacy", legacy: true, label: "context", unit: "tokens" },
-  parallel: { kind: "range", group: "engine", scope: "legacy", legacy: true, label: "parallel" },
-  threads: { kind: "range", group: "engine", scope: "legacy", legacy: true, label: "threads" },
-  gpu_layers: { kind: "range", group: "engine", scope: "legacy", legacy: true, label: "gpuLayers" },
-  warmup: { kind: "boolean", group: "measurement", scope: "all", label: "warmup" },
-  request_usage: { kind: "boolean", group: "measurement", scope: "serving", label: "requestUsage" },
+  q: { kind: "text", group: "model", label: "search" },
+  model: { kind: "text", group: "model", label: "model" },
+  model_query: { kind: "text", group: "model", label: "modelQuery" },
+  publisher: { kind: "text", group: "model", label: "publisher" },
+  weight_bits: { kind: "text", group: "model", label: "weightBits" },
+  quantization: { kind: "text", group: "model", label: "quantization" },
+  base_model: { kind: "text", group: "model", label: "baseModel" },
+  model_format: { kind: "text", group: "model", label: "modelFormat" },
+  model_sha256: { kind: "text", group: "model", label: "modelSha256" },
+  model_repository: { kind: "text", group: "model", label: "modelRepository" },
+  model_revision: { kind: "text", group: "model", label: "modelRevision" },
+  runtime: { kind: "text", group: "engine", label: "runtime" },
+  runtime_version: { kind: "text", group: "engine", label: "runtimeVersion" },
+  runtime_variant: { kind: "text", group: "engine", label: "runtimeVariant" },
+  runtime_build: { kind: "text", group: "engine", label: "runtimeBuild" },
+  runtime_plugin_version: { kind: "text", group: "engine", label: "runtimePluginVersion" },
+  app_version: { kind: "text", group: "engine", label: "appVersion" },
+  backend: { kind: "text", group: "engine", label: "backend" },
+  hardware: { kind: "text", group: "hardware", label: "hardware" },
+  vendor: { kind: "text", group: "hardware", label: "vendor" },
+  gpu: { kind: "text", group: "hardware", label: "gpu" },
+  cpu: { kind: "text", group: "hardware", label: "cpu" },
+  os: { kind: "text", group: "hardware", label: "os" },
+  arch: { kind: "text", group: "hardware", label: "arch" },
+  mode: { kind: "text", group: "hardware", label: "mode" },
+  method: { kind: "text", group: "measurement", label: "method" },
+  workload: { kind: "text", group: "measurement", label: "workload" },
+  input_bytes: { kind: "range", group: "measurement", label: "inputBytes", unit: "bytes" },
+  max_output_tokens: { kind: "range", group: "measurement", label: "maxOutputTokens", unit: "tokens" },
+  max_concurrency: { kind: "range", group: "measurement", label: "maxConcurrency" },
+  model_size: { kind: "range", group: "model", label: "modelSize", unit: "bytes" },
+  ram: { kind: "range", group: "hardware", label: "ram", unit: "bytes" },
+  physical_cores: { kind: "range", group: "hardware", label: "physicalCores" },
+  repetitions: { kind: "range", group: "measurement", label: "repetitions" },
+  vram: { kind: "range", group: "hardware", label: "vram", unit: "MiB" },
+  cores: { kind: "range", group: "hardware", label: "cores" },
+  warmup: { kind: "boolean", group: "measurement", label: "warmup" },
+  request_usage: { kind: "boolean", group: "measurement", label: "requestUsage" },
 } as const;
 type DefinitionKeys<K extends "text" | "range" | "boolean"> = { [P in keyof typeof FILTER_DEFINITIONS]: typeof FILTER_DEFINITIONS[P]["kind"] extends K ? P : never }[keyof typeof FILTER_DEFINITIONS];
 export type TextFilterKey = DefinitionKeys<"text">;
@@ -99,54 +82,20 @@ export const MODEL_INFO_SEARCH_KEYS = ["name", "architecture", "size_label", "qu
 export const MODEL_QUERY_INFO_KEYS = ["name", "repository", "revision", "artifact", "sha256"] as const;
 export const POINT_OPTION_FIELD = "point";
 export type OptionField = Exclude<TextFilterKey, "q"> | "point" | "setting" | "setting_value";
-export const SORT_VALUES = ["newest", "oldest", "input_bytes_asc", "input_bytes_desc", "vram_asc", "vram_desc", "token_rate_desc", "output_rate_desc", "duration_asc", "context_asc", "context_desc", "throughput_desc"] as const;
+export const SORT_VALUES = ["newest", "oldest", "input_bytes_asc", "input_bytes_desc", "vram_asc", "vram_desc", "token_rate_desc", "output_rate_desc", "duration_asc"] as const;
 export type BenchmarkSort = typeof SORT_VALUES[number];
 /** Speed sorts are read at one complete operating point, never across a result's grid. */
-export const POINT_SORT_VALUES = ["token_rate_desc", "output_rate_desc", "throughput_desc", "duration_asc"] as const satisfies readonly BenchmarkSort[];
-/** Every request produced exactly the requested, engine-reported completion tokens. */
-export const FIXED_OUTPUT_MEASUREMENT = "openai-chat-serving@2";
-/** Historical serving scope: max_output_tokens was only a request cap. */
-export const OUTPUT_CAP_MEASUREMENT = "openai-chat-serving@1";
-export const MEASUREMENT_VALUES = [FIXED_OUTPUT_MEASUREMENT, OUTPUT_CAP_MEASUREMENT, "legacy"] as const;
-export type MeasurementScope = typeof MEASUREMENT_VALUES[number];
-export type ServingMeasurementScope = Exclude<MeasurementScope, "legacy">;
-export const DEFAULT_MEASUREMENT: MeasurementScope = FIXED_OUTPUT_MEASUREMENT;
-const SERVING_METHOD_VERSIONS: Record<ServingMeasurementScope, 1 | 2> = { [FIXED_OUTPUT_MEASUREMENT]: 2, [OUTPUT_CAP_MEASUREMENT]: 1 };
-/** Explorer addresses keep the default scope implicit; an unknown value is not a scope. */
-export function measurementScope(value: string | null | undefined): MeasurementScope {
-  return value && (MEASUREMENT_VALUES as readonly string[]).includes(value) ? value as MeasurementScope : DEFAULT_MEASUREMENT;
-}
-export function servingMethodVersion(scope: ServingMeasurementScope): 1 | 2 {
-  return SERVING_METHOD_VERSIONS[scope];
-}
-/** Serving scope of a recorded method; null for legacy and unknown methods. */
-export function servingScopeOf(method: { id?: unknown; version?: unknown } | null | undefined): ServingMeasurementScope | null {
-  if (method?.id !== "openai-chat-serving") return null;
-  return method.version === 2 ? FIXED_OUTPUT_MEASUREMENT : method.version === 1 ? OUTPUT_CAP_MEASUREMENT : null;
-}
-/** Accepted identity decides the scope; a display label is only read when identity was never stored. */
-export function summaryServingScope(summary: { schema_version?: number; identity?: { method_id: string | null; method_version: number | null } | null; method_label?: string }): ServingMeasurementScope | null {
-  if (summary.schema_version !== 3) return null;
-  if (summary.identity) return servingScopeOf({ id: summary.identity.method_id, version: summary.identity.method_version });
-  return summary.method_label === FIXED_OUTPUT_MEASUREMENT || summary.method_label === OUTPUT_CAP_MEASUREMENT ? summary.method_label : null;
-}
-/** Fixed-output points name one of the shared presets; historical caps keep any accepted value. */
-export function isServingOutputInScope(maxOutputTokens: number, scope: MeasurementScope): boolean {
-  if (scope === "legacy" || !Number.isSafeInteger(maxOutputTokens) || maxOutputTokens < 1) return false;
-  return scope === FIXED_OUTPUT_MEASUREMENT ? FIXED_OUTPUT_TOKENS.includes(maxOutputTokens) && maxOutputTokens <= MAX_SERVING_OUTPUT_TOKENS : maxOutputTokens <= HISTORICAL_CAP_MAX_OUTPUT_TOKENS;
-}
-/** Token units never cross into byte scopes; exact token rates exist only for fixed output. */
-export function sortAvailable(sort: string, scope: MeasurementScope): boolean {
-  if (scope === "legacy") return !sort.startsWith("input_bytes_") && sort !== "output_rate_desc" && sort !== "token_rate_desc";
-  return !sort.startsWith("context_") && sort !== "throughput_desc" && (sort !== "token_rate_desc" || scope === FIXED_OUTPUT_MEASUREMENT);
+export const POINT_SORT_VALUES = ["token_rate_desc", "output_rate_desc", "duration_asc"] as const satisfies readonly BenchmarkSort[];
+export function isServingOutputInScope(maxOutputTokens: number): boolean {
+  return Number.isSafeInteger(maxOutputTokens) && maxOutputTokens >= 1 && maxOutputTokens <= MAX_SERVING_OUTPUT_TOKENS;
 }
 export interface BenchmarkPointSelection {
-  point_tokens?: number; point_bytes?: number; point_concurrency?: number; point_max_tokens?: number; point_only?: boolean;
+  point_bytes?: number; point_concurrency?: number; point_max_tokens?: number; point_only?: boolean;
 }
 export type SettingDescriptor = Pick<RecordedSetting, "target" | "scope" | "name" | "unit" | "role">;
 export type SettingValue = Exclude<RecordedSetting["value"], null>;
 export type SettingCondition = SettingDescriptor & ({ op: "eq"; value: SettingValue } | { op: "range"; min?: number; max?: number });
-export type BenchmarkFilters = Partial<Record<TextFilterKey, string>> & Partial<Record<`${RangeFilterKey}_${"min" | "max"}`, number>> & Partial<Record<BooleanFilterKey, boolean>> & BenchmarkPointSelection & { measurement?: MeasurementScope; sort?: BenchmarkSort; setting?: SettingCondition[] };
+export type BenchmarkFilters = Partial<Record<TextFilterKey, string>> & Partial<Record<`${RangeFilterKey}_${"min" | "max"}`, number>> & Partial<Record<BooleanFilterKey, boolean>> & BenchmarkPointSelection & { sort?: BenchmarkSort; setting?: SettingCondition[] };
 export interface BenchmarkOptions { options: Array<{ value: string; count: number }>; has_more: boolean }
 export class DiscoveryQueryError extends Error {}
 export const SETTING_MAX_BYTES = 1024;
@@ -230,11 +179,7 @@ export function matchesSetting(setting: RecordedSetting, condition: SettingCondi
 }
 export function parseFilters(search: URLSearchParams): BenchmarkFilters {
   if (search.toString().length > DISCOVERY_MAX_QUERY_BYTES) throw new DiscoveryQueryError("Encoded query must be at most 8192 bytes.");
-  const requested = search.get("measurement") || DEFAULT_MEASUREMENT;
-  if (!(MEASUREMENT_VALUES as readonly string[]).includes(requested)) throw new DiscoveryQueryError("Invalid measurement scope.");
-  const measurement = requested as MeasurementScope;
-  // The default scope stays implicit, so an explicit default and an omitted one bind identically.
-  const out: BenchmarkFilters = measurement === DEFAULT_MEASUREMENT ? {} : { measurement };
+  const out: BenchmarkFilters = {};
   for (const key of TEXT_FILTER_KEYS) {
     const value = search.get(key)?.trim();
     if (key === "weight_bits" && value && (!isWeightBitValue(Number(value)) || String(Number(value)) !== value)) throw new DiscoveryQueryError("weight_bits must be a supported weight bit count.");
@@ -246,7 +191,7 @@ export function parseFilters(search: URLSearchParams): BenchmarkFilters {
       const name = `${key}_${bound}` as const, raw = search.get(name);
       if (raw === null || raw === "") continue;
       const value = Number(raw);
-      if (!/^-?\d+$/.test(raw) || !Number.isSafeInteger(value) || value < (key === "gpu_layers" ? -1 : 0)) throw new DiscoveryQueryError(`${name} must be a valid integer.`);
+      if (!/^\d+$/.test(raw) || !Number.isSafeInteger(value)) throw new DiscoveryQueryError(`${name} must be a valid integer.`);
       out[name] = value;
     }
     if (out[`${key}_min`] !== undefined && out[`${key}_max`] !== undefined && out[`${key}_min`]! > out[`${key}_max`]!) throw new DiscoveryQueryError(`${key} minimum must not exceed maximum.`);
@@ -257,39 +202,29 @@ export function parseFilters(search: URLSearchParams): BenchmarkFilters {
     if (raw !== "0" && raw !== "1") throw new DiscoveryQueryError(`${key} must be 0 or 1.`);
     out[key] = raw === "1";
   }
-  for (const key of definitionKeys) {
-    const definition = FILTER_DEFINITIONS[key];
-    const present = definition.kind === "range" ? out[`${key as RangeFilterKey}_min`] !== undefined || out[`${key as RangeFilterKey}_max`] !== undefined : out[key as TextFilterKey] !== undefined;
-    if (present && definition.scope !== "all" && (definition.scope === "legacy") !== (measurement === "legacy")) throw new DiscoveryQueryError(`${key} is not available in this measurement scope.`);
-  }
   const settings = search.getAll("setting");
   if (settings.length > SETTING_MAX_CONDITIONS) throw new DiscoveryQueryError("At most 8 setting conditions are allowed.");
-  if (settings.length) {
-    if (measurement === "legacy") throw new DiscoveryQueryError("Setting conditions require serving measurements.");
-    out.setting = normalizeSettingConditions(settings.map(parseSettingCondition));
-  }
-  Object.assign(out, parseBasisPoint(search, measurement));
+  if (settings.length) out.setting = normalizeSettingConditions(settings.map(parseSettingCondition));
+  Object.assign(out, parseBasisPoint(search));
   const sort = search.get("sort");
   if (sort && !SORT_VALUES.includes(sort as BenchmarkSort)) throw new DiscoveryQueryError("Invalid sort.");
   if (sort && sort !== "newest") out.sort = sort as BenchmarkSort;
-  if (sort && !sortAvailable(sort, measurement)) throw new DiscoveryQueryError("Sort is not available in this measurement scope.");
   if ((POINT_SORT_VALUES as readonly string[]).includes(sort ?? "") && out.point_concurrency === undefined) throw new DiscoveryQueryError("This sort requires a complete operating point.");
   return out;
 }
-function parseBasisPoint(search: URLSearchParams, measurement: MeasurementScope): BenchmarkPointSelection {
+function parseBasisPoint(search: URLSearchParams): BenchmarkPointSelection {
   const out: BenchmarkPointSelection = {};
-  for (const name of ["point_tokens", "point_bytes", "point_concurrency", "point_max_tokens"] as const) {
+  const names = ["point_bytes", "point_concurrency", "point_max_tokens"] as const;
+  for (const name of names) {
     const raw = search.get(name);
     if (raw === null || raw === "") continue;
     const value = Number(raw);
     if (!/^\d+$/.test(raw) || !Number.isSafeInteger(value) || value < 1) throw new DiscoveryQueryError(`${name} must be a positive whole number.`);
     out[name] = value;
   }
-  if (measurement === "legacy" ? out.point_bytes !== undefined || out.point_max_tokens !== undefined : out.point_tokens !== undefined) throw new DiscoveryQueryError("Point units do not match measurement scope.");
-  const names = measurement === "legacy" ? ["point_tokens", "point_concurrency"] as const : ["point_bytes", "point_concurrency", "point_max_tokens"] as const;
   const count = names.filter(name => out[name] !== undefined).length;
   if (count > 0 && count !== names.length) throw new DiscoveryQueryError("Give all operating point coordinates together.");
-  if (measurement !== "legacy" && count && (out.point_bytes! < 256 || out.point_bytes! > 1048576 || out.point_concurrency! > 64 || !isServingOutputInScope(out.point_max_tokens!, measurement))) throw new DiscoveryQueryError("Serving operating point is out of bounds.");
+  if (count && (out.point_bytes! < 256 || out.point_bytes! > 1048576 || out.point_concurrency! > 64 || !isServingOutputInScope(out.point_max_tokens!))) throw new DiscoveryQueryError("Serving operating point is out of bounds.");
   const only = search.get("point_only");
   if (only !== null && only !== "" && only !== "0" && only !== "1") throw new DiscoveryQueryError("point_only must be 0 or 1.");
   if (only === "1") {
@@ -308,9 +243,8 @@ export function parseOptionsQuery(search: URLSearchParams): { field: OptionField
   if (field === "setting_value" && rawDescriptor === null) throw new DiscoveryQueryError("setting_value requires option_setting.");
   if (rawDescriptor !== null && field !== "setting_value") throw new DiscoveryQueryError("option_setting is only valid for setting_value.");
   const setting = rawDescriptor === null ? undefined : parseSettingDescriptor(rawDescriptor);
-  if ((field === "setting" || field === "setting_value") && filters.measurement === "legacy") throw new DiscoveryQueryError("Setting facets require serving measurements.");
   if (field === POINT_OPTION_FIELD) {
-    delete filters.point_tokens; delete filters.point_bytes; delete filters.point_concurrency; delete filters.point_max_tokens; delete filters.point_only;
+    delete filters.point_bytes; delete filters.point_concurrency; delete filters.point_max_tokens; delete filters.point_only;
   } else if (field !== "setting" && field !== "setting_value") delete filters[field];
   return { field, query, filters, ...(setting ? { setting } : {}) };
 }
@@ -320,44 +254,30 @@ export function selectedExecutionGpus(b: PublicBenchmarkSubmission) {
 export function normalizeSetup(b: PublicBenchmarkSubmission): BenchmarkSetup {
   const env = b.environment, devices = selectedExecutionGpus(b);
   const strings = (values: Array<string | null>) => [...new Set(values.filter((v): v is string => !!v))];
-  const common = {
+  return {
     os: env?.os ?? null, arch: env?.arch ?? null, cpu: env?.cpu.name ?? null, cores: env?.cpu.logical_cores ?? null,
     physical_cores: env?.cpu.physical_cores ?? null, ram_bytes: env?.system_memory_bytes ?? null,
     host_gpus: env?.installed_gpus ?? null, execution_selection_complete: env?.execution.selection_complete ?? null,
     vendors: strings(devices.map(g => g.vendor)), gpus: strings(devices.map(g => g.name)),
     vram_mb: devices.length > 0 && env?.execution.selection_complete && devices.every(g => g.vram_mb !== null) ? devices.reduce((sum, g) => sum + g.vram_mb!, 0) : null,
     runtime: b.runtime.name, runtime_version: b.runtime.version, runtime_build: b.runtime.build, backend: b.runtime.backend,
-    runtime_variant: b.runtime.variant ?? null, runtime_plugin_version: b.runtime.plugin_version ?? null, mode: env?.execution.mode ?? null,
+    runtime_variant: b.runtime.variant, runtime_plugin_version: b.runtime.plugin_version, mode: env?.execution.mode ?? null,
     repetitions: b.workload.repetitions, warmup: b.workload.warmup,
     corpus: b.workload.corpus, corpus_version: b.workload.corpus_version,
-  };
-  if (b.schema_version === 3) return {
-    ...common, context_size: null, parallel: null, threads: null, gpu_layers: null,
-    flash_attention: null, cache_type_k: null, cache_type_v: null, split_mode: null,
-    max_input_bytes: largestPromptLength(b.workload.inputs.map(i => i.bytes)), max_concurrency: largestPromptLength(b.workload.concurrencies),
+    max_input_bytes: Math.max(...b.workload.inputs.map(i => i.bytes)), max_concurrency: Math.max(...b.workload.concurrencies),
     max_output_tokens: b.workload.max_output_tokens, request_usage: b.workload.request_usage, settings: b.execution.settings,
     setting_facets: normalizeSettingFacets(b.execution.settings),
-    inputs: b.workload.inputs, cache_policy: b.workload.cache_policy,
+    inputs: b.workload.inputs, cache_policy: b.workload.cache_policy, prompt_nonce: b.workload.prompt_nonce,
+    concurrencies: b.workload.concurrencies,
     topology: b.execution.topology, memory_scope: b.execution.memory_scope,
   };
-  const settings = b.execution.settings;
-  return {
-    ...common, context_size: b.execution.context_size, parallel: b.execution.parallel, threads: settings?.threads ?? null, gpu_layers: settings?.gpu_layers ?? null,
-    prompt_length: largestPromptLength(b.workload.prompt_lengths),
-    flash_attention: settings?.flash_attention ?? null, cache_type_k: settings?.cache_type_k ?? null, cache_type_v: settings?.cache_type_v ?? null, split_mode: settings?.split_mode ?? null,
-  };
-}
-export function withRuntimeBuild<T extends { summary: BenchmarkSummary }>(item: T, build: unknown): T {
-  const setup = item.summary?.setup;
-  if (!setup || typeof setup !== "object" || "runtime_build" in setup) return item;
-  return { ...item, summary: { ...item.summary, setup: { ...setup, runtime_build: typeof build === "string" ? build : null } } };
 }
 export function textValues(summary: BenchmarkSummary, field: TextFilterKey): string[] {
   if (field === "weight_bits") { const bits = weightBits(summary.model_info); return bits === null ? [] : [String(bits)]; }
   const infoString = (value: unknown): string | null => typeof value === "string" && value ? value : null;
   const identity = summary.identity;
-  if (field === "q") return [...new Set(GLOBAL_SEARCH_FILTER_KEYS.flatMap(k => textValues(summary, k)).concat(summary.status, MODEL_INFO_SEARCH_KEYS.flatMap(k => infoString(summary.model_info?.[k]) ?? []), (summary.setup?.host_gpus ?? []).flatMap(g => [g.name, g.vendor].filter((v): v is string => !!v))))];
-  if (field === "model_query") return [...new Set([summary.model_label, ...MODEL_QUERY_INFO_KEYS.map(k => infoString(summary.model_info?.[k])), identity?.model_sha256, identity?.model_repository, identity?.model_revision].filter((v): v is string => typeof v === "string" && !!v))];
+  if (field === "q") return [...new Set(GLOBAL_SEARCH_FILTER_KEYS.flatMap(k => textValues(summary, k)).concat(summary.status, MODEL_INFO_SEARCH_KEYS.flatMap(k => infoString(summary.model_info?.[k]) ?? []), (summary.setup.host_gpus ?? []).flatMap(g => [g.name, g.vendor].filter((v): v is string => !!v))))];
+  if (field === "model_query") return [...new Set([summary.model_label, ...MODEL_QUERY_INFO_KEYS.map(k => infoString(summary.model_info?.[k])), identity.model_sha256, identity.model_repository, identity.model_revision].filter((v): v is string => typeof v === "string" && !!v))];
   if (["model", "hardware", "method", "workload"].includes(field)) return [summary[`${field}_label` as "model_label"]];
   if (field === "base_model") {
     const values = summary.model_info?.base_models;
@@ -365,23 +285,20 @@ export function textValues(summary: BenchmarkSummary, field: TextFilterKey): str
   }
   if (field === "publisher" || field === "quantization") { const v = infoString(summary.model_info?.[field]); return v ? [v] : []; }
   const identityKey = field === "runtime" ? "engine_name" : field.startsWith("runtime_") ? `engine_${field.slice(8)}` : field;
-  if (identity && identityKey in identity) { const v = infoString(identity[identityKey as keyof typeof identity]); return v ? [v] : []; }
-  const value = field === "vendor" ? summary.setup?.vendors : field === "gpu" ? summary.setup?.gpus : summary.setup?.[field as "os"];
+  if (identityKey in identity) { const v = infoString(identity[identityKey as keyof typeof identity]); return v ? [v] : []; }
+  const value = field === "vendor" ? summary.setup.vendors : field === "gpu" ? summary.setup.gpus : summary.setup[field as "os"];
   return Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : typeof value === "string" && value ? [value] : [];
 }
 export function numericValue(summary: BenchmarkSummary, field: RangeFilterKey): number | null {
-  if (field === "model_size") return summary.identity?.model_size_bytes ?? null;
-  const key = field === "context" ? "prompt_length" : field === "vram" ? "vram_mb" : field === "ram" ? "ram_bytes" : field === "input_bytes" ? "max_input_bytes" : field;
-  return summary.setup?.[key] ?? null;
+  if (field === "model_size") return summary.identity.model_size_bytes;
+  const key = field === "vram" ? "vram_mb" : field === "ram" ? "ram_bytes" : field === "input_bytes" ? "max_input_bytes" : field;
+  return summary.setup[key];
 }
 export function selectedPoint(summary: BenchmarkSummary, filters: BenchmarkFilters) {
-  if (filters.point_concurrency === undefined) return null;
-  if ((filters.measurement ?? DEFAULT_MEASUREMENT) === "legacy") return filters.point_tokens === undefined ? null : findPoint(summary.points, filters.point_tokens, filters.point_concurrency);
-  return filters.point_bytes === undefined || filters.point_max_tokens === undefined ? null : findServingPoint(summary.serving_points, filters.point_bytes, filters.point_concurrency, filters.point_max_tokens);
+  if (filters.point_bytes === undefined || filters.point_concurrency === undefined || filters.point_max_tokens === undefined) return null;
+  return findServingPoint(summary.serving_points, filters.point_bytes, filters.point_concurrency, filters.point_max_tokens);
 }
 export function matchesFilters(summary: BenchmarkSummary, filters: BenchmarkFilters, workload?: PublicBenchmarkSubmission["workload"]): boolean {
-  const scope = filters.measurement ?? DEFAULT_MEASUREMENT;
-  if (scope === "legacy" ? summary.schema_version === 3 : summaryServingScope(summary) !== scope) return false;
   return TEXT_FILTER_KEYS.every(k => !filters[k] || textValues(summary, k).some(v => k === "weight_bits" ? v === filters[k] : v.toLowerCase().includes(filters[k]!.toLowerCase()))) && RANGE_FILTER_KEYS.every(k => {
     const min = filters[`${k}_min`], max = filters[`${k}_max`];
     if (min === undefined && max === undefined) return true;
@@ -389,16 +306,14 @@ export function matchesFilters(summary: BenchmarkSummary, filters: BenchmarkFilt
     return value !== null && (min === undefined || value >= min) && (max === undefined || value <= max);
   }) && BOOLEAN_FILTER_KEYS.every(k => {
     if (filters[k] === undefined) return true;
-    const value = workload ? k === "warmup" ? workload.warmup : "request_usage" in workload ? workload.request_usage : undefined : summary.setup?.[k];
+    const value = workload ? workload[k] : summary.setup[k];
     return value === filters[k];
-  }) && (filters.setting ?? []).every(c => (summary.setup?.settings ?? []).some(s => matchesSetting(s, c))) && (!filters.point_only || selectedPoint(summary, filters) !== null);
+  }) && (filters.setting ?? []).every(c => summary.setup.settings.some(s => matchesSetting(s, c))) && (!filters.point_only || selectedPoint(summary, filters) !== null);
 }
 export function sortValue(summary: BenchmarkSummary, filters: BenchmarkFilters): number | null {
   const sort = filters.sort ?? "newest";
-  if (sort.startsWith("context_")) return summary.setup?.prompt_length ?? null;
-  if (sort.startsWith("input_bytes_")) return summary.setup?.max_input_bytes ?? null;
-  if (sort.startsWith("vram_")) return summary.setup?.vram_mb ?? null;
+  if (sort.startsWith("input_bytes_")) return summary.setup.max_input_bytes;
+  if (sort.startsWith("vram_")) return summary.setup.vram_mb;
   if (!(POINT_SORT_VALUES as readonly string[]).includes(sort)) return null;
-  if ((filters.measurement ?? DEFAULT_MEASUREMENT) === "legacy") return pointMedian(filters.point_tokens === undefined || filters.point_concurrency === undefined ? null : findPoint(summary.points, filters.point_tokens, filters.point_concurrency), sort === "throughput_desc" ? "tg_tps" : "e2e_ms");
-  return servingPointMedian(filters.point_bytes === undefined || filters.point_concurrency === undefined || filters.point_max_tokens === undefined ? null : findServingPoint(summary.serving_points, filters.point_bytes, filters.point_concurrency, filters.point_max_tokens), sort === "token_rate_desc" ? "reported_tokens_per_second" : sort === "output_rate_desc" ? "output_bytes_per_second" : "e2e_ms");
+  return servingPointMedian(selectedPoint(summary, filters), sort === "token_rate_desc" ? "reported_tokens_per_second" : sort === "output_rate_desc" ? "output_bytes_per_second" : "e2e_ms");
 }

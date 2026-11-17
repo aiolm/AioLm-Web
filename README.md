@@ -19,7 +19,7 @@ accounts in v1.
   desktop app can open the page with a single-use handoff
   ([management handoff](docs/management-handoff.md)).
 - API: the wire contract is the OpenAPI document shipped by
-  `@aiolm/benchmark-contracts` 0.11.0
+  `@aiolm/benchmark-contracts` 0.15.0
   (`node_modules/@aiolm/benchmark-contracts/schema/openapi.json`). Routes:
   `POST /v1/upload-sessions`, `POST .../verify`, `GET ...`, `POST /v1/benchmark-runs`,
   `GET /v1/benchmark-runs`, `GET /v1/benchmark-runs/<id>`, `GET .../measurements`,
@@ -54,9 +54,8 @@ Apple silicon macOS 15+ through vllm-metal; MLX targets Apple silicon. Automatic
 external connections require a local OpenAI-compatible v1 server or an installed
 engine with a clear launch method, model and platform; advanced manual adapter
 registration remains available. Connecting does not enable unsupported
-modalities, fixed-output benchmarks or portable bundles: new benchmarks need a
-declared output-length control, which only native llama.cpp, supported
-non-Metal vLLM and explicitly declaring custom probes provide. Runtime probes do
+modalities or portable bundles. Benchmarks use one streaming text-chat method,
+`openai-chat-serving@5`, for every connected engine. Runtime probes do
 not certify inference quality; CPU-reference numerical verification is not
 offered in the current desktop app or public CLI.
 
@@ -79,8 +78,8 @@ APIs remain at `/v1/**`. See [language routing and catalogs](docs/internationali
   Apply filters submits the draft; basis point and sorting apply immediately.
   Filters, basis point and sorting remain in the URL.
   Every speed is read at one operating point - one input length at one
-  concurrency - so a column compares like for like; the two speed orders rank at
-  the basis point and require one. Select up to three results for a
+  concurrency - so a column compares like for like; the three point-ranked
+  orders require the complete operating point. Select up to three results for a
   summary comparison; differing methods or workloads carry a comparability notice.
   Sorting self-reported measurements does not make different setups comparable.
 - `/benchmarks/[id]`: the operating points the result measured, with one chosen
@@ -148,27 +147,34 @@ See `docs/deployment.md` and `docs/operations.md`.
 ## Contracts
 
 Validation, recovery encoding, and the schema/OpenAPI surface come from
-`@aiolm/benchmark-contracts` 0.11.0, installed from the vendored archive
-`vendor/aiolm-benchmark-contracts-0.11.0.tgz` and integrity-pinned in
+`@aiolm/benchmark-contracts` 0.15.0, installed from the vendored archive
+`vendor/aiolm-benchmark-contracts-0.15.0.tgz` and integrity-pinned in
 `package-lock.json`. The website re-exports that package rather than keeping a
 second copy of the rules, and never imports app sources at runtime. Details and
 the upgrade procedure in `docs/contracts-integration.md`.
 
-Contract 0.11.0 preserves legacy schema1/2 and schema3 `openai-chat-serving@1`
-results, and accepts `openai-chat-serving@2` fixed-output results from any
-connected streaming text-chat engine that declares a fixed-output control,
-including an unknown public identity. Measurements distinguish exact input
-UTF-8 bytes and client-observed content/reasoning timing. In @2 every request
-reported exactly one of the eight shared output-token targets (1k–200k, with
-1k = 1,024) and each row keeps those per-request counts; @1 only capped output
-and its token/cache counts stay optional. Neither claims a cold cache.
-Public runtime identity and typed settings never derive from local connection
-IDs, process names or reference-file hashes/sizes. Discovery defaults to fixed
-output; historical caps require explicit `measurement=openai-chat-serving@1` and
-token-based results require explicit `measurement=legacy`.
-Apply migration015 with the dedicated migration owner before deploying; it
-adds 13 generated identity columns without rewriting payloads or broadening
-runtime permissions. Fixed output needs no further migration.
+Contract 0.15.0 defines one public method: `openai-chat-serving@5` with
+`schema_version: 4`. Every accepted result is a Cold Prompt run: no workload
+warmup, `corpus_version: 2`, `cache_policy: "cold_prompt"`, a fresh 32-hex
+`prompt_nonce` and a unique `input_sha256_by_request` entry for each dispatched
+request. The desktop requests at most 128 output tokens; the public bound is
+1–128. Required request descriptors are `max_tokens`, `stream` and
+`temperature`; `stream_options.include_usage` appears exactly when
+`request_usage` is true. Early completion and missing usage are valid, so
+reported token metrics stay null without evidence. Forced generation, workload
+warmup and every retired method/schema version are rejected.
+
+The eight metrics are `first_output_ms`, `prefill_tokens_per_second`,
+`decode_tokens_per_second`, `tpot_ms`, `reported_tokens_per_second`,
+`output_bytes_per_second`, `e2e_ms` and `peak_memory_bytes`. Token metrics
+depend on engine-reported usage; byte and time observations remain available
+when token metrics are null. The method records input isolation without claiming
+a cold start or verified-empty engine caches. Public identity never derives from
+local connection IDs or paths. Apply migrations through 016 with the dedicated
+migration owner before deploying; migration016 deletes retired benchmark
+records, their measurement chunks, pending upload sessions and reports rather
+than keeping unreadable history. Quota buckets and the audit log are preserved,
+and discovery then has a single list, basis point and comparison signature.
 
 ## Moderation
 
@@ -244,8 +250,9 @@ catalog and read tool, and long catalog descriptions are shortened without
 losing the full entry point. The guides also explain verification-first
 installs (with one-liners as convenience alternatives), close-to-tray,
 configurable login startup, CLI `runtime discover`/`connect` and log compaction,
-and 60-second clipboard clearing for copied recovery codes. Fixed-output
-`openai-chat-serving@2` guidance keeps its declared output-control requirements.
+and 60-second clipboard clearing for copied recovery codes. New Cold Prompt
+`openai-chat-serving@5` benchmarks isolate measured inputs with a fresh run nonce
+and per-point/request prefixes, without force declarations or per-point model reloads.
 Startup update notices do not install an update automatically.
 The desktop's public-benchmark explorer is an unprivileged, private-browsing
 window loading the existing website directly, not an iframe or a second explorer

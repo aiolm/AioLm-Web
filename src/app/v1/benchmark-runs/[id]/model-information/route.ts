@@ -29,7 +29,7 @@ export async function GET(_request: Request, ctx: Ctx): Promise<Response> {
     size_bytes: benchmark.model.size_bytes,
     name: info?.name ?? null,
     repository: info?.repository ?? null,
-    format: benchmark.schema_version === 1 ? "gguf" : benchmark.model.format ?? null,
+    format: benchmark.model.format,
   });
   return Response.json(result, { headers: { "cache-control": "no-store" } });
 }

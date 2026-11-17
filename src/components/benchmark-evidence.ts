@@ -52,19 +52,17 @@ export interface ServingMetricEvidence {
   memoryScope?: unknown;
   usageStatus?: unknown;
   outputBytes?: number;
-  contentBytes?: number;
-  reasoningBytes?: number;
 }
 
-/** A missing number is not zero, and a channel with zero bytes has no first event. */
+const USAGE_METRICS: Partial<Record<ServingMetricKey, true>> = { prefill_tokens_per_second: true, decode_tokens_per_second: true, tpot_ms: true, reported_tokens_per_second: true };
+
+/** A missing number is not zero: name why it is absent when the published evidence says so. */
 export function servingMetricAbsence(key: ServingMetricKey, evidence: ServingMetricEvidence, t: Translator = benchmarkFallback): string {
-  if (key.startsWith("reported_")) {
-    if (evidence.usageStatus === "invalid") return t("benchmark.Usage response invalid or inconsistent");
+  if (USAGE_METRICS[key]) {
     if (evidence.requestUsage === false) return t("benchmark.Usage not requested");
+    if (evidence.usageStatus === "invalid") return t("benchmark.Usage response invalid or inconsistent");
     return t("benchmark.Usage value not reported");
   }
-  if (key === "first_reasoning_ms" && evidence.reasoningBytes === 0) return t("benchmark.No reasoning output observed");
-  if (key === "first_content_ms" && evidence.contentBytes === 0) return t("benchmark.No content output observed");
   if (key === "first_output_ms" && evidence.outputBytes === 0) return t("benchmark.No output observed");
   if (key === "peak_memory_bytes" && evidence.memoryScope === "unavailable") return t("benchmark.Unavailable for this process scope");
   return t("benchmark.Measurement not reported");

@@ -45,7 +45,7 @@ describe('search publication safety', () => {
       expect(detail.benchmark.execution).toEqual(benchmark.execution);
       expect(detail.benchmark).not.toHaveProperty('measurements');
       expect(JSON.stringify(detail)).not.toMatch(/private-owner|private-submission|private-hash/);
-      if (benchmark.schema_version === 3) expect(validateBenchmarkConfiguration({
+      expect(validateBenchmarkConfiguration({
         runtime: detail.benchmark.runtime, execution: detail.benchmark.execution,
       })).toEqual({ runtime: benchmark.runtime, execution: benchmark.execution });
     }

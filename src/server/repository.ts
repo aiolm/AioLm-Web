@@ -210,6 +210,7 @@ export const REQUIRED_MIGRATIONS: readonly string[] = [
   "013_gpu_hardware_labels.sql",
   "014_weight_bits.sql",
   "015_engine_neutral_benchmarks.sql",
+  "016_single_benchmark_method.sql",
 ];
 
 /**

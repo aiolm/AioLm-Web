@@ -14,7 +14,6 @@ import {
   isExplorerRequestWithinBounds,
   type ExplorerFilters,
   buildExplorerSearch,
-  comparisonCompatibility,
   explorerDetailHref,
   explorerHistoryState,
   explorerReducer,
@@ -30,29 +29,28 @@ import {
 import {
   EXPLORER_MISSING,
   formatDuration,
-  formatPromptLength,
-  formatPromptLengths,
   formatSampleCount,
+  formatServingPointLabel,
   formatThroughput,
 } from "@/components/benchmark-explorer-format";
 import { parseFilters } from "@/lib/benchmark-discovery";
+import { syntheticSubmission } from "@/lib/fixtures";
+import { summarizeBenchmark } from "@/lib/summary";
 
 /** Synthetic results: fabricated labels only, no published model names or file paths. */
+const syntheticSummary = summarizeBenchmark(syntheticSubmission());
+
 function result(id: string, overrides: Partial<ExplorerSummary> = {}): ExplorerItem {
   return {
     public_id: id,
     revision: 1,
     created_at: "2026-01-02T03:04:05.000Z",
     summary: {
+      ...syntheticSummary,
       model_label: `sha256:${id}`,
       hardware_label: "synthetic-gpu-a",
-      method_label: "synthetic-method@1",
-      workload_label: "synthetic-corpus",
-      row_count: 12,
-      failed_rows: 0,
-      status: "complete",
-      mean_tg_tps: 42.25,
-      mean_e2e_ms: 1234.6,
+      method_label: "openai-chat-serving@5",
+      workload_label: "code_python",
       ...overrides,
     },
   };
@@ -350,31 +348,6 @@ describe("hand-picked comparison", () => {
     expect(refilled.compare.map((item) => item.public_id)).toEqual(["0000aaaa", "0000cccc", "0000dddd"]);
     expect(explorerReducer(refilled, { type: "clearComparison" }).compare).toEqual([]);
   });
-
-  it("calls out results that measured different work", () => {
-    const sameSetup = comparisonCompatibility([result("0000aaaa"), result("0000bbbb")]);
-    expect(sameSetup.comparable).toBe(true);
-    expect(sameSetup.methods).toEqual(["synthetic-method@1"]);
-
-    const otherMethod = comparisonCompatibility([
-      result("0000aaaa"),
-      result("0000bbbb", { method_label: "synthetic-method@2" }),
-    ]);
-    expect(otherMethod.comparable).toBe(false);
-    expect(otherMethod.methods).toEqual(["synthetic-method@1", "synthetic-method@2"]);
-
-    const otherWorkload = comparisonCompatibility([
-      result("0000aaaa"),
-      result("0000bbbb", { workload_label: "synthetic-corpus-long" }),
-    ]);
-    expect(otherWorkload.comparable).toBe(false);
-    expect(otherWorkload.workloads).toEqual(["synthetic-corpus", "synthetic-corpus-long"]);
-  });
-
-  it("treats a single selection as internally consistent", () => {
-    expect(comparisonCompatibility([result("0000aaaa")]).comparable).toBe(true);
-    expect(comparisonCompatibility([]).comparable).toBe(true);
-  });
 });
 
 describe("result cell formatting", () => {
@@ -390,15 +363,11 @@ describe("result cell formatting", () => {
     expect(formatSampleCount(12, 0)).toBe("12");
     expect(formatSampleCount(12, 3)).toBe("12 (3 failed)");
   });
-
-
 });
-
-
 
 describe("discovery filters and sorting", () => {
   it("round-trips arbitrary text, numeric bounds and sorting and restores them on back", () => {
-    const link = "?measurement=legacy&q=synthetic+search&vendor=unlisted+vendor&gpu=new+device&os=custom+os&runtime=engine&context_min=0&context_max=8192&gpu_layers_min=-1&sort=context_desc";
+    const link = "?q=synthetic+search&vendor=unlisted+vendor&gpu=new+device&os=custom+os&runtime=engine&input_bytes_min=0&input_bytes_max=8192&vram_min=0&sort=oldest";
     const original = explorerStateFromSearch(link);
     expect(buildExplorerRequestPath({ filters: original.applied, cursor: null })).toContain("vendor=unlisted+vendor");
     expect(parseExplorerLocation(buildExplorerSearch({ filters: original.applied, cursor: null })).filters).toEqual(original.applied);
@@ -410,19 +379,19 @@ describe("discovery filters and sorting", () => {
     expect(explorerReducer(next, { type: "location", search: link }).applied).toEqual(original.applied);
     expect(buildExplorerSearch({ filters: explorerReducer(next, { type: "reset" }).applied, cursor: null })).toBe("");
   });
-  it.each(["NaN", "Infinity", "1.5", "1e3", "9007199254740992", "-1"])("refuses invalid context bounds %s without changing results", value => {
-    const state = explorerReducer(explorerStateFromSearch("?measurement=legacy&model=synthetic"), { type: "draft", key: "context_min", value });
-    expect(invalidExplorerRanges(state.draft)).toContain("context");
+  it.each(["NaN", "Infinity", "1.5", "1e3", "9007199254740992", "-1"])("refuses invalid input byte bounds %s without changing results", value => {
+    const state = explorerReducer(explorerStateFromSearch("?model=synthetic"), { type: "draft", key: "input_bytes_min", value });
+    expect(invalidExplorerRanges(state.draft)).toContain("input_bytes");
     expect(explorerReducer(state, { type: "apply" })).toBe(state);
   });
-  it("validates paired ranges, accepts zero and the GPU layer sentinel", () => {
-    expect(invalidExplorerRanges({ ...EMPTY_EXPLORER_FILTERS, context_min: "100", context_max: "99" })).toEqual(["context"]);
-    expect(invalidExplorerRanges({ ...EMPTY_EXPLORER_FILTERS, context_min: "0", gpu_layers_min: "-1" })).toEqual([]);
+  it("validates paired ranges and accepts zero", () => {
+    expect(invalidExplorerRanges({ ...EMPTY_EXPLORER_FILTERS, input_bytes_min: "100", input_bytes_max: "99" })).toEqual(["input_bytes"]);
+    expect(invalidExplorerRanges({ ...EMPTY_EXPLORER_FILTERS, input_bytes_min: "0", max_output_tokens_max: "0" })).toEqual([]);
   });
   it("suggestions honor other filters and use a separate query without paging or own filter", () => {
-    const filters = { ...EMPTY_EXPLORER_FILTERS, measurement: "legacy", q: "global", vendor: "synthetic vendor", gpu: "typed", sort: "oldest", context_min: "128" };
+    const filters = { ...EMPTY_EXPLORER_FILTERS, q: "global", vendor: "synthetic vendor", gpu: "typed", sort: "oldest", input_bytes_min: "128" };
     const params = new URLSearchParams(buildExplorerOptionsPath("gpu", "new text", filters).split("?")[1]);
-    expect(Object.fromEntries(params)).toEqual({ measurement: "legacy", q: "global", vendor: "synthetic vendor", context_min: "128", field: "gpu", option_query: "new text" });
+    expect(Object.fromEntries(params)).toEqual({ q: "global", vendor: "synthetic vendor", input_bytes_min: "128", field: "gpu", option_query: "new text" });
   });
 });
 
@@ -438,21 +407,21 @@ describe("immediate result sorting", () => {
     expect(new URLSearchParams(buildExplorerSearch({ filters: applied.applied, cursor: null })).get("sort")).toBe("oldest");
   });
   it("sorts applied results without submitting unfinished text or invalid ranges", () => {
-    let state = explorerStateFromSearch("?measurement=legacy&vendor=synthetic&cursor=page2", [""]);
+    let state = explorerStateFromSearch("?vendor=synthetic&cursor=page2", [""]);
     state = explorerReducer(state, { type: "draft", key: "q", value: "unfinished query" });
-    state = explorerReducer(state, { type: "draft", key: "context_min", value: "invalid" });
-    const sorted = explorerReducer(state, { type: "sort", value: "context_desc" });
+    state = explorerReducer(state, { type: "draft", key: "input_bytes_min", value: "invalid" });
+    const sorted = explorerReducer(state, { type: "sort", value: "vram_desc" });
     expect(sorted.applied.vendor).toBe("synthetic");
     expect(sorted.applied.q).toBe("");
-    expect(sorted.applied.context_min).toBe("");
-    expect(sorted.applied.sort).toBe("context_desc");
+    expect(sorted.applied.input_bytes_min).toBe("");
+    expect(sorted.applied.sort).toBe("vram_desc");
     expect(sorted.draft.q).toBe("unfinished query");
-    expect(sorted.draft.context_min).toBe("invalid");
-    expect(sorted.draft.sort).toBe("context_desc");
+    expect(sorted.draft.input_bytes_min).toBe("invalid");
+    expect(sorted.draft.sort).toBe("vram_desc");
     expect(sorted.cursor).toBeNull();
     expect(sorted.history).toEqual([]);
-    expect(buildExplorerSearch({ filters: sorted.applied, cursor: null })).toContain("sort=context_desc");
-    const restored = explorerReducer(sorted, { type: "location", search: "?measurement=legacy&vendor=synthetic&cursor=page2", history: [""] });
+    expect(buildExplorerSearch({ filters: sorted.applied, cursor: null })).toContain("sort=vram_desc");
+    const restored = explorerReducer(sorted, { type: "location", search: "?vendor=synthetic&cursor=page2", history: [""] });
     expect(restored.applied.sort).toBe("");
     expect(restored.cursor).toBe("page2");
   });
@@ -464,28 +433,11 @@ describe("immediate result sorting", () => {
   });
 });
 
-describe("configured input lengths", () => {
-  it("shortens an exact multiple of 1024 and leaves every other length as measured", () => {
-    expect(formatPromptLength(512)).toBe("512");
-    expect(formatPromptLength(1024)).toBe("1K");
-    expect(formatPromptLength(4096)).toBe("4K");
-    expect(formatPromptLength(8192)).toBe("8K");
-    expect(formatPromptLength(1500)).toBe("1500");
-    expect(formatPromptLength(8704)).toBe("8704");
+describe("serving point labels", () => {
+  it("names the input bytes, concurrency and output cap of one operating point", () => {
+    expect(formatServingPointLabel(4096, 4, 128)).toBe("4096 B / c4 / max 128 tok");
+    expect(formatServingPointLabel(256, 1, 1)).toBe("256 B / c1 / max 1 tok");
   });
-
-  it("lists every reported length once, in ascending order", () => {
-    expect(formatPromptLengths([8192, 512, 4096, 512])).toBe("512 · 4K · 8K");
-    expect(formatPromptLengths([128])).toBe("128");
-  });
-
-  it("stays absent rather than standing in for the context the server allocated", () => {
-    expect(formatPromptLengths(undefined)).toBeNull();
-    expect(formatPromptLengths(null)).toBeNull();
-    expect(formatPromptLengths([])).toBeNull();
-    expect(formatPromptLengths([0, -1, Number.NaN, 1.5] as number[])).toBeNull();
-  });
-
 });
 
 describe("serving point and condition links", () => {
@@ -503,44 +455,65 @@ describe("serving point and condition links", () => {
     expect(buildExplorerSearch(parseExplorerLocation(reverse.toString()))).toBe(canonical);
     expect(parseExplorerLocation(canonical)).toEqual(location);
   });
-  it("keeps a complete historical byte/concurrency/cap tuple in its own scope and requires it before ranking output rate", () => {
-    let state = explorerStateFromSearch("measurement=openai-chat-serving@1&runtime=sglang");
+  it("keeps a complete byte/concurrency/cap tuple in its own scope and requires it before ranking output rate", () => {
+    let state = explorerStateFromSearch("?runtime=sglang");
     expect(explorerReducer(state, { type: "sort", value: "output_rate_desc" })).toBe(state);
     state = explorerReducer(state, { type: "basisPoint", value: "b4096/c4/o128" });
-    expect(explorerReducer(state, { type: "sort", value: "token_rate_desc" })).toBe(state);
     state = explorerReducer(state, { type: "sort", value: "output_rate_desc" });
-    expect(state.applied).toMatchObject({ measurement: "openai-chat-serving@1", point_bytes: "4096", point_concurrency: "4", point_max_tokens: "128", point_tokens: "", sort: "output_rate_desc" });
+    expect(state.applied).toMatchObject({ runtime: "sglang", point_bytes: "4096", point_concurrency: "4", point_max_tokens: "128", point_only: "", sort: "output_rate_desc" });
     expect(parseExplorerLocation(buildExplorerSearch({ filters: state.applied, cursor: null })).filters).toEqual(state.applied);
     expect(explorerReducer(state, { type: "basisPoint", value: "" }).applied.sort).toBe("");
   });
-  it("defaults to fixed output, accepts only preset output points and ranks them by exact token rate", () => {
-    let state = explorerStateFromSearch("runtime=sglang");
-    expect(state.applied.measurement).toBe("");
-    expect(explorerReducer(state, { type: "basisPoint", value: "b4096/c4/o128" })).toBe(state);
-    expect(explorerStateFromSearch("point_bytes=4096&point_concurrency=4&point_max_tokens=128&sort=token_rate_desc").applied).toMatchObject({ point_bytes: "", point_max_tokens: "", sort: "" });
-    state = explorerReducer(state, { type: "basisPoint", value: "b4096/c4/o204800" });
-    state = explorerReducer(state, { type: "sort", value: "token_rate_desc" });
-    expect(state.applied).toMatchObject({ point_bytes: "4096", point_concurrency: "4", point_max_tokens: "204800", sort: "token_rate_desc" });
-    expect(parseFilters(new URLSearchParams(buildExplorerSearch({ filters: state.applied, cursor: null })))).toMatchObject({ point_max_tokens: 204800, sort: "token_rate_desc" });
-    // Changing scope drops a basis and sort chosen for another method.
-    const changed = explorerReducer(state, { type: "draft", key: "measurement", value: "openai-chat-serving@1" });
-    expect(changed.draft).toMatchObject({ measurement: "openai-chat-serving@1", point_bytes: "", point_max_tokens: "", sort: "" });
+  it("accepts only an in-scope output cap and refuses an incomplete basis", () => {
+    const state = explorerStateFromSearch("?runtime=sglang");
+    expect(explorerReducer(state, { type: "basisPoint", value: "b4096/c4/o256" })).toBe(state);
+    expect(explorerStateFromSearch("?point_bytes=4096&point_concurrency=4&point_max_tokens=256&sort=token_rate_desc").applied).toMatchObject({ point_bytes: "", point_max_tokens: "", sort: "" });
+    const bounded = explorerReducer(state, { type: "basisPoint", value: "b4096/c4/o128" });
+    const ranked = explorerReducer(bounded, { type: "sort", value: "token_rate_desc" });
+    expect(ranked.applied).toMatchObject({ point_bytes: "4096", point_concurrency: "4", point_max_tokens: "128", sort: "token_rate_desc" });
+    expect(parseFilters(new URLSearchParams(buildExplorerSearch({ filters: ranked.applied, cursor: null })))).toMatchObject({ point_max_tokens: 128, sort: "token_rate_desc" });
+    // A partial tuple can never be applied or forwarded as a basis.
+    const partial = explorerReducer(state, { type: "draft", key: "point_bytes", value: "4096" });
+    expect(invalidExplorerDraft(partial.draft)).toBe(true);
+    expect(explorerReducer(partial, { type: "apply" })).toBe(partial);
+    expect(explorerStateFromSearch("?point_only=1").applied.point_only).toBe("");
   });
-  it("refuses byte/token mixing and never uses an old token value as input bytes", () => {
-    const serving = explorerStateFromSearch("context_min=128");
-    expect(invalidExplorerDraft(serving.draft)).toBe(true);
-    expect(explorerReducer(serving, { type: "apply" })).toBe(serving);
-    const legacy = explorerStateFromSearch("measurement=legacy&input_bytes_min=4096");
-    expect(invalidExplorerDraft(legacy.draft)).toBe(true);
-    const stale = explorerStateFromSearch("point_tokens=4096&point_concurrency=4");
+  it("keeps a basis and its point-ranked sort through navigation, reset and reload", () => {
+    let state = explorerStateFromSearch("?runtime=sglang");
+    state = explorerReducer(state, { type: "basisPoint", value: "b4096/c4/o128" });
+    state = explorerReducer(state, { type: "sort", value: "output_rate_desc" });
+    expect(state.applied).toMatchObject({ point_bytes: "4096", point_max_tokens: "128", sort: "output_rate_desc" });
+    const url = buildExplorerSearch({ filters: state.applied, cursor: null });
+    expect(url).not.toContain("point_only");
+    const fixed = explorerStateFromSearch("?point_bytes=4096&point_concurrency=4&point_max_tokens=64&point_only=1&sort=token_rate_desc");
+    expect(fixed.applied).toMatchObject({ point_bytes: "4096", point_concurrency: "4", point_max_tokens: "64", point_only: "1", sort: "token_rate_desc" });
+    expect(parseFilters(new URLSearchParams(buildExplorerSearch({ filters: fixed.applied, cursor: null })))).toMatchObject({ point_max_tokens: 64, point_only: true, sort: "token_rate_desc" });
+    // Back/forward restore each URL's basis while retaining manually selected columns.
+    const selected = explorerReducer(fixed, { type: "toggleComparison", item: result("chosen") });
+    const back = explorerReducer(selected, { type: "location", search: "" });
+    expect(back.applied.point_bytes).toBe("");
+    expect(back.compare.map(item => item.public_id)).toEqual(["chosen"]);
+    const forward = explorerReducer(back, { type: "location", search: buildExplorerSearch({ filters: fixed.applied, cursor: null }) });
+    expect(forward.applied.point_bytes).toBe("4096");
+    expect(forward.compare).toEqual(back.compare);
+    const reset = explorerReducer(forward, { type: "reset" });
+    expect(reset.applied.point_bytes).toBe("");
+    expect(reset.applied.point_only).toBe("");
+    expect(reset.applied.sort).toBe("");
+  });
+  it("ignores pre-@5 point parameters and never promotes a token count to input bytes", () => {
+    const stale = explorerStateFromSearch("?point_tokens=4096&point_concurrency=4");
     expect(stale.applied.point_bytes).toBe("");
     expect(stale.applied.point_concurrency).toBe("");
+    // The current byte-bounded filter remains available and independent.
+    const bytes = explorerStateFromSearch("?input_bytes_min=128");
+    expect(invalidExplorerDraft(bytes.draft)).toBe(false);
   });
   it("keeps pending option drafts when immediately changing the basis", () => {
-    let state = explorerStateFromSearch("runtime=sglang");
+    let state = explorerStateFromSearch("?runtime=sglang");
     const pending = JSON.stringify({ _draft: { name: "batch", text: "-" } });
     state = explorerReducer(state, { type: "settings", value: [pending] });
-    state = explorerReducer(state, { type: "basisPoint", value: "b4096/c4/o1024" });
+    state = explorerReducer(state, { type: "basisPoint", value: "b4096/c4/o128" });
     expect(state.draft.setting).toEqual([pending]);
     expect(state.applied.setting).toEqual([]);
   });

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GET } from "@/app/v1/benchmark-runs/[id]/model-information/route";
-import { syntheticServingSubmission, syntheticSubmission } from "@/lib/fixtures";
+import { syntheticSubmission } from "@/lib/fixtures";
 import { summarizeBenchmark } from "@/lib/summary";
 import type { PublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
 import type { BenchmarkStore, StoredRun } from "@/server/repository";
@@ -36,7 +36,7 @@ afterEach(() => {
 
 describe("GET public model information", () => {
   it("enriches only recorded published evidence without returning or rewriting private or frozen data", async () => {
-    const benchmark = syntheticServingSubmission({ model: {
+    const benchmark = syntheticSubmission({ model: {
       status: "sha256", sha256: HASH, size_bytes: 1234, format: "hf-safetensors",
       source: { kind: "huggingface", repository: "public-source/synthetic-model", revision: "a".repeat(40) },
     } });
@@ -75,7 +75,7 @@ describe("GET public model information", () => {
 
   it("leaves an older no-checksum record unidentified rather than borrowing a live checksum", async () => {
     const benchmark = syntheticSubmission({ model: {
-      status: "unidentified", sha256: null, size_bytes: 1234,
+      status: "unidentified", sha256: null, size_bytes: 1234, format: "gguf",
       metadata: {
         format: "GGUF", name: "synthetic-model", architecture: null, size_label: null, quantization: null, file_type: null,
         quantized_by: null, repository: "public-source/synthetic-model", base_models: [], artifact: null, source: "gguf",
@@ -91,7 +91,7 @@ describe("GET public model information", () => {
   });
 
   it.each(["missing", "hidden", "deleted"])("returns 404 for a %s published record without contacting HF", async kind => {
-    const { store, run } = save(syntheticServingSubmission());
+    const { store, run } = save(syntheticSubmission());
     if (kind === "missing") store.byPublic.clear();
     else if (kind === "hidden") await store.setHidden(run.submission_id, true);
     else await store.deleteRun(run.submission_id);
@@ -115,7 +115,7 @@ describe("GET public model information", () => {
   });
 
   it("keeps upstream outages inside a successful public DTO response", async () => {
-    save(syntheticServingSubmission({ model: {
+    save(syntheticSubmission({ model: {
       status: "sha256", sha256: "2".repeat(64), size_bytes: 1234, format: "mlx",
       source: { kind: "huggingface", repository: "public-source/unavailable-model", revision: REVISION },
     } }));

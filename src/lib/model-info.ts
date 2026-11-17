@@ -3,15 +3,14 @@ import type { BenchmarkModelMetadata, PublicBenchmarkSubmission } from "@aiolm/b
 /**
  * Public model metadata carried on a summary.
  *
- * Contract 0.3.0 added an OPTIONAL model.metadata block and schema_version
- * stays 1, so a payload without one stays valid. Everything here is either copied
- * from that block after validation or derived from the recorded identity; the
- * publisher comes ONLY from the repository namespace, and nothing is ever
- * parsed out of a filename or a curated label. A field that fails validation is
- * null - unknown - rather than a guess.
+ * Everything here is either copied from the optional model.metadata block after
+ * validation or derived from the recorded identity; the publisher comes ONLY
+ * from the repository namespace, and nothing is ever parsed out of a filename
+ * or a curated label. A field that fails validation is null - unknown - rather
+ * than a guess.
  *
  * Format and quantization describe the model weights. They say nothing about
- * the KV cache (setup.cache_type_k/v) and are not a quality claim.
+ * the engine's KV cache and are not a quality claim.
  */
 export type BenchmarkModelInfo = {
   format: "GGUF" | "hf-safetensors" | "mlx" | "unknown";
@@ -24,7 +23,7 @@ export type BenchmarkModelInfo = {
   /** Hugging Face namespace/repo only, never a URL or a local path. */
   repository: string | null;
   /** Inspected source revision, never a replacement for the weight SHA. */
-  revision?: string | null;
+  revision: string | null;
   base_models: string[];
   /** Repo-relative .gguf artifact from a file-matched public origin. */
   artifact: string | null;
@@ -84,8 +83,8 @@ function modelSource(value: unknown): { repository: string; revision: string } |
  */
 export function normalizeModelInfo(benchmark: PublicBenchmarkSubmission): BenchmarkModelInfo | null {
   const model = benchmark.model;
-  const source = benchmark.schema_version === 3 ? modelSource(benchmark.model.source) : null;
-  const format = benchmark.schema_version === 1 ? "gguf" : model.format;
+  const source = modelSource(model.source);
+  const format = model.format;
   const meta: unknown = model.metadata;
   const m = format === "gguf" && typeof meta === "object" && meta !== null &&
     !Array.isArray(meta) && (meta as Partial<BenchmarkModelMetadata>).format === "GGUF"
@@ -98,7 +97,7 @@ export function normalizeModelInfo(benchmark: PublicBenchmarkSubmission): Benchm
   const metadataOrigin = repo !== null && repository(m?.repository) === repo &&
     (metadataSource === "huggingface" || metadataSource === "gguf+huggingface");
   return {
-    format: format === "gguf" ? "GGUF" : format ?? "unknown",
+    format: format === "gguf" ? "GGUF" : format,
     name: label(m?.name),
     architecture: label(m?.architecture),
     size_label: label(m?.size_label),
@@ -106,7 +105,7 @@ export function normalizeModelInfo(benchmark: PublicBenchmarkSubmission): Benchm
     file_type: fileType(m?.file_type),
     quantized_by: label(m?.quantized_by),
     repository: repo,
-    ...(benchmark.schema_version === 3 ? { revision: source?.revision ?? null } : {}),
+    revision: source?.revision ?? null,
     base_models: baseModels(m?.base_models),
     artifact: metadataOrigin ? artifact(m?.artifact) : null,
     source: provenanceSource,

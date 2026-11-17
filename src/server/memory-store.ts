@@ -1,7 +1,6 @@
 import { encodeDiscoveryCursor, comparePosition, type ListCursor } from "../lib/pagination";
-import { DEFAULT_MEASUREMENT, POINT_OPTION_FIELD, TEXT_FILTER_MAX_LENGTH, matchesFilters, textValues, sortValue, withRuntimeBuild, canonicalSettingDescriptor, compareCanonical, selectedExecutionGpus, type BenchmarkOptions, type OptionField, type SettingDescriptor } from "../lib/benchmark-discovery";
-import { pointId, readPoints, readServingPoints, servingPointId } from "../lib/benchmark-points";
-import { withCanonicalIdentity } from "../lib/summary";
+import { POINT_OPTION_FIELD, TEXT_FILTER_MAX_LENGTH, matchesFilters, textValues, sortValue, canonicalSettingDescriptor, compareCanonical, selectedExecutionGpus, type BenchmarkOptions, type OptionField, type SettingDescriptor } from "../lib/benchmark-discovery";
+import { readServingPoints, servingPointId } from "../lib/benchmark-points";
 import { UPLOAD_PERMIT_TTL_MS, permitExpiryForSession, verifyUploadPermit } from "../lib/permits";
 import { quotaKeyForIp, quotaWindowDay, quotaWindowHour } from "../lib/ip";
 import type { BenchmarkFilters } from "../lib/summary";
@@ -87,13 +86,13 @@ export class InMemoryBenchmarkStore implements BenchmarkStore {
 
   async getRunBySubmission(submissionId: string): Promise<StoredRun | null> {
     const row = this.runs.get(submissionId);
-    return row && !row.deleted ? withCanonicalIdentity(withRuntimeBuild(row, row.benchmark.runtime.build), row.benchmark) : row ?? null;
+    return row ?? null;
   }
 
   async getRunByPublicId(publicId: string): Promise<StoredRun | null> {
     const sub = this.byPublic.get(publicId);
     const row = sub ? this.runs.get(sub) : undefined;
-    return row && !row.deleted ? withCanonicalIdentity(withRuntimeBuild(row, row.benchmark.runtime.build), row.benchmark) : row ?? null;
+    return row ?? null;
   }
 
   async acceptRunAtomic(args: AcceptArgs): Promise<AcceptOutcome> {
@@ -233,8 +232,7 @@ export class InMemoryBenchmarkStore implements BenchmarkStore {
   async listRuns(filters: BenchmarkFilters, limit: number, cursor: ListCursor | null): Promise<ListResult> {
     const sort = filters.sort ?? "newest";
     const position = (r: StoredRun): ListCursor => ({ createdAt: r.created_at, publicId: r.public_id, value: sortValue(r.summary, filters) });
-    // A legacy summary gets its build before filtering, so q finds it exactly as the SQL store does.
-    const rows = [...this.runs.values()].filter(r => !r.deleted && !r.hidden).map(r => withCanonicalIdentity(withRuntimeBuild(r, r.benchmark.runtime.build), r.benchmark))
+    const rows = [...this.runs.values()].filter(r => !r.deleted && !r.hidden)
       .filter(r => matchesFilters(r.summary, filters, r.benchmark.workload))
       .filter(r => !cursor || comparePosition(position(r), cursor, sort) > 0)
       .sort((a, b) => comparePosition(position(a), position(b), sort));
@@ -246,29 +244,23 @@ export class InMemoryBenchmarkStore implements BenchmarkStore {
   async listOptions(field: OptionField, query: string, filters: BenchmarkFilters, setting?: SettingDescriptor): Promise<BenchmarkOptions> {
     const remaining = { ...filters };
     if (field === POINT_OPTION_FIELD) {
-      delete remaining.point_tokens; delete remaining.point_bytes; delete remaining.point_concurrency; delete remaining.point_max_tokens; delete remaining.point_only;
+      delete remaining.point_bytes; delete remaining.point_concurrency; delete remaining.point_max_tokens; delete remaining.point_only;
     } else if (field !== "setting" && field !== "setting_value") delete remaining[field];
     const counts = new Map<string, number>();
     const order = new Map<string, number[]>();
     for (const r of this.runs.values()) {
       if (r.deleted || r.hidden) continue;
-      const summary = withCanonicalIdentity(withRuntimeBuild(r, r.benchmark.runtime.build), r.benchmark).summary;
+      const summary = r.summary;
       if (!matchesFilters(summary, remaining, r.benchmark.workload)) continue;
       let candidates: string[];
       if (field === POINT_OPTION_FIELD) {
-        if ((remaining.measurement ?? DEFAULT_MEASUREMENT) === "legacy") {
-          const points = readPoints(summary.points);
-          for (const p of points) order.set(pointId(p.prompt_tokens, p.concurrency), [p.prompt_tokens, p.concurrency]);
-          candidates = points.map(p => pointId(p.prompt_tokens, p.concurrency));
-        } else {
-          const points = readServingPoints(summary.serving_points);
-          for (const p of points) order.set(servingPointId(p.input_bytes, p.concurrency, p.max_output_tokens), [p.input_bytes, p.concurrency, p.max_output_tokens]);
-          candidates = points.map(p => servingPointId(p.input_bytes, p.concurrency, p.max_output_tokens));
-        }
+        const points = readServingPoints(summary.serving_points);
+        for (const p of points) order.set(servingPointId(p.input_bytes, p.concurrency, p.max_output_tokens), [p.input_bytes, p.concurrency, p.max_output_tokens]);
+        candidates = points.map(p => servingPointId(p.input_bytes, p.concurrency, p.max_output_tokens));
       } else if (field === "setting" || field === "setting_value") {
         candidates = [];
         const descriptor = setting ? canonicalSettingDescriptor(setting) : null;
-        for (const entry of summary.setup?.setting_facets ?? []) {
+        for (const entry of summary.setup.setting_facets) {
           if (field === "setting") candidates.push(entry.descriptor);
           else if (entry.descriptor === descriptor && entry.value !== null) candidates.push(entry.value);
         }

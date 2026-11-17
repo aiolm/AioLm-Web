@@ -1,9 +1,9 @@
 import type React from "react";
-import { formatGpuLabels } from "@/lib/gpu-labels";
 import { formatRuntimeVersionLabel } from "@aiolm/benchmark-contracts";
+import { formatGpuLabels } from "@/lib/gpu-labels";
 import type { Translator } from "@/i18n/types";
-import { FIXED_OUTPUT_MEASUREMENT, type BenchmarkSetup, type ServingMeasurementScope } from "@/lib/benchmark-discovery";
-import type { BenchmarkPoint, MetricStat, ServingMetricKey } from "@/lib/benchmark-points";
+import type { BenchmarkSetup } from "@/lib/benchmark-discovery";
+import type { ServingMetricKey, ServingMetricStat } from "@/lib/benchmark-points";
 import { benchmarkFallback } from "./benchmark-i18n";
 /**
  * Cell formatting for the explorer. Values are locale independent so a shared
@@ -36,60 +36,16 @@ export function formatSampleCount(rowCount: number, failedRows: number, t: Trans
   return Number.isFinite(failedRows) && failedRows > 0 ? t("benchmark.{total} ({failed} failed)", { total, failed: failedRows }) : total;
 }
 
-/**
- * One configured input length. An exact multiple of 1024 reads as K so a list of
- * them stays short; any other value keeps its digits rather than being rounded
- * into a size the run was never measured at.
- */
-export function formatPromptLength(value: number): string {
-  return value % 1024 === 0 ? `${value / 1024}K` : String(value);
+/** One operating point: input bytes, requests in flight and the requested output cap. */
+export function formatServingPointLabel(inputBytes: number, concurrency: number, maxTokens: number): string {
+  return `${inputBytes} B / c${concurrency} / max ${maxTokens} tok`;
 }
-
-/**
- * Every input length a result was configured with, compactly (512 · 4K · 8K).
- * This is the workload's own list of prompt lengths, never the total context the
- * server allocated, so an unreported list stays unreported instead of borrowing
- * a number that measures something else.
- */
-export function formatPromptLengths(values: readonly number[] | null | undefined): string | null {
-  if (!Array.isArray(values)) return null;
-  const lengths = [...new Set(values.filter((value) => typeof value === "number" && Number.isSafeInteger(value) && value > 0))].sort((a, b) => a - b);
-  return lengths.length === 0 ? null : lengths.map(formatPromptLength).join(" · ");
-}
-
-/**
- * One operating point as a reader names it: the input length it sent and the
- * number of requests it sent at once. Locale independent, like every other
- * value here, so a shared link reads the same everywhere.
- */
-export function formatPointLabel(promptTokens: number, concurrency: number): string {
-  return `${formatPromptLength(promptTokens)} / c${concurrency}`;
-}
-
-/** Fixed-output points name exact reported tokens; historical points name only a request cap. */
-export function formatServingPointLabel(inputBytes: number, concurrency: number, maxTokens: number, scope: ServingMeasurementScope | null): string {
-  return `${inputBytes} B / c${concurrency} / ${scope === FIXED_OUTPUT_MEASUREMENT ? `${maxTokens} tok` : `max ${maxTokens} tok`}`;
-}
-export const SERVING_METRIC_LABELS: Record<ServingMetricKey, string> = {
-  first_output_ms: "First output", first_content_ms: "First content", first_reasoning_ms: "First reasoning",
-  e2e_ms: "End-to-end batch duration", content_bytes: "Content bytes", reasoning_bytes: "Reasoning bytes", output_bytes: "Observed output bytes",
-  output_bytes_per_second: "Observed output B/s", reported_prompt_tokens: "Reported prompt tokens", reported_completion_tokens: "Reported completion tokens",
-  reported_cached_tokens: "Reported cached tokens", reported_tokens_per_second: "Reported tok/s", peak_memory_bytes: "Observed engine memory",
-};
 export function formatServingMetric(key: ServingMetricKey, value: number | null | undefined, t: Translator = benchmarkFallback): string {
   if (typeof value !== "number" || !Number.isFinite(value)) return t("benchmark.Unknown");
   if (key === "peak_memory_bytes") return formatCompactBytes(value, t);
   if (key.endsWith("_ms")) return `${formatLatency(value)} ms`;
   if (key === "output_bytes_per_second") return `${formatThroughput(value)} B/s`;
-  if (key === "reported_tokens_per_second") return `${formatThroughput(value)} tok/s`;
-  return `${value}${key.endsWith("_bytes") ? " B" : ""}`;
-}
-
-/** Every point a result measured, compactly, with a count when the grid is wider than the line. */
-export function formatMeasuredPoints(points: readonly BenchmarkPoint[] | undefined, limit = 6): string | null {
-  if (!points || points.length === 0) return null;
-  const labels = points.map((point) => formatPointLabel(point.prompt_tokens, point.concurrency));
-  return labels.length <= limit ? labels.join(" · ") : `${labels.slice(0, limit).join(" · ")} +${labels.length - limit}`;
+  return `${formatThroughput(value)} tok/s`;
 }
 
 /**
@@ -97,12 +53,12 @@ export function formatMeasuredPoints(points: readonly BenchmarkPoint[] | undefin
  * same value has no spread to report, and neither does a single sample, so the
  * line is left off rather than printed as a range of one number.
  */
-function spread(stat: MetricStat | null | undefined, format: (value: number) => string): string | null {
+function spread(stat: ServingMetricStat | null | undefined, format: (value: number) => string): string | null {
   if (!stat || stat.min === stat.max) return null;
   return `${format(stat.min)}–${format(stat.max)}`;
 }
 
-export function formatThroughputSpread(stat: MetricStat | null | undefined): string | null {
+export function formatThroughputSpread(stat: ServingMetricStat | null | undefined): string | null {
   return spread(stat, (value) => formatThroughput(value));
 }
 
@@ -110,11 +66,11 @@ export function formatLatency(value: number | null | undefined): string {
   return typeof value === "number" && Number.isFinite(value) ? value.toFixed(1) : EXPLORER_MISSING;
 }
 
-export function formatLatencySpread(stat: MetricStat | null | undefined): string | null {
+export function formatLatencySpread(stat: ServingMetricStat | null | undefined): string | null {
   return spread(stat, formatLatency);
 }
 
-export function formatSecondsSpread(stat: MetricStat | null | undefined): string | null {
+export function formatSecondsSpread(stat: ServingMetricStat | null | undefined): string | null {
   return spread(stat, (value) => formatDuration(value));
 }
 
@@ -201,38 +157,6 @@ export function extractGpuList(summary: { hardware_label: string; setup?: { gpus
 }
 
 /**
- * The reported measurement environment, as labeled facts rather than one run-on
- * line. Each part names what it is, so an operating system is never mistaken for
- * a backend and a missing part leaves no ambiguous gap between two separators.
- * Only reported parts are listed: an unreported one is absent here and named on
- * the result page, where there is room to say so.
- */
-export function environmentFacts(setup: (BenchmarkSetup & { ram_bytes?: number | null; physical_cores?: number | null }) | undefined, t: Translator = benchmarkFallback): SummaryFact[] {
-  if (!setup) return [];
-  const runtime = [setup.runtime, runtimeVersionLabel({ name: setup.runtime, version: setup.runtime_version, build: setup.runtime_build, variant: setup.runtime_variant, plugin_version: setup.runtime_plugin_version })].filter(Boolean).join(" ");
-  const facts: SummaryFact[] = [];
-  if (setup.gpus && setup.gpus.length > 0) {
-    facts.push({ key: "gpu", label: t("benchmark.GPU"), value: setup.gpus.join(", ") });
-  }
-  if (setup.cpu) {
-    const topology = setup.cores == null ? "" : formatCpuCores({ logical_cores: setup.cores, physical_cores: setup.physical_cores });
-    const cpuValue = topology ? `${setup.cpu} · ${topology}` : setup.cpu;
-    facts.push({ key: "cpu", label: t("benchmark.CPU"), value: cpuValue });
-  }
-  if (setup.ram_bytes != null && setup.ram_bytes > 0) {
-    facts.push({ key: "ram", label: t("benchmark.RAM"), value: formatCompactBytes(setup.ram_bytes, t) });
-  }
-  facts.push(
-    { key: "os", label: t("benchmark.OS"), value: setup.os ?? "" },
-    { key: "runtime", label: t("benchmark.Runtime"), value: runtime },
-    { key: "backend", label: t("benchmark.Backend"), value: setup.backend ?? "" },
-    { key: "vram", label: t("benchmark.VRAM"), value: setup.vram_mb == null ? "" : formatVramGb(setup.vram_mb, t) },
-    { key: "cores", label: t("benchmark.Logical cores"), value: setup.cores == null ? "" : formatCpuCores({ logical_cores: setup.cores, physical_cores: setup.physical_cores }) },
-  );
-  return facts.filter((fact) => fact.value !== "");
-}
-
-/**
  * Comparison cells for the measurement environment. Unlike the compact list
  * facts, these name every gap as unknown so two columns with different gaps
  * do not look identical, and each cell keeps its label in the row header
@@ -254,31 +178,9 @@ export function formatComparisonCpu(setup: (BenchmarkSetup & { ram_bytes?: numbe
   return parts.length > 0 ? parts.join(" · ") : t("benchmark.Unknown");
 }
 
-/** Runtime name and version with its backend, or unknown when none was recorded. */
-export function formatComparisonRuntime(setup: BenchmarkSetup | undefined, t: Translator = benchmarkFallback): string {
-  const runtime = [setup?.runtime, runtimeVersionLabel(setup && { name: setup.runtime, version: setup.runtime_version, build: setup.runtime_build, variant: setup.runtime_variant, plugin_version: setup.runtime_plugin_version })].filter((part): part is string => typeof part === "string" && part !== "").join(" ");
-  const parts = [runtime, setup?.backend].filter((part): part is string => typeof part === "string" && part !== "");
-  return parts.length > 0 ? parts.join(" · ") : t("benchmark.Unknown");
-}
-
 /** Selected GPU memory as published, or unknown when it was not recorded. */
 export function formatComparisonVram(setup: BenchmarkSetup | undefined, t: Translator = benchmarkFallback): string {
   return setup?.vram_mb == null ? t("benchmark.Unknown") : formatVramGb(setup.vram_mb, t);
-}
-
-/**
- * Essential execution settings: parallel requests, threads and the KV cache
- * types. Each part keeps its label so a bare number is never mistaken for
- * another setting, and an unreported setup reads as unknown.
- */
-export function formatComparisonExecution(setup: BenchmarkSetup | undefined, t: Translator = benchmarkFallback): string {
-  const parts: string[] = [];
-  if (setup?.parallel != null) parts.push(`${t("benchmark.Parallel requests")}: ${setup.parallel}`);
-  if (setup?.threads != null) parts.push(`${t("benchmark.Threads")}: ${setup.threads}`);
-  if (setup?.cache_type_k || setup?.cache_type_v) {
-    parts.push(`${t("benchmark.KV cache type")} K: ${setup.cache_type_k || t("benchmark.Unknown")}, V: ${setup.cache_type_v || t("benchmark.Unknown")}`);
-  }
-  return parts.length > 0 ? parts.join(" · ") : t("benchmark.Unknown");
 }
 
 const CORPUS_KEYS: Record<string, string> = {
@@ -297,32 +199,4 @@ export function formatWorkloadName(workload: string | null | undefined, t: Trans
     return `${t(key)} (${workload})`;
   }
   return workload;
-}
-
-const METHOD_KEYS: Record<string, string> = {
-  "cold-prompt-serving": "benchmark.method.cold-prompt-serving",
-  "warm-prompt-serving": "benchmark.method.warm-prompt-serving",
-  "concurrent-prompt-serving": "benchmark.method.concurrent-prompt-serving",
-};
-/** Serving method versions measure different work, so each version has its own name. */
-const SERVING_METHOD_KEYS: Record<string, string> = {
-  "openai-chat-serving@2": "benchmark.method.openai-chat-serving@2",
-  "openai-chat-serving@1": "benchmark.method.openai-chat-serving@1",
-};
-
-/** Formats benchmark method id@version to a friendly name while retaining original identifier. */
-export function formatMethodName(method: string | null | undefined, t: Translator = benchmarkFallback): string {
-  if (!method) return t("benchmark.Unknown");
-  const serving = SERVING_METHOD_KEYS[method];
-  if (serving) return `${t(serving)} (${method})`;
-  const atIndex = method.lastIndexOf("@");
-  const baseId = atIndex !== -1 ? method.slice(0, atIndex) : method;
-  const version = atIndex !== -1 ? method.slice(atIndex + 1) : null;
-  const key = METHOD_KEYS[baseId];
-  if (key) {
-    const localized = t(key);
-    const verText = version ? ` (v${version})` : "";
-    return `${localized}${verText} (${method})`;
-  }
-  return method;
 }

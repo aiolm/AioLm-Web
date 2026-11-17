@@ -240,15 +240,15 @@ const content: GuideContent = {
         {
           id: 'benchmarks',
           title: '벤치마크 및 공개 공유',
-          body: ['새 벤치마크는 출력 길이 제어를 지원하는 엔진(네이티브 llama.cpp, 지원 비 Metal vLLM)에서 고정 출력 API 테스트로 측정합니다.'],
+          body: ['새 벤치마크는 연결된 모든 텍스트 채팅 엔진에 단일 Cold Prompt 방식 openai-chat-serving@5를 적용하며, 워크로드 워밍업 없이 최대 128 출력 토큰을 요청합니다.'],
           points: [
-            'vllm-metal·MLX·자동 외부 연결은 고정 출력 벤치마크를 실행할 수 없으며, 이전 상한 및 토큰 방식 결과는 별도 보관됩니다.',
+            '조기 종료도 정상 결과입니다. 토큰 보고는 선택 사항이며 미보고 지표는 확인 불가로 남깁니다. 실행별 논스와 요청별 입력 해시로 측정 입력을 분리합니다.',
             '실행 중인 세션을 먼저 중지하세요. 주요 설정의 옵션 수락은 자동 실행 없이 지원 확인만 다시 수행합니다.',
             '공유 결과는 웹사이트에서 관리로 수정·삭제하며, 복사한 복구 코드는 클립보드가 같으면 60초 뒤 자동 삭제됩니다.',
           ],
           more: [{
             title: '측정 기준 및 프로필 가져오기',
-            body: ['시간과 출력 바이트는 클라이언트 관측값이며 모든 요청이 목표 토큰 수와 일치해야 합니다. 결과에서 프로필을 만들면 호환 실행 설정만 복사됩니다.'],
+            body: ['시간과 출력 바이트는 클라이언트 관측값이며 각 행은 요청별 입력 해시를 하나씩 기록합니다. 결과에서 프로필을 만들면 호환 실행 설정만 복사됩니다.'],
           }],
         },
         {
@@ -281,13 +281,13 @@ const content: GuideContent = {
           id: 'choose',
           title: '엔진별 호환성 표',
           table: {
-            headers: ['엔진', '지원 OS · 모델 형식 · 고정 출력 벤치마크'],
+            headers: ['엔진', '지원 OS · 모델 형식 · 벤치마크 지원'],
             rows: [
-              ['llama.cpp', 'Windows · macOS · Linux · GGUF · 고정 출력 지원'],
-              ['vLLM', '지원 Linux CUDA/ROCm · Safetensors · 고정 출력 지원(비 Metal)'],
-              ['vLLM · vllm-metal', 'Apple Silicon macOS 15+ · Safetensors / 제한적 GGUF · 미지원'],
-              ['MLX', 'Apple Silicon macOS · MLX Safetensors · 미지원'],
-              ['외부 추론 엔진', '로컬 OpenAI v1 서버 또는 설치 폴더 · 채팅/스트리밍 검증 · 미지원'],
+              ['llama.cpp', 'Windows · macOS · Linux · GGUF · 벤치마크 지원'],
+              ['vLLM', '지원 Linux CUDA/ROCm · Safetensors · 벤치마크 지원'],
+              ['vLLM · vllm-metal', 'Apple Silicon macOS 15+ · Safetensors / 제한적 GGUF · 벤치마크 지원'],
+              ['MLX', 'Apple Silicon macOS · MLX Safetensors · 벤치마크 지원'],
+              ['외부 추론 엔진', '로컬 OpenAI v1 서버 또는 설치 폴더 · 스트리밍 텍스트 채팅 필수 · 벤치마크 지원'],
             ],
           },
           note: 'Intel Mac에서는 CPU llama.cpp만 사용할 수 있으며 MLX·vllm-metal은 지원하지 않습니다.',
@@ -310,7 +310,7 @@ const content: GuideContent = {
           more: [{
             title: `v${DESKTOP_RELEASE_VERSION} 검증 제한 및 알려진 문제`,
             body: [
-              '고정 출력 벤치마크는 출력 길이 제어를 선언한 엔진(네이티브 llama.cpp, 지원 비 Metal vLLM)에서만 실행됩니다.',
+              '벤치마크는 단일 스트리밍 텍스트 채팅 방식을 사용하며 플랫폼·모델 요건은 유지됩니다.',
               'v0.3.2에서 보고된 SmolVLM 이미지·영상 품질 문제(F09)는 수정 여부가 미확인 상태입니다.',
               '앱과 공개 CLI는 CPU 기준 수치 검증을 제공하지 않습니다.',
             ],
@@ -355,7 +355,7 @@ const content: GuideContent = {
           body: ['연결을 누르면 실제 채팅 응답과 스트리밍 검사를 통과한 경우에만 앱에 저장합니다.'],
           points: [
             '실행 중인 서버는 AioLM 로컬 프록시를 거치므로 연결 중지를 눌러도 원래 서버는 종료되지 않습니다.',
-            '자동 연결은 고정 출력 벤치마크 제어를 선언하지 않으며 멀티모달·도구 품질을 보증하지 않습니다.',
+            '자동 연결도 동일한 단일 벤치마크 방식을 사용합니다. 연결 검사는 멀티모달·도구 품질을 보증하지 않습니다.',
           ],
           image: 'auto-connect',
           caption: '연결 검증 완료 화면.',

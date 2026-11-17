@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { syntheticFixedOutputSubmission, syntheticSubmission } from "@/lib/fixtures";
+import { syntheticSubmission } from "@/lib/fixtures";
 import { pythonBenchmark, servingBenchmark, sourcedServingBenchmark } from "../inference-benchmarks";
 import {
   describeGpu,
@@ -47,54 +47,43 @@ function valueOf(groups: SetupGroup[], label: string, unit?: string): string | s
 }
 
 describe("setup groups", () => {
-  it.each(["vllm", "mlx-vlm", "vllm-metal"] as const)("labels %s model format, context and launch options without llama.cpp assumptions", engine => {
+  it.each(["vllm", "mlx-vlm", "vllm-metal"] as const)("labels %s model format and workload without llama.cpp assumptions", engine => {
     const benchmark = pythonBenchmark(engine);
     const groups = buildSetupGroups(publicSetup(benchmark));
     expect(valueOf(groups, "Weights format")).toBe(engine === "mlx-vlm" ? "MLX" : "safetensors");
-    expect(valueOf(groups, "Per-sequence context allocation", "tokens")).toBe("4096");
-    expect(labelsOf(groups)).toContain("Engine launch options");
+    expect(valueOf(groups, "Maximum output token request", "tokens")).toBe("128");
+    expect(labelsOf(groups)).toContain("Input UTF-8 bytes and SHA256");
+    expect(labelsOf(groups)).not.toContain("Prompt lengths (tokens)");
     expect(labelsOf(groups)).not.toContain("llama-server options");
-    if (engine === "vllm-metal") expect(valueOf(groups, "Engine version")).toBe("vllm-metal 0.30.0 · vLLM 0.30.0");
+    if (engine === "vllm-metal") expect(valueOf(groups, "Engine version")).toBe("0.30.0");
   });
 
-  it("shows the published launch one option per line, keeping each option with its value", () => {
-    const groups = buildSetupGroups(publicSetup({
-      execution: {
-        context_size: 4096, parallel: 1, settings: null,
-        effective_args: ["--ctx-size", "8192", "--sleep-idle-seconds", "-1", "--cache-type-k=q8_0", "--cont-batching"],
-      },
-    }));
-    // A negative value belongs to its option; a switch and an inline value stand alone.
-    expect(valueOf(groups, "llama-server options")).toEqual([
-      "--ctx-size 8192",
-      "--sleep-idle-seconds -1",
-      "--cache-type-k=q8_0",
-      "--cont-batching",
-    ]);
+  it("shows each recorded execution setting with its exact scope and typed value", () => {
+    const benchmark = servingBenchmark();
+    benchmark.execution.settings = [
+      { target: "launch", scope: [], name: "flag", unit: null, role: null, value: false },
+      { target: "launch", scope: ["serve"], name: "zero", unit: "count", role: null, value: 0 },
+      { target: "launch", scope: [], name: "array", unit: "ratio", role: null, value: [2, 1] },
+      { target: "launch", scope: [], name: "redacted", unit: null, role: null, value: null },
+    ];
+    const group = buildSetupGroups(publicSetup(benchmark)).find(group => group.id === "detail-setup-execution")!;
+    expect(group.fields.slice(2, 5).map(field => field.value)).toEqual(["false", "0", "[2,1]"]);
+    expect(group.fields[5]!.value).toBe("Value not recorded");
+    expect(group.fields[3]!.label).toContain('["serve"]');
   });
-
-  it("separates a publication that reported no launch options from one made before they were published", () => {
-    const empty = buildSetupGroups(publicSetup({ execution: { context_size: 4096, parallel: 1, settings: null, effective_args: [] } }));
-    expect(valueOf(empty, "llama-server options")).toBe("None reported");
-    // The synthetic fixture predates the field, as every older publication does.
-    expect(valueOf(buildSetupGroups(publicSetup()), "llama-server options")).toBe("Unknown");
-  });
-
 
   it("separates an absent value from an empty reported list", () => {
     const groups = buildSetupGroups(publicSetup());
-    // The synthetic environment reports no GPUs at all, and no settings block.
-    expect(valueOf(groups, "Installed graphics")).toBeUndefined();
-    expect(valueOf(groups, "Selected graphics")).toBe("None reported");
-    expect(valueOf(groups, "Threads")).toBe("Unknown");
-    expect(valueOf(groups, "Tensor split")).toBe("Unknown");
+    expect(valueOf(groups, "Installed host GPUs")).toBe("None reported");
+    expect(valueOf(groups, "Selected graphics")).toBe("CPU");
+    expect(valueOf(groups, "Selection record complete")).toBe("Yes");
 
     const missing = buildSetupGroups(publicSetup({ environment: null, execution: null, method: null }));
-    expect(valueOf(missing, "Installed graphics")).toBeUndefined();
-    expect(valueOf(missing, "Selected graphics")).toBe("Unknown");
+    expect(valueOf(missing, "Installed host GPUs")).toBe("Unknown");
+    expect(valueOf(missing, "Selected graphics")).toBe("Execution GPU selection not recorded");
     expect(valueOf(missing, "Operating system")).toBe("Unknown");
     expect(valueOf(missing, "Method")).toBe("Unknown");
-    expect(valueOf(missing, "Allocated context size", "tokens")).toBe("Unknown");
+    expect(valueOf(missing, "Recorded settings")).toBe("None reported");
   });
 
   it("reports booleans and sizes in words a reader can use", () => {
@@ -102,7 +91,7 @@ describe("setup groups", () => {
       publicSetup({ model: { status: "sha256", sha256: "a".repeat(64), size_bytes: 4_294_967_296 } }),
     );
     expect(valueOf(groups, "Warmup")).toBe("No");
-    expect(valueOf(groups, "Graphics selection complete")).toBe("Yes");
+    expect(valueOf(groups, "Selection record complete")).toBe("Yes");
     expect(valueOf(groups, "Model size")).toBe("4.00 GiB (4,294,967,296 B)");
     expect(valueOf(groups, "Model checksum")).toBe("a".repeat(64));
   });
@@ -135,40 +124,25 @@ describe("engine-neutral serving setup and measurements", () => {
     expect(labelsOf(groups)).not.toContain("llama-server options");
   });
 
-  it("preserves typed false, zero, array order and nullable setting values with exact scopes", () => {
-    const benchmark = servingBenchmark();
-    benchmark.execution.settings = [
-      { target: "launch", scope: [], name: "flag", unit: null, role: null, value: false },
-      { target: "launch", scope: ["serve"], name: "zero", unit: "count", role: null, value: 0 },
-      { target: "launch", scope: [], name: "array", unit: "ratio", role: null, value: [2, 1] },
-      { target: "launch", scope: [], name: "redacted", unit: null, role: null, value: null },
-    ];
-    const group = buildSetupGroups(publicSetup(benchmark)).find(group => group.id === "detail-setup-execution")!;
-    expect(group.fields.slice(2, 5).map(field => field.value)).toEqual(["false", "0", "[2,1]"]);
-    expect(group.fields[5]!.value).not.toBe("0");
-    expect(group.fields[5]!.value).not.toBe("false");
-    expect(group.fields[3]!.label).toContain('["serve"]');
-  });
-
-  it("uses all13 serving metrics with honest byte and reported-token units, never legacy timing columns", () => {
-    const rows = servingBenchmark().measurements.rows;
-    const columns = buildRowColumns(rows as unknown as Record<string, unknown>[], undefined, true, 3);
+  it("shows the eight shared metrics and honest evidence columns, never legacy timing columns", () => {
+    const columns = buildRowColumns(undefined, true);
     const keys = columns.map(column => column.key);
-    expect(keys).toContain("first_reasoning_ms");
-    expect(keys).toContain("reasoning_bytes");
-    expect(keys).toContain("reported_tokens_per_second");
-    for (const key of ["ttft_ms", "tg_tps", "pp_tps", "tpot_ms", "prompt_tokens"]) expect(keys).not.toContain(key);
-    expect(columns.find(column => column.key === "output_bytes")?.format(0)).toBe("0");
-    expect(columns.find(column => column.key === "reported_completion_tokens")?.format(null)).toBe(DETAIL_MISSING);
+    expect(keys).toEqual([
+      "input_bytes", "concurrency", "max_output_tokens", "repetition",
+      "first_output_ms", "prefill_tokens_per_second", "decode_tokens_per_second", "tpot_ms",
+      "reported_tokens_per_second", "output_bytes_per_second", "e2e_ms", "peak_memory_bytes",
+      "input_sha256_by_request", "usage_status", "finish_reasons", "timing_source",
+    ]);
+    for (const key of ["ttft_ms", "tg_tps", "pp_tps", "prompt_tokens", "reported_completion_tokens", "output_bytes", "first_reasoning_ms", "reasoning_bytes"]) expect(keys).not.toContain(key);
+    expect(columns.find(column => column.key === "reported_tokens_per_second")?.format(null)).toBe(DETAIL_MISSING);
   });
 
-  it("shows exact per-request fixed-output evidence only for rows that carry it", () => {
-    const fixedRows = syntheticFixedOutputSubmission(204800).measurements.rows as unknown as Record<string, unknown>[];
-    const fixed = buildRowColumns(fixedRows, undefined, true, 3, "openai-chat-serving@2");
-    expect(fixed.find(column => column.key === "reported_completion_tokens_by_request")?.format(fixedRows[0]!.reported_completion_tokens_by_request)).toBe("204800, 204800");
-    const historical = buildRowColumns(servingBenchmark().measurements.rows as unknown as Record<string, unknown>[], undefined, true, 3, "openai-chat-serving@1");
-    expect(historical.map(column => column.key)).not.toContain("reported_completion_tokens_by_request");
-    expect(fixed.find(column => column.key === "max_output_tokens")?.label).not.toBe(historical.find(column => column.key === "max_output_tokens")?.label);
+  it("shows per-request input hashes and usage evidence only in detailed mode", () => {
+    const rows = servingBenchmark().measurements.rows as unknown as Record<string, unknown>[];
+    const detailed = buildRowColumns(undefined, true);
+    expect(detailed.find(column => column.key === "input_sha256_by_request")?.format(rows[0]!.input_sha256_by_request)).toBe("a".repeat(64));
+    const core = buildRowColumns();
+    for (const key of ["input_sha256_by_request", "usage_status", "finish_reasons", "timing_source"]) expect(core.map(column => column.key)).not.toContain(key);
   });
 });
 
@@ -194,11 +168,10 @@ describe("graphics devices", () => {
     });
   }
 
-
-  it("shows selected devices one entry at a time, in reported order, omitting installed graphics", () => {
+  it("shows installed devices and selected graphics as separate facts", () => {
     const groups = buildSetupGroups(environmentWith([discrete, partial], [discrete]));
-    expect(valueOf(groups, "Installed graphics")).toBeUndefined();
-    expect(valueOf(groups, "Selected graphics")).toEqual([describeGpu(discrete)]);
+    expect(valueOf(groups, "Installed host GPUs")).toEqual(describeGpuList([discrete, partial]));
+    expect(valueOf(groups, "Selected graphics")).toBe("synthetic-gpu-a");
   });
 
   it("never infers a driver, a VRAM size or a device name that was not reported", () => {
@@ -228,52 +201,41 @@ describe("graphics devices", () => {
     expect(describeGpuList([])).toBe("None reported");
     expect(describeGpuList(null)).toBe("Unknown");
     expect(describeGpuList(undefined)).toBe("Unknown");
-    const groups = buildSetupGroups(environmentWith([], null));
-    expect(valueOf(groups, "Installed graphics")).toBeUndefined();
-    expect(valueOf(groups, "Selected graphics")).toBe("Unknown");
-    const groupsEmpty = buildSetupGroups(environmentWith([], []));
-    expect(valueOf(groupsEmpty, "Selected graphics")).toBe("None reported");
+    expect(valueOf(buildSetupGroups(environmentWith([], null)), "Selected graphics")).toBe("None reported");
+    expect(valueOf(buildSetupGroups(environmentWith([], [])), "Selected graphics")).toBe("None reported");
   });
 });
 
 describe("measurement columns", () => {
-  const row = syntheticSubmission().measurements.rows[0] as unknown as Record<string, unknown>;
-
-
-  it("keeps a metric that only later rows carry, and an unknown key under its own name in detailed mode", () => {
-    const partial: Record<string, unknown> = { prompt_tokens: 1 };
-    const extended: Record<string, unknown> = { prompt_tokens: 2, tg_tps: 9, scheduler_ms: 4 };
-    const coreColumns = buildRowColumns([partial, extended]);
-    expect(coreColumns.map((c) => c.key)).toEqual(["prompt_tokens", "tg_tps"]);
-
-    const detailedColumns = buildRowColumns([partial, extended], true);
-    expect(detailedColumns.map((c) => c.key)).toEqual(["prompt_tokens", "tg_tps", "scheduler_ms"]);
-    expect(detailedColumns[detailedColumns.length - 1]).toMatchObject({ label: "scheduler_ms", numeric: false });
+  it("declares coordinates, the eight shared metrics and detailed evidence in one order", () => {
+    const core = buildRowColumns();
+    expect(core.map(column => column.key)).toEqual([
+      "input_bytes", "concurrency", "max_output_tokens", "repetition",
+      "first_output_ms", "prefill_tokens_per_second", "decode_tokens_per_second", "tpot_ms",
+      "reported_tokens_per_second", "output_bytes_per_second", "e2e_ms", "peak_memory_bytes",
+    ]);
+    expect(core.every(column => column.numeric)).toBe(true);
+    expect(core.find(column => column.key === "first_output_ms")).toMatchObject({ unit: "ms", numeric: true });
+    expect(core.find(column => column.key === "e2e_ms")).toMatchObject({ unit: "s", numeric: true });
   });
 
-  it("shows only the columns the loaded rows actually carry", () => {
-    expect(buildRowColumns([{ e2e_ms: 12 }], true).map((c) => c.key)).toEqual(["e2e_ms"]);
-    expect(buildRowColumns([{ tg_tps: 50 }]).map((c) => c.key)).toEqual(["tg_tps"]);
-    expect(buildRowColumns([])).toEqual([]);
-  });
-
-  it("detects failed rows defensively for UI exclusion while omitting outcome column", () => {
+  it("detects failed rows defensively for UI exclusion while omitting an outcome column", () => {
     expect(isFailedRow({ failed: true })).toBe(true);
     expect(isFailedRow({ failed: false })).toBe(false);
     expect(isFailedRow({})).toBe(false);
-    expect(buildRowColumns([row], true).find((c) => c.key === "failed")).toBeUndefined();
+    expect(buildRowColumns(undefined, true).find((c) => c.key === "failed")).toBeUndefined();
   });
 
   it("formats each cell in the unit its column promises", () => {
-    const byKey = new Map(buildRowColumns([row], true).map((c) => [c.key, c]));
-    expect(byKey.get("ttft_ms")?.format(620)).toBe("620.0");
+    const byKey = new Map(buildRowColumns(undefined, true).map((c) => [c.key, c]));
+    expect(byKey.get("first_output_ms")?.format(620)).toBe("620.0");
     expect(byKey.get("e2e_ms")?.format(2560)).toBe("2.56");
-    expect(byKey.get("tg_tps")?.format(51.27)).toBe("51.3");
-    expect(byKey.get("tg_tps")?.format(null)).toBe(DETAIL_MISSING);
-    expect(byKey.get("prompt_tokens")?.format(4096)).toBe("4,096");
+    expect(byKey.get("reported_tokens_per_second")?.format(51.27)).toBe("51.3");
+    expect(byKey.get("reported_tokens_per_second")?.format(null)).toBe(DETAIL_MISSING);
+    expect(byKey.get("input_bytes")?.format(4096)).toBe("4,096");
     expect(byKey.get("peak_memory_bytes")?.format(1_073_741_824)).toBe("1.00 GiB");
     expect(byKey.get("peak_memory_bytes")?.format(null)).toBe(DETAIL_MISSING);
-    expect(byKey.get("timing_source")?.format("server")).toBe("server");
+    expect(byKey.get("timing_source")?.format("client")).toBe("client");
   });
 });
 
@@ -301,9 +263,7 @@ describe("detail value formatting", () => {
     expect(formatCompactBytes(1536)).toBe("1.5 KiB");
     expect(formatCompactBytes(512)).toBe("512 B");
   });
-
 });
-
 
 describe("structured measurement devices", () => {
   it("keeps device names intact and separates their reported facts", () => {

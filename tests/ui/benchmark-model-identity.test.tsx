@@ -17,14 +17,14 @@ import {
 } from "@/components/benchmark-model-identity";
 import { buildSetupGroups } from "@/components/benchmark-detail-fields";
 import { BenchmarkExplorerComparison, servingComparisonSignature } from "@/components/benchmark-explorer-comparison";
-import { formatComparisonCpu, formatComparisonExecution, formatComparisonOs, formatComparisonRuntime, formatComparisonVram } from "@/components/benchmark-explorer-format";
+import { formatComparisonCpu, formatComparisonOs, formatComparisonVram } from "@/components/benchmark-explorer-format";
 import { type ExplorerItem, type ExplorerSummary } from "@/components/benchmark-explorer-state";
 import { BenchmarkDetail } from "@/components/benchmark-detail";
 import { ServingBenchmarkPointsPanel } from "@/components/benchmark-detail-points";
 import { summarizeBenchmark } from "@/lib/summary";
 import { summarizeServingPoints } from "@/lib/benchmark-points";
-import { servingBenchmark, sourcedServingBenchmark } from "../inference-benchmarks";
-import { syntheticFixedOutputSubmission, syntheticServingSubmission } from "@/lib/fixtures";
+import { syntheticSubmission } from "@/lib/fixtures";
+import type { PublicBenchmarkSubmission } from "@aiolm/benchmark-contracts";
 
 const fetched = vi.hoisted(() => ({ data: null as unknown }));
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams("") }));
@@ -57,15 +57,11 @@ function info(overrides: Partial<BenchmarkModelInfo> = {}): BenchmarkModelInfo {
 
 function summary(overrides: Partial<ExplorerSummary> = {}): ExplorerSummary {
   return {
+    ...summarizeBenchmark(syntheticSubmission()),
     model_label: "synthetic-model",
     hardware_label: "synthetic-gpu",
-    method_label: "synthetic-method@1",
-    workload_label: "synthetic-corpus",
-    row_count: 4,
-    failed_rows: 0,
-    status: "complete",
-    mean_tg_tps: 10,
-    mean_e2e_ms: 100,
+    method_label: "openai-chat-serving@5",
+    workload_label: "code_python",
     ...overrides,
   };
 }
@@ -207,33 +203,34 @@ describe("the comparison", () => {
 
   it("reads the environment across the columns with a label per row", () => {
     const setup = {
-      os: "synthetic-os", arch: "x64", cpu: "synthetic-cpu", cores: 8, vendors: ["synthetic-vendor"], gpus: ["synthetic-gpu"],
+      ...summary().setup,
+      os: "synthetic-os", arch: "x64", cpu: "synthetic-cpu", cores: 8, physical_cores: null,
+      vendors: ["synthetic-vendor"], gpus: ["synthetic-gpu"],
       vram_mb: 8192, runtime: "synthetic-runtime", runtime_version: "1.2", backend: "synthetic-backend", mode: "selected",
-      context_size: 16896, parallel: 2, threads: 8, gpu_layers: -1, flash_attention: "on",
-      cache_type_k: "f16", cache_type_v: "f16", split_mode: "layer",
+      settings: [
+        { target: "launch" as const, scope: [], name: "batch", value: 2, unit: "count" as const, role: null },
+        { target: "launch" as const, scope: [], name: "cache_type_k", value: "f16", unit: null, role: null },
+      ],
     };
     expect(formatComparisonOs(setup, t)).toBe("synthetic-os · x64");
-    expect(formatComparisonCpu(setup, t)).toBe("synthetic-cpu · 8 Thread");
-    expect(formatComparisonCpu({ ...setup, physical_cores: 4 }, t)).toBe("synthetic-cpu · 4 Core / 8 Thread");
-    expect(formatComparisonRuntime(setup, t)).toBe("synthetic-runtime 1.2 · synthetic-backend");
+    expect(formatComparisonCpu(setup, t)).toContain("synthetic-cpu · 8 Thread");
+    expect(formatComparisonCpu({ ...setup, physical_cores: 4 }, t)).toContain("synthetic-cpu · 4 Core / 8 Thread");
     expect(formatComparisonVram(setup, t)).toBe("8.00 GiB");
-    expect(formatComparisonExecution(setup, t)).toContain("Parallel requests: 2");
-    expect(formatComparisonExecution(setup, t)).toContain("Threads: 8");
-    expect(formatComparisonExecution(setup, t)).toContain("K: f16, V: f16");
     expect(formatComparisonOs(undefined, t)).toBe("Unknown");
-    expect(formatComparisonExecution(undefined, t)).toBe("Unknown");
-    expect(formatComparisonExecution({ ...setup, cache_type_k: null, cache_type_v: "q8_0" }, t)).toContain("K: Unknown, V: q8_0");
-    expect(formatComparisonExecution({ ...setup, cache_type_k: "q8_0", cache_type_v: null }, t)).toContain("K: q8_0, V: Unknown");
+    expect(formatComparisonVram(undefined, t)).toBe("Unknown");
 
+    const identity = { ...summary().identity, engine_name: "synthetic-runtime", engine_version: "1.2" };
     const html = render(
       <BenchmarkExplorerComparison
-        items={[item("a", { setup, model_info: info() }), item("b", { model_info: info() })]}
+        items={[item("a", { setup, identity, model_info: info() }), item("b", { model_info: info() })]}
         onRemove={() => {}} onClear={() => {}}
       />,
     );
     expect(html).toContain("synthetic-os · x64");
     expect(html).toContain("synthetic-runtime 1.2 · synthetic-backend");
     expect(html).toContain("8.00 GiB");
+    expect(html).toContain("batch");
+    expect(html).toContain("cache_type_k");
   });
 });
 
@@ -263,15 +260,25 @@ describe("the result page", () => {
     expect(unlinkable.fields.find((field) => field.label === "Base model (recorded)")?.links).toEqual({});
   });
 
-  it("reports unknown for required facts and omits empty optional metadata fields for bare publication", () => {
+  it("names every missing required fact and omits empty optional metadata fields for bare publication", () => {
     const bare = { status: "unidentified", sha256: null, size_bytes: null };
     const [model] = buildSetupGroups({ ...benchmark, model: bare }, t);
-    for (const label of ["Model name", "Repository owner (recorded)", "Weight quantization", "Model checksum", "Model size"]) {
-      expect(model.fields.find((field) => field.label === label)?.value, label).toBe("Unknown");
+    for (const [label, value] of [
+      ["Model name", "Unknown"],
+      ["Repository owner (recorded)", "Value not recorded"],
+      ["Weight quantization", "Unknown"],
+      ["Model checksum", "Value not recorded"],
+      ["Model size", "Unknown"],
+    ] as const) {
+      expect(model.fields.find((field) => field.label === label)?.value, label).toBe(value);
     }
     expect(model.fields.find((field) => field.label === "Model identity")?.value).toBe("unidentified");
-    // Empty optional metadata fields are omitted
-    for (const label of ["Base model (recorded)", "Artifact file (recorded)", "Repository (recorded)", "Quantized by (recorded)"]) {
+    // Recorded provenance rows stay visible so the gap itself is named.
+    for (const label of ["Repository (recorded)", "Quantized by (recorded)"]) {
+      expect(model.fields.find((field) => field.label === label)?.value, label).toBe("Value not recorded");
+    }
+    // Empty optional metadata fields are omitted.
+    for (const label of ["Base model (recorded)", "Artifact file (recorded)"]) {
       expect(model.fields.find((field) => field.label === label)).toBeUndefined();
     }
   });
@@ -296,66 +303,67 @@ describe("the result page header", () => {
 });
 
 describe("serving detail and comparison", () => {
-  it("renders shared metric sample counts, byte channels, empty output and memory attribution", () => {
-    const benchmark = servingBenchmark(null);
-    const row = benchmark.measurements.rows[0]!;
-    const points = summarizeServingPoints([
-      { ...row, repetition: 0, output_bytes: 0, content_bytes: 0, reasoning_bytes: 0, first_output_ms: null, first_content_ms: null, first_reasoning_ms: null, reported_prompt_tokens: null, reported_completion_tokens: null, reported_cached_tokens: null },
-      { ...row, repetition: 1, output_bytes: 0, content_bytes: 0, reasoning_bytes: 0, first_output_ms: null, first_content_ms: null, first_reasoning_ms: null, reported_prompt_tokens: 10, reported_completion_tokens: 0, reported_cached_tokens: null },
-    ]);
-    const html = render(<ServingBenchmarkPointsPanel points={points} memoryScope="unavailable" scope="openai-chat-serving@1" />);
-    expect(html).toContain("No output was observed");
-    expect(html).toContain("Observed reasoning");
-    expect(html).toContain("Reported completion tokens");
-    expect(html).toContain("n=1");
-    expect(html).toContain("n=2");
-    for (const legacy of ["TTFT", "Prefill", "Decode"]) expect(html).not.toContain(legacy);
+  const base = syntheticSubmission();
+  const row = base.measurements.rows[0]!;
+  const sampled = summarizeBenchmark({ ...base, measurements: { status: "complete", rows: [
+    { ...row, repetition: 1, output_bytes: 2, e2e_ms: 100 },
+    { ...row, repetition: 2, output_bytes: 6, e2e_ms: 100 },
+  ] } });
+
+  it("renders all shared metrics with sample counts and honest evidence", () => {
+    const html = render(<ServingBenchmarkPointsPanel points={sampled.serving_points} memoryScope="unavailable" requestUsage={false} />);
+    for (const label of ["First observed output", "prefillRate", "decodeRate", "tpot", "reportedRate", "Observed output rate", "End-to-end duration", "Peak process memory"]) {
+      expect(html).toContain(t(`benchmark.${label}`));
+    }
+    expect(html).toContain("20.0–60.0 · n=2");
+    expect(html).toContain("40.0");
+    expect(html).toContain(t("benchmark.Usage not requested"));
+    expect(html).toContain(t("benchmark.Unavailable for this process scope"));
+    expect(html).not.toContain("NaN");
+    expect(html).not.toContain("Infinity");
   });
 
-  it("compares actual workload facts, ignores engine identity, and includes cap in basis matching", () => {
-    const a = sourcedServingBenchmark("sglang");
-    const b = sourcedServingBenchmark(null);
-    const makeItem = (id: string, benchmark: typeof a): ExplorerItem => ({ public_id: id, revision: 1, created_at: "2026-01-02T03:04:05.000Z", summary: summarizeBenchmark(benchmark) });
-    const left = makeItem("left", a), right = makeItem("right", b);
+  it("compares workload facts across engine identity and per-run nonce or hashes", () => {
+    const runSpecific = syntheticSubmission({
+      runtime: { ...base.runtime, name: "vllm", version: "9.9.9" },
+      workload: { ...base.workload, prompt_nonce: "f".repeat(32), inputs: [{ bytes: base.workload.inputs[0]!.bytes, sha256: "c".repeat(64) }] },
+      measurements: { status: "complete", rows: [{ ...row, input_sha256_by_request: ["c".repeat(64)] }] },
+    });
+    const make = (id: string, submission: PublicBenchmarkSubmission): ExplorerItem => ({
+      public_id: id, revision: 1, created_at: "2026-01-02T03:04:05.000Z", summary: summarizeBenchmark(submission),
+    });
+    const left = make("left", base), right = make("right", runSpecific);
     expect(servingComparisonSignature(left)).toBe(servingComparisonSignature(right));
-    const first = left.summary.serving_points![0]!;
-    const exact = render(<BenchmarkExplorerComparison items={[left, right]} basis={{ input_bytes: first.input_bytes, concurrency: first.concurrency, max_output_tokens: first.max_output_tokens, scope: "openai-chat-serving@1" }} onClear={() => {}} onRemove={() => {}} />);
-    expect(exact).toContain("Reported token rate");
-    expect(exact).toContain("b".repeat(40));
-    expect(exact).toContain(a.workload.inputs[0]!.sha256);
-    expect(exact).not.toContain("Selected results differ in method");
-    const missing = render(<BenchmarkExplorerComparison items={[left]} basis={{ input_bytes: first.input_bytes, concurrency: first.concurrency, max_output_tokens: first.max_output_tokens + 1, scope: "openai-chat-serving@1" }} onClear={() => {}} onRemove={() => {}} />);
-    expect(missing).toContain("Not measured at this point");
-    b.workload.inputs[0]!.sha256 = "c".repeat(64);
-    const different = makeItem("different", b);
-    expect(servingComparisonSignature(left)).not.toBe(servingComparisonSignature(different));
-    const html = render(<BenchmarkExplorerComparison items={[left, different]} onClear={() => {}} onRemove={() => {}} />);
-    expect(html).toContain("Selected results differ in method");
+    const first = left.summary.serving_points[0]!;
+    const basis = { input_bytes: first.input_bytes, concurrency: first.concurrency, max_output_tokens: first.max_output_tokens };
+    const exact = render(<BenchmarkExplorerComparison items={[left, right]} basis={basis} onClear={() => {}} onRemove={() => {}} />);
+    expect(exact).toContain(t("benchmark.reportedRate"));
+    expect(exact).toContain(base.workload.inputs[0]!.sha256);
+    expect(exact).toContain(runSpecific.workload.inputs[0]!.sha256);
+    expect(exact).not.toContain(t("benchmark.Selected results differ in input bytes, output tokens, corpus, warmup, usage request, concurrencies, repetitions or execution settings. Read each column on its own terms."));
+    const missing = render(<BenchmarkExplorerComparison items={[left]} basis={{ ...basis, max_output_tokens: basis.max_output_tokens + 1 }} onClear={() => {}} onRemove={() => {}} />);
+    expect(missing).toContain(t("benchmark.Not measured at this point"));
+
+    const changed = syntheticSubmission({
+      workload: { ...base.workload, max_output_tokens: 64 },
+      measurements: { status: "complete", rows: [{ ...row, max_output_tokens: 64 }] },
+    });
+    const changedSetting = syntheticSubmission({
+      execution: { ...base.execution, settings: [...base.execution.settings, { target: "launch", scope: [], name: "batch", value: 2, unit: null, role: null }] },
+    });
+    for (const submission of [changed, changedSetting]) {
+      expect(servingComparisonSignature(left)).not.toBe(servingComparisonSignature(make("changed", submission)));
+    }
+    expect(render(<BenchmarkExplorerComparison items={[left, make("changed", changed)]} onClear={() => {}} onRemove={() => {}} />))
+      .toContain(t("benchmark.Selected results differ in input bytes, output tokens, corpus, warmup, usage request, concurrencies, repetitions or execution settings. Read each column on its own terms."));
   });
 
-  it("never presents fixed output and a historical cap at the same tuple as one method", () => {
-    const fixed: ExplorerItem = { public_id: "fixed", revision: 1, created_at: "2026-01-02T03:04:05.000Z", summary: summarizeBenchmark(syntheticFixedOutputSubmission(1024)) };
-    const capSubmission = syntheticServingSubmission();
-    capSubmission.workload = { ...capSubmission.workload, max_output_tokens: 1024, concurrencies: [2] };
-    capSubmission.measurements.rows = [{ ...capSubmission.measurements.rows[0]!, concurrency: 2, max_output_tokens: 1024, finish_reasons: ["stop", "stop"], e2e_ms: 100, output_bytes: 1000, content_bytes: 1000, reasoning_bytes: 0 }];
-    const cap: ExplorerItem = { public_id: "cap", revision: 1, created_at: "2026-01-02T03:04:05.000Z", summary: summarizeBenchmark(capSubmission) };
-    expect(servingComparisonSignature(fixed)).not.toBe(servingComparisonSignature(cap));
-    const html = render(<BenchmarkExplorerComparison items={[fixed, cap]} basis={{ input_bytes: 4096, concurrency: 2, max_output_tokens: 1024, scope: "openai-chat-serving@2" }} onClear={() => {}} onRemove={() => {}} />);
-    expect(html).toContain(t("benchmark.Fixed-output and historical output-cap results measure different work. Their token rates, durations and byte rates are not a same-method comparison."));
-    expect(html).toContain(t("benchmark.Different measurement method; not read at this basis point"));
-    // The fixed column reads 2 x 1024 exact tokens over 4 s; the cap column's 10000 B/s is not read at this basis.
-    expect(html).toContain("512.0");
-    expect(html).not.toContain("10000.0");
-    expect(render(<BenchmarkExplorerComparison items={[fixed]} onClear={() => {}} onRemove={() => {}} />)).not.toContain(t("benchmark.Different measurement method; not read at this basis point"));
-  });
-
-  it("leads fixed-output detail with the exact reported token rate and keeps byte observations", () => {
-    const points = summarizeServingPoints(syntheticFixedOutputSubmission(204800).measurements.rows);
-    const html = render(<ServingBenchmarkPointsPanel points={points} memoryScope="unavailable" scope="openai-chat-serving@2" />);
-    // The first metric read is the primary one; the full point table keeps the shared order after it.
-    expect(html.indexOf(t("benchmark.Reported token rate"))).toBeLessThan(html.indexOf(t("benchmark.First observed output")));
-    expect(html).toContain(t("benchmark.Observed output rate"));
-    const cap = render(<ServingBenchmarkPointsPanel points={points} memoryScope="unavailable" scope="openai-chat-serving@1" />);
-    expect(cap.indexOf(t("benchmark.First observed output"))).toBeLessThan(cap.indexOf(t("benchmark.Reported token rate")));
+  it("keeps the shared metric order in the detail panel", () => {
+    const points = summarizeServingPoints(base.measurements.rows);
+    const html = render(<ServingBenchmarkPointsPanel points={points} memoryScope="unavailable" requestUsage={false} />);
+    expect(html.indexOf(t("benchmark.First observed output"))).toBeLessThan(html.indexOf(t("benchmark.prefillRate")));
+    expect(html.indexOf(t("benchmark.reportedRate"))).toBeLessThan(html.indexOf(t("benchmark.Observed output rate")));
+    expect(html.indexOf(t("benchmark.Observed output rate"))).toBeLessThan(html.indexOf(t("benchmark.End-to-end duration")));
+    expect(html.indexOf(t("benchmark.End-to-end duration"))).toBeLessThan(html.indexOf(t("benchmark.Peak process memory")));
   });
 });

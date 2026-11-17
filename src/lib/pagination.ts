@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { DEFAULT_MEASUREMENT, DiscoveryQueryError, compareCanonical, normalizeSettingConditions, type BenchmarkFilters, type BenchmarkSort } from "./benchmark-discovery";
+import { DiscoveryQueryError, compareCanonical, normalizeSettingConditions, type BenchmarkFilters, type BenchmarkSort } from "./benchmark-discovery";
 /** Keyset pagination helpers. Lists use opaque cursors; rows page in chunks of 1000. */
 
 export const LIST_DEFAULT_LIMIT = 25;
@@ -48,12 +48,11 @@ export function decodeRowsCursor(cursor: string | null): number {
 /** Discovery cursors bind all normalized filters and sorting to their position. */
 export interface ListCursor { createdAt: string; publicId: string; value?: number | null }
 
-/** Global meaning marker retires cursors minted before engine-neutral scopes. */
-const DISCOVERY_MEANING = "engine-neutral-serving-v1";
+/** Global meaning marker retires cursors minted before the single serving method. */
+const DISCOVERY_MEANING = "single-serving-method-v1";
 export function discoveryBinding(filters: BenchmarkFilters): string {
   const normalized = Object.entries({
     ...filters,
-    measurement: filters.measurement ?? DEFAULT_MEASUREMENT,
     setting: filters.setting?.length ? normalizeSettingConditions(filters.setting) : undefined,
   }).filter(([key, value]) => key !== "sort" && value !== undefined && value !== "" && !(key === "point_only" && value === false))
     .sort(([a], [b]) => compareCanonical(a, b));

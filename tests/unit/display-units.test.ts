@@ -53,9 +53,9 @@ describe("shared display conventions", () => {
   });
   it("keeps small latency values in milliseconds across summaries and individual rows", () => {
     expect(formatLatency(0.4)).toBe("0.4");
-    expect(formatLatencySpread({median:0.4,min:0.2,max:0.6})).toBe("0.2–0.6");
-    const columns = buildRowColumns([{ttft_ms:620,tpot_ms:0.4,e2e_ms:2560}], true);
-    expect(columns.find(c=>c.key==="ttft_ms")).toMatchObject({unit:"ms"});
+    expect(formatLatencySpread({median:0.4,min:0.2,max:0.6,samples:3})).toBe("0.2–0.6");
+    const columns = buildRowColumns(undefined, true);
+    expect(columns.find(c=>c.key==="first_output_ms")).toMatchObject({unit:"ms"});
     expect(columns.find(c=>c.key==="tpot_ms")?.format(0.4)).toBe("0.4");
     expect(columns.find(c=>c.key==="e2e_ms")).toMatchObject({unit:"s"});
   });

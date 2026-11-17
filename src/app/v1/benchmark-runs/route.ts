@@ -14,7 +14,8 @@ import { getStore } from "@/server/store";
 export const dynamic = "force-dynamic";
 
 /**
- * POST /v1/benchmark-runs accepts wrapper or legacy body. Hashes EXACT incoming
+ * POST /v1/benchmark-runs accepts only the { benchmark, description_md } wrapper;
+ * a bare submission is 400 invalid_request. Hashes EXACT incoming
  * request bytes. Under a submission anchor lock, same ID+owner+body returns the
  * existing receipt 200 even without a fresh permit or quota; wrong owner is
  * rejected; changed body 409s; deleted submission with correct owner 410s.

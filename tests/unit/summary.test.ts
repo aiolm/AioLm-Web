@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { summarizeServingPoints, validatePublicBenchmark } from "@aiolm/benchmark-contracts";
-import { syntheticFixedOutputSubmission, syntheticServingSubmission, syntheticSubmission } from "@/lib/fixtures";
-import { normalizeIdentity, summarizeBenchmark, withCanonicalIdentity } from "@/lib/summary";
+import { SERVING_METRIC_KEYS, summarizeServingPoints, validatePublicBenchmark } from "@aiolm/benchmark-contracts";
+import { syntheticSubmission } from "@/lib/fixtures";
+import { normalizeIdentity, summarizeBenchmark } from "@/lib/summary";
 import { servingBenchmark, sourcedServingBenchmark } from "../inference-benchmarks";
 
 describe("canonical benchmark identity", () => {
@@ -14,14 +14,12 @@ describe("canonical benchmark identity", () => {
       engine_variant: name === null ? null : "custom-safe-variant", engine_build: null,
       engine_plugin_version: null, model_format: "unknown", model_sha256: null,
       model_size_bytes: null, model_repository: null, model_revision: null,
-      app_version: "0.0.0-synthetic", method_id: "openai-chat-serving", method_version: 1,
+      app_version: "0.0.0-synthetic", method_id: "openai-chat-serving", method_version: 5,
     });
-    expect(summary.schema_version).toBe(3);
+    expect(summary.schema_version).toBe(4);
+    expect(summary.method_label).toBe("openai-chat-serving@5");
     expect(summary.input_unit).toBe("utf8_bytes");
     expect(summary.serving_points).toEqual(summarizeServingPoints(benchmark.measurements.rows));
-    expect(summary.points).toBeUndefined();
-    expect(summary.prompt_lengths).toBeUndefined();
-    expect(summary.mean_tg_tps).toBeNull();
   });
 
   it("copies all thirteen raw identities without parsing display labels", () => {
@@ -33,27 +31,26 @@ describe("canonical benchmark identity", () => {
       engine_name: "new engine", engine_version: "version 2", engine_variant: "arbitrary",
       engine_build: "build 3", engine_plugin_version: "plugin 4", model_format: "hf-safetensors",
       model_sha256: null, model_size_bytes: 0, model_repository: "synthetic-org/example-model",
-      model_revision: "b".repeat(40), app_version: "app 5", method_id: "openai-chat-serving", method_version: 1,
+      model_revision: "b".repeat(40), app_version: "app 5", method_id: "openai-chat-serving", method_version: 5,
     });
   });
 
-  it("reads old summaries from their own metadata without changing labels or mutating either object", () => {
-    const benchmark = syntheticSubmission({ method: null });
-    const { identity, schema_version, ...stored } = summarizeBenchmark(benchmark);
-    void identity; void schema_version;
-    const item = { summary: { ...stored, model_label: "Curated label" }, other: "preserved" };
-    const before = JSON.stringify({ item, benchmark });
-    const projected = withCanonicalIdentity(item, benchmark);
-    expect(projected.summary).toEqual({ ...item.summary, identity: normalizeIdentity(benchmark), schema_version: 1 });
-    expect(projected.summary.identity).toMatchObject({ model_format: "gguf", method_id: null, method_version: null });
-    expect(JSON.stringify({ item, benchmark })).toBe(before);
-    expect(withCanonicalIdentity(projected, benchmark)).toBe(projected);
+  it("stores exactly the single-method summary shape", () => {
+    const summary = summarizeBenchmark(syntheticSubmission());
+    expect(Object.keys(summary).sort()).toEqual([
+      "corpus", "failed_rows", "hardware_label", "identity", "input_unit", "method_label", "model_info", "model_label",
+      "row_count", "schema_version", "serving_points", "setup", "status", "workload_label",
+    ]);
+    expect(Object.keys(summary.serving_points[0]!).sort()).toEqual(["concurrency", "input_bytes", "max_output_tokens", "samples", ...SERVING_METRIC_KEYS].sort());
+    for (const legacy of ["context_size", "parallel", "threads", "gpu_layers", "flash_attention", "cache_type_k", "cache_type_v", "split_mode", "prompt_length"]) {
+      expect(summary.setup).not.toHaveProperty(legacy);
+    }
   });
 });
 
 describe("API serving summary", () => {
   it("preserves configured workload maxima even when local rows only completed the smallest point", () => {
-    const benchmark = syntheticServingSubmission();
+    const benchmark = syntheticSubmission();
     benchmark.workload.inputs.push({ bytes: 16384, sha256: "b".repeat(64) });
     benchmark.workload.concurrencies = [1, 2, 4];
     benchmark.workload.repetitions = 3;
@@ -62,25 +59,25 @@ describe("API serving summary", () => {
     expect(summary.setup).toMatchObject({
       max_input_bytes: 16384, max_concurrency: 4, max_output_tokens: 128,
       repetitions: 3, warmup: false, request_usage: false,
-      inputs: benchmark.workload.inputs, corpus: "code_python", corpus_version: 1, cache_policy: "as_configured",
+      inputs: benchmark.workload.inputs, corpus: "code_python", corpus_version: 2, cache_policy: "cold_prompt",
+      prompt_nonce: "0123456789abcdef0123456789abcdef", concurrencies: [1, 2, 4],
     });
-    expect(summary.serving_points!.map((point) => [point.input_bytes, point.concurrency])).toEqual([[4096, 1]]);
+    expect(summary.serving_points.map((point) => [point.input_bytes, point.concurrency])).toEqual([[4096, 1]]);
   });
 
-  it("retains generic settings including zero, false and unknown without deriving legacy tuning", () => {
-    const benchmark = syntheticServingSubmission();
+  it("retains generic settings including zero, false and unknown", () => {
+    const benchmark = syntheticSubmission();
     benchmark.execution.settings.unshift(
       { target: "launch", scope: [], name: "disabled", value: false, unit: null, role: null },
       { target: "launch", scope: ["serve"], name: "unknown", value: null, unit: "tokens", role: "context.per_sequence_tokens" },
       { target: "launch", scope: ["serve"], name: "zero", value: 0, unit: "count", role: null },
     );
     const summary = summarizeBenchmark(validatePublicBenchmark(benchmark));
-    expect(summary.setup!.settings).toEqual(benchmark.execution.settings);
-    expect(summary.setup).toMatchObject({ context_size: null, parallel: null, threads: null, gpu_layers: null });
+    expect(summary.setup.settings).toEqual(benchmark.execution.settings);
   });
 
   it("preserves host observations and does not report attached proxy memory as engine memory", () => {
-    const benchmark = syntheticServingSubmission();
+    const benchmark = syntheticSubmission();
     benchmark.environment!.cpu = { name: "Host CPU", logical_cores: 16, physical_cores: 8 };
     benchmark.environment!.execution = { mode: "selected", selection_complete: true, selected_gpus: [
       { name: "GPU", vendor: "Vendor", vram_mb: 0, driver: null, integrated: false },
@@ -89,45 +86,60 @@ describe("API serving summary", () => {
       cpu: "Host CPU", cores: 16, physical_cores: 8, ram_bytes: 16 * 1024 ** 3,
       gpus: ["GPU"], vendors: ["Vendor"], vram_mb: 0,
     });
-    expect(summarizeBenchmark(benchmark).serving_points![0]!.peak_memory_bytes).toBeNull();
+    expect(summarizeBenchmark(benchmark).serving_points[0]!.peak_memory_bytes).toBeNull();
   });
 
   it("matches shared statistics and never puts a nonfinite derived rate into JSON", () => {
-    const benchmark = syntheticServingSubmission();
+    const benchmark = syntheticSubmission();
     benchmark.workload.repetitions = 3;
     const base = benchmark.measurements.rows[0]!;
     benchmark.measurements.rows = [
       { ...base, repetition: 1, e2e_ms: 100 },
-      { ...base, repetition: 2, e2e_ms: 200 },
-      { ...base, repetition: 3, e2e_ms: 1e-320 },
+      { ...base, repetition: 2, e2e_ms: 200, input_sha256_by_request: ["b".repeat(64)] },
+      { ...base, repetition: 3, e2e_ms: 1e-320, input_sha256_by_request: ["c".repeat(64)] },
     ];
     validatePublicBenchmark(benchmark);
     const before = JSON.stringify(benchmark);
     const summary = summarizeBenchmark(benchmark);
     expect(summary.serving_points).toEqual(summarizeServingPoints(benchmark.measurements.rows));
-    expect(summary.serving_points![0]!.output_bytes_per_second).toEqual({ median: 90, min: 60, max: 120, samples: 2 });
-    expect(summary.serving_points![0]!.reported_tokens_per_second).toBeNull();
+    expect(summary.serving_points[0]!.output_bytes_per_second).toEqual({ median: 90, min: 60, max: 120, samples: 2 });
+    expect(summary.serving_points[0]!.reported_tokens_per_second).toBeNull();
     expect(JSON.stringify(summary)).not.toMatch(/Infinity|NaN/);
     expect(JSON.stringify(benchmark)).toBe(before);
   });
 
-  it("summarizes accepted 200k fixed output as method v2 with exact reported token rates", () => {
-    const benchmark = validatePublicBenchmark(syntheticFixedOutputSubmission(204800));
+  it("observes bytes and first output without filling unreported token metrics", () => {
+    const benchmark = validatePublicBenchmark(syntheticSubmission());
     const summary = summarizeBenchmark(benchmark);
-    expect(summary.identity).toMatchObject({ method_id: "openai-chat-serving", method_version: 2 });
-    expect(summary.method_label).toBe("openai-chat-serving@2");
-    expect(summary.setup).toMatchObject({ max_output_tokens: 204800, request_usage: true });
-    // 2 requests x 204800 exact tokens over 4 s.
-    expect(summary.serving_points![0]).toMatchObject({ max_output_tokens: 204800, reported_tokens_per_second: { median: 102400, min: 102400, max: 102400, samples: 1 } });
+    expect(summary.setup).toMatchObject({ max_output_tokens: 128, request_usage: false });
+    expect(summary.serving_points[0]).toMatchObject({
+      max_output_tokens: 128,
+      first_output_ms: { median: 20, min: 20, max: 20, samples: 1 },
+      output_bytes_per_second: { median: 60, min: 60, max: 60, samples: 1 },
+      e2e_ms: { median: 200, min: 200, max: 200, samples: 1 },
+      reported_tokens_per_second: null, prefill_tokens_per_second: null, decode_tokens_per_second: null, tpot_ms: null,
+    });
+    expect(benchmark.measurements.rows[0]).toMatchObject({ finish_reasons: ["stop"], reported_completion_tokens: null });
   });
 
-  it("keeps legacy token points and means out of the serving measurement shape", () => {
-    const summary = summarizeBenchmark(syntheticSubmission());
-    expect(summary.points![0]).toMatchObject({ prompt_tokens: 512, tg_tps: { median: 50, min: 50, max: 50 } });
-    expect(summary.mean_tg_tps).toBe(50);
-    expect(summary.mean_e2e_ms).toBe(2560);
-    expect(summary.input_unit).toBeUndefined();
-    expect(summary.serving_points).toBeUndefined();
+  it("summarizes engine-reported usage into the per-request and batch token metrics", () => {
+    const benchmark = syntheticSubmission();
+    benchmark.workload.request_usage = true;
+    benchmark.execution.settings.splice(2, 0, { target: "request", scope: [], name: "stream_options.include_usage", value: true, unit: null, role: null });
+    Object.assign(benchmark.measurements.rows[0]!, {
+      reported_prompt_tokens: 55, reported_completion_tokens: 10, usage_status: "complete",
+      prefill_tokens_per_second: 2750, decode_tokens_per_second: 50, tpot_ms: 20,
+    });
+    const summary = summarizeBenchmark(validatePublicBenchmark(benchmark));
+    expect(summary.serving_points[0]).toMatchObject({
+      prefill_tokens_per_second: { median: 2750, min: 2750, max: 2750, samples: 1 },
+      decode_tokens_per_second: { median: 50, min: 50, max: 50, samples: 1 },
+      tpot_ms: { median: 20, min: 20, max: 20, samples: 1 },
+      // 10 completion tokens over a 200 ms batch.
+      reported_tokens_per_second: { median: 50, min: 50, max: 50, samples: 1 },
+    });
+    expect(summary.serving_points[0]).not.toHaveProperty("output_bytes");
+    expect(summary.serving_points[0]).not.toHaveProperty("reported_completion_tokens");
   });
 });
 
@@ -136,7 +148,7 @@ describe("installed host GPU inventory", () => {
   const selected = { name: "Selected Compute GPU", vendor: "Compute Vendor", vram_mb: 8192, driver: "compute-driver", integrated: false };
 
   it("keeps per-device host facts separate from selected execution devices and memory", () => {
-    const benchmark = syntheticServingSubmission();
+    const benchmark = syntheticSubmission();
     benchmark.environment!.cpu.name = "Distinct Host CPU";
     benchmark.environment!.installed_gpus = [integrated, { ...selected, name: "Installed Discrete GPU", vram_mb: 16384 }];
     benchmark.environment!.execution = { mode: "selected", selection_complete: true, selected_gpus: [selected] };
@@ -149,35 +161,21 @@ describe("installed host GPU inventory", () => {
     expect(summary.hardware_label).toBe("Selected Compute GPU");
   });
 
-  it("enriches an already identified stored summary without changing measurements or the original record", () => {
-    const benchmark = syntheticServingSubmission();
+  it("labels an unknown execution device by the host CPU at acceptance", () => {
+    const benchmark = syntheticSubmission();
     benchmark.environment!.cpu.name = "Distinct Host CPU";
     benchmark.environment!.installed_gpus = [integrated];
     benchmark.environment!.execution = { mode: "unknown", selection_complete: false, selected_gpus: [] };
     const summary = summarizeBenchmark(benchmark);
-    delete summary.setup!.host_gpus;
-    delete summary.setup!.execution_selection_complete;
-    summary.hardware_label = "unknown";
-    // Stored aggregates are authoritative; metadata-only projection must not rebuild them.
-    summary.serving_points![0]!.output_bytes_per_second = { median: 321, min: 123, max: 456, samples: 7 };
-    benchmark.measurements.rows = [];
-    const item = { summary, revision: 12 };
-    const before = JSON.stringify({ item, benchmark });
-    const projected = withCanonicalIdentity(item, benchmark);
-    expect(projected.summary.setup).toMatchObject({
+    expect(summary.setup).toMatchObject({
       host_gpus: [integrated], execution_selection_complete: false,
       gpus: [], vendors: [], vram_mb: null, mode: "unknown",
     });
-    expect(projected.summary.hardware_label).toBe("Host CPU: Distinct Host CPU");
-    expect(projected.summary.serving_points).toBe(summary.serving_points);
-    expect(projected.summary.serving_points![0]!.output_bytes_per_second).toEqual({ median: 321, min: 123, max: 456, samples: 7 });
-    expect(projected.revision).toBe(12);
-    expect(JSON.stringify({ item, benchmark })).toBe(before);
-    expect(withCanonicalIdentity(projected, benchmark)).toBe(projected);
+    expect(summary.hardware_label).toBe("Host CPU: Distinct Host CPU");
   });
 
   it("distinguishes a recorded empty inventory from unavailable host metadata without inferring a device", () => {
-    const benchmark = syntheticServingSubmission();
+    const benchmark = syntheticSubmission();
     benchmark.environment!.execution = { mode: "unknown", selection_complete: false, selected_gpus: [] };
     expect(summarizeBenchmark(benchmark).setup).toMatchObject({ host_gpus: [], gpus: [], vendors: [], vram_mb: null, execution_selection_complete: false });
     benchmark.environment = null;

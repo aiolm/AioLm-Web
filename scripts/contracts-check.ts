@@ -3,12 +3,12 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import {
   DESCRIPTION_MAX_CODEPOINTS,
-  FIXED_OUTPUT_TOKENS,
   MAX_SERVING_OUTPUT_TOKENS,
   PUBLICATION_MAX_ROWS,
   PUBLICATION_MAX_UTF8_BYTES,
   RECOVERY_FIXTURE,
   RECOVERY_PREFIX,
+  SERVING_METRIC_KEYS,
   decodeRecoveryCode,
   encodeRecoveryCode,
   formatRuntimeVersionLabel,
@@ -21,7 +21,7 @@ import {
   validateDescriptionMd,
   validatePublicBenchmark,
 } from "@aiolm/benchmark-contracts";
-import { syntheticFixedOutputSubmission, syntheticServingSubmission, syntheticSubmission } from "../src/lib/fixtures";
+import { syntheticSubmission } from "../src/lib/fixtures";
 
 /**
  * Offline verification that this repository really consumes the versioned
@@ -35,9 +35,9 @@ import { syntheticFixedOutputSubmission, syntheticServingSubmission, syntheticSu
  *    bounds, `validatePublicBenchmark`, the publication snapshot round-trip,
  *    the recovery round-trip against `RECOVERY_FIXTURE`, origin normalization,
  *    and the recoverable/terminal service-error classification.
- * 4. Fixed-output policy (the eight output presets, the serving upper bound and
- *    exact per-request evidence) is the package's, while historical output-cap
- *    submissions remain valid in their own method version.
+ * 4. The single benchmark method (openai-chat-serving@5, schema_version 4),
+ *    its eight metrics and the 1..128 output bound are the package's, and every
+ *    retired method or schema version is rejected.
  * 5. The shared JSON Schema and OpenAPI documents resolve and parse.
  *
  * Runs unconditionally in CI (`npm run contracts:check`). Set
@@ -117,49 +117,71 @@ check("publication bounds come from the package", () => {
   assert(rejected, "an over-long description was accepted");
 });
 
+function rejects(candidate: unknown, message: string): void {
+  let rejected = false;
+  try { validatePublicBenchmark(JSON.parse(JSON.stringify(candidate))); } catch { rejected = true; }
+  assert(rejected, message);
+}
+
 check("benchmark validation accepts a valid submission and rejects a broken one", () => {
   const benchmark = syntheticSubmission();
   validatePublicBenchmark(benchmark);
-  let rejected = false;
-  try {
-    validatePublicBenchmark({ ...benchmark, schema_version: 99 });
-  } catch {
-    rejected = true;
-  }
-  assert(rejected, "an unknown schema_version was accepted");
+  rejects({ ...benchmark, schema_version: 99 }, "an unknown schema_version was accepted");
 });
 
-check("fixed-output policy comes from the package and historical caps stay valid", () => {
-  assert(JSON.stringify(FIXED_OUTPUT_TOKENS) === JSON.stringify([1024, 4096, 8192, 16384, 32768, 65536, 131072, 204800]), `fixed presets are ${JSON.stringify(FIXED_OUTPUT_TOKENS)}`);
-  assert(MAX_SERVING_OUTPUT_TOKENS === 204800, `serving output bound is ${MAX_SERVING_OUTPUT_TOKENS}`);
-  for (const target of FIXED_OUTPUT_TOKENS) validatePublicBenchmark(syntheticFixedOutputSubmission(target));
-  const historicalCap = (tokens: number) => {
-    const cap = syntheticServingSubmission();
-    cap.workload.max_output_tokens = tokens;
-    cap.execution.settings = cap.execution.settings.map(setting => setting.name === "max_tokens" ? { ...setting, value: tokens } : setting);
-    cap.measurements.rows = cap.measurements.rows.map(row => ({ ...row, max_output_tokens: tokens }));
-    return cap;
+check("only openai-chat-serving@5 with schema_version 4 is accepted", () => {
+  const benchmark = syntheticSubmission();
+  assert(benchmark.schema_version === 4 && benchmark.method.id === "openai-chat-serving" && benchmark.method.version === 5, "fixture is not the single method");
+  assert(MAX_SERVING_OUTPUT_TOKENS === 128, `serving output bound is ${MAX_SERVING_OUTPUT_TOKENS}`);
+  assert(JSON.stringify(SERVING_METRIC_KEYS) === JSON.stringify(["first_output_ms", "prefill_tokens_per_second", "decode_tokens_per_second", "tpot_ms", "reported_tokens_per_second", "output_bytes_per_second", "e2e_ms", "peak_memory_bytes"]), `metric keys are ${JSON.stringify(SERVING_METRIC_KEYS)}`);
+  for (const version of [1, 2, 3, 4]) rejects({ ...benchmark, method: { ...benchmark.method, version } }, `method version ${version} was accepted`);
+  for (const schema of [1, 2, 3]) rejects({ ...benchmark, schema_version: schema }, `schema_version ${schema} was accepted`);
+  rejects({ ...benchmark, method: { id: "cold-prompt-serving", version: 1 } }, "a retired method id was accepted");
+});
+
+check("output bound, usage evidence and derived rates follow the package", () => {
+  const cap = (tokens: number) => {
+    const benchmark = syntheticSubmission();
+    benchmark.workload.max_output_tokens = tokens;
+    benchmark.execution.settings = benchmark.execution.settings.map(setting => setting.name === "max_tokens" ? { ...setting, value: tokens } : setting);
+    benchmark.measurements.rows = benchmark.measurements.rows.map(row => ({ ...row, max_output_tokens: tokens }));
+    return benchmark;
   };
-  validatePublicBenchmark(historicalCap(65536));
-  const fixed = syntheticFixedOutputSubmission(204800);
-  const row = fixed.measurements.rows[0]!;
-  const invalid: Array<[string, unknown]> = [
-    ["missing per-request evidence", { ...fixed, measurements: { ...fixed.measurements, rows: [{ ...row, reported_completion_tokens_by_request: undefined }] } }],
-    ["an early stop", { ...fixed, measurements: { ...fixed.measurements, rows: [{ ...row, reported_completion_tokens_by_request: [204799, 204800], reported_completion_tokens: 409599 }] } }],
-    ["unequal counts with a matching sum", { ...fixed, measurements: { ...fixed.measurements, rows: [{ ...row, reported_completion_tokens_by_request: [204799, 204801] }] } }],
-    ["a non-preset target", syntheticFixedOutputSubmission(1000)],
-    ["a historical cap above 65536", historicalCap(65537)],
-    ["historical cap rows carrying fixed-output evidence", { ...syntheticServingSubmission(), measurements: { status: "complete", rows: syntheticServingSubmission().measurements.rows.map(r => ({ ...r, reported_completion_tokens_by_request: [128] })) } }],
-  ];
-  for (const [name, candidate] of invalid) {
-    let rejected = false;
-    try {
-      validatePublicBenchmark(JSON.parse(JSON.stringify(candidate)));
-    } catch {
-      rejected = true;
-    }
-    assert(rejected, `a submission with ${name} was accepted`);
-  }
+  for (const tokens of [1, 128]) validatePublicBenchmark(cap(tokens));
+  rejects(cap(0), "max_output_tokens 0 was accepted");
+  rejects(cap(129), "max_output_tokens 129 was accepted");
+  const usage = syntheticSubmission();
+  usage.workload.request_usage = true;
+  usage.execution.settings.splice(2, 0, { target: "request", scope: [], name: "stream_options.include_usage", value: true, unit: null, role: null });
+  validatePublicBenchmark(usage); // Requesting usage does not guarantee a report.
+  const reported = structuredClone(usage);
+  Object.assign(reported.measurements.rows[0]!, { reported_prompt_tokens: 55, reported_completion_tokens: 3, prefill_tokens_per_second: 2750, decode_tokens_per_second: 50, tpot_ms: 20, usage_status: "complete" });
+  validatePublicBenchmark(reported);
+  const row = syntheticSubmission().measurements.rows[0]!;
+  const withRow = (change: Record<string, unknown>) => ({ ...syntheticSubmission(), measurements: { status: "complete", rows: [{ ...row, ...change }] } });
+  for (const [name, candidate] of [
+    ["a retired content_bytes row field", withRow({ content_bytes: 6 })],
+    ["a retired reported_cached_tokens row field", withRow({ reported_cached_tokens: null })],
+    ["prefill without reported prompt tokens", withRow({ prefill_tokens_per_second: 100 })],
+    ["tpot without reported completion tokens", withRow({ reported_prompt_tokens: 55, usage_status: "partial", tpot_ms: 10 })],
+    ["a missing input hash list", withRow({ input_sha256_by_request: undefined })],
+    ["a rewritten slot-0 hash", withRow({ input_sha256_by_request: ["b".repeat(64)] })],
+    ["warmup", { ...syntheticSubmission(), workload: { ...syntheticSubmission().workload, warmup: true } }],
+    ["a missing nonce", { ...syntheticSubmission(), workload: { ...syntheticSubmission().workload, prompt_nonce: undefined } }],
+    ["an as-configured cache policy", { ...syntheticSubmission(), workload: { ...syntheticSubmission().workload, cache_policy: "as_configured" } }],
+    ["usage requested without its request setting", { ...syntheticSubmission(), workload: { ...syntheticSubmission().workload, request_usage: true } }],
+    ["a fixed-output request control", { ...syntheticSubmission(), execution: { ...syntheticSubmission().execution, settings: [{ target: "request", scope: [], name: "ignore_eos", value: true, unit: null, role: null }, ...syntheticSubmission().execution.settings] } }],
+  ] as Array<[string, unknown]>) rejects(candidate, `a submission with ${name} was accepted`);
+});
+
+check("publication accepts only the wrapper", () => {
+  const benchmark = syntheticSubmission();
+  let rejected = false;
+  try { parsePublicationSnapshot(JSON.stringify(benchmark)); } catch { rejected = true; }
+  assert(rejected, "a bare submission was accepted as a publication request");
+  rejected = false;
+  try { normalizePublicationInput(benchmark); } catch { rejected = true; }
+  assert(rejected, "a bare submission was normalized into a publication request");
 });
 
 check("publication snapshot round-trips through the package", () => {

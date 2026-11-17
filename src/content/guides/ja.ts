@@ -240,15 +240,15 @@ const content: GuideContent = {
         {
           id: 'benchmarks',
           title: 'ベンチマークと結果の共有',
-          body: ['新規ベンチマークは出力長制御に対応するエンジン（ネイティブ llama.cpp、対応非 Metal vLLM）で固定出力 API テストを測定します。'],
+          body: ['新規ベンチマークは接続済みの全テキストチャットエンジンに単一の Cold Prompt 方式 openai-chat-serving@5 を適用し、ワークロードウォームアップなしで最大 128 出力トークンを要求します。'],
           points: [
-            'vllm-metal・MLX・自動外部接続では固定出力ベンチマークを実行できず、以前の旧上限結果や旧トークン測定とは分離されます。',
+            '早期終了も有効です。トークン数の報告は任意で、未報告の指標は確認不能のままです。実行ごとのナンスとリクエスト別入力ハッシュで計測入力を分離します。',
             '実行中セッションを停止して開始します。主な設定の更新承認は自動開始せず対応チェックのみ再実行します。',
             '公開結果は「ウェブサイトで管理」から編集・削除できます（コピーした復旧コードは 60 秒後に自動消去）。',
           ],
           more: [{
             title: '計測仕様とプロファイル取込',
-            body: ['時間と出力バイトはクライアント観測値で、全リクエストが目標トークン数と一致する必要があります。結果からのプロファイル作成は互換のある起動設定だけを取り込みます。'],
+            body: ['時間と出力バイトはクライアント観測値で、各行はリクエストごとの入力ハッシュを 1 件記録します。結果からのプロファイル作成は互換のある起動設定だけを取り込みます。'],
           }],
         },
         {
@@ -281,13 +281,13 @@ const content: GuideContent = {
           id: 'choose',
           title: 'エンジン互換性マトリックス',
           table: {
-            headers: ['エンジン', '対応 OS・モデル形式・固定出力ベンチマーク'],
+            headers: ['エンジン', '対応 OS・モデル形式・ベンチマーク対応'],
             rows: [
-              ['llama.cpp', 'Windows · macOS · Linux · GGUF · 固定出力対応'],
-              ['vLLM', '対応 Linux CUDA/ROCm · Safetensors · 固定出力対応（非 Metal）'],
-              ['vLLM · vllm-metal', 'Apple Silicon macOS 15+ · Safetensors / 制限 GGUF · 非対応'],
-              ['MLX', 'Apple Silicon macOS · MLX Safetensors · 非対応'],
-              ['外部推論エンジン', 'ローカル OpenAI v1 サーバーまたはフォルダー · 応答/SSE 検証 · 非対応'],
+              ['llama.cpp', 'Windows · macOS · Linux · GGUF · ベンチマーク対応'],
+              ['vLLM', '対応 Linux CUDA/ROCm · Safetensors · ベンチマーク対応'],
+              ['vLLM · vllm-metal', 'Apple Silicon macOS 15+ · Safetensors / 制限 GGUF · ベンチマーク対応'],
+              ['MLX', 'Apple Silicon macOS · MLX Safetensors · ベンチマーク対応'],
+              ['外部推論エンジン', 'ローカル OpenAI v1 サーバーまたはフォルダー · ストリーミングテキストチャット必須 · ベンチマーク対応'],
             ],
           },
           note: 'Intel Mac は CPU の llama.cpp のみ対応し、MLX と vllm-metal は利用不可です。',
@@ -310,7 +310,7 @@ const content: GuideContent = {
           more: [{
             title: `v${DESKTOP_RELEASE_VERSION} の検証範囲と既知の問題`,
             body: [
-              '固定出力ベンチマークは出力長制御を宣言するエンジン（ネイティブ llama.cpp、対応非 Metal vLLM）でのみ実行可能です。',
+              'ベンチマークは単一のストリーミングテキストチャット方式を使用し、OS とモデルの要件は変わりません。',
               'v0.3.2 で報告された SmolVLM 画像・動画品質問題（F09）は修正未確認です。',
               'アプリと公開 CLI は CPU 基準との数値比較機能を提供しません。',
             ],
@@ -355,7 +355,7 @@ const content: GuideContent = {
           body: ['接続を押すと実際のチャット応答とストリーミング検査を通過した後にアプリ内へ保存します。'],
           points: [
             '稼働中サーバーへは AioLM ローカルプロキシ経由で接続し、停止しても元のサーバー自体は終了しません。',
-            '自動接続は固定出力ベンチマーク制御を宣言せず、マルチモーダル・ツール品質も保証しません。',
+            '自動接続も同じ単一ベンチマーク方式を使用します。接続検査はマルチモーダル・ツール品質を保証しません。',
           ],
           image: 'auto-connect',
           caption: '接続検証完了画面。',

@@ -16,10 +16,8 @@ import { asRecord } from "@/components/benchmark-detail-format";
 import { buildSetupGroups, type BenchmarkSetup, type SetupField } from "@/components/benchmark-detail-fields";
 import { formatWeightQuantization, modelPublisher, modelValue, type BenchmarkModelInfo } from "@/components/benchmark-model-identity";
 import { buildRowColumns, isFailedRow } from "@/components/benchmark-detail-rows";
-import { BenchmarkPointsPanel, ServingBenchmarkPointsPanel } from "@/components/benchmark-detail-points";
-import { formatMethodName, formatPromptLengths, formatWorkloadName } from "@/components/benchmark-explorer-format";
-import type { BenchmarkPoint } from "@/lib/benchmark-points";
-import { servingScopeOf, type ServingMeasurementScope } from "@/lib/benchmark-discovery";
+import { ServingBenchmarkPointsPanel } from "@/components/benchmark-detail-points";
+import { formatWorkloadName } from "@/components/benchmark-explorer-format";
 import { SERVING_METRIC_KEYS, servingMetricValues, type ServingMetricKey, type ServingBenchmarkPoint, type ServingBenchmarkRow } from "@aiolm/benchmark-contracts";
 import { ColumnHeading } from "./benchmark-i18n";
 import { servingMetricAbsence } from "./benchmark-evidence";
@@ -30,19 +28,11 @@ interface Detail {
   benchmark: BenchmarkSetup;
   summary: {
     model_label: string; hardware_label: string; method_label: string; workload_label: string;
-    row_count: number; failed_rows: number; mean_tg_tps: number | null; mean_e2e_ms: number | null; status: string;
-    mean_pp_tps?: number | null; prompt_lengths?: number[];
-    /**
-     * What the page reports. The mean_* fields above average across input
-     * lengths and concurrencies at once, which describes no configuration that
-     * ran, so they are stored but never shown. Absent before migration 012.
-     */
-    points?: BenchmarkPoint[];
-    serving_points?: ServingBenchmarkPoint[];
-    input_unit?: "utf8_bytes";
-    points_truncated?: boolean;
-    /** Published model metadata, absent on older results and null when none was sent. */
-    model_info?: BenchmarkModelInfo | null;
+    row_count: number; failed_rows: number; status: string;
+    serving_points: ServingBenchmarkPoint[];
+    input_unit: "utf8_bytes";
+    /** Published model metadata; null when none was sent. */
+    model_info: BenchmarkModelInfo | null;
   };
   description_md: string;
   revision: number;
@@ -212,8 +202,6 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
   const { start, end } = getRowsSliceIndices(clampedPage, ROWS_VISIBLE_PAGE_SIZE, loadedCount);
   const retryCursor = rows === null ? null : rowsCursor;
   const { summary } = data;
-  const serving = data.benchmark.schema_version === 3;
-  const servingScope = serving ? servingScopeOf(asRecord(data.benchmark.method)) : null;
   const workload = asRecord(data.benchmark.workload);
 
 
@@ -235,13 +223,11 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
         <BenchmarkModelInformation publicId={publicId} recordedName={summary.model_info?.name} />
         {/* What ran on which machine comes before any number read from it. */}
         <BenchmarkHardwareOverview benchmark={data.benchmark} />
-        {serving
-          ? <ServingBenchmarkPointsPanel points={summary.serving_points ?? []} memoryScope={asRecord(data.benchmark.execution)?.memory_scope} requestUsage={workload?.request_usage} scope={servingScope} />
-          : <BenchmarkPointsPanel points={summary.points ?? []} truncated={summary.points_truncated ?? false} />}
+        <ServingBenchmarkPointsPanel points={summary.serving_points} memoryScope={asRecord(data.benchmark.execution)?.memory_scope} requestUsage={workload?.request_usage} />
         <div className="detail-context-grid">
           <div className="detail-fact">
-            <span className="detail-fact-label">{t(serving ? "benchmark.Input UTF-8 bytes" : "benchmark.Input context")}</span>
-            <span className="detail-fact-value">{serving ? (Array.isArray(workload?.inputs) ? workload.inputs.map((input) => `${asRecord(input)?.bytes} B`).join(", ") : t("benchmark.Unknown")) : formatPromptLengths(summary.prompt_lengths) ?? t("benchmark.Unknown")}</span>
+            <span className="detail-fact-label">{t("benchmark.Input UTF-8 bytes")}</span>
+            <span className="detail-fact-value">{Array.isArray(workload?.inputs) ? workload.inputs.map((input) => `${asRecord(input)?.bytes} B`).join(", ") : t("benchmark.Unknown")}</span>
           </div>
           <div className="detail-fact">
             <span className="detail-fact-label">{t("benchmark.Workload")}</span>
@@ -249,7 +235,7 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
           </div>
           <div className="detail-fact">
             <span className="detail-fact-label">{t("benchmark.Method")}</span>
-            <span className="detail-fact-value">{formatMethodName(summary.method_label, t)}</span>
+            <span className="detail-fact-value">{summary.method_label}</span>
           </div>
           <div className="detail-fact">
             <span className="detail-fact-label">{t("benchmark.Measurement count")}</span>
@@ -283,8 +269,6 @@ export function BenchmarkDetail({ publicId, initialData = null }: { publicId: st
             page={clampedPage}
             pageCount={pageCount}
             onPage={setVisiblePage}
-            schemaVersion={data.benchmark.schema_version}
-            servingScope={servingScope}
             requestUsage={workload?.request_usage}
             memoryScope={asRecord(data.benchmark.execution)?.memory_scope}
           />
@@ -340,9 +324,6 @@ function SetupSection({ benchmark }: { benchmark: BenchmarkSetup }): React.JSX.E
                         </li>
                       ))}
                     </ul>
-                  ) : field.command && Array.isArray(field.value) ? (
-                    // Selectable as one block, so the whole launch copies in one go.
-                    <pre className="detail-command">{field.value.join("\n")}</pre>
                   ) : Array.isArray(field.value) ? (
                     <ul className="detail-device-list">
                       {field.value.map((item, index) => <li key={index}><SetupValue field={field} text={item} /></li>)}
@@ -382,8 +363,6 @@ function RowsPreview({
   page,
   pageCount,
   onPage,
-  schemaVersion,
-  servingScope,
   requestUsage,
   memoryScope,
 }: {
@@ -393,8 +372,6 @@ function RowsPreview({
   page: number;
   pageCount: number;
   onPage: (page: number) => void;
-  schemaVersion: unknown;
-  servingScope: ServingMeasurementScope | null;
   requestUsage: unknown;
   memoryScope: unknown;
 }): React.JSX.Element {
@@ -402,13 +379,13 @@ function RowsPreview({
   const [showDetailed, setShowDetailed] = useState(false);
   // A row that is not an object still takes its place in the table, as gaps. Failures are defensively excluded.
   const filtered = rows.filter((row) => !isFailedRow(asRecord(row) ?? {}));
-  const visible = filtered.slice(start, end).map((row) => {
+  const visible: Array<Record<string, unknown>> = filtered.slice(start, end).map((row) => {
     const record = asRecord(row) ?? {};
-    return schemaVersion === 3 ? { ...record, ...servingMetricValues(record as unknown as ServingBenchmarkRow) } : record;
+    return { ...record, ...servingMetricValues(record as unknown as ServingBenchmarkRow) };
   });
   if (rows.length === 0 || filtered.length === 0) return <p className="muted">{t("benchmark.No rows.")}</p>;
   if (visible.length === 0) return <p className="muted">{t("benchmark.No rows on this page.")}</p>;
-  const columns = buildRowColumns(visible, t, showDetailed, schemaVersion, servingScope);
+  const columns = buildRowColumns(t, showDetailed);
   return (
     <div>
       <div className="detail-rows-toolbar">
@@ -446,14 +423,12 @@ function RowsPreview({
               <tr key={start + i}>
                 {columns.map((column) => (
                   <td key={column.key} className={column.numeric ? "detail-num" : undefined}>
-                    {schemaVersion === 3 && row[column.key] == null && SERVING_METRIC_KEYS.includes(column.key as ServingMetricKey)
+                    {row[column.key] == null && SERVING_METRIC_KEYS.includes(column.key as ServingMetricKey)
                       ? servingMetricAbsence(column.key as ServingMetricKey, {
                         requestUsage, memoryScope, usageStatus: row.usage_status,
                         outputBytes: typeof row.output_bytes === "number" ? row.output_bytes : undefined,
-                        contentBytes: typeof row.content_bytes === "number" ? row.content_bytes : undefined,
-                        reasoningBytes: typeof row.reasoning_bytes === "number" ? row.reasoning_bytes : undefined,
                       }, t)
-                      : schemaVersion === 3 && column.key === "usage_status" && row.usage_status === "missing" && requestUsage === false ? t("benchmark.Usage not requested") : column.format(row[column.key])}
+                      : column.key === "usage_status" && row.usage_status === "missing" && requestUsage === false ? t("benchmark.Usage not requested") : column.format(row[column.key])}
                   </td>
                 ))}
               </tr>

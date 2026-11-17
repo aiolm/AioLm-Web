@@ -240,15 +240,15 @@ const content: GuideContent = {
         {
           id: 'benchmarks',
           title: '基准测试与公开分享',
-          body: ['新基准在支持输出长度控制的引擎（原生 llama.cpp、受支持非 Metal vLLM）上运行固定输出 API 测试。'],
+          body: ['新基准对所有已连接的文本聊天引擎使用单一 Cold Prompt 方式 openai-chat-serving@5，在不进行工作负载预热的情况下请求最多 128 个输出词元。'],
           points: [
-            'vllm-metal、MLX 与自动外部连接不可运行固定输出基准；历史上限与旧版词元结果分开保留。',
+            '提前结束也有效。词元报告是可选的，未报告的指标保持不可用。每次运行使用新的随机数和逐请求输入哈希来隔离测量输入。',
             '开始前需停止活动会话；接受刷新的关键设置仅重跑目标支持检查，不会自动启动测试。',
             '通过“在网站上管理”编辑说明或删除；复制的恢复码未变时 60 秒后从剪贴板自动清除。',
           ],
           more: [{
             title: '测量说明与配置导入',
-            body: ['耗时与输出字节由客户端观测，每次请求都必须精确输出目标词元数。从结果创建预设仅导入兼容启动设置，不下载模型。'],
+            body: ['耗时与输出字节由客户端观测，每行记录每个已发送请求的输入哈希。从结果创建预设仅导入兼容启动设置，不下载模型。'],
           }],
         },
         {
@@ -281,13 +281,13 @@ const content: GuideContent = {
           id: 'choose',
           title: '引擎兼容性对比表',
           table: {
-            headers: ['引擎', '适用平台 · 模型格式 · 固定输出基准'],
+            headers: ['引擎', '适用平台 · 模型格式 · 基准支持'],
             rows: [
-              ['llama.cpp', 'Windows · macOS · Linux · GGUF · 支持固定输出'],
-              ['vLLM', '受支持 Linux CUDA/ROCm · Safetensors · 支持固定输出（非 Metal）'],
-              ['vLLM · vllm-metal', 'Apple 芯片 macOS 15+ · Safetensors / 窄范围 GGUF · 不支持'],
-              ['MLX', 'Apple 芯片 macOS · MLX Safetensors · 不支持'],
-              ['外部推理引擎', '本地 OpenAI v1 服务或安装目录 · 聊天/流式验证 · 不支持'],
+              ['llama.cpp', 'Windows · macOS · Linux · GGUF · 支持基准'],
+              ['vLLM', '受支持 Linux CUDA/ROCm · Safetensors · 支持基准'],
+              ['vLLM · vllm-metal', 'Apple 芯片 macOS 15+ · Safetensors / 窄范围 GGUF · 支持基准'],
+              ['MLX', 'Apple 芯片 macOS · MLX Safetensors · 支持基准'],
+              ['外部推理引擎', '本地 OpenAI v1 服务或安装目录 · 需要流式文本聊天 · 支持基准'],
             ],
           },
           note: 'Intel Mac 仅支持 CPU 版 llama.cpp，无法使用 MLX 或 vllm-metal。',
@@ -310,7 +310,7 @@ const content: GuideContent = {
           more: [{
             title: `v${DESKTOP_RELEASE_VERSION} 验证范围与已知问题`,
             body: [
-              '固定输出基准仅支持声明输出长度控制的原生 llama.cpp 与受支持非 Metal vLLM。',
+              '基准使用单一流式文本聊天方式；平台与模型要求仍然适用。',
               'v0.3.2 报告的 SmolVLM 图像/视频质量问题（F09）尚未确认修复。',
               '桌面端与公开 CLI 均不提供基于 CPU 参考的数值对比验证。',
             ],
@@ -355,7 +355,7 @@ const content: GuideContent = {
           body: ['点击连接，验证真实聊天回复与流式传输通过后再保存到应用内。'],
           points: [
             '连接运行中服务使用 AioLM 本地代理；停止连接只关闭代理，不会关闭原服务。',
-            '自动连接不会声明固定输出基准控制，也不代表已验证多模态或工具支持。',
+            '自动连接也使用相同的单一基准方式。连接验证不代表已验证多模态或工具质量。',
           ],
           image: 'auto-connect',
           caption: '连接验证完成界面。',

@@ -240,15 +240,15 @@ const content: GuideContent = {
         {
           id: 'benchmarks',
           title: 'Benchmarks & sharing',
-          body: ['New benchmarks run fixed-output API tests on engines that support output-length control (native llama.cpp or supported non-Metal vLLM).'],
+          body: ['New benchmarks use the single Cold Prompt method openai-chat-serving@5 for every connected text-chat engine, requesting at most 128 output tokens without workload warmup.'],
           points: [
-            'vllm-metal, MLX, and automatic external connections cannot run fixed-output benchmarks; older output-cap and token results stay separate.',
+            'Early completion is valid. Usage reporting is optional; unreported token metrics stay unavailable. A fresh run nonce and per-request input hashes isolate measured inputs.',
             'Stop running sessions first; accepting refreshed Key settings repeats only the target support check without auto-starting.',
             'Manage publications via Shared results → Manage on website (copied recovery codes auto-clear from the clipboard after 60s).',
           ],
           more: [{
             title: 'Measurement & profile import details',
-            body: ['Timing and output bytes are client-observed, and every request must match the target token count. Creating a profile from a result imports compatible launch settings only and never downloads models or runtimes.'],
+            body: ['Timing and output bytes are client-observed; each row records one input hash per dispatched request. Creating a profile from a result imports compatible launch settings only and never downloads models or runtimes.'],
           }],
         },
         {
@@ -281,13 +281,13 @@ const content: GuideContent = {
           id: 'choose',
           title: 'Engine compatibility matrix',
           table: {
-            headers: ['Engine', 'Platforms, Formats & Fixed-Output Benchmarks'],
+            headers: ['Engine', 'Platforms, Formats & Benchmark Support'],
             rows: [
-              ['llama.cpp', 'Windows · macOS · Linux · GGUF · Fixed-output supported'],
-              ['vLLM', 'Supported Linux CUDA/ROCm · Safetensors · Fixed-output supported (non-Metal)'],
-              ['vLLM · vllm-metal', 'Apple silicon macOS 15+ · Safetensors / limited GGUF · Not supported'],
-              ['MLX', 'Apple silicon macOS · MLX Safetensors · Not supported'],
-              ['External engine', 'Local OpenAI-compatible v1 server or folder · Chat verified · Not supported'],
+              ['llama.cpp', 'Windows · macOS · Linux · GGUF · Benchmark supported'],
+              ['vLLM', 'Supported Linux CUDA/ROCm · Safetensors · Benchmark supported'],
+              ['vLLM · vllm-metal', 'Apple silicon macOS 15+ · Safetensors / limited GGUF · Benchmark supported'],
+              ['MLX', 'Apple silicon macOS · MLX Safetensors · Benchmark supported'],
+              ['External engine', 'Local OpenAI-compatible v1 server or folder · Streaming text chat required · Benchmark supported'],
             ],
           },
           note: 'Intel Macs use CPU llama.cpp only—MLX and vllm-metal are unavailable.',
@@ -310,7 +310,7 @@ const content: GuideContent = {
           more: [{
             title: `v${DESKTOP_RELEASE_VERSION} limits & known issues`,
             body: [
-              'Fixed-output benchmarks require declared output-length control (native llama.cpp and supported non-Metal vLLM).',
+              'Benchmarks use the single streaming text-chat method; platform and model requirements still apply.',
               'SmolVLM image/video quality issue (F09) reported in v0.3.2 remains unconfirmed fixed.',
               'Desktop and CLI builds do not include numerical CPU-reference verification.',
             ],
@@ -355,7 +355,7 @@ const content: GuideContent = {
           body: ['Click Connect to run live chat and streaming checks before saving the connection inside AioLM.'],
           points: [
             'Running servers connect via an AioLM-owned local proxy; stopping the connection stops only the proxy, not your server.',
-            'Automatic connections do not declare fixed-output benchmark control and do not verify multimodal/tool quality.',
+            'Automatic connections use the same single benchmark method; connection checks do not verify multimodal/tool quality.',
           ],
           image: 'auto-connect',
           caption: 'Connection verified and saved.',

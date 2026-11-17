@@ -20,9 +20,7 @@ export {
   validatePublicBenchmark,
   validateBenchmarkReceipt as validateContractReceipt,
   type BenchmarkPublicationRequest,
-  type BenchmarkPublicationInput,
   type PublicBenchmarkSubmission,
-  type PublicBenchmarkRow,
   type BenchmarkReceipt,
 } from "@aiolm/benchmark-contracts";
 

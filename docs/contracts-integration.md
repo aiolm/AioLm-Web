@@ -1,6 +1,6 @@
 # Contracts integration
 
-`@aiolm/benchmark-contracts` 0.11.0 owns the shared data contract: DTOs,
+`@aiolm/benchmark-contracts` 0.15.0 owns the shared data contract: DTOs,
 validation, JSON Schema/OpenAPI, publication bounds, recovery encoding, receipt
 shape. The website consumes that package directly — it does not carry its own
 copy of the rules and never imports app sources at runtime.
@@ -10,7 +10,7 @@ copy of the rules and never imports app sources at runtime.
 The versioned tarball is committed to this repository and installed from there:
 
 ```json
-"@aiolm/benchmark-contracts": "file:vendor/aiolm-benchmark-contracts-0.11.0.tgz"
+"@aiolm/benchmark-contracts": "file:vendor/aiolm-benchmark-contracts-0.15.0.tgz"
 ```
 
 `package-lock.json` pins its `integrity` (`sha512-…`), so `npm ci` fails if the
@@ -37,24 +37,40 @@ one-argument API allows the HTTP debug loopback.
 
 ## Schema and API surface
 
-Contract 0.11.0 accepts unchanged legacy schema1/2 snapshots, historical schema3
-`openai-chat-serving@1` output-cap snapshots and new `openai-chat-serving@2`
-fixed-output snapshots through the same `/v1/**` routes. Results use exact UTF-8
-input byte sizes/hashes, client-observed content/reasoning timing and output
-bytes. @1 keeps nullable engine-reported token/cache counters, its original
-cap bound of 65536 and no per-request evidence; it never becomes fixed output.
-@2 requires request usage, one of the package's `FIXED_OUTPUT_TOKENS`
-targets (upper bound `MAX_SERVING_OUTPUT_TOKENS` = 204800), the declared
-force-control request descriptor, and `reported_completion_tokens_by_request`
-with every launch slot equal to the target. The website imports those constants
-and validation from the package rather than restating them. Unknown engine
-identity, model format or launch settings does not disqualify a complete
-serving workload.
+Contract 0.15.0 accepts one public method, `openai-chat-serving@5` with
+`schema_version: 4`, through the same `/v1/**` routes. Results use exact UTF-8
+input byte sizes, client-observed content timing and output bytes. The workload
+requires `warmup: false`, `corpus_version: 2`, `cache_policy: "cold_prompt"` and
+a lowercase 32-hex `prompt_nonce`. Every row carries one unique
+`input_sha256_by_request` entry per dispatched request; the first row of each
+measured input matches that input descriptor's hash.
 
-Validation selects the declared schema before checking its fields. An invalid
-schema3 input therefore reports that input's constraint, not an unrelated
-legacy `schema_version` failure. Accepted wire shapes and publication bounds
-are unchanged.
+Each point accepts a 1–128 output-token cap. Required request descriptors are
+`max_tokens`, `stream` and `temperature`, in ASCII order. With
+`request_usage: true`, the exact `stream_options.include_usage` descriptor is
+inserted between `stream` and `temperature`: value true, unit null, empty scope
+and role null. With false, that descriptor must be absent. Force descriptors and
+per-request fixed-output evidence are rejected. The method records input
+isolation and does not certify a cold start or empty engine caches. Early
+completion, zero output and missing or invalid normalized usage are valid
+observations. Reported completion counters are observations, not proof that the
+engine obeyed the cap; they are not compared with it. Missing counters and
+derived rates remain null.
+
+Validation selects the declared schema before checking its fields, so an
+invalid schema-4 input reports that input's constraint rather than an unrelated
+schema failure. Retired schema versions and method versions are rejected. The
+database migration retires their records instead of keeping unreadable history.
+
+The eight metrics are `first_output_ms`, `prefill_tokens_per_second`,
+`decode_tokens_per_second`, `tpot_ms`, `reported_tokens_per_second`,
+`output_bytes_per_second`, `e2e_ms` and `peak_memory_bytes`. Token metrics
+depend on engine-reported usage; unavailable evidence remains null.
+`reported_tokens_per_second` is `reported_completion_tokens * 1000 / e2e_ms` and
+`output_bytes_per_second` is `output_bytes * 1000 / e2e_ms`.
+The metric labels distinguish prompt processing and generation speed per request
+from total token throughput across the batch. The basis-point throughput sort
+uses the same total-throughput terminology in every supported locale.
 
 Public runtime identity has six required nullable fields and no fixed engine
 enum. Model format is engine-independent; declared GGUF metadata is permitted
@@ -62,19 +78,21 @@ only for GGUF. Optional HF repository/revision is provenance, not a weight
 digest or proof of unmodified weights. Local provider IDs and reference-file
 hashes/sizes are not substituted for missing public identity.
 
-Schema3 execution records typed, bounded public settings and explicit compute
+Execution records typed, bounded public settings and explicit compute
 topology/memory scope. Environment scope is `aiolm_host`, not an upstream or
-container allocation. Historical optional usage requests and as-configured
-caches are measurement conditions, not token-count/cold-cache guarantees;
-fixed-output token counts are exact by admission. Repeated rows
-use the package's per-metric median/min/max/sample count. Unobserved metrics and
-non-finite derived rates stay null, never zero or Infinity.
+container allocation; as-configured caches are measurement conditions, not
+cache guarantees. Repeated rows use the package's per-metric median/min/max and
+sample count. Unobserved metrics and non-finite derived rates stay null, never
+zero or Infinity. Summaries carry `serving_points` only; there is no legacy
+token-point list or scope selector.
 
 The archive is produced by the desktop workspace's build/pack scripts and
 includes LICENSE. Its exact bytes are pinned by the web lockfile; no source
-checkout is imported. Migration `015_engine_neutral_benchmarks.sql` is required
-before the new web deployment is ready. Existing accepted snapshots, request
-bytes, hashes and receipts are not rewritten or backfilled.
+checkout is imported. Migration `016_single_benchmark_method.sql` is required
+before the new web deployment is ready. It deletes retired benchmark records,
+measurement chunks, pending upload sessions and reports, preserves quota buckets
+and the audit log, and drops indexes over summary fields no current summary
+carries. No current record is rewritten or backfilled.
 
 The current desktop explorer's profile importer reads the existing public
 `GET /v1/benchmark-runs/<id>` projection: `id`, the actual `benchmark.schema_version`, `benchmark.runtime` and
@@ -97,10 +115,16 @@ The OpenAPI document is the wire contract for every `/v1` route this app serves.
 
 ## Upgrading
 
-1. Drop the new tarball into `vendor/`.
-2. `npm install ./vendor/aiolm-benchmark-contracts-<version>.tgz` — this updates
+1. In the desktop `packages/benchmark-contracts` directory, run `npm pack --pack-destination ../../../AioLm-Web/vendor` (prepack builds the artifact).
+2. In the website directory, run
+   `npm install ./vendor/aiolm-benchmark-contracts-<version>.tgz` — this updates
    `package.json` and records the new `integrity` hash in `package-lock.json`.
-3. Delete the superseded tarball and keep the package's `LICENSE` notices.
+   Preserve unrelated lockfile metadata, including platform-specific optional
+   dependencies' `libc` restrictions; npm may strip those fields during installation.
+3. Delete only a superseded version's tarball and keep the package's `LICENSE`
+   notices. Repacking the same version replaces its archive and requires updating
+   both the installed package and lockfile integrity; never hand-edit generated
+   `dist` files or tarball contents.
 4. Run `npm run contracts:check`, then `npm run typecheck && npm run lint && npm test && npm run test:integration`.
 
 Never point the website at a source checkout of the contracts package; the
@@ -121,16 +145,20 @@ build when any of these does not hold:
   the recovery round-trip against `RECOVERY_FIXTURE`, origin normalization, and
   the recoverable/terminal service-error classification, and the
   `formatRuntimeVersionLabel` version(build) labels;
-- fixed-output policy is the package's: the eight `FIXED_OUTPUT_TOKENS`, the
-  204800 serving bound, an accepted 200k @2 submission, rejection of missing,
-  early or unequal per-request counts and non-preset targets, continued
-  acceptance of a historical @1 cap up to 65536, and rejection of a larger @1
-  cap or @1 rows carrying per-request evidence;
+- the single benchmark method is the package's: `openai-chat-serving@5` with
+  `schema_version: 4`, the eight `SERVING_METRIC_KEYS`, the 1–128 output bound,
+  and rejection of retired schema versions 1–3, method versions @1–@4 and the
+  retired `cold-prompt-serving` method id;
+- usage and derived metrics follow the package: accepted usage requests with the
+  exact `stream_options.include_usage` descriptor, accepted early completion and
+  missing usage, and rejection of prefill/tpot without reported token evidence,
+  retired row fields, a missing or rewritten input hash list, workload warmup, a
+  missing nonce, an as-configured cache policy and force controls;
 - the shared JSON Schema and OpenAPI documents resolve and parse.
 
 Set `CONTRACTS_TARBALL_PATH` to additionally compare a candidate archive
 against the vendored one before adopting a new version:
 
 ```sh
-CONTRACTS_TARBALL_PATH=./vendor/aiolm-benchmark-contracts-0.11.0.tgz npm run contracts:check
+CONTRACTS_TARBALL_PATH=./vendor/aiolm-benchmark-contracts-0.15.0.tgz npm run contracts:check
 ```
