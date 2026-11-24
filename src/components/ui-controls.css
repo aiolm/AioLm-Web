@@ -68,7 +68,7 @@
 .ui-menu--above { transform: translateY(-100%); }
 /* Free-text suggestions stay attached to their field instead of floating in a portal. */
 .ui-menu.ui-menu--inline { position: absolute; z-index: 25; top: 100%; left: 0; right: 0; width: auto; max-width: none; margin-top: 4px; padding: 0; overflow: hidden; }
-.ui-menu--inline .explorer-options { max-height: 240px; margin: 0; padding: 4px; overflow-y: auto; overscroll-behavior: contain; list-style: none; }
+.ui-menu--inline .explorer-options { max-height: 240px; margin: 0; padding: 4px; overflow-y: auto; scrollbar-gutter: stable; overscroll-behavior: contain; list-style: none; }
 .explorer-combobox-toggle {
   position: absolute;
   inset-block: 1px;
@@ -140,7 +140,7 @@
 /* Native <details> keeps its semantics; only the indicator changes to one
    understated chevron at the inline end that turns when the section opens. */
 
-details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure) > summary {
+details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure, .guide-more, .benchmark-catalog-evidence) > summary {
   display: flex;
   min-height: 36px;
   padding-block: var(--control-pad-block);
@@ -150,9 +150,9 @@ details:is(.explorer-secondary-filters, .detail-group, .detail-description, .rec
   cursor: pointer;
   line-height: var(--lh-control);
 }
-details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure) > summary::-webkit-details-marker { display: none; }
-details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure) > summary::before { content: none; }
-details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure) > summary::after {
+details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure, .guide-more, .benchmark-catalog-evidence) > summary::-webkit-details-marker { display: none; }
+details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure, .guide-more, .benchmark-catalog-evidence) > summary::before { content: none; }
+details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure, .guide-more, .benchmark-catalog-evidence) > summary::after {
   content: "";
   flex: 0 0 16px;
   width: 16px;
@@ -162,8 +162,8 @@ details:is(.explorer-secondary-filters, .detail-group, .detail-description, .rec
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='m6 8 4 4 4-4' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 16px 16px no-repeat;
   transition: transform 150ms ease;
 }
-details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure)[open] > summary::after { transform: rotate(180deg); background: var(--ui-ink); }
-details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure) > summary:focus-visible {
+details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure, .guide-more, .benchmark-catalog-evidence)[open] > summary::after { transform: rotate(180deg); background: var(--ui-ink); }
+details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure, .guide-more, .benchmark-catalog-evidence) > summary:focus-visible {
   outline: 2px solid var(--ui-focus);
   outline-offset: 2px;
   border-radius: var(--ui-radius-sm);
@@ -176,7 +176,7 @@ details.explorer-secondary-filters > summary:has(.explorer-filter-count)::after 
 
 @media (max-width: 700px), (pointer: coarse) {
   .ui-menu .ui-option { min-height: 44px; }
-  details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure) > summary,
+  details:is(.explorer-secondary-filters, .detail-group, .detail-description, .recovery-paste, .report-disclosure, .guide-more, .benchmark-catalog-evidence) > summary,
   .management-panel details.recovery-paste > summary { min-height: 44px; }
 }
 

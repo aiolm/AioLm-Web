@@ -31,8 +31,8 @@
 .explorer-filter-panel-header { margin-block-end: 16px; }
 .explorer-filter-panel-title { margin: 0; color: var(--ui-ink); font-size: var(--fs-section); font-weight: var(--fw-heading); line-height: var(--lh-heading); letter-spacing: var(--tracking-heading); }
 .explorer-compact .explorer-filter-groups { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; margin: 0; border: 0; }
-.explorer-compact .explorer-filter-group { min-width: 0; margin: 0; padding: 0; border: 0; }
-.explorer-filter-group-title { margin: 0 0 12px; padding-block-end: 8px; border-bottom: 1px solid var(--ui-border); color: var(--ui-ink); font-size: var(--fs-group); font-weight: var(--fw-heading); line-height: var(--lh-group); letter-spacing: var(--tracking-heading); }
+.explorer-compact .explorer-filter-group { display: flex; flex-direction: column; min-width: 0; margin: 0; padding: 0; border: 0; }
+.explorer-filter-group-title { display: flex; align-items: flex-end; min-height: 2.75rem; margin: 0 0 12px; padding-block-end: 8px; border-bottom: 1px solid var(--ui-border); color: var(--ui-ink); font-size: var(--fs-group); font-weight: var(--fw-heading); line-height: var(--lh-group); letter-spacing: var(--tracking-heading); }
 .explorer-compact .explorer-group-fields { grid-template-columns: minmax(0, 1fr); gap: 16px; margin: 0; }
 .explorer-compact .explorer-field { min-width: 0; gap: 4px; }
 .explorer-compact .explorer-field-label,
@@ -185,7 +185,7 @@
 .explorer-compact .explorer-comparison-caveat { max-width: 80ch; margin-block-start: 12px; padding: 12px 16px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); background: var(--tone-warning-bg); color: var(--tone-warning-ink); font-size: var(--fs-body-compact); line-height: var(--lh-compact); }
 .explorer-compact .explorer-comparison-caveat + .explorer-comparison-caveat { margin-block-start: 8px; }
 /* Keyboard-focusable region: the comparison scrolls inside itself, never the page. */
-.explorer-compact .explorer-comparison-scroll { max-width: 100%; margin-block-start: 16px; overflow-x: auto; border-top: 1px solid var(--ui-border); }
+.explorer-compact .explorer-comparison-scroll { max-width: 100%; margin-block-start: 16px; overflow-x: auto; scrollbar-gutter: stable; border-top: 1px solid var(--ui-border); }
 .explorer-compact .explorer-comparison-scroll:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
 .explorer-compact .explorer-comparison-caption { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
 .explorer-compact :is(.explorer-comparison-field-head, .explorer-comparison-item-head) { padding: 12px; border-bottom: 1px solid var(--ui-border); color: var(--ui-muted); font-size: var(--fs-table); font-weight: var(--fw-medium); line-height: var(--lh-table); vertical-align: bottom; }
@@ -245,6 +245,7 @@
   .explorer-compact .explorer-filter-groups,
   .explorer-compact .explorer-group-fields { grid-template-columns: minmax(0, 1fr); }
   .explorer-detailed-filters { padding: 16px; }
+  .explorer-filter-group-title { min-height: 0; }
   .explorer-filter-panel-actions { margin: 16px -16px -16px; padding: 12px 16px; }
   .explorer-filter-panel-actions > .explorer-button { width: 100%; }
   .explorer-measurement-controls { padding-inline: 12px; }

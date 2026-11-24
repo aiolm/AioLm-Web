@@ -3,6 +3,7 @@ import { localizedPath, type Locale } from '@/i18n/config';
 import { guideSlugs, type GuideContent, type GuideImageId, type GuideSlug } from '@/content/guides/types';
 import { GuideImageViewer } from './guide-image-viewer';
 import screenshots from '../../public/screenshots/current/manifest.json';
+import './ui-controls.css';
 import './guides.css';
 
 export function GuideLayout({ locale, content, active, children }: {

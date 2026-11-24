@@ -164,7 +164,7 @@
 
 .home-engine-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch;
   gap: 12px;
   margin: 0;
   padding: 0;
@@ -216,7 +216,7 @@
 
 .home-steps {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch;
   gap: 16px;
   min-width: 0;
   margin: 0;
@@ -235,6 +235,7 @@
   background: var(--ui-surface);
 }
 
+.home-step { grid-template-rows: auto 1fr; }
 .home-step-art {
   display: flex;
   align-items: center;

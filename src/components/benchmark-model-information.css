@@ -32,7 +32,7 @@
 .benchmark-model-information .benchmark-catalog-fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; margin-block: 8px; }
 .benchmark-catalog-fields dt { color: var(--ui-muted); font-size: var(--fs-support); line-height: var(--lh-support); }
 .benchmark-catalog-fields dd { min-width: 0; margin: 0 0 8px; overflow-wrap: anywhere; }
-.benchmark-catalog-evidence > summary { display: list-item; min-height: var(--control-min); padding-block: 6px; color: var(--ui-accent); font-size: var(--fs-control); font-weight: var(--fw-medium); line-height: var(--lh-control); cursor: pointer; }
+.benchmark-catalog-evidence > summary { min-height: var(--control-min); padding-block: 6px; color: var(--ui-accent); font-size: var(--fs-control); font-weight: var(--fw-medium); line-height: var(--lh-control); cursor: pointer; }
 .benchmark-catalog-evidence[open] > summary { margin-block-end: 4px; }
 
 /* Inside a result row the lookup is supporting text, not another panel. */

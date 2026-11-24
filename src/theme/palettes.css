@@ -1,13 +1,13 @@
 /* Generated from the app-aligned Orchid Periwinkle palette. Run npm run theme:generate. */
 :root {
-  --ui-bg: #FDFEFF;
-  --ui-surface: #FDFDFF;
+  --ui-bg: #F5F7FC;
+  --ui-surface: #FFFFFF;
   --ui-sidebar: #DFF3FE;
-  --ui-panel-raised: #FDFDFF;
-  --ui-menu-surface: #FDFDFF;
-  --ui-input: #F5F8FF;
+  --ui-panel-raised: #FFFFFF;
+  --ui-menu-surface: #FFFFFF;
+  --ui-input: #F2F5FC;
   --ui-input-hover: #DDE6FF;
-  --ui-surface-muted: #F2FAFF;
+  --ui-surface-muted: #ECF2FB;
   --ui-field-fill: #F5F8FE;
   --ui-field-fill-hover: #F0F5FE;
   --ui-ink: #242424;
@@ -22,7 +22,7 @@
   --ui-accent-solid-hover: #7AB9F9;
   --ui-accent-solid-active: #7AB9F9;
   --ui-on-accent: #242424;
-  --ui-accent-soft: #F2FAFF;
+  --ui-accent-soft: #ECF2FB;
   --ui-secondary-fg: #242424;
   --ui-border-accent: #A4ADCA;
   --ui-action-secondary-fill: #E2E9FC;
@@ -38,7 +38,7 @@
   --ui-rail-error: #9B3B34;
   --ui-nav-fill: linear-gradient(108deg in srgb,#BFE6FD,#CBE0FE);
   --ui-nav-ink: #242424;
-  --ui-mono-bg: #F5F8FF;
+  --ui-mono-bg: #F2F5FC;
   --ui-mono-ink: #242424;
   --ui-brand-icon: url('/brand/themes/13.png');
   --ui-action-gradient: linear-gradient(135deg in srgb,#73C6F1,#7AB9F9,#87AAFC);
@@ -51,7 +51,7 @@
   --ui-secondary-ink: #242424;
   --ui-elev-menu: 0 8px 28px rgb(16 19 23 / 14%), 0 1px 3px rgb(16 19 23 / 10%);
   --ui-elev-2: 0 16px 48px rgb(16 19 23 / 20%);
-  --tone-neutral-bg: #F2FAFF;
+  --tone-neutral-bg: #ECF2FB;
   --tone-neutral-ink: #646464;
   --tone-error-bg: #FCEEEF;
   --tone-error-ink: #9B3B34;
@@ -70,14 +70,14 @@
 }
 @media (prefers-color-scheme: dark) {
 :root {
-  --ui-bg: #34394B;
-  --ui-surface: #3A4155;
+  --ui-bg: #262B3A;
+  --ui-surface: #2E3547;
   --ui-sidebar: #394768;
-  --ui-panel-raised: #3A4155;
-  --ui-menu-surface: #3A4155;
-  --ui-input: #404965;
+  --ui-panel-raised: #2E3547;
+  --ui-menu-surface: #2E3547;
+  --ui-input: #363F56;
   --ui-input-hover: #434F77;
-  --ui-surface-muted: #3F496D;
+  --ui-surface-muted: #323B52;
   --ui-field-fill: #49516A;
   --ui-field-fill-hover: #4D566E;
   --ui-ink: #F5F5F5;
@@ -92,7 +92,7 @@
   --ui-accent-solid-hover: #7AB9F9;
   --ui-accent-solid-active: #7AB9F9;
   --ui-on-accent: #242424;
-  --ui-accent-soft: #3F496D;
+  --ui-accent-soft: #323B52;
   --ui-secondary-fg: #F5F5F5;
   --ui-border-accent: #6B90AA;
   --ui-action-secondary-fill: #4F5A8B;
@@ -108,7 +108,7 @@
   --ui-rail-error: #FFC9C1;
   --ui-nav-fill: linear-gradient(180deg in srgb,#46598D,#44578B,#425589);
   --ui-nav-ink: #F5F5F5;
-  --ui-mono-bg: #404965;
+  --ui-mono-bg: #363F56;
   --ui-mono-ink: #F5F5F5;
   --ui-brand-icon: url('/brand/themes/13.png');
   --ui-action-gradient: linear-gradient(135deg in srgb,#73C6F1,#7AB9F9,#87AAFC);
@@ -121,7 +121,7 @@
   --ui-secondary-ink: #ECBADC;
   --ui-elev-menu: 0 8px 28px rgb(0 0 0 / 40%);
   --ui-elev-2: 0 16px 48px rgb(0 0 0 / 50%);
-  --tone-neutral-bg: #3F496D;
+  --tone-neutral-bg: #323B52;
   --tone-neutral-ink: #D1D1D1;
   --tone-error-bg: #644A4D;
   --tone-error-ink: #FFC9C1;

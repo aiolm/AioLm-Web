@@ -5,29 +5,29 @@
     "gradient": ["#79D4FF", "#7993EE", "#D875B8"],
     "themes": {
       "light": {
-        "bg": "#FDFEFF", "surface": "#FDFDFF",
+        "bg": "#F5F7FC", "surface": "#FFFFFF",
         "ink": "#242424", "muted": "#646464",
         "line": "#DFE6FA", "lineStrong": "#898989", "lineStrongest": "#646464", "lineAccent": "#A4ADCA",
         "accent": "#4B5C94", "focus": "#242424",
-        "field": "#F5F8FF", "inputHover": "#DDE6FF",
+        "field": "#F2F5FC", "inputHover": "#DDE6FF",
         "rail": "#DFF3FE", "railInk": "#242424",
         "railMuted": "#5E5E5E", "railHover": "#DDE6FF",
         "selected": "#BBE6FE", "selectedInk": "#242424",
         "action": "#7AB9F9", "actionInk": "#242424",
-        "soft": "#F2FAFF", "softInk": "#242424",
+        "soft": "#ECF2FB", "softInk": "#242424",
         "secondary": "#F7E7F3", "secondaryInk": "#242424"
       },
       "dark": {
-        "bg": "#34394B", "surface": "#3A4155",
+        "bg": "#262B3A", "surface": "#2E3547",
         "ink": "#F5F5F5", "muted": "#D1D1D1",
         "line": "#4F5A7C", "lineStrong": "#A1A3A9", "lineStrongest": "#D1D1D1", "lineAccent": "#6B90AA",
         "accent": "#9BDFFF", "focus": "#79D4FF",
-        "field": "#404965", "inputHover": "#434F77",
+        "field": "#363F56", "inputHover": "#434F77",
         "rail": "#394768", "railInk": "#F5F5F5",
         "railMuted": "#D3D3D3", "railHover": "#434F77",
         "selected": "#43578B", "selectedInk": "#F5F5F5",
         "action": "#7AB9F9", "actionInk": "#242424",
-        "soft": "#3F496D", "softInk": "#F5F5F5",
+        "soft": "#323B52", "softInk": "#F5F5F5",
         "secondary": "#434F6C", "secondaryInk": "#ECBADC"
       }
     },

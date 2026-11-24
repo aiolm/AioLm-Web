@@ -130,21 +130,24 @@
 @media (max-width: 900px) {
   .benchmark-detail .detail-environment .detail-hardware-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 0; }
   .benchmark-detail .detail-environment .detail-hardware-card:nth-child(odd) { border-inline-start: 0; }
+  .benchmark-detail .detail-environment .detail-hardware-card:nth-child(n + 3) { padding-block-start: 16px; border-top: 1px solid var(--ui-border); }
   .benchmark-detail .detail-performance-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .benchmark-detail .detail-metric-card { padding-inline: 0 16px; border-inline-end: 0; }
-  .benchmark-detail .detail-metric-card:nth-child(n) { padding-inline-start: 0; border-top: 0; }
+  .benchmark-detail .detail-metric-card:nth-child(odd) { padding-inline: 0 16px; border-inline-end: 1px solid var(--ui-border); }
+  .benchmark-detail .detail-metric-card:nth-child(even) { padding-inline: 16px 0; border-inline-end: 0; }
+  .benchmark-detail .detail-metric-card:nth-child(-n + 2) { border-top: 0; }
   .benchmark-detail .detail-metric-card:nth-child(n + 3) { border-top: 1px solid var(--ui-border); }
   .benchmark-detail .detail-context-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) {
   .benchmark-detail .detail-environment .detail-hardware-grid { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 4px 16px; }
-  .benchmark-detail .detail-environment .detail-hardware-card { padding: 12px 0; border-inline-start: 0; border-top: 1px solid var(--ui-border); }
+  .benchmark-detail .detail-environment .detail-hardware-card:nth-child(n) { padding: 12px 0; border-inline-start: 0; border-top: 1px solid var(--ui-border); }
   .benchmark-detail .detail-environment .detail-hardware-card:first-child { padding-block-start: 12px; border-top: 0; }
   .benchmark-detail .detail-context-grid { grid-template-columns: minmax(0, 1fr); }
   .benchmark-detail .detail-rows-toolbar { align-items: stretch; }
 }
 @media (max-width: 360px) {
   .benchmark-detail .detail-performance-grid { grid-template-columns: minmax(0, 1fr); }
+  .benchmark-detail .detail-metric-card:nth-child(n) { padding-inline: 0; border-inline-end: 0; }
   .benchmark-detail .detail-metric-card:nth-child(n + 2) { border-top: 1px solid var(--ui-border); }
 }
 @media (max-width: 700px), (pointer: coarse) {
