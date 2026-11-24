@@ -211,44 +211,57 @@ release's exact-source CI, all four platform package builds and public-download
 verification pass. Installer links, checksum examples, the homepage source
 notice and the four localized guide notices share this value.
 
-The localized homepage and guides follow desktop v0.4.3. They cover
-engine-neutral All formats/Trending search with repository-read retry, GGUF and
-per-weight HF/MLX bundles, pause/resume with retained data and end-to-end digest
-checks, pending downloads in Discover, and independent engine installation during
-model downloads. Library Saved sessions, header/Chat default-session controls,
+The localized homepage and guides follow desktop v0.4.3 and the current
+unreleased desktop updates. They cover engine-neutral All formats/Trending
+search with repository-read retry, an optional OS-stored Hugging Face access
+token for gated repositories, repository file filtering, GGUF and per-weight
+HF/MLX bundles, pause/resume with retained data and end-to-end digest checks,
+pending downloads in Discover, and independent engine installation during model
+downloads. Library Saved sessions, local model sorting (default, running first,
+name, size) with engine filtering, header/Chat default-session controls,
 supporting-file search reveal, model updates with file reuse, shared profiles,
 automatic first-available runtime selection and Choose runtime → Choose profile →
 Adjust options remain the execution flow. Save profile & start closes the editor
 automatically for background launch with Cancel and failure recovery; wide
-workspaces, primary CLI/JSON option titles and grouped controls use the
-available window. Resource guidance distinguishes physical/shared memory pools,
-allocation, capacity overflow, stored files and binary byte units instead of
-equating file size, reclaimable cache and permanent RAM.
+workspaces, meaning-first option titles paired with primary CLI/JSON keys and
+grouped controls use the available window. Resource guidance distinguishes
+physical/shared memory pools, allocation, capacity overflow, stored files and
+binary byte units instead of equating file size, reclaimable cache and permanent
+RAM.
 
 External discovery uses executable headers rather than favored names, excludes
 non-launchable support files and requires explicit checking of installation
 candidates, including a sole preselected folder item. Only a sole running server
-may be checked automatically. Resolved command/address labels, help-derived
-grouped controls, literal-token launch arguments and protected/duplicate flag
-safeguards, Command and help tools, Recheck options and launch-time
-unchanged-help re-confirmation are described without claiming every
+may be checked automatically. Resolved command/address labels, readable library
+display names (without file extensions or split-GGUF shard counters) for managed
+connections, help-derived grouped controls, literal-token launch arguments and
+protected/duplicate flag safeguards, Command and help tools, Recheck options and
+launch-time unchanged-help re-confirmation are described without claiming every
 engine/device is compatible. Previously verified models avoid a redundant
 temporary load/unload; readiness still checks the actual serving process and
 model identity, and Windows DLL load failures are surfaced explicitly.
 Standard managed Python runtime installs (non-Metal vLLM and mlx-vlm) require
 binary wheels only without falling back to source builds.
 
-Internal chat is independent of the explicitly started API server, which also
-translates Anthropic Messages and OpenAI Responses function tools when supported
-by the engine and enforces loopback Host and connection limits. Chat scopes
-pending turns, tool approvals and errors to the owning conversation, and MCP
+Internal chat is independent of the explicitly started API server. The server
+keeps its rotatable API key in a private `api-key` file inside the AioLM data
+folder across app and server restarts, serves OpenAI-compatible (`/v1/models`,
+`chat/completions`, `completions`, `embeddings`, `responses` with stream cancel,
+`audio/transcriptions`, `audio/translations`) and Anthropic Messages
+(`/v1/messages`) routes, translates Anthropic Messages and OpenAI Responses
+function tools when supported by the engine and enforces loopback Host and
+connection limits. Chat offers sidebar conversation search, user-turn editing
+and resending, assistant regeneration, code-block copy headers and clipboard or
+drag-and-drop image attachments with a lightbox preview. It scopes pending turns,
+tool approvals and errors to the owning conversation, and MCP
 server first launches, desktop help execution, project document bindings and
 unpicked manifest paths require native OS approval. Personal AGENTS.md
 instructions retain their precedence and read-only role. Explicit skills work
 across engines; engines without declared tool calling omit the automatic
 catalog and read tool, and long catalog descriptions are shortened without
 losing the full entry point. The guides also explain verification-first
-installs (with one-liners as convenience alternatives), close-to-tray,
+installs (with one-liners as convenience alternatives), close-to-tray with live
+tray-menu status of loaded models and the API server,
 configurable login startup, CLI `runtime discover`/`connect` and log compaction,
 and 60-second clipboard clearing for copied recovery codes. New Cold Prompt
 `openai-chat-serving@5` benchmarks isolate measured inputs with a fresh run nonce

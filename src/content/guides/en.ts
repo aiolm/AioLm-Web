@@ -101,7 +101,7 @@ const content: GuideContent = {
           points: [
             'Startup checks GitHub releases once and notifies without auto-installing; manual checks live in Settings → General → Application updates.',
             'Download and install verifies the release SHA-256 before stopping tasks and opening the installer (AppImage updates are manual).',
-            'Closing the window hides AioLM to the system tray; use Quit to stop managed model processes. Data stays in ~/.aiolm (%USERPROFILE%\\.aiolm on Windows) or AIOLM_HOME.',
+            'Closing the window hides AioLM to the system tray (the tray menu stays synced with loaded-model and API server status); use Quit to stop managed model processes. Data stays in ~/.aiolm (%USERPROFILE%\\.aiolm on Windows) or AIOLM_HOME.',
           ],
           image: 'updates',
           caption: 'Application updates in Settings.',
@@ -156,9 +156,9 @@ const content: GuideContent = {
           title: '5. Search & download a model',
           body: ['Discover searches all Hugging Face formats (Trending by default) independently of your selected engine.'],
           points: [
-            'Choose an HF/MLX Safetensors weight file to pull its required config, tokenizer, and splits without other weight variants; GGUF split sets download together too.',
-            'Pause, resume from Paused downloads, and verify full-file digests; failed repository file reads offer per-item Retry.',
-            'You can install an engine runtime while a model downloads.',
+            'Choose an HF/MLX Safetensors weight file to pull its required config, tokenizer, and splits without other weight variants; GGUF split sets download together too, and multi-file repositories include a file filter.',
+            'Configure an optional Hugging Face access token (stored in the OS credential store) directly in Discover to inspect and download gated repositories.',
+            'Pause, resume from Paused downloads, verify full-file digests, retry failed repository file reads per item, and install an engine runtime while a model downloads.',
           ],
           image: 'model-files',
           caption: 'Inspect repository files and memory needs before downloading.',
@@ -172,7 +172,7 @@ const content: GuideContent = {
           title: '6. Manage sessions in the Library',
           body: ['Use the header and Chat for the default session, and Library → Saved sessions for named sessions and local model files.'],
           points: [
-            'Click a model or Model settings to preview; delete, copy, and update actions sit in the file-action row.',
+            'Sort local models (default, running first, name, or size) and filter by engine or search query; click a model or Model settings to preview, with delete, copy, and update actions in the file-action row.',
             'If search matches only hidden supporting files, click Show supporting files while keeping your filters.',
             'Upstream model updates reuse unchanged files (stop all sessions first; single-file GGUF updates re-download in full).',
           ],
@@ -186,7 +186,7 @@ const content: GuideContent = {
           body: ['Model settings follow Choose runtime → Choose profile → Adjust options, auto-picking the first available runtime if none is selected.'],
           points: [
             'Save profile & start saves and closes the editor automatically while running checks and loading in the background with Cancel and failure recovery.',
-            'Option titles show the primary CLI flag or JSON key (full signature on hover); simple controls use multi-column grids while complex editors stay full width.',
+            'Option titles pair human-readable meaning with the primary CLI flag or JSON key (full signature on hover); simple controls use multi-column grids while complex editors stay full width.',
             'Check VRAM, Runtime RAM, RAM Offload, and SSD Offload separately; shared-memory GPUs omit combined totals so RAM is not counted twice.',
           ],
           image: 'model-settings',
@@ -204,9 +204,9 @@ const content: GuideContent = {
           title: '8. Chat with a loaded session',
           body: ['Open Chat, pick an answering session in the chat header, and send a message (no API server needed).'],
           points: [
-            'Tool approvals, progress, and errors stay scoped to the owning conversation, with a return button when viewing another chat.',
-            'Conversation settings hold document retrieval and optional local ffmpeg audio/video preprocessing; project document links ask for native permission once.',
-            'MCP servers require native OS approval on first launch (editing commands preserves whitespace and warns before discarding drafts).',
+            'Search conversations in the sidebar, edit and resend earlier user messages, regenerate assistant replies, copy code blocks with one click, and paste images from the clipboard (or drag and drop) with a click-to-enlarge lightbox.',
+            'Tool approvals, progress, and errors stay scoped to the owning conversation, with a return button when viewing another chat; conversation settings hold document retrieval and optional local ffmpeg audio/video preprocessing.',
+            'Project document links and first-run MCP servers require native OS approval (editing MCP commands preserves whitespace and warns before discarding drafts).',
           ],
           image: 'chat',
           caption: 'Local model conversation in Chat.',
@@ -214,14 +214,14 @@ const content: GuideContent = {
         {
           id: 'api',
           title: 'Local API server',
-          body: ['Start Integrations → API server independently of models; both OpenAI (including Responses tools) and Anthropic Messages share 127.0.0.1:8080.'],
+          body: ['Start Integrations → API server independently of models; OpenAI (/v1/models, chat/completions, completions, embeddings, responses with stream cancel, audio transcriptions/translations) and Anthropic Messages (/v1/messages) share 127.0.0.1:8080.'],
           points: [
-            'Requests require a loopback Host header (421 otherwise), obey a 64-connection cap, and return 503 if no model is loaded.',
+            'Requests require a loopback Host header (421 otherwise), obey a 64-connection cap, and return 503 if no model is loaded. Managed automatic connections expose the model’s readable library display name without the file extension.',
             'Function tools translate to Chat Completions when the loaded engine supports function calling; unsupported built-in Responses tools are rejected.',
           ],
           more: [{
             title: 'API key lifetime & macOS Dock PATH',
-            body: ['The API key stays valid until the app quits; stopping the listener keeps internal chat running. On Mac, apps launched from Finder/Dock do not read shell startup files—configure absolute paths for nvm/Volta/asdf MCP tools.'],
+            body: ['The API key is stored in a private api-key file inside the AioLM data folder and stays the same across app restarts, model reloads, and API server stop/start until you reset it on the API server page; stopping the listener keeps internal chat running. On Mac, apps launched from Finder/Dock do not read shell startup files—configure absolute paths for nvm/Volta/asdf MCP tools.'],
           }],
         },
         {
@@ -354,7 +354,7 @@ const content: GuideContent = {
           title: '3. Connect & verify',
           body: ['Click Connect to run live chat and streaming checks before saving the connection inside AioLM.'],
           points: [
-            'Running servers connect via an AioLM-owned local proxy; stopping the connection stops only the proxy, not your server.',
+            'Running servers connect via an AioLM-owned local proxy (keeping the server’s advertised model ID); stopping the connection stops only the proxy, not your server. Managed connections serve the model under its library display name without the file extension (split GGUF models use one name without the shard counter).',
             'Automatic connections use the same single benchmark method; connection checks do not verify multimodal/tool quality.',
           ],
           image: 'auto-connect',
