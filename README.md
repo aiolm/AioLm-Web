@@ -215,14 +215,11 @@ The localized homepage and guides follow desktop v0.4.3 and the current
 unreleased desktop updates. They cover engine-neutral All formats/Trending
 search with repository-read retry, an optional OS-stored Hugging Face access
 token for gated repositories, repository file filtering, GGUF and per-weight
-HF/MLX bundles, pause/resume with retained data and end-to-end digest checks,
-pending downloads in Discover, and independent engine installation during model
-downloads. Library Saved sessions, local model sorting (default, running first,
-name, size) with engine filtering, header/Chat default-session controls,
+HF/MLX bundles, pause/resume with retained data and end-to-end digest checks, and isolated background download jobs that keep Discover search, repository inspection, provider discovery, runtime installs, and update checks responsive during concurrent transfers. A mutually exclusive header Downloads popover (alongside Model loading and Activity & notices, without header spinners or duplicate failure popovers) consolidates model, runtime (release and PR), and application update downloads with live transfer speed, active/paused/completed/failed sections, pause/resume/discard, and one-click Configure, paired with inline paused-transfer controls in Discover. The desktop window opens maximized on every platform. Library Saved sessions, local model sorting (default, running first, name, size) with engine filtering, header/Chat default-session controls,
 supporting-file search reveal, model updates with file reuse, shared profiles,
 automatic first-available runtime selection and Choose runtime → Choose profile →
 Adjust options remain the execution flow. Save profile & start closes the editor
-automatically for background launch with Cancel and failure recovery; wide
+automatically and tracks background launch in the header Model loading popover with Cancel and failure recovery; wide
 workspaces, meaning-first option titles paired with primary CLI/JSON keys and
 grouped controls use the available window. Resource guidance distinguishes
 physical/shared memory pools, allocation, capacity overflow, stored files and
@@ -241,7 +238,7 @@ engine/device is compatible. Previously verified models avoid a redundant
 temporary load/unload; readiness still checks the actual serving process and
 model identity, and Windows DLL load failures are surfaced explicitly.
 Standard managed Python runtime installs (non-Metal vLLM and mlx-vlm) require
-binary wheels only without falling back to source builds.
+binary wheels only without falling back to source builds. Windows llama.cpp ROCm packaging auto-discovers standard AMD ROCm/HIP SDK directories (in addition to HIP_PATH/ROCM_PATH/hipcc), supports split bin/ DLL and lib/ kernel layouts, and surfaces context-specific packaging guidance across release, PR, repair, and bundle flows.
 
 Internal chat is independent of the explicitly started API server. The server
 keeps its rotatable API key in a private `api-key` file inside the AioLM data
@@ -266,7 +263,7 @@ configurable login startup, CLI `runtime discover`/`connect` and log compaction,
 and 60-second clipboard clearing for copied recovery codes. New Cold Prompt
 `openai-chat-serving@5` benchmarks isolate measured inputs with a fresh run nonce
 and per-point/request prefixes, without force declarations or per-point model reloads.
-Startup update notices do not install an update automatically.
+Startup update notices do not install an update automatically; manual update downloads report progress and speed in the header Downloads popover before verifying SHA-256.
 The desktop's public-benchmark explorer is an unprivileged, private-browsing
 window loading the existing website directly, not an iframe or a second explorer
 implementation. Its app-owned toolbar offers profile creation on a public

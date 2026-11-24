@@ -34,9 +34,9 @@ const messages = {
   "home.workflow": "モデル選びから性能測定まで",
   "home.workflowDetail": "モデル探索から実行、結果共有まで 3 ステップで進みます。",
   "home.choose": "1. モデルを選ぶ",
-  "home.chooseDetail": "全形式の Hugging Face（OS 保存トークンによる制限付きリポジトリを含む）を検索・絞り込み、一時停止・再開・ダイジェスト検証付きでモデルを取得します。",
+  "home.chooseDetail": "全形式の Hugging Face（OS 保存トークンによる制限付きリポジトリを含む）を検索・絞り込み、ヘッダーの「ダウンロード」ポップオーバーから同時ダウンロードをリアルタイム速度・一時停止・再開・ダイジェスト検証付きで管理します。",
   "home.run": "2. 設定して実行",
-  "home.runDetail": "ランタイム → プロファイル → オプションを選び、メモリーを確認してバックグラウンド起動します。",
+  "home.runDetail": "ランタイム → プロファイル → オプションを選び、メモリーを確認してバックグラウンド起動し、ヘッダーの「モデル読み込み」ポップオーバーとセッション操作で管理します。",
   "home.measure": "3. 測定して共有",
   "home.measureDetail": "接続済みのストリーミングチャットエンジンで標準出力上限ベンチマークを実行し、CSV/Excel 出力や公開共有を行います。",
   "home.closing": "数値の背景にある構成を比べる",
@@ -72,7 +72,7 @@ const messages = {
   "home.faqApiQuestion": "モデルをロードすれば他のアプリからも使えますか？",
   "home.faqApiAnswer": "外部連携 → API サーバーを起動したときのみ利用できます。OpenAI（models・chat・completions・embeddings・responses・audio）と Anthropic Messages が再発行まで維持される API キーおよび Host・接続数制限付きのループバックを共有します。",
   "home.faqUpdatesQuestion": "更新はどのように確認しますか？",
-  "home.faqUpdatesAnswer": "起動時に GitHub リリースを一度確認して通知し、自動インストールはしません。ダウンロード時は SHA-256 を検証します（AppImage は手動更新）。",
+  "home.faqUpdatesAnswer": "起動時に GitHub リリースを一度確認して通知し、自動インストールはしません。更新のダウンロードはヘッダーの「ダウンロード」ポップオーバーで進捗と速度を表示し、先に SHA-256 を検証します（AppImage は手動更新）。",
   "home.sourceNotice": "AioLM v{version} デスクトップリリース準拠。",
 } satisfies Record<keyof EnglishMessages, string>;
 export default messages;

@@ -34,9 +34,9 @@ const messages = {
   "home.workflow": "모델 선택부터 성능 측정까지",
   "home.workflowDetail": "모델 탐색부터 실행, 벤치마크 공유까지 세 단계로 진행합니다.",
   "home.choose": "1. 모델 선택",
-  "home.chooseDetail": "모든 형식의 Hugging Face 저장소(OS 자격 증명 토큰을 통한 제한된 저장소 포함)를 검색·필터링하고 일시 중지·이어받기·해시 검증과 함께 모델을 내려받습니다.",
+  "home.chooseDetail": "모든 형식의 Hugging Face 저장소(OS 자격 증명 토큰을 통한 제한된 저장소 포함)를 검색·필터링하고, 상단 다운로드 팝오버에서 동시 모델 다운로드를 실시간 속도·일시 중지·이어받기·해시 검증과 함께 관리합니다.",
   "home.run": "2. 설정 및 실행",
-  "home.runDetail": "런타임 → 프로필 → 옵션을 고르고 메모리 풀을 확인한 뒤 백그라운드에서 실행·관리합니다.",
+  "home.runDetail": "런타임 → 프로필 → 옵션을 고르고 메모리 풀을 확인한 뒤 백그라운드로 실행하며, 상단 모델 로딩 팝오버와 세션 제어로 상태를 관리합니다.",
   "home.measure": "3. 측정 및 공유",
   "home.measureDetail": "연결된 스트리밍 채팅 엔진에서 표준 출력 상한 벤치마크를 실행하고 CSV/Excel 내보내기 또는 공개 공유를 진행합니다.",
   "home.closing": "수치와 함께 실행 환경을 비교하세요",
@@ -72,7 +72,7 @@ const messages = {
   "home.faqApiQuestion": "모델을 로드하면 다른 앱에서도 바로 사용할 수 있나요?",
   "home.faqApiAnswer": "외부 연동 → API 서버를 켜야 연결됩니다. OpenAI(models·chat·completions·embeddings·responses·audio)와 Anthropic Messages가 재발급 전까지 유지되는 API 키와 Host·연결 수 제한이 적용된 루프백 리스너 하나를 공유합니다.",
   "home.faqUpdatesQuestion": "업데이트는 어떻게 확인하나요?",
-  "home.faqUpdatesAnswer": "시작 시 GitHub 릴리스를 한 번 확인해 알림만 띄우며 자동 설치하지 않습니다. 다운로드 시 SHA-256을 검증합니다(AppImage는 수동 업데이트).",
+  "home.faqUpdatesAnswer": "시작 시 GitHub 릴리스를 한 번 확인해 알림만 띄우며 자동 설치하지 않습니다. 업데이트 다운로드는 상단 다운로드 팝오버에서 진행률과 속도를 표시하고 SHA-256을 먼저 검증합니다(AppImage는 수동 업데이트).",
   "home.sourceNotice": "AioLM v{version} 데스크톱 릴리스 기준입니다.",
 } satisfies Record<keyof EnglishMessages, string>;
 export default messages;

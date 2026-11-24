@@ -81,7 +81,7 @@ const content: GuideContent = {
         {
           id: 'first-open',
           title: 'First launch',
-          body: ['New installs start with language, theme, and model-folder setup; existing configs open the workspace directly.'],
+          body: ['AioLM opens maximized; new installs start with language, theme, and model-folder setup, while existing configs open the workspace directly.'],
           image: 'language',
           caption: 'First-run language screen.',
         },
@@ -100,7 +100,7 @@ const content: GuideContent = {
           title: 'Updates & background tray',
           points: [
             'Startup checks GitHub releases once and notifies without auto-installing; manual checks live in Settings → General → Application updates.',
-            'Download and install verifies the release SHA-256 before stopping tasks and opening the installer (AppImage updates are manual).',
+            'Download and install tracks progress and transfer speed in the header Downloads popover, then verifies the release SHA-256 before stopping tasks and opening the installer (AppImage updates are manual).',
             'Closing the window hides AioLM to the system tray (the tray menu stays synced with loaded-model and API server status); use Quit to stop managed model processes. Data stays in ~/.aiolm (%USERPROFILE%\\.aiolm on Windows) or AIOLM_HOME.',
           ],
           image: 'updates',
@@ -144,6 +144,7 @@ const content: GuideContent = {
           body: ['Open Inference engines to check OS/hardware support and install or connect a runtime.'],
           points: [
             'The inventory displays actual installed or registered versions and runs executable checks automatically (no manual Check button).',
+            'Runtime release and PR downloads track live speed and progress in the header Downloads popover without blocking model search; on Windows, llama.cpp ROCm packaging auto-discovers standard AMD ROCm/HIP SDK folders (alongside HIP_PATH/ROCM_PATH/hipcc) and supports split bin/lib layouts.',
             'If automatic vLLM or MLX installation is unavailable for your setup, prepare your own Python environment and register it.',
             'Desktop help execution requires native OS approval for the exact program, arguments, directory, and environment; PR source builds compile third-party code as your user.',
           ],
@@ -158,7 +159,7 @@ const content: GuideContent = {
           points: [
             'Choose an HF/MLX Safetensors weight file to pull its required config, tokenizer, and splits without other weight variants; GGUF split sets download together too, and multi-file repositories include a file filter.',
             'Configure an optional Hugging Face access token (stored in the OS credential store) directly in Discover to inspect and download gated repositories.',
-            'Pause, resume from Paused downloads, verify full-file digests, retry failed repository file reads per item, and install an engine runtime while a model downloads.',
+            'Manage active, paused, completed, and failed transfers—with live speed, pause/resume/discard, and one-click Configure—from the header Downloads popover (or inline on matching files), while background jobs keep Discover search, repository checks, and runtime installs responsive with full-file digest verification and per-item Retry.',
           ],
           image: 'model-files',
           caption: 'Inspect repository files and memory needs before downloading.',
@@ -185,7 +186,7 @@ const content: GuideContent = {
           diagram: 'memory-pools',
           body: ['Model settings follow Choose runtime → Choose profile → Adjust options, auto-picking the first available runtime if none is selected.'],
           points: [
-            'Save profile & start saves and closes the editor automatically while running checks and loading in the background with Cancel and failure recovery.',
+            'Save profile & start saves and closes the editor automatically while tracking checks and background loading in the header Model loading popover (mutually exclusive with Downloads and Activity & notices) with Cancel and failure recovery.',
             'Option titles pair human-readable meaning with the primary CLI flag or JSON key (full signature on hover); simple controls use multi-column grids while complex editors stay full width.',
             'Check VRAM, Runtime RAM, RAM Offload, and SSD Offload separately; shared-memory GPUs omit combined totals so RAM is not counted twice.',
           ],

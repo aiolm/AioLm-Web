@@ -33,9 +33,9 @@ const messages = {
   "home.workflow": "From model to measurement",
   "home.workflowDetail": "Three clear steps from finding weights to sharing benchmarks.",
   "home.choose": "1. Pick a model",
-  "home.chooseDetail": "Search Hugging Face across all formats (including gated repos via an OS-stored token), filter repository files, and download GGUF or HF/MLX bundles with pause/resume and digest checks.",
+  "home.chooseDetail": "Search Hugging Face across all formats (including gated repos via an OS-stored token), filter repository files, and track concurrent GGUF or HF/MLX downloads with live speed, pause/resume, and digest checks from the header Downloads popover.",
   "home.run": "2. Configure & run",
-  "home.runDetail": "Select runtime → profile → options, inspect memory pools, and launch in the background with session controls.",
+  "home.runDetail": "Select runtime → profile → options, inspect memory pools, and monitor background launches from the header Model loading popover with session controls.",
   "home.measure": "3. Measure & share",
   "home.measureDetail": "Run standard-cap serving benchmarks on connected streaming chat engines, then export CSV/Excel or publish results.",
   "home.closing": "Compare setups behind the numbers",
@@ -71,7 +71,7 @@ const messages = {
   "home.faqApiQuestion": "Does loading a model enable access from other apps?",
   "home.faqApiAnswer": "Only after you start Integrations → API server. OpenAI (models, chat, completions, embeddings, responses, audio) and Anthropic Messages share one loopback listener with a persistent rotatable API key, Host validation, and connection limits.",
   "home.faqUpdatesQuestion": "How does AioLM check for updates?",
-  "home.faqUpdatesAnswer": "It checks GitHub once at startup and notifies you without auto-installing. Downloading an update verifies the release SHA-256 first (AppImage updates are manual).",
+  "home.faqUpdatesAnswer": "It checks GitHub once at startup and notifies you without auto-installing. Update downloads track progress and speed in the header Downloads popover and verify the release SHA-256 first (AppImage updates are manual).",
   "home.sourceNotice": "Matches AioLM v{version} desktop release.",
 };
 export type EnglishMessages = typeof messages;

@@ -34,9 +34,9 @@ const messages = {
   "home.workflow": "从模型选择到性能测量",
   "home.workflowDetail": "三步完成模型获取、配置运行与基准分享。",
   "home.choose": "1. 选择模型",
-  "home.chooseDetail": "跨格式搜索并筛选 Hugging Face 模型（含通过 OS 凭据令牌访问的受限仓库），支持 GGUF 与 HF/MLX 模型包下载、暂停续传与摘要校验。",
+  "home.chooseDetail": "跨格式搜索并筛选 Hugging Face 模型（含通过 OS 凭据令牌访问的受限仓库），在顶部“下载”弹窗中统一管理并发下载、实时速度、暂停续传与摘要校验。",
   "home.run": "2. 配置并运行",
-  "home.runDetail": "按运行时 → 预设 → 选项配置，查看内存池估算，并在后台完成加载与会话管理。",
+  "home.runDetail": "按运行时 → 预设 → 选项配置，查看内存池估算，并在后台加载时通过顶部“模型加载”弹窗与会话控件统一管理。",
   "home.measure": "3. 测量与分享",
   "home.measureDetail": "在已连接的流式聊天引擎上运行标准输出上限基准测试，导出 CSV/Excel 或公开发布结果。",
   "home.closing": "对比数据背后的运行配置",
@@ -72,7 +72,7 @@ const messages = {
   "home.faqApiQuestion": "加载模型后，其他应用就能使用了吗？",
   "home.faqApiAnswer": "需在外部集成 → API 服务器中手动启动。OpenAI（models、chat、completions、embeddings、responses、audio）与 Anthropic Messages 共用带持久化可重置密钥、Host 校验与连接上限的同一回环监听器。",
   "home.faqUpdatesQuestion": "AioLM 如何检查更新？",
-  "home.faqUpdatesAnswer": "启动时检查一次 GitHub 公开版本并通知，不会自动安装；下载更新前先校验 SHA-256（AppImage 需手动更新）。",
+  "home.faqUpdatesAnswer": "启动时检查一次 GitHub 公开版本并通知，不会自动安装；更新下载会在顶部“下载”弹窗中显示进度与速度，并先校验 SHA-256（AppImage 需手动更新）。",
   "home.sourceNotice": "对应 AioLM v{version} 桌面版。",
 } satisfies Record<keyof EnglishMessages, string>;
 export default messages;
