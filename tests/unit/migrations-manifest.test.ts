@@ -1,6 +1,7 @@
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { migrationSha256, normalizeMigrationSql } from "@/server/migrations";
 import { REQUIRED_MIGRATIONS } from "@/server/repository";
 
 /**
@@ -25,5 +26,20 @@ function migrationFilesOnDisk(): string[] {
 describe("required migration manifest", () => {
   it("lists exactly the migrations in sql/migrations/", () => {
     expect([...REQUIRED_MIGRATIONS]).toEqual(migrationFilesOnDisk());
+  });
+});
+
+describe("migration checksum normalization", () => {
+  it("normalizes CRLF line endings to LF without changing LF text", () => {
+    expect(normalizeMigrationSql("select 1;\r\nselect 2;\r\n")).toBe("select 1;\nselect 2;\n");
+    expect(normalizeMigrationSql("select 1;\nselect 2;\n")).toBe("select 1;\nselect 2;\n");
+  });
+
+  it("computes identical SHA-256 digests for CRLF and LF SQL variants", () => {
+    const lfSql = "create table bench.example (\n  id int primary key\n);\n";
+    const crlfSql = lfSql.replace(/\n/g, "\r\n");
+
+    expect(migrationSha256(crlfSql)).toBe(migrationSha256(lfSql));
+    expect(migrationSha256(`${lfSql}-- extra\n`)).not.toBe(migrationSha256(lfSql));
   });
 });

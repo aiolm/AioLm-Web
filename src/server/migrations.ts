@@ -15,16 +15,26 @@ import type postgres from "postgres";
  * Callers must supply a reserved single-connection client (see getMigrationDb:
  * max:1) so the lock and the transaction share one session.
  */
+/** Normalize CRLF checkouts so Windows and Unix compute identical migration checksums. */
+export function normalizeMigrationSql(body: string): string {
+  return body.replace(/\r\n/g, "\n");
+}
+
+/** Compute the canonical UTF-8 SHA-256 checksum for a migration SQL body. */
+export function migrationSha256(body: string): string {
+  return createHash("sha256").update(normalizeMigrationSql(body), "utf8").digest("hex");
+}
+
 export async function applyMigrations(sql: postgres.Sql, dir?: string): Promise<string[]> {
   const migrationsDir = dir ?? join(process.cwd(), "sql", "migrations");
   const files = (await readdir(migrationsDir)).filter((f) => f.endsWith(".sql")).sort();
   const bodies = new Map<string, string>();
   for (const file of files) {
-    bodies.set(file, await readFile(join(migrationsDir, file), "utf8"));
+    bodies.set(file, normalizeMigrationSql(await readFile(join(migrationsDir, file), "utf8")));
   }
   const digests = new Map<string, string>();
   for (const [file, body] of bodies) {
-    digests.set(file, createHash("sha256").update(body, "utf8").digest("hex"));
+    digests.set(file, migrationSha256(body));
   }
   return sql.begin(async (tx) => {
     await tx`select pg_advisory_xact_lock(hashtext('aiolm-web-migrations'))`;
