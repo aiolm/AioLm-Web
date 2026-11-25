@@ -645,6 +645,17 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
         void model_info;
         return { ...rest, model_label: label };
       };
+      // Historical migration 010 predates the contract's optional model.source.revision field.
+      const withoutRevision = (info: ReturnType<typeof normalizeModelInfo> | undefined) => {
+        if (!info) return info;
+        const { revision, ...rest } = info;
+        void revision;
+        return rest;
+      };
+      const backfilledSummary = (b: typeof undescribed, label: string) => {
+        const summary = summarizeBenchmark(b);
+        return { ...summary, model_info: withoutRevision(summary.model_info), model_label: label };
+      };
 
       const submissionIds = new Map<string, string>();
       for (const [publicId, benchmark, label] of [
@@ -676,29 +687,29 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
 
       // The backfill reproduces the application helper field for field, on the hidden
       // run too, and the operator-curated label survives the merge untouched.
-      expect(stored.get("described")!.summary).toEqual({ ...summarizeBenchmark(complete), model_label: "Curated Model A" });
-      expect(stored.get("described")!.summary!.model_info).toEqual(normalizeModelInfo(complete));
+      expect(stored.get("described")!.summary).toEqual(backfilledSummary(complete, "Curated Model A"));
+      expect(stored.get("described")!.summary!.model_info).toEqual(withoutRevision(normalizeModelInfo(complete)));
       expect(stored.get("described")!.summary!.model_info).toMatchObject({
         publisher: "Publisher-Org", quantized_by: "Quantizer Org", identity_status: "sha256", sha256: "c".repeat(64) });
 
       // Out-of-contract fields are unknown, never repaired: no publisher is read from
       // the unusable repository, and no quantization or name from the artifact.
-      expect(stored.get("messy")!.summary).toEqual({ ...summarizeBenchmark(messy), model_label: "Curated Model B" });
-      expect(stored.get("messy")!.summary!.model_info).toEqual(normalizeModelInfo(messy));
+      expect(stored.get("messy")!.summary).toEqual(backfilledSummary(messy, "Curated Model B"));
+      expect(stored.get("messy")!.summary!.model_info).toEqual(withoutRevision(normalizeModelInfo(messy)));
       expect(stored.get("messy")!.summary!.model_info).toMatchObject({
         name: null, architecture: null, size_label: null, quantization: null, file_type: null,
         quantized_by: null, repository: null, publisher: null, artifact: null, source: null });
       expect(stored.get("messy")!.summary!.model_info!.base_models)
         .toEqual(["Upstream-Org/example-8B", "org/a", "org/b", "org/c", "org/d", "org/e", "org/f", "org/g"]);
 
-      expect(stored.get("backslash")!.summary).toEqual({ ...summarizeBenchmark(backslash), model_label: "Curated Model C" });
+      expect(stored.get("backslash")!.summary).toEqual(backfilledSummary(backslash, "Curated Model C"));
       expect(stored.get("backslash")!.summary!.model_info).toMatchObject({ artifact: null, name: "Example 8B" });
 
       // A well-shaped filename with no repository and no registry source proves
       // no download origin: the application helper and the backfill agree that
       // the name is kept, the artifact is unknown, and the curated label wins.
-      expect(stored.get("sourceless")!.summary).toEqual({ ...summarizeBenchmark(sourceless), model_label: "Curated Model E" });
-      expect(stored.get("sourceless")!.summary!.model_info).toEqual(normalizeModelInfo(sourceless));
+      expect(stored.get("sourceless")!.summary).toEqual(backfilledSummary(sourceless, "Curated Model E"));
+      expect(stored.get("sourceless")!.summary!.model_info).toEqual(withoutRevision(normalizeModelInfo(sourceless)));
       expect(stored.get("sourceless")!.summary!.model_info).toMatchObject({
         name: "Example 8B", repository: null, publisher: null, artifact: null, source: null });
 
@@ -758,8 +769,11 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     try {
       await applyMigrations(scratch);
       const base = syntheticSubmission();
+      const legacyEnv = { ...base.environment! };
+      delete (legacyEnv as Partial<typeof legacyEnv>).system_memory_bytes;
+      const legacy = syntheticSubmission({ environment: legacyEnv });
       const recorded = syntheticSubmission({ environment: { ...base.environment!, system_memory_bytes: 32 * 1024 ** 3 } });
-      for (const [id, benchmark] of [["recorded", recorded], ["legacy", base]] as const) {
+      for (const [id, benchmark] of [["recorded", recorded], ["legacy", legacy]] as const) {
         const summary = summarizeBenchmark(benchmark);
         delete (summary.setup as Partial<typeof summary.setup>).ram_bytes;
         await scratch`insert into bench.benchmark_runs (submission_id,public_id,owner_hash,body_sha256,benchmark,summary)
@@ -770,7 +784,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       const rows = await scratch`select public_id,benchmark,summary,owner_hash,body_sha256 from bench.benchmark_runs order by public_id`;
       expect(rows[0]!.summary.setup.ram_bytes).toBeNull();
       expect(rows[1]!.summary.setup.ram_bytes).toBe(32 * 1024 ** 3);
-      expect(rows[0]!.benchmark).toEqual(JSON.parse(JSON.stringify(base)));
+      expect(rows[0]!.benchmark).toEqual(JSON.parse(JSON.stringify(legacy)));
       expect(rows[1]!.benchmark).toEqual(JSON.parse(JSON.stringify(recorded)));
       expect(rows[1]!.summary).toEqual(summarizeBenchmark(recorded));
       expect(rows.every(row => row.owner_hash === "0".repeat(64) && row.body_sha256 === "1".repeat(64))).toBe(true);
@@ -1542,6 +1556,10 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
     const memory = new InMemoryBenchmarkStore();
     const ids: string[] = [];
 
+    beforeAll(async () => {
+      await db!`delete from bench.benchmark_runs`;
+    });
+
     async function publish(benchmark: PublicBenchmarkSubmission, summary?: BenchmarkSummary) {
       const submissionId = randomUUID(), ownerSecret = randomBase64Url32();
       benchmark = { ...benchmark, submission_id: submissionId };
@@ -1562,6 +1580,7 @@ describe.skipIf(ADMIN_URL === null)("postgres integration", () => {
       if (accepted.outcome !== "created") throw new Error("serving acceptance failed");
       ids.push(submissionId);
       memory.runs.set(accepted.run.submission_id, accepted.run);
+      memory.byPublic.set(accepted.run.public_id, accepted.run.submission_id);
       return accepted.run;
     }
 
