@@ -201,18 +201,18 @@ The current screenshots were captured from the native macOS app built from
 desktop v0.3.4 source (`SCREENSHOT_SOURCE_VERSION` in
 `src/lib/desktop-release.ts`), not browser-only rendering. They remain historical
 illustrations of model, chat, installation and connection flows, not evidence of
-the v0.4.3 layout. The homepage caption and all localized guide notices disclose
+the v0.5.0 layout. The homepage caption and all localized guide notices disclose
 both versions. Keep the capture version unchanged unless native images are
 actually recaptured, and update their manifest hashes together with the assets.
 
 Keep `DESKTOP_RELEASE_VERSION` in the same file tied to the latest published
-installer assets (v0.4.3 for this release update). Advance that version only after the desktop
+installer assets (v0.5.0 for this release update). Advance that version only after the desktop
 release's exact-source CI, all four platform package builds and public-download
 verification pass. Installer links, checksum examples, the homepage source
 notice and the four localized guide notices share this value.
 
-The localized homepage and guides follow desktop v0.4.3 and the current
-unreleased desktop updates. They cover engine-neutral All formats/Trending
+The localized homepage and guides follow desktop v0.5.0. They cover
+engine-neutral All formats/Trending
 search with repository-read retry, an optional OS-stored Hugging Face access
 token for gated repositories, repository file filtering, GGUF and per-weight
 HF/MLX bundles, pause/resume with retained data and end-to-end digest checks, and isolated background download jobs that keep Discover search, repository inspection, provider discovery, runtime installs, and update checks responsive during concurrent transfers. A mutually exclusive header Downloads popover (alongside Model loading and Activity & notices, without header spinners or duplicate failure popovers) consolidates model, runtime (release and PR), and application update downloads with live transfer speed, active/paused/completed/failed sections, pause/resume/discard, and one-click Configure, paired with inline paused-transfer controls in Discover. The desktop window opens maximized on every platform. Library Saved sessions, local model sorting (default, running first, name, size) with engine filtering, header/Chat default-session controls,
