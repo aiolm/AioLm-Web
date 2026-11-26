@@ -8,7 +8,7 @@ const content: GuideContent = {
   onPage: '本页目录',
   related: '接着看',
   download: '查看全部下载文件',
-  screenshotNotice: `说明基于 v${DESKTOP_RELEASE_VERSION}。截图来自 v${SCREENSHOT_SOURCE_VERSION} macOS 版本，部分标签和布局有所不同。`,
+  screenshotNotice: `说明基于 v${DESKTOP_RELEASE_VERSION}，截图来自 v${SCREENSHOT_SOURCE_VERSION} 原生 Windows 桌面应用。`,
   enlarge: '放大查看',
   close: '关闭',
   panHint: '左右滑动可查看图片其他部分。',
@@ -149,7 +149,7 @@ const content: GuideContent = {
             '桌面端执行 help 需要对确切程序、参数、目录和环境进行原生 OS 批准；PR 源码构建会以当前用户权限编译。',
           ],
           image: 'llama-install',
-          caption: '原生 macOS llama.cpp Metal 运行时界面。',
+          caption: '原生 Windows llama.cpp Vulkan 运行时界面。',
           links: [{ href: '/zh/guides/adapters#find', label: '查看外部引擎连接步骤' }],
         },
         {
@@ -173,7 +173,7 @@ const content: GuideContent = {
           title: '6. 在库中管理会话与文件',
           body: ['默认会话由标题栏与聊天控制，命名会话与本地文件在库 → 已保存的会话管理。'],
           points: [
-            '支持对本地模型排序（默认、运行中优先、按名称、按大小）及按引擎或关键词筛选；点击模型或模型设置可预览配置，路径、复制、删除和更新操作位于独立文件操作行。',
+            '支持对本地模型排序（默认、运行中优先、按名称、按大小）及按引擎或关键词筛选；点击去除 -00001-of-00004 等分片后缀的统一模型名称或模型设置可预览配置，路径、复制、删除和更新操作位于独立文件操作行。',
             '若搜索仅命中隐藏的辅助文件，可点击显示模型辅助文件查看而不丢失当前筛选。',
             '上游更新会复用未变更文件（需先停止所有会话；单文件 GGUF 变更需完整重下）。',
           ],
@@ -187,15 +187,15 @@ const content: GuideContent = {
           body: ['按选择运行时 → 选择预设 → 调整选项配置；若未选运行时，将自动选用首个可用项。'],
           points: [
             '“保存配置并启动”会自动关闭设置窗口，并在顶部“模型加载”弹窗（与“下载”“活动与通知”弹窗互斥展开）中实时跟踪后台检查与加载状态，支持取消及失败恢复。',
-            '选项标题同时展示易读说明与主 CLI 参数或 JSON 键（悬停看完整签名）；简单控件自动分栏，复杂编辑器保持全宽。',
-            '请分开查看显存、运行内存、内存卸载与 SSD 卸载；共享内存设备不会重复叠加总和。',
+            '选项标题同时展示易读说明与主 CLI 参数或 JSON 键（悬停看完整签名）；简单控件自动分栏，复杂编辑器保持全宽，并可通过共享的“启动命令”查看器核对解析后的启动命令。',
+            '通过加载前即始终展示的带准确度等级内存估算，分开查看显存、运行内存、内存卸载与 SSD 卸载；共享内存设备不会重复叠加总和。',
           ],
           image: 'model-settings',
-          caption: `历史 v${SCREENSHOT_SOURCE_VERSION} 设置截图；v${DESKTOP_RELEASE_VERSION} 会充分利用宽窗口分栏。`,
+          caption: '具备多分栏选项与实时内存估算的模型设置界面。',
           more: [{
             title: '内存估算、过期帮助与超时说明',
             body: [
-              'llama.cpp 估算覆盖受支持架构（含部分 Qwen 混合架构），不支持时显示无法估算而非零。可回收的系统文件缓存不计入常驻内存。',
+              'llama.cpp 估算覆盖受支持架构（含部分 Qwen 混合架构），并在加载前始终显示带准确度等级的预估数值，不支持时显示无法估算而非零。可回收的系统文件缓存不计入常驻内存。',
               '非 llama.cpp 引擎帮助过期时提供重新检查选项（及详情加载失败重试）。启动与预热上限为 10 分钟；Windows 提前退出时会提示缺失或损坏的 DLL。',
             ],
           }],
@@ -205,8 +205,8 @@ const content: GuideContent = {
           title: '8. 在已加载会话中聊天',
           body: ['打开聊天，在顶部会话选择器指定回答会话即可发送消息（无需启动 API 服务器）。'],
           points: [
-            '支持侧边栏对话搜索、编辑并重发历史用户消息、重新生成助手回复、代码块一键复制，以及剪贴板粘贴（或拖放）图片与点击放大预览灯箱。',
-            '工具审批、进度与错误严格限定在发起对话中，查看其他对话时会提示返回原对话以防误操作。对话设置支持文档检索与本地 ffmpeg 音视频预处理。',
+            '支持侧边栏对话搜索、生成或模型加载期间排队发送与随时插话转向（Steer）、流式思考块自动展开、编辑并重发历史用户消息、重新生成助手回复、代码块一键复制，以及剪贴板粘贴（或拖放）图片与点击放大预览灯箱。',
+            '工具审批、进度与错误严格限定在发起对话中，查看其他对话时会提示精简的返回原对话按钮以防误操作。对话设置支持文档检索与本地 ffmpeg 音视频预处理。',
             '项目文档绑定与 MCP 服务器首次启动均需原生 OS 批准（编辑命令保留空格并在丢弃未保存修改前提示确认）。',
           ],
           image: 'chat',
@@ -215,7 +215,7 @@ const content: GuideContent = {
         {
           id: 'api',
           title: '本地 API 服务器',
-          body: ['在外部集成 → API 服务器独立启停。OpenAI（/v1/models、chat/completions、completions、embeddings、支持流式取消的 responses、audio/transcriptions、audio/translations）与 Anthropic Messages（/v1/messages）共用 127.0.0.1:8080。'],
+          body: ['在外部集成 → API 服务器独立启停，也可开启设置 → 服务器 → 应用启动时启动API服务器。OpenAI（/v1/models、chat/completions、completions、embeddings、支持流式取消的 responses、audio/transcriptions、audio/translations）与 Anthropic Messages（/v1/messages）共用 127.0.0.1:8080。'],
           points: [
             '强制校验回环 Host 头（否则返回 421）与 64 个连接上限；未加载模型时返回 HTTP 503。托管自动连接会使用去除文件扩展名的模型库显示名称对外提供服务。',
             '当引擎支持函数调用时，自动将 Responses 与 Anthropic 函数工具转换到 Chat Completions。',
@@ -241,22 +241,22 @@ const content: GuideContent = {
         {
           id: 'benchmarks',
           title: '基准测试与公开分享',
-          body: ['新基准对所有已连接的文本聊天引擎使用单一 Cold Prompt 方式 openai-chat-serving@5，在不进行工作负载预热的情况下请求最多 128 个输出词元。'],
+          body: ['新基准对所有已连接的文本聊天引擎使用单一 Cold Prompt 方式 openai-chat-serving@5，在不进行工作负载预热的情况下请求最多 128 个输出词元；结果优先按并发数（Concurrency）排序，同时提供 TTFT、Prefill、Decode、TPOT、Throughput、E2E 指标与可选推理引擎的共享启动命令查看器。'],
           points: [
             '提前结束也有效。词元报告是可选的，未报告的指标保持不可用。每次运行使用新的随机数和逐请求输入哈希来隔离测量输入。',
-            '开始前需停止活动会话；接受刷新的关键设置仅重跑目标支持检查，不会自动启动测试。',
+            '开始前需停止活动会话（正在进行基准测试时，其他模型操作不会在后台静默排队）；接受刷新的关键设置仅重跑目标支持检查，不会自动启动测试。',
             '通过“在网站上管理”编辑说明或删除；复制的恢复码未变时 60 秒后从剪贴板自动清除。',
           ],
           more: [{
             title: '测量说明与配置导入',
-            body: ['耗时与输出字节由客户端观测，每行记录每个已发送请求的输入哈希。从结果创建预设仅导入兼容启动设置，不下载模型。'],
+            body: ['耗时与输出字节由客户端观测，每行记录每个已发送请求的输入哈希，启动命令查看器可区分直接运行推理引擎的命令与代理辅助提示。从结果创建预设仅导入兼容启动设置，不下载模型。'],
           }],
         },
         {
           id: 'cli',
           title: 'CLI 与便携运行时',
           body: ['aiolm-cli 随安装包附带（Mac 位于 AioLM.app/Contents/MacOS/aiolm-cli）。'],
-          code: 'aiolm-cli runtime list\naiolm-cli runtime select <backend> <build>\naiolm-cli server start|status|logs|stop\naiolm-cli runtime discover [folder]\naiolm-cli runtime connect <candidate-id> <model-id> [folder]',
+          code: 'aiolm-cli runtime list\naiolm-cli runtime select <backend> <build>\naiolm-cli server start|status|logs|stop\naiolm-cli runtime discover [folder]\naiolm-cli runtime connect <candidate-id> [folder]',
           more: [{
             title: 'CLI 配置、日志与便携包',
             body: [
@@ -321,13 +321,13 @@ const content: GuideContent = {
     },
     adapters: {
       title: '连接外部推理引擎',
-      description: '自动查找 → 检查项目 → 选择模型 → 连接，四步接入本地引擎。',
+      description: '自动查找 → 检查项目 → 连接，三步完成接入，无需预先绑定模型。',
       sections: [
         {
           id: 'prepare',
           title: '连接流程概览',
           diagram: 'adapter-flow',
-          body: ['无需手写配置文件，即可连接本机 OpenAI 兼容 v1 服务或安装目录。'],
+          body: ['无需手写配置文件或绑定单个模型，即可连接本机 OpenAI 兼容 v1 服务或安装目录。'],
         },
         {
           id: 'find',
@@ -344,22 +344,25 @@ const content: GuideContent = {
         },
         {
           id: 'choose-model',
-          title: '2. 选择模型',
-          body: ['从运行中服务返回的模型列表或文件夹模式下的本地模型库中选择。'],
-          points: ['若程序通过子命令提供服务，请在启动命令中选择一项并点击检查所选命令。'],
+          title: '2. 检查启动命令与提供模型',
+          body: ['以只读方式查看运行中服务提供的模型列表，或核验安装目录的启动命令与帮助，无需将连接绑定到单个模型。'],
+          points: [
+            '若程序通过子命令提供服务，请在启动命令中选择一项并点击检查所选命令。',
+            '托管安装会在您首次启动模型库中的每个兼容模型时，自动完成身份、聊天与流式验证。',
+          ],
           image: 'auto-model',
-          caption: '外部引擎模型选择界面。',
+          caption: '不锁定单一模型的外部引擎检查与可用模型预览界面。',
         },
         {
           id: 'connect',
-          title: '3. 连接与实时验证',
-          body: ['点击连接，验证真实聊天回复与流式传输通过后再保存到应用内。'],
+          title: '3. 连接与保存',
+          body: ['点击连接即可将外部推理引擎接入并保存到应用内。'],
           points: [
-            '连接运行中服务使用 AioLM 本地代理（保留原服务上报的模型 ID）；停止连接只关闭代理，不会关闭原服务。托管连接会以去除文件扩展名的模型库显示名称提供服务（分片 GGUF 模型使用去除分片编号的统一名称）。',
+            '连接运行中服务会注册其列出的模型（最多 128 个），并通过 AioLM 本地代理转发（不预先锁定单个模型）；停止连接只关闭代理，不会关闭原服务。托管连接会以去除文件扩展名和分片编号的统一模型库显示名称运行兼容模型，并在首次启动各模型时完成聊天与流式验证。',
             '自动连接也使用相同的单一基准方式。连接验证不代表已验证多模态或工具质量。',
           ],
           image: 'auto-connect',
-          caption: '连接验证完成界面。',
+          caption: '外部引擎连接保存完成界面。',
         },
         {
           id: 'launch-options',
@@ -367,12 +370,13 @@ const content: GuideContent = {
           body: ['托管连接根据所选命令的实际帮助生成分组选项编辑器。'],
           points: [
             '简单控件采用响应式多栏，JSON、词元列表、路径与重复编辑器保持全宽，并提供命令与帮助工具。',
+            '将带引号的绝对路径（如 Windows“复制文件地址”）粘贴到选项字段或附加启动参数时，系统会自动去除首尾成对的 " 或 \' 引号。',
             '若已审核的 help 与运行时标识不再一致（PATH 等未变的继承环境变量不计入标识），启动时会再次运行一次已审核的 help 命令，若解析结果完全一致则沿用审核。仅当准确的可执行文件路径、参数、实际工作目录和环境均与此前已批准的记录一致时，help 执行才会跳过原生确认提示；只要其中任一执行输入发生变化，都需要重新进行原生批准。',
             '若 help 已变更或存在仅针对旧构建的选项确认，则会停止启动并要求重新检查选项。保存配置并启动会自动关闭弹窗并在后台运行检查与加载。',
           ],
           more: [{
             title: '附加启动参数与外部托管服务',
-            body: ['附加启动参数按字面量传递且不执行 Shell，拒绝重复或应用保留标志。已在运行的服务不在 AioLM 内修改启动参数。'],
+            body: ['附加启动参数按字面量传递且不执行 Shell（粘贴绝对路径时会自动去除首尾匹配引号），拒绝重复或应用保留标志。已在运行的服务不在 AioLM 内修改启动参数。'],
           }],
         },
         {

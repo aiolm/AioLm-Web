@@ -126,6 +126,14 @@ describe("model names and the weight encoding stay independent", () => {
     expect(summarizeBenchmark(described({ ...COMPLETE, name: "Example-Custom-Instruct-8B", base_models: ["org/Example-8B"] })).model_label).toBe("Example-Custom-Instruct-8B");
     expect(summarizeBenchmark(described({ ...COMPLETE, name: "Q4_K_M" })).model_label).toBe("Q4_K_M");
   });
+  it("strips split shard suffixes in unified display names without altering non-shards", () => {
+    expect(summarizeBenchmark(described({ ...COMPLETE, name: "Example-8B-Q4_K_M-00001-of-00004.gguf" })).model_label).toBe("Example-8B");
+    expect(summarizeBenchmark(described({ ...COMPLETE, name: "Example-8B-0001-of-0004.gguf" })).model_label).toBe("Example-8B");
+    expect(summarizeBenchmark(described({ ...COMPLETE, name: "Example-8B-00001-of-00004" })).model_label).toBe("Example-8B");
+    for (const kept of ["Example-1-of-4", "Example-0005-of-0004", "Example-0001-of-00004", "Example-0001-OF-0004"]) {
+      expect(summarizeBenchmark(described({ ...COMPLETE, name: kept })).model_label).toBe(kept);
+    }
+  });
 });
 
 describe("engine-neutral model source", () => {

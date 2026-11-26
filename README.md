@@ -197,31 +197,30 @@ it never touches, and the real upper bound of the 24h cutoffs.
 
 `/<locale>/guides` provides installation, first conversation, engine selection and external inference engine setup in all four site languages. Instructions use the visible button names, direct platform download choices and one action per illustrated step. Technical details and validation limits remain in expandable sections. User-facing help stays on the site; GitHub hosts release downloads, source and license.
 
-The current screenshots were captured from the native macOS app built from
-desktop v0.3.4 source (`SCREENSHOT_SOURCE_VERSION` in
-`src/lib/desktop-release.ts`), not browser-only rendering. They remain historical
-illustrations of model, chat, installation and connection flows, not evidence of
-the v0.5.0 layout. The homepage caption and all localized guide notices disclose
-both versions. Keep the capture version unchanged unless native images are
-actually recaptured, and update their manifest hashes together with the assets.
+The current screenshots were captured from the native Windows app built from
+desktop v0.5.2 source (`SCREENSHOT_SOURCE_VERSION` in
+`src/lib/desktop-release.ts`) rather than browser-only rendering. The homepage
+caption and all localized guide notices disclose the desktop release and
+capture versions. Keep the capture version aligned with recaptured native images,
+and update their manifest hashes together with the assets.
 
 Keep `DESKTOP_RELEASE_VERSION` in the same file tied to the latest published
-installer assets (v0.5.0 for this release update). Advance that version only after the desktop
+installer assets (v0.5.2 for this release update). Advance that version only after the desktop
 release's exact-source CI, all four platform package builds and public-download
 verification pass. Installer links, checksum examples, the homepage source
 notice and the four localized guide notices share this value.
 
-The localized homepage and guides follow desktop v0.5.0. They cover
-engine-neutral All formats/Trending
+The localized homepage and guides follow desktop v0.5.2. They cover
+Windows x64 EXE and MSI installers, engine-neutral All formats/Trending
 search with repository-read retry, an optional OS-stored Hugging Face access
 token for gated repositories, repository file filtering, GGUF and per-weight
 HF/MLX bundles, pause/resume with retained data and end-to-end digest checks, and isolated background download jobs that keep Discover search, repository inspection, provider discovery, runtime installs, and update checks responsive during concurrent transfers. A mutually exclusive header Downloads popover (alongside Model loading and Activity & notices, without header spinners or duplicate failure popovers) consolidates model, runtime (release and PR), and application update downloads with live transfer speed, active/paused/completed/failed sections, pause/resume/discard, and one-click Configure, paired with inline paused-transfer controls in Discover. The desktop window opens maximized on every platform. Library Saved sessions, local model sorting (default, running first, name, size) with engine filtering, header/Chat default-session controls,
-supporting-file search reveal, model updates with file reuse, shared profiles,
+supporting-file search reveal, model updates with file reuse, unified shard-free model names (stripping suffixes such as `-00001-of-00004`), shared profiles,
 automatic first-available runtime selection and Choose runtime → Choose profile →
 Adjust options remain the execution flow. Save profile & start closes the editor
 automatically and tracks background launch in the header Model loading popover with Cancel and failure recovery; wide
-workspaces, meaning-first option titles paired with primary CLI/JSON keys and
-grouped controls use the available window. Resource guidance distinguishes
+workspaces, meaning-first option titles paired with primary CLI/JSON keys,
+the shared Launch command viewer (also usable on benchmarks with inference-engine selection), and grouped controls use the available window. Pre-load resource estimates are always shown alongside an accuracy grade and distinguish
 physical/shared memory pools, allocation, capacity overflow, stored files and
 binary byte units instead of equating file size, reclaimable cache and permanent
 RAM.
@@ -231,26 +230,29 @@ non-launchable support files and requires explicit checking of installation
 candidates, including a sole preselected folder item. Only a sole running server
 may be checked automatically. Resolved command/address labels, readable library
 display names (without file extensions or split-GGUF shard counters) for managed
-connections, help-derived grouped controls, literal-token launch arguments and
-protected/duplicate flag safeguards, Command and help tools, Recheck options and
-launch-time unchanged-help re-confirmation are described without claiming every
+connections, help-derived grouped controls, literal-token launch arguments,
+automatic stripping of matching surrounding quotes (`"` or `'`) on pasted
+absolute paths in options and additional launch arguments, protected/duplicate
+flag safeguards, Command and help tools, Recheck options and launch-time
+unchanged-help re-confirmation are described without claiming every
 engine/device is compatible. Previously verified models avoid a redundant
 temporary load/unload; readiness still checks the actual serving process and
 model identity, and Windows DLL load failures are surfaced explicitly.
 Standard managed Python runtime installs (non-Metal vLLM and mlx-vlm) require
 binary wheels only without falling back to source builds. Windows llama.cpp ROCm packaging auto-discovers standard AMD ROCm/HIP SDK directories (in addition to HIP_PATH/ROCM_PATH/hipcc), supports split bin/ DLL and lib/ kernel layouts, and surfaces context-specific packaging guidance across release, PR, repair, and bundle flows.
 
-Internal chat is independent of the explicitly started API server. The server
+Internal chat is independent of the explicitly started API server (which can also
+start automatically at launch via Settings → Server → Start API server on app launch). The server
 keeps its rotatable API key in a private `api-key` file inside the AioLM data
 folder across app and server restarts, serves OpenAI-compatible (`/v1/models`,
 `chat/completions`, `completions`, `embeddings`, `responses` with stream cancel,
 `audio/transcriptions`, `audio/translations`) and Anthropic Messages
 (`/v1/messages`) routes, translates Anthropic Messages and OpenAI Responses
 function tools when supported by the engine and enforces loopback Host and
-connection limits. Chat offers sidebar conversation search, user-turn editing
+connection limits. Chat supports queueing or steering follow-up messages while a reply streams or a model is loading, auto-expanding thinking blocks, sidebar conversation search, user-turn editing
 and resending, assistant regeneration, code-block copy headers and clipboard or
 drag-and-drop image attachments with a lightbox preview. It scopes pending turns,
-tool approvals and errors to the owning conversation, and MCP
+tool approvals and errors to the owning conversation with a compact return button when viewing another chat during an active turn, and MCP
 server first launches, desktop help execution, project document bindings and
 unpicked manifest paths require native OS approval. Personal AGENTS.md
 instructions retain their precedence and read-only role. Explicit skills work
@@ -259,10 +261,10 @@ catalog and read tool, and long catalog descriptions are shortened without
 losing the full entry point. The guides also explain verification-first
 installs (with one-liners as convenience alternatives), close-to-tray with live
 tray-menu status of loaded models and the API server,
-configurable login startup, CLI `runtime discover`/`connect` and log compaction,
-and 60-second clipboard clearing for copied recovery codes. New Cold Prompt
+configurable login startup, CLI `runtime discover`/`connect` (`aiolm-cli runtime connect <candidate-id> [folder]`) and log compaction,
+and 60-second clipboard clearing for copied recovery codes. Model operations do not silently queue behind an active benchmark; Cold Prompt
 `openai-chat-serving@5` benchmarks isolate measured inputs with a fresh run nonce
-and per-point/request prefixes, without force declarations or per-point model reloads.
+and per-point/request prefixes, sort operating points by concurrency first, display standard metric terms (`TTFT`, `Prefill`, `Decode`, `TPOT`, `Throughput`, `E2E`), and show the shared Launch command viewer without force declarations or per-point model reloads.
 Startup update notices do not install an update automatically; manual update downloads report progress and speed in the header Downloads popover before verifying SHA-256.
 The desktop's public-benchmark explorer is an unprivileged, private-browsing
 window loading the existing website directly, not an iframe or a second explorer
@@ -288,7 +290,7 @@ an accessible native dialog, with horizontal viewing on small screens.
 Screenshots do not establish model quality, every engine/device combination,
 F09 resolution, full Linux acceptance or historical update-installation results.
 
-The external-engine guide leads with the automatic flow available in v0.3.3 and later: find a local server or choose an installation folder, select a model, then connect. It does not ask users for engine IDs, JSON, executables or probe commands. The current implementation targets loopback OpenAI-compatible v1; it does not infer or translate arbitrary wire protocols. A running local server must return an actual model list before it is offered, and actual text/chat and SSE checks must pass before a connection is saved. An existing server remains outside AioLM's process ownership; disconnecting stops AioLM's proxy, not the original server. An installed program is considered for managed launch only when its launch method and model identity are clear. Ambiguous commands or models, different protocols and required credentials remain unconfirmed. An already running container server can use the same local protocol, but automatic container/daemon creation and management are not implemented. Availability of this flow does not establish all-engine validation.
+The external-engine guide leads with the 3-step automatic flow available in v0.5.2 (replacing the earlier 4-step flow from v0.3.3): find a local server or choose an installation folder, inspect the server or command help, then connect without pre-binding a model. It does not ask users for engine IDs, JSON, executables or probe commands. The current implementation targets loopback OpenAI-compatible v1; it does not infer or translate arbitrary wire protocols. A running local server lists its served models read-only and registers them (up to 128 bindings) through AioLM's local proxy without locking to a single model; stopping the connection stops only the proxy, not the original server. An installed program checks command help during connection and verifies each compatible library model (identity, chat, and streaming) on its first launch. Ambiguous commands, different protocols and required credentials remain unconfirmed. An already running container server can use the same local protocol, but automatic container/daemon creation and management are not implemented. Availability of this flow does not establish all-engine validation.
 
 Manual registration remains under expandable advanced guidance, illustrated with the current native app. That section distinguishes provider-authored `*.setup.json` input recipes with companion programs, provider/developer-prepared completed registration JSON for advanced import (`*.engine.json` is only a filename example), and the engine's own configuration files such as `deployment.json`. Manual registration does not require either import file: the form constructs the registration and successful registration saves it internally as `adapters/<engine-id>/<runtime-id>/registration.json`. It does not export a separate `.engine.json` or infer unknown model/port/probe settings.
 

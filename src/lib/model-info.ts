@@ -122,11 +122,23 @@ export function normalizeModelInfo(benchmark: PublicBenchmarkSubmission): Benchm
  * metadata; everything else keeps the existing hash-or-status label, so a run
  * without metadata still reads exactly as it did before.
  */
+/** Strip valid split-GGUF / Safetensors shard suffixes like `-00001-of-00004` on display stems. */
+function stripModelShardSuffix(stem: string): string {
+  const match = /^(.+)-(\d{4,5})-of-(\d{4,5})$/.exec(stem);
+  if (!match) return stem;
+  const [, base = "", indexText = "", totalText = ""] = match;
+  if (base.endsWith("/") || base.endsWith("\\") || indexText.length !== totalText.length) return stem;
+  const index = Number(indexText);
+  const total = Number(totalText);
+  return total > 1 && index > 0 && index <= total ? base : stem;
+}
+
 /** Name presentation is separate from weight identity: never derive quantization here. */
 export function cleanModelName(value: string): string {
-  const withoutExtension = value.replace(/\.gguf$/i, "");
-  const cleaned = withoutExtension.replace(/[-_. ](?:UD[-_])?(?:IQ[1-4]_[A-Z0-9_]+|Q[2-8]_[A-Z0-9_]+|BF16|FP16|F16|FP32|F32)$/i, "");
-  return cleaned || withoutExtension;
+  const withoutExtension = value.replace(/\.(?:gguf|safetensors)$/i, "");
+  const withoutShard = stripModelShardSuffix(withoutExtension);
+  const cleaned = withoutShard.replace(/[-_. ](?:UD[-_])?(?:IQ[1-4]_[A-Z0-9_]+|Q[2-8]_[A-Z0-9_]+|BF16|FP16|F16|FP32|F32)$/i, "");
+  return cleaned || withoutShard;
 }
 
 export function modelLabelFor(benchmark: PublicBenchmarkSubmission, info: BenchmarkModelInfo | null): string {

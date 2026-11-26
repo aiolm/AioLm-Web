@@ -34,6 +34,13 @@ describe("install platform tabs", () => {
     expect(html).not.toContain('href="https://github.com/aiolm/AioLM/releases/latest"');
     expect(html).toContain('href="/en/guides/install#linux"');
   });
+  it("provides the verified Windows installer command and both EXE and MSI download destinations", () => {
+    const html = renderToStaticMarkup(<InstallCommand locale="en" messages={messages} macosGuideUrl="/en/guides/install#macos" linuxGuideUrl="/en/guides/install#linux" />);
+    const panel = html.match(/<div id="panel-windows"[^]*?<div id="panel-macos"/)?.[0] ?? "";
+    expect(panel).toContain("install.ps1");
+    expect(panel).toContain(`href="https://github.com/aiolm/AioLM/releases/download/v${DESKTOP_RELEASE_VERSION}/AioLM_${DESKTOP_RELEASE_VERSION}_x64-setup.exe"`);
+    expect(panel).toContain(`href="https://github.com/aiolm/AioLM/releases/download/v${DESKTOP_RELEASE_VERSION}/AioLM_${DESKTOP_RELEASE_VERSION}_x64_en-US.msi"`);
+  });
   it("provides the verified macOS installer command and real download/guide destinations", () => {
     const html = renderToStaticMarkup(<InstallCommand locale="en" messages={messages} macosGuideUrl="/en/guides/install#macos" linuxGuideUrl="/en/guides/install#linux" />);
     const panel = html.match(/<div id="panel-macos"[^]*?<div id="panel-linux"/)?.[0] ?? "";

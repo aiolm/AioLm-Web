@@ -8,7 +8,7 @@ const content: GuideContent = {
   onPage: 'On this page',
   related: 'Next steps',
   download: 'See all download files',
-  screenshotNotice: `Instructions follow v${DESKTOP_RELEASE_VERSION}. Screenshots come from v${SCREENSHOT_SOURCE_VERSION} macOS builds, so some labels and layouts differ.`,
+  screenshotNotice: `Instructions follow v${DESKTOP_RELEASE_VERSION}; screenshots are native Windows captures from v${SCREENSHOT_SOURCE_VERSION}.`,
   enlarge: 'View larger',
   close: 'Close',
   panHint: 'Swipe sideways to see the rest of the image.',
@@ -149,7 +149,7 @@ const content: GuideContent = {
             'Desktop help execution requires native OS approval for the exact program, arguments, directory, and environment; PR source builds compile third-party code as your user.',
           ],
           image: 'llama-install',
-          caption: 'Native llama.cpp Metal runtime screen.',
+          caption: 'Native Windows llama.cpp Vulkan runtime screen.',
           links: [{ href: '/en/guides/adapters#find', label: 'External-engine connection steps' }],
         },
         {
@@ -173,7 +173,7 @@ const content: GuideContent = {
           title: '6. Manage sessions in the Library',
           body: ['Use the header and Chat for the default session, and Library → Saved sessions for named sessions and local model files.'],
           points: [
-            'Sort local models (default, running first, name, or size) and filter by engine or search query; click a model or Model settings to preview, with delete, copy, and update actions in the file-action row.',
+            'Sort local models (default, running first, name, or size) and filter by engine or search query; click a model (shown with unified names that strip split-GGUF shard suffixes such as -00001-of-00004) or Model settings to preview, with delete, copy, and update actions in the file-action row.',
             'If search matches only hidden supporting files, click Show supporting files while keeping your filters.',
             'Upstream model updates reuse unchanged files (stop all sessions first; single-file GGUF updates re-download in full).',
           ],
@@ -187,15 +187,15 @@ const content: GuideContent = {
           body: ['Model settings follow Choose runtime → Choose profile → Adjust options, auto-picking the first available runtime if none is selected.'],
           points: [
             'Save profile & start saves and closes the editor automatically while tracking checks and background loading in the header Model loading popover (mutually exclusive with Downloads and Activity & notices) with Cancel and failure recovery.',
-            'Option titles pair human-readable meaning with the primary CLI flag or JSON key (full signature on hover); simple controls use multi-column grids while complex editors stay full width.',
-            'Check VRAM, Runtime RAM, RAM Offload, and SSD Offload separately; shared-memory GPUs omit combined totals so RAM is not counted twice.',
+            'Option titles pair human-readable meaning with the primary CLI flag or JSON key (full signature on hover); simple controls use multi-column grids while complex editors stay full width, and the shared Launch command viewer shows the resolved launch command.',
+            'Check VRAM, Runtime RAM, RAM Offload, and SSD Offload separately alongside an accuracy grade always shown before loading; shared-memory GPUs omit combined totals so RAM is not counted twice.',
           ],
           image: 'model-settings',
-          caption: `Historical v${SCREENSHOT_SOURCE_VERSION} settings view; v${DESKTOP_RELEASE_VERSION} expands options across wider windows.`,
+          caption: 'Model settings with multi-column options and live memory estimates.',
           more: [{
             title: 'Memory estimates, stale help & timeouts',
             body: [
-              'llama.cpp estimates cover supported architectures (including supported Qwen hybrids) and show Unavailable instead of zero when unsupported. Reclaimable OS file cache is never treated as permanent RAM.',
+              'llama.cpp estimates cover supported architectures (including supported Qwen hybrids), always display pre-load memory figures with an accuracy grade, and show Unavailable instead of zero when unsupported. Reclaimable OS file cache is never treated as permanent RAM.',
               'For non-llama.cpp engines, stale option info offers Recheck options (plus Retry on load errors). Startup/warmup allows up to 10 minutes; Windows early exits surface missing or damaged DLL errors.',
             ],
           }],
@@ -205,8 +205,8 @@ const content: GuideContent = {
           title: '8. Chat with a loaded session',
           body: ['Open Chat, pick an answering session in the chat header, and send a message (no API server needed).'],
           points: [
-            'Search conversations in the sidebar, edit and resend earlier user messages, regenerate assistant replies, copy code blocks with one click, and paste images from the clipboard (or drag and drop) with a click-to-enlarge lightbox.',
-            'Tool approvals, progress, and errors stay scoped to the owning conversation, with a return button when viewing another chat; conversation settings hold document retrieval and optional local ffmpeg audio/video preprocessing.',
+            'Search conversations in the sidebar, queue or steer follow-up messages while a reply streams or a model is loading, auto-expand thinking blocks as they stream, edit and resend earlier user messages, regenerate assistant replies, copy code blocks with one click, and paste images from the clipboard (or drag and drop) with a click-to-enlarge lightbox.',
+            'Tool approvals, progress, and errors stay scoped to the owning conversation, with a compact return button when viewing another chat during an active turn; conversation settings hold document retrieval and optional local ffmpeg audio/video preprocessing.',
             'Project document links and first-run MCP servers require native OS approval (editing MCP commands preserves whitespace and warns before discarding drafts).',
           ],
           image: 'chat',
@@ -215,7 +215,7 @@ const content: GuideContent = {
         {
           id: 'api',
           title: 'Local API server',
-          body: ['Start Integrations → API server independently of models; OpenAI (/v1/models, chat/completions, completions, embeddings, responses with stream cancel, audio transcriptions/translations) and Anthropic Messages (/v1/messages) share 127.0.0.1:8080.'],
+          body: ['Start Integrations → API server independently of models (or enable Settings → Server → Start API server on app launch); OpenAI (/v1/models, chat/completions, completions, embeddings, responses with stream cancel, audio transcriptions/translations) and Anthropic Messages (/v1/messages) share 127.0.0.1:8080.'],
           points: [
             'Requests require a loopback Host header (421 otherwise), obey a 64-connection cap, and return 503 if no model is loaded. Managed automatic connections expose the model’s readable library display name without the file extension.',
             'Function tools translate to Chat Completions when the loaded engine supports function calling; unsupported built-in Responses tools are rejected.',
@@ -241,22 +241,22 @@ const content: GuideContent = {
         {
           id: 'benchmarks',
           title: 'Benchmarks & sharing',
-          body: ['New benchmarks use the single Cold Prompt method openai-chat-serving@5 for every connected text-chat engine, requesting at most 128 output tokens without workload warmup.'],
+          body: ['New benchmarks use the single Cold Prompt method openai-chat-serving@5 for every connected text-chat engine, requesting at most 128 output tokens without workload warmup; results sort by concurrency first and surface TTFT, Prefill, Decode, TPOT, Throughput, and E2E alongside the shared Launch command viewer (with engine selection).'],
           points: [
             'Early completion is valid. Usage reporting is optional; unreported token metrics stay unavailable. A fresh run nonce and per-request input hashes isolate measured inputs.',
-            'Stop running sessions first; accepting refreshed Key settings repeats only the target support check without auto-starting.',
+            'Stop running sessions first—model operations never silently queue behind an active benchmark; accepting refreshed Key settings repeats only the target support check without auto-starting.',
             'Manage publications via Shared results → Manage on website (copied recovery codes auto-clear from the clipboard after 60s).',
           ],
           more: [{
             title: 'Measurement & profile import details',
-            body: ['Timing and output bytes are client-observed; each row records one input hash per dispatched request. Creating a profile from a result imports compatible launch settings only and never downloads models or runtimes.'],
+            body: ['Timing and output bytes are client-observed; each row records one input hash per dispatched request, while Launch command distinguishes direct engine invocations from attached proxy helpers. Creating a profile from a result imports compatible launch settings only and never downloads models or runtimes.'],
           }],
         },
         {
           id: 'cli',
           title: 'CLI & portable runtimes',
           body: ['aiolm-cli ships beside the desktop app for headless server control, runtime management, and portable Python bundles.'],
-          code: 'aiolm-cli runtime list\naiolm-cli runtime select <backend> <build>\naiolm-cli server start|status|logs|stop\naiolm-cli runtime discover [folder]\naiolm-cli runtime connect <candidate-id> <model-id> [folder]',
+          code: 'aiolm-cli runtime list\naiolm-cli runtime select <backend> <build>\naiolm-cli server start|status|logs|stop\naiolm-cli runtime discover [folder]\naiolm-cli runtime connect <candidate-id> [folder]',
           more: [{
             title: 'CLI configuration, logs & bundles',
             body: [
@@ -321,13 +321,13 @@ const content: GuideContent = {
     },
     adapters: {
       title: 'Connect an external inference engine',
-      description: 'Find automatically → Check selected item → Pick model → Connect.',
+      description: 'Find automatically → Check selected item → Connect (without pre-binding a model).',
       sections: [
         {
           id: 'prepare',
           title: 'Overview',
           diagram: 'adapter-flow',
-          body: ['Connect any local OpenAI-compatible v1 server or install folder without editing JSON files.'],
+          body: ['Connect any local OpenAI-compatible v1 server or install folder without editing JSON files or locking the connection to a single model.'],
         },
         {
           id: 'find',
@@ -344,22 +344,25 @@ const content: GuideContent = {
         },
         {
           id: 'choose-model',
-          title: '2. Choose a model',
-          body: ['Pick a model reported by the running server or a local catalog model for folder installations.'],
-          points: ['If an engine exposes serving subcommands, choose one under Launch command and click Check selected command.'],
+          title: '2. Inspect command & served models',
+          body: ['Inspect the read-only list of models served by a running server, or review the launch command for an installation folder—without binding the connection to one model.'],
+          points: [
+            'If an engine exposes serving subcommands, choose one under Launch command and click Check selected command.',
+            'Managed connections verify each library model (identity, chat, and streaming) the first time you start it.',
+          ],
           image: 'auto-model',
-          caption: 'Model selection for an external engine.',
+          caption: 'Inspected server models and connection readiness without a single-model lock.',
         },
         {
           id: 'connect',
-          title: '3. Connect & verify',
-          body: ['Click Connect to run live chat and streaming checks before saving the connection inside AioLM.'],
+          title: '3. Connect & save',
+          body: ['Click Connect to save the external engine inside AioLM.'],
           points: [
-            'Running servers connect via an AioLM-owned local proxy (keeping the server’s advertised model ID); stopping the connection stops only the proxy, not your server. Managed connections serve the model under its library display name without the file extension (split GGUF models use one name without the shard counter).',
+            'Running servers register their listed models (up to 128) through an AioLM local proxy without pre-binding one model; stopping the connection stops only the proxy, not your server. Managed connections let you start any compatible library model under its unified shard-free display name without the file extension (first launch runs live chat and streaming checks).',
             'Automatic connections use the same single benchmark method; connection checks do not verify multimodal/tool quality.',
           ],
           image: 'auto-connect',
-          caption: 'Connection verified and saved.',
+          caption: 'External engine connection saved.',
         },
         {
           id: 'launch-options',
@@ -367,12 +370,13 @@ const content: GuideContent = {
           body: ['Managed connections build grouped option controls directly from the command’s help output.'],
           points: [
             'Simple controls use multi-column layouts while JSON, token lists, paths, and repeated editors stay full width alongside Command and help tools.',
+            'Pasting a quoted absolute path (such as Windows “Copy as path”) into an option field or additional launch argument automatically strips one matching pair of surrounding " or \' quotes.',
             'If reviewed help no longer matches runtime identity (ignoring host env like PATH), launch re-runs the reviewed help command once and continues if parsed options are identical. Help execution skips the native confirmation prompt only when the exact program path, arguments, effective working directory and environment were previously approved; changing any of those execution inputs requires renewed native approval.',
             'Save profile & start closes settings and runs checks/loading in the background with Cancel and Review saved model settings on failure (including Windows DLL errors).',
           ],
           more: [{
             title: 'Additional launch arguments & attached servers',
-            body: ['Additional launch arguments accepts literal tokens without shell evaluation and blocks duplicate or app-managed flags. Attached running servers keep their own launch settings outside AioLM.'],
+            body: ['Additional launch arguments accepts literal tokens without shell evaluation (stripping matching surrounding quotes from pasted paths) and blocks duplicate or app-managed flags. Attached running servers keep their own launch settings outside AioLM.'],
           }],
         },
         {

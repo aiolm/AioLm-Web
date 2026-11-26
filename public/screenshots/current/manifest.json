@@ -6,7 +6,7 @@
       "file": "guides/en/adapter-add.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "ade4d42494963807dfb9b590247e1850adc20784ed7904e68b403267082a6b5f"
+      "sha256": "10c96fb57df71cf2dd9ecdb27b66c57df824f17921dd9905a91ec6013cc948c4"
     },
     {
       "locale": "en",
@@ -14,7 +14,7 @@
       "file": "guides/en/adapter-check.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "712112125f6ab8b0cd0e24a93a50c51c1229ff79005f6b2a3513e5b7cfcc5621"
+      "sha256": "b9cb434bb161c7f272898234d11b1a012740f94c909a5a62cf1a5903b49fb4f8"
     },
     {
       "locale": "en",
@@ -22,7 +22,7 @@
       "file": "guides/en/adapter-help.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "58fcbdf689c6bfca3ee33eae355f6c9fd774520de982ea9124b432f048aa04c5"
+      "sha256": "2331f5ebbaccf9aa7fd8944b4acff31b4983ef5ae5c528b599d9a8bc3dc116ba"
     },
     {
       "locale": "en",
@@ -30,7 +30,7 @@
       "file": "guides/en/adapter-review.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "8409d6938abfce220dfe4096565ec8ec11f067f0eebaeb0951d752442693e316"
+      "sha256": "efe8effbef736d14769d0a36fde9afdd1344324ba37d1a55cd98f0c09c6fcbb9"
     },
     {
       "locale": "en",
@@ -38,7 +38,7 @@
       "file": "guides/en/adapter-setup.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "10babdb2c384f20355b6421af6688239e7f3bd92f252dfb940d20c05f7a4c700"
+      "sha256": "bfef22bc42d55903e97ea0e820a770806c4fa02a88d938a5e49141d9dc2f81ae"
     },
     {
       "locale": "en",
@@ -46,7 +46,7 @@
       "file": "guides/en/auto-connect.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "3313f93fee6dc9645f8644b3527d687dc906a67e5f4e5476c17e8eddba7e29a7"
+      "sha256": "6a138ec30971cf42e27e1192b9c30ed829678e424e5914c3b7f673f3edb44e5e"
     },
     {
       "locale": "en",
@@ -54,7 +54,7 @@
       "file": "guides/en/auto-find.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "77436ffcf507102122c8bc948f29c704e54132cd8e197ab8911316ce6f0fd591"
+      "sha256": "fdc09eff2d88aa91881dbafecea7df1a9294a01818b5e6eef4966f434b541d67"
     },
     {
       "locale": "en",
@@ -62,7 +62,7 @@
       "file": "guides/en/auto-model.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "591e7115d85eda4de189141f14d7d980becf31cdc659d8ba02eb7e69dde4336a"
+      "sha256": "b7453d4aa3089cde1e7b50fc780953341be209622d7efdcc9aa601af9b71dcdf"
     },
     {
       "locale": "en",
@@ -70,7 +70,7 @@
       "file": "guides/en/chat.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "9d98adea93576d1b325a06d71a40d19f7ad8a3b0621eb6ea57d98ed8aa23faa3"
+      "sha256": "60de297ac4195ef699a03a4e572d02790e269bd9fb7566c6e56cb54d5d311dd4"
     },
     {
       "locale": "en",
@@ -78,7 +78,7 @@
       "file": "guides/en/discover.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "5f2cece6ae0d3df69cdaf72000098dae6dbf02cc560c8caaf2d12f57c3f7ab0c"
+      "sha256": "81a407c0245157473fdecb73bc35083af0d2057c94e9c849c2e19b07b5ac2e81"
     },
     {
       "locale": "en",
@@ -86,7 +86,7 @@
       "file": "guides/en/engines.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "540beac57edde64b8bc419fa60093dcc9e7ba5cf26767aca04785926961ebf0e"
+      "sha256": "61b08592e398d6aaccebf20e05239058712e6e6eb22e15d8aaf0f68e417c56cc"
     },
     {
       "locale": "en",
@@ -94,7 +94,7 @@
       "file": "guides/en/folder.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "dd2417204d7b405f1f890c83a0c7ceab4009c465c63c32803b1c8afe3179b83a"
+      "sha256": "8c9f8a97983dd19847bbb96465be46f4cf0fd0667bcf9916dde6848cfafefa8a"
     },
     {
       "locale": "en",
@@ -102,7 +102,7 @@
       "file": "guides/en/language.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "2c71cb1dcf56536bc19ad91de9b41c68450ea7cff91b8494178739590cefa57e"
+      "sha256": "11b88b791289bdb49991a8f98b394762ab4a54802ed136681a2c0ba9529e727e"
     },
     {
       "locale": "en",
@@ -110,7 +110,7 @@
       "file": "guides/en/llama-install.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "7203ba20aaaf8f0ab57863b78939dd02979b0dacb1d5e1a90bbc3025fae67fac"
+      "sha256": "95f56a9b3e0594fef588123441d8c7baaecb5f648308a53e5450c682906c5017"
     },
     {
       "locale": "en",
@@ -118,7 +118,7 @@
       "file": "guides/en/model-files.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "ad139d973a7aec8300e618538142eb6b1d11607933e3c055faa352c1cac75160"
+      "sha256": "8488b3a523ac01f9d4114710f7fd5ec7164ba8da1cbdf1629ca66d54bd9c75bb"
     },
     {
       "locale": "en",
@@ -126,7 +126,7 @@
       "file": "guides/en/model-library.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "edc6efa3e703435b53aefd1428f12e714a4605f93163bf96b4439c43b9e216a1"
+      "sha256": "d0858632b387059417da010258e4263e352ba42f5a963758a4f48d2e765f7ab3"
     },
     {
       "locale": "en",
@@ -134,7 +134,7 @@
       "file": "guides/en/model-settings.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "76d0ac28808b6c6ac707aa33a4edc0e3bdffbdaea7325f49eb96171b55f76fd4"
+      "sha256": "89b27d8ea37ff788f7c59a3cc6ba9949d2d5a03da208e5f1e73afa5a820267da"
     },
     {
       "locale": "en",
@@ -142,7 +142,7 @@
       "file": "guides/en/theme.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "0cd60fceddfcf42bfa03c4f0bade7924234b1057b800e992da88d13de32f00de"
+      "sha256": "c8b4b69c499851606d4a9d8d584c5a38d2af9e8efa81197afe8ee694b2e1c91e"
     },
     {
       "locale": "en",
@@ -150,7 +150,7 @@
       "file": "guides/en/updates.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "02d7acec0c3be47b3f9159c6e40a643ada488f3ac1fb61ab6db20855b6bb20c3"
+      "sha256": "e73e9f71c6e71f6880d5134ae625f3af776b57b2637597e53303eac627a68a94"
     },
     {
       "locale": "ja",
@@ -158,7 +158,7 @@
       "file": "guides/ja/adapter-add.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "a47019c0ba3985578639534267385f368a9b12c280b0431f4b144cee701626cb"
+      "sha256": "67311128a3148ab80480869bbec4d884328125c04ba847cc2011d165e9ca5fe5"
     },
     {
       "locale": "ja",
@@ -166,7 +166,7 @@
       "file": "guides/ja/adapter-check.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "0c21cfdbf249731bec3765d405319312c28872dd448a0766a5f43919dfb98c30"
+      "sha256": "dcbc63d962df4a77780880702a41ce90c905511c86a2c486efb881f6428aa295"
     },
     {
       "locale": "ja",
@@ -174,7 +174,7 @@
       "file": "guides/ja/adapter-help.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "5e061ab1e8aca67824b48243301115709804c4bed438cd76872b70d97c833d94"
+      "sha256": "f83dfe232f4ef7b5333a7281c0d4d29b2d79b12e3db8d3adf5ffba36a62c7d8e"
     },
     {
       "locale": "ja",
@@ -182,7 +182,7 @@
       "file": "guides/ja/adapter-review.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "198f3644fd82af92009d67e914fee34f6e8d04b3ec5ece7a82dd37f53dce9bae"
+      "sha256": "609d12e532b307f0fe20f7a92111f18130284f89c760cf85de48c4a6e566c8d3"
     },
     {
       "locale": "ja",
@@ -190,7 +190,7 @@
       "file": "guides/ja/adapter-setup.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "e5db6ebf3dfbff29ad2884e0dcdfe0777b7e0884aafb84e06d88950c80b00803"
+      "sha256": "ce411a6cf55c8252c8e8fe25bef9a10e5e67b66618631987c2b15ef4e25cd8fc"
     },
     {
       "locale": "ja",
@@ -198,7 +198,7 @@
       "file": "guides/ja/auto-connect.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "cb0ed78f9581ce213269312467546994c58eadb33d5068a1e189bf88d959c3a4"
+      "sha256": "bd40d8b47503cc27a5875aa5700c4806441ba4c3c3a3f1e5d4a3730ef2677d5a"
     },
     {
       "locale": "ja",
@@ -206,7 +206,7 @@
       "file": "guides/ja/auto-find.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "5e7841933b51c5e2b9beeec477151a60685da6a6436d0efdc0ce2e7ea5fb298e"
+      "sha256": "33d19bd95c9bb8c69241506d2fec071ea3e2ecbf3ffdaa1a67ac6853abf647e8"
     },
     {
       "locale": "ja",
@@ -214,7 +214,7 @@
       "file": "guides/ja/auto-model.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "048a157eed8c7d918706b0008224cd79374c85e940670dda7e7e160571fda3f9"
+      "sha256": "87d8c8950b1d08cff30657dbeb84a0b17b9beaf5b3b6ed3ca3748c7b9254ac92"
     },
     {
       "locale": "ja",
@@ -222,7 +222,7 @@
       "file": "guides/ja/chat.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "0e493eae47db2855caca0b841f29c4cab3b78539b65198170575c4997282bbc7"
+      "sha256": "dc09cb959ee93b1539f0c920280527ce3795f5c469513f62e0785b105eb5ea50"
     },
     {
       "locale": "ja",
@@ -230,7 +230,7 @@
       "file": "guides/ja/discover.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "e9604243193a3775c310111732cb0ce406269b7fd413c25005fc278809e04bc0"
+      "sha256": "08737e03090e366b4ec3d87866b21fd97f4b6f91c2e021d5d273e61dcf8c1577"
     },
     {
       "locale": "ja",
@@ -238,7 +238,7 @@
       "file": "guides/ja/engines.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "895102a0357af76ee8776272d1e86d9a27a65878892a94ed949bd77b9b0b7dd5"
+      "sha256": "dfbb1dd08332d6bc77bbbe65e737c70d5a82fe7decb55423f6efe2cba96f0e21"
     },
     {
       "locale": "ja",
@@ -246,7 +246,7 @@
       "file": "guides/ja/folder.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "d74fa6bab718c5b26c2201db860f097374f53b3b332dcf1b221041203c3b5477"
+      "sha256": "5127bb9319e1656ed5e94707a5b24e4d881620450a67cfa2642a623113420c8b"
     },
     {
       "locale": "ja",
@@ -254,7 +254,7 @@
       "file": "guides/ja/language.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "97acb6d50e659e3274299627633a1f85b760e47ae7fdb84c04f4f627e1a80a5b"
+      "sha256": "1f9dfb7ebefb8305f17986f4cf5aad4d1af77504a5855c376ff0bc271313db42"
     },
     {
       "locale": "ja",
@@ -262,7 +262,7 @@
       "file": "guides/ja/llama-install.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "01b6ef980a50e7203a91c05aae83e3e4dc92fb09dee3518df1879905cbf6aea8"
+      "sha256": "12be28d13fb2053826b7784ab61c539b43e4d28ee90c6d60cf5d4c952441e76d"
     },
     {
       "locale": "ja",
@@ -270,7 +270,7 @@
       "file": "guides/ja/model-files.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "e7cefef98e571facf0312430894c7aeb748ac9ca0bbb9f1f2994c4c9fc4ca5dd"
+      "sha256": "796fe45dcc08f4738382b0b7a4b6d3ae7c3a9b8e24e3dfdda80f9d4409d9a459"
     },
     {
       "locale": "ja",
@@ -278,7 +278,7 @@
       "file": "guides/ja/model-library.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "6fabd1cfdaf700f25fbe0faaafe3ab7e6618cb7cecf66b1027df15a88e356ea9"
+      "sha256": "b8c2f7d8386c9d4c564e00b3641942a838e4d42973e36a0731bceff8bd081a73"
     },
     {
       "locale": "ja",
@@ -286,7 +286,7 @@
       "file": "guides/ja/model-settings.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "20a36764fe94e08f6544c1d1b3072b54641ee439692f56c63a5e0c4f6d9c0539"
+      "sha256": "8a494a9bb61f47f4f42c2f063498847ec5ed22f91a3ca1dd97480a3c1409b81e"
     },
     {
       "locale": "ja",
@@ -294,7 +294,7 @@
       "file": "guides/ja/theme.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "31d03b13a3d1d726a751f05105a84ea2edd3c7b6cb2923b181a3e5ee85638d07"
+      "sha256": "f8355bb1347b681c9abae63cbbc8fe00a5dcd026ecf9bad7e2f42aae56db11d0"
     },
     {
       "locale": "ja",
@@ -302,7 +302,7 @@
       "file": "guides/ja/updates.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "0fc300d7302256a72f7c2e6ac5358a76be417a60ef91991e6552d21dd338987a"
+      "sha256": "bb312de403f10bb4f634b7d88b2792f99b92b18ae2443778d0ef65081436969b"
     },
     {
       "locale": "ko",
@@ -310,7 +310,7 @@
       "file": "guides/ko/adapter-add.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "9a5187ec983cf9d163bf6e9e4487af55070a91f25c50a64ed041dcf1d42a95b3"
+      "sha256": "2647e641ccf9dc6c657a3c7fa4716491669d481e59d6c6acb0e6d33c989ba9dc"
     },
     {
       "locale": "ko",
@@ -318,7 +318,7 @@
       "file": "guides/ko/adapter-check.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "dd1f4402a810485f26553449cae3516c3222d5ee516ff34fb0da45b42774e100"
+      "sha256": "16b142150d1eb18616b509c987c7215452c31996c26caf0fbb88ead1285a43d4"
     },
     {
       "locale": "ko",
@@ -326,7 +326,7 @@
       "file": "guides/ko/adapter-help.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "53928325abd4aa48278f2f7ecf72605a242cba889c000be35662102cac04bbc9"
+      "sha256": "7170aea2a26370cec77d23a5ffed45793eb69537bdb919f150cc6a788fc8833a"
     },
     {
       "locale": "ko",
@@ -334,7 +334,7 @@
       "file": "guides/ko/adapter-review.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "389a54831846cf8d635e059afc093cd3b1721d42a3c70fd0892a873f11ecdb2f"
+      "sha256": "812b5714feff191dc647e3e12de3ee3e6f7bdea6bf34d4ae078690192cc80c54"
     },
     {
       "locale": "ko",
@@ -342,7 +342,7 @@
       "file": "guides/ko/adapter-setup.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "a766ab04120b25c7c69bb8b5c70a8ec4653874d73db4b7bc0a6e8ebec6b6468d"
+      "sha256": "92a68f6d54025de5185bfbf406d220cd11507ea70ac3f3d6ecb03dece9fe5a14"
     },
     {
       "locale": "ko",
@@ -350,7 +350,7 @@
       "file": "guides/ko/auto-connect.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "39793e2957c7ae58bdb18229b3b21f7c3fba1bc4e8376a7a4b6299f5faf4cbaf"
+      "sha256": "8a0575b6dd7c0767fe1b79ba59016b784fb541616d23103360ecc1e57f173309"
     },
     {
       "locale": "ko",
@@ -358,7 +358,7 @@
       "file": "guides/ko/auto-find.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "32b59b53cca8a13e055d6778dc78f35767ee2f831286be439f7a2d31ac85e0e9"
+      "sha256": "9e93353185ab53b4664963b64943544f381935a57ad9ab922a08ff2b0b398a94"
     },
     {
       "locale": "ko",
@@ -366,7 +366,7 @@
       "file": "guides/ko/auto-model.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "45df733501c719afec66c529d72116ea29e30a860abccda486d63ede33c23c0a"
+      "sha256": "f40ef5bd9528f04dbe0541f340ce0f647e084f42058235b06eead35c6f99b0f3"
     },
     {
       "locale": "ko",
@@ -374,7 +374,7 @@
       "file": "guides/ko/chat.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "5547d1fa32ca8e25ff1d49c52200017b44477ec2b52a1cd36d541fd414cc6598"
+      "sha256": "ddf2defa87f04eebd4a58e5d1bebd1ce78fae7ccaa185e8bbb2dbf41cb60f05a"
     },
     {
       "locale": "ko",
@@ -382,7 +382,7 @@
       "file": "guides/ko/discover.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "6b2fc3e16b08e267d9d5f90a9dca89ce8d940038290a95744b7c164d4b19b744"
+      "sha256": "f7908edbcc655d89187183e48b7d50b9e6dbc49f37efff96f8b239ad33ab71f4"
     },
     {
       "locale": "ko",
@@ -390,7 +390,7 @@
       "file": "guides/ko/engines.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "1fcfb591aee8cef72e269d8dc5e7723bb451090a122715071903ef891eaf981e"
+      "sha256": "58e297721de2a9397b5c1150010486fba245156c63f1fb089b4ceb39734ac05f"
     },
     {
       "locale": "ko",
@@ -398,7 +398,7 @@
       "file": "guides/ko/folder.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "3388a56006d0968e02e53f09c073bdf9ad4e3ae7e4b8bf531d5d5c70f169f6e3"
+      "sha256": "0229418dc1a5a504eaf191e7e92048bb2c95b78f1213111eb76375b6220eb99b"
     },
     {
       "locale": "ko",
@@ -406,7 +406,7 @@
       "file": "guides/ko/language.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "08efdaeb81a8010821ba5c2168c2fc7bd01f40024bf26b695c42f9ee84ec3f7b"
+      "sha256": "c6147d34dc156db13d39676588c3df2beee8370ededdc899d868472731943cce"
     },
     {
       "locale": "ko",
@@ -414,7 +414,7 @@
       "file": "guides/ko/llama-install.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "61c7fd7f765601345ab27fc02b63c4cd4af717ea7de8a4b090c510a49d0565ca"
+      "sha256": "308d8de57b6a04157a437261c1a05ec4b004530f8949884619921f2d0ce8d8a8"
     },
     {
       "locale": "ko",
@@ -422,7 +422,7 @@
       "file": "guides/ko/model-files.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "ff53eefe2ac9178c3d6c00526232a91c887c79949ee185882d5aa255e3804761"
+      "sha256": "ccae44943f44fb390b720f9c6b8583dfcf0142e3a2e1023a224a4859f6f0c9ee"
     },
     {
       "locale": "ko",
@@ -430,7 +430,7 @@
       "file": "guides/ko/model-library.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "ecf153c11a85f235481494f7d396d94c59467d40e5cd78de0c467df6de21e747"
+      "sha256": "28b1416929667fae298eabe88e1df3c24a1ef4f001a83126ae76062c3a6d6abc"
     },
     {
       "locale": "ko",
@@ -438,7 +438,7 @@
       "file": "guides/ko/model-settings.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "67e641def9d6518e9e92551973df2edb21dc01702de1e2e4339d4f26c2194ffe"
+      "sha256": "d655de0a3ae96191c525215c4c56f80b619d6c9751eafa2012514c200863f554"
     },
     {
       "locale": "ko",
@@ -446,7 +446,7 @@
       "file": "guides/ko/theme.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "abcbeaa073fb7c3df29288c327478d255ca049e8305bd56894efa47c68631b71"
+      "sha256": "c5b13e97c7c89cc43a22201329033d567be418c2383ef71ae8512f319c92ceda"
     },
     {
       "locale": "ko",
@@ -454,7 +454,7 @@
       "file": "guides/ko/updates.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "529dd2d1b7c13666a41396d4470bda3bde55ef9193c59b5f4157616e7be02850"
+      "sha256": "39c493bfa412b8d55090c4b6e997e54c279d9d1eac4558651b5428c8738e01b3"
     },
     {
       "locale": "zh",
@@ -462,7 +462,7 @@
       "file": "guides/zh/adapter-add.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "86b938fdfcd1b162ccc8d5e05bdcc51610cfe259a832d2596da363cd865ff258"
+      "sha256": "af5b704d251297a2718fa57c4c323d1020aa42189c2640bbfbc3d45a4db78b04"
     },
     {
       "locale": "zh",
@@ -470,7 +470,7 @@
       "file": "guides/zh/adapter-check.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "e61199bd31117a0fb4f6a7be625da988618a9da5446083009027e16b1ae680d6"
+      "sha256": "b2202eaace0729185299f520576b5f7ab12e15a7a5ed0ede0762d72830b82f1a"
     },
     {
       "locale": "zh",
@@ -478,7 +478,7 @@
       "file": "guides/zh/adapter-help.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "d56ef03243ba7976477db320741547455ae86e97f86cb832f87ec3d6dad0bf3e"
+      "sha256": "59307aa6405e4e24ebc7293f5e2c73341b3491da69d4558d4e33730ba5542227"
     },
     {
       "locale": "zh",
@@ -486,7 +486,7 @@
       "file": "guides/zh/adapter-review.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "8f14d93b243158f1c1674b3b8eafc413c847114172b54ec1b38c92d9d2568d0f"
+      "sha256": "ae6cd26b874e3a5e992889ce1682c963b84deeb882d5ef4ae2a5fdc52c6f0e7a"
     },
     {
       "locale": "zh",
@@ -494,7 +494,7 @@
       "file": "guides/zh/adapter-setup.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "632bee67ce9a36fcc74c6a0b49dbca997c28474243165d205d620bd126412f34"
+      "sha256": "11c7949a6039e54b9b45c79fc74f4a2ccaedba45a35f36b54328b99d0eb5d54f"
     },
     {
       "locale": "zh",
@@ -502,7 +502,7 @@
       "file": "guides/zh/auto-connect.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "e5e65201b01825913f8004cf00d331e0fc00f67a2963f5ec75876a14f7948cfe"
+      "sha256": "571b3bab0fea2c7516d143ba59b767f62864d12ea2ad21199c24e264352951db"
     },
     {
       "locale": "zh",
@@ -510,7 +510,7 @@
       "file": "guides/zh/auto-find.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "1ac7298fced3ecc68b729dc26623e8a986b8132f5c7967519725de0aa34325bd"
+      "sha256": "c1b76999730605c174585d5ff71c0b4776c544ce2fa59b80005939b0f68d2247"
     },
     {
       "locale": "zh",
@@ -518,7 +518,7 @@
       "file": "guides/zh/auto-model.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "4ffc110ea5c4531b033938c851c5f2ce8dc4e3734abab10b75d0ac6763c12b3c"
+      "sha256": "87bed3919baf794132bc1f4d1963cd81c91c6359142072b9d0553a0ca66ff754"
     },
     {
       "locale": "zh",
@@ -526,7 +526,7 @@
       "file": "guides/zh/chat.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "cf464228d6bd648d105a20d6f217923b9c328a35bb37d9f330dde1118d03d3db"
+      "sha256": "ab93d53b48973e1b6a54b774d9baf4147a49a7cf07691cfbddaa2429fa7ef1bb"
     },
     {
       "locale": "zh",
@@ -534,7 +534,7 @@
       "file": "guides/zh/discover.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "ae80d87365eb6941bb5e049b14edd9c32137a6fca32f0697c0b49dffad3d6a13"
+      "sha256": "17cd5d021f1a9dbf660dc8c0d24dca9c451b171d48f3d8671d06ca32e4555e87"
     },
     {
       "locale": "zh",
@@ -542,7 +542,7 @@
       "file": "guides/zh/engines.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "76eaf934c3fce1c4ec61bfb96e0051544ddb4afebe83b2a2266441f9281a9370"
+      "sha256": "56f20c1625891ed70599c25129fe4a31f76e69ff0a57980cf1075affe746531e"
     },
     {
       "locale": "zh",
@@ -550,7 +550,7 @@
       "file": "guides/zh/folder.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "ed8784ce4f02f1bed99673c0a8a46aff7e5895b19965e6f3b0b0fcad05b6957d"
+      "sha256": "2ef530d03d1458872570b8e63bd2009f089a3ff0270fdbbee80eb9a0628b4e6a"
     },
     {
       "locale": "zh",
@@ -558,7 +558,7 @@
       "file": "guides/zh/language.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "fa60dfeda317c3a5cac845ae76299e70eb9e70215d1c9cd2afc1bcc9d5029eef"
+      "sha256": "6f2fe4b87b6dbc63c22ff21d84203ea0b0f78c592a67d64bf743a9022dc13df2"
     },
     {
       "locale": "zh",
@@ -566,7 +566,7 @@
       "file": "guides/zh/llama-install.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "dacd977a6d0e4ea58129f2b33493e06d8ce9ca8132a4c3cf62075bac666d8da8"
+      "sha256": "a3f8341c2e342809a98ae66be9a44d0c8ed6f45d5f02dfd0eef1df9c667a364e"
     },
     {
       "locale": "zh",
@@ -574,7 +574,7 @@
       "file": "guides/zh/model-files.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "28c44766966cc411ea0cdef4021f2658946e21249587c301b4f4fad75431208d"
+      "sha256": "bcaa14e0d9390f14b1331071d844890967f4d578a3bda974c6c95997973501bc"
     },
     {
       "locale": "zh",
@@ -582,7 +582,7 @@
       "file": "guides/zh/model-library.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "b8e124a90cd00fa0699d77382ada778bbd121fd3038d03fa23bbb5fc1b21c27a"
+      "sha256": "be954a8da596c4717e1a8ef9e9df7034c6fa0ce155348c85f0df828caa4343a1"
     },
     {
       "locale": "zh",
@@ -590,7 +590,7 @@
       "file": "guides/zh/model-settings.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "d5b3cc660673fbcd8eb8212c1a7e68349a2648d9c0772b43ef17e6d3c9787918"
+      "sha256": "2cd56b234db382b0edd1de02f30f06272153db8f26af273a6c57488fa50defed"
     },
     {
       "locale": "zh",
@@ -598,7 +598,7 @@
       "file": "guides/zh/theme.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "71dff53b01f079648685c20d4ca14b00a8d10d6bca31fe462a3e033bdf76e2aa"
+      "sha256": "f2c7839f45d122ae7b3885985e5a5b19af9aadb90bd49f04a735ce3944ecba26"
     },
     {
       "locale": "zh",
@@ -606,7 +606,7 @@
       "file": "guides/zh/updates.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "43bb97377342c8e3936bd8e0d1df6dd9a37612306fe00cbd707634efd551974e"
+      "sha256": "fb79e7b8068475514bd5e85df3c339030cf92bfbf202dac1605ba3bfb0557e8e"
     },
     {
       "locale": "en",
@@ -614,7 +614,7 @@
       "file": "home/en/dark.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "5917dde540de336f63994e2920982ded5d53f9f8d7f3cb91782f42909da9e2c5"
+      "sha256": "c1050afa571a7a186dadc59d6bd25ff2edb618b82ba985f315edc8b6c29687f8"
     },
     {
       "locale": "en",
@@ -622,7 +622,7 @@
       "file": "home/en/light.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "edc6efa3e703435b53aefd1428f12e714a4605f93163bf96b4439c43b9e216a1"
+      "sha256": "d0858632b387059417da010258e4263e352ba42f5a963758a4f48d2e765f7ab3"
     },
     {
       "locale": "ja",
@@ -630,7 +630,7 @@
       "file": "home/ja/dark.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "a6b0abfc64c70cf9611ecf6be2d30f8cb56bb85a2462b8eee438c16c050098bc"
+      "sha256": "5d98cacac4ab65255c97726368b75bf21b211cfbc9e375c545dd690c79f841f6"
     },
     {
       "locale": "ja",
@@ -638,7 +638,7 @@
       "file": "home/ja/light.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "6a81e060d3a8c97c90ba8c1c47c31543b8f0b961c4e27ccceda521b1037ed5f0"
+      "sha256": "b8c2f7d8386c9d4c564e00b3641942a838e4d42973e36a0731bceff8bd081a73"
     },
     {
       "locale": "ko",
@@ -646,7 +646,7 @@
       "file": "home/ko/dark.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "8bd98da7101fc9631f6b016a66a476a06e90aeab9827f2836b6012a101f58520"
+      "sha256": "472e5a2ae2256e2f83fb577a30e80d1893a3edca7cdb1455478445c1476aab17"
     },
     {
       "locale": "ko",
@@ -654,7 +654,7 @@
       "file": "home/ko/light.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "a792ad718513644fe9124edfbce02bf46f5500895b14ea55137238d0b1d9640a"
+      "sha256": "28b1416929667fae298eabe88e1df3c24a1ef4f001a83126ae76062c3a6d6abc"
     },
     {
       "locale": "zh",
@@ -662,7 +662,7 @@
       "file": "home/zh/dark.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "19d95035be2768091150be2ed62af1c4ad32d73f01debd27590d892196531198"
+      "sha256": "b0dbcbd4eed0a147df52c718ee4ea6dce5d35cccce8ef40cbce360af484c57c2"
     },
     {
       "locale": "zh",
@@ -670,7 +670,7 @@
       "file": "home/zh/light.png",
       "width": 2560,
       "height": 1782,
-      "sha256": "b8e124a90cd00fa0699d77382ada778bbd121fd3038d03fa23bbb5fc1b21c27a"
+      "sha256": "be954a8da596c4717e1a8ef9e9df7034c6fa0ce155348c85f0df828caa4343a1"
     }
   ]
 }

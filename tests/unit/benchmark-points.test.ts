@@ -23,7 +23,7 @@ const usage = (prompt: number, completion: number): Partial<Row> => ({
 });
 
 describe("shared API serving points", () => {
-  it("groups rows by input bytes, concurrency and output cap, ascending", () => {
+  it("groups rows by concurrency, input bytes and output cap, ascending", () => {
     const points = summarizeServingPoints(rows([
       { input_bytes: 16384, concurrency: 1 },
       { input_bytes: 4096, concurrency: 4 },
@@ -31,7 +31,7 @@ describe("shared API serving points", () => {
       { input_bytes: 4096, concurrency: 1, max_output_tokens: 64 },
     ]));
     expect(points.map((point) => [point.input_bytes, point.concurrency, point.max_output_tokens])).toEqual([
-      [4096, 1, 64], [4096, 1, 128], [4096, 4, 128], [16384, 1, 128],
+      [4096, 1, 64], [4096, 1, 128], [16384, 1, 128], [4096, 4, 128],
     ]);
   });
 

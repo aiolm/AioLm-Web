@@ -125,8 +125,7 @@ const DIAGRAM_COPY: Record<Locale, DiagramStrings> = {
     adapter: [
       { title: 'Find', meta: 'Server or folder' },
       { title: 'Check', meta: 'Approve & inspect' },
-      { title: 'Pick model', meta: 'Served or local' },
-      { title: 'Connect', meta: 'Verify & save' },
+      { title: 'Connect', meta: 'Save connection' },
     ],
   },
   ko: {
@@ -158,8 +157,7 @@ const DIAGRAM_COPY: Record<Locale, DiagramStrings> = {
     adapter: [
       { title: '찾기', meta: '실행 서버·설치 폴더' },
       { title: '항목 확인', meta: '승인 후 검사' },
-      { title: '모델 선택', meta: '서버·로컬 모델' },
-      { title: '연결', meta: '응답 검증 후 저장' },
+      { title: '연결', meta: '연결 저장' },
     ],
   },
   ja: {
@@ -191,8 +189,7 @@ const DIAGRAM_COPY: Record<Locale, DiagramStrings> = {
     adapter: [
       { title: '探す', meta: 'サーバーまたはフォルダー' },
       { title: '確認', meta: '承認して検査' },
-      { title: 'モデル選択', meta: '提供モデル・ローカル' },
-      { title: '接続', meta: '応答検証後に保存' },
+      { title: '接続', meta: '接続を保存' },
     ],
   },
   zh: {
@@ -224,8 +221,7 @@ const DIAGRAM_COPY: Record<Locale, DiagramStrings> = {
     adapter: [
       { title: '查找', meta: '本地服务或目录' },
       { title: '检查', meta: '批准并核验' },
-      { title: '选模型', meta: '服务或本地模型' },
-      { title: '连接', meta: '验证通过后保存' },
+      { title: '连接', meta: '保存连接' },
     ],
   },
 };

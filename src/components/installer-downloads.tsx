@@ -4,7 +4,7 @@ import { GITHUB_REPOSITORY_URL } from './site-links';
 export type InstallOs = 'windows' | 'macos' | 'linux';
 
 const files = {
-  windows: [{ label: 'Windows x64', suffix: 'x64-setup.exe' }],
+  windows: [{ label: 'Windows x64 · EXE', suffix: 'x64-setup.exe' }, { label: 'Windows x64 · MSI', suffix: 'x64_en-US.msi' }],
   macos: [{ label: 'Mac · Apple Silicon (M1, M2, …)', suffix: 'aarch64.dmg' }, { label: 'Mac · Intel', suffix: 'x64.dmg' }],
   linux: [{ label: 'Linux · DEB', suffix: 'amd64.deb' }, { label: 'Linux · AppImage', suffix: 'amd64.AppImage' }],
 } as const;
